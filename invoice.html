@@ -53,19 +53,27 @@ document.getElementById("invoice").innerHTML = `
 
 <div class="header">
 
+<!-- يمين: الشعار -->
 <div class="logo">
 <img src="images/logo.svg">
 </div>
 
-<div>
+<!-- وسط: العنوان -->
+<div class="center-title">
 <h2>فاتورة إلكترونية</h2>
 <p>منصة في خدمتك</p>
+</div>
+
+<!-- يسار: بيانات الطلب -->
+<div class="order-info">
+<p><b>رقم الطلب:</b> ${order.order_number || "-"}</p>
+<p><b>التاريخ:</b> ${order.date || "-"}</p>
+<p><b>الوقت:</b> ${order.time || "-"}</p>
 </div>
 
 </div>
 
 <hr>
-
 <p>رقم الطلب: ${order.order_number}</p>
 <p>التاريخ: ${order.date}</p>
 <p>الوقت: ${order.time}</p>
