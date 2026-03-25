@@ -16,12 +16,13 @@ body {
 
 .invoice {
     background: #fff;
-    max-width: 900px;
+    max-width: 950px;
     margin: auto;
     padding: 30px;
     border-radius: 10px;
 }
 
+/* الهيدر */
 .header {
     display: flex;
     justify-content: space-between;
@@ -29,9 +30,14 @@ body {
 }
 
 .logo img {
-    width: 100px;
+    width: 110px;
 }
 
+.title {
+    text-align: left;
+}
+
+/* أقسام */
 .section {
     margin-top: 20px;
 }
@@ -39,12 +45,14 @@ body {
 .row {
     display: flex;
     justify-content: space-between;
+    gap: 10px;
 }
 
 .box {
     width: 48%;
 }
 
+/* جدول */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -61,6 +69,11 @@ th, td {
     text-align: center;
 }
 
+/* الإجمالي */
+.total {
+    margin-top: 20px;
+}
+
 .total div {
     display: flex;
     justify-content: space-between;
@@ -71,6 +84,7 @@ h3 {
     color: #1e3a8a;
 }
 
+/* QR */
 .qr {
     text-align: center;
     margin-top: 20px;
@@ -108,16 +122,16 @@ let rows = "";
 
 order.cart.forEach(p => {
 
-let total = parseFloat(p.price);
+let qty = 1;
+let total = parseFloat(p.price) * qty;
 
 subtotal += total;
 
 rows += `
 <tr>
 <td>${p.name}</td>
-<td>${p.id}</td>
-<td>${p.code}</td>
-<td>1</td>
+<td>${p.description || "-"}</td>
+<td>${qty}</td>
 <td>${p.price}</td>
 <td>${total}</td>
 </tr>
@@ -133,80 +147,91 @@ let final = subtotal + tax + shipping - discount;
 // عرض الفاتورة
 document.getElementById("invoice").innerHTML = `
 
+<!-- الهيدر -->
 <div class="header">
+
 <div class="logo">
 <img src="images/logo.png">
 </div>
 
-<div>
-<h2>فاتورة ضريبية</h2>
+<div class="title">
+<h2>فاتورة إلكترونية</h2>
 <p>منصة في خدمتك</p>
 </div>
+
 </div>
 
 <hr>
 
+<!-- بيانات البائع والعميل -->
 <div class="row">
 
 <div class="box">
-<h4>المورد</h4>
+<h4>مصدره من</h4>
 <p>منصة في خدمتك</p>
 <p>المملكة العربية السعودية</p>
 <p>حائل - حي النقرة - شارع سعد المشاط</p>
 <p>الرقم الضريبي: 312495447600003</p>
-<p>وثيقة العمل الحر: XXXXX</p>
+<p>رقم شهادة العمل الحر: XXXXX</p>
 </div>
 
 <div class="box">
-<h4>العميل</h4>
-<p>${order.customer}</p>
-<p>${order.address}</p>
-<p>${order.phone}</p>
+<h4>مصدره إلى</h4>
+<p>اسم العميل: ${order.customer}</p>
+<p>العنوان: ${order.address}</p>
+<p>رقم الجوال: ${order.phone}</p>
 </div>
 
 </div>
 
+<hr>
+
+<!-- بيانات الطلب -->
 <div class="section">
 <p>رقم الطلب: ${order.order_number}</p>
 <p>التاريخ: ${order.date}</p>
 <p>الوقت: ${order.time}</p>
-<p>طريقة الدفع: ${order.payment}</p>
 <p>تفاصيل الشحن: ${order.shipping}</p>
 </div>
 
+<!-- جدول المنتجات -->
 <table>
+
 <tr>
 <th>اسم المنتج</th>
-<th>رقم المنتج</th>
-<th>الكود</th>
+<th>وصف المنتج</th>
 <th>الكمية</th>
-<th>السعر</th>
-<th>الإجمالي</th>
+<th>السعر الفردي</th>
+<th>السعر الإجمالي</th>
 </tr>
 
 ${rows}
 
 </table>
 
+<!-- الحساب -->
 <div class="total">
+
 <div><span>مجموع السلة</span><span>${subtotal}</span></div>
 <div><span>الشحن</span><span>${shipping}</span></div>
 <div><span>الخصم</span><span>${discount}</span></div>
-<div><span>ضريبة القيمة المضافة</span><span>${tax.toFixed(2)}</span></div>
+<div><span>رسوم الضريبة</span><span>${tax.toFixed(2)}</span></div>
 
 <h3>
 <span>الإجمالي النهائي</span>
 <span>${final.toFixed(2)} ريال</span>
 </h3>
+
 </div>
 
+<!-- QR -->
 <div class="qr">
 <img id="qr">
 </div>
 
 `;
 
-// 🔥 QR ضريبي مطابق (ZATCA)
+// QR ضريبي (ZATCA)
 let qrData = `
 اسم المنشأة: منصة في خدمتك
 الرقم الضريبي: 312495447600003
