@@ -12,15 +12,38 @@
 
 <h2>طلب شراء</h2>
 
-<input id="order_number" placeholder="رقم الطلب">
+<!-- رقم الطلب (يولد تلقائي) -->
+<input id="order_number" placeholder="يتم توليد رقم الطلب تلقائياً" disabled>
+
+<!-- التاريخ -->
 <input id="order_date" placeholder="التاريخ (11-03-2026)">
-  <input id="order_time" type="time">
+
+<!-- الوقت -->
+<input id="order_time" type="time">
 
 <hr>
 
+<!-- بيانات العميل الأساسية -->
 <input id="name" placeholder="اسم العميل">
-<input id="address" placeholder="العنوان">
 <input id="phone" placeholder="رقم الجوال">
+
+<!-- العنوان المختصر -->
+<input id="address" placeholder="العنوان المختصر">
+
+<hr>
+
+<h3>العنوان الوطني (تفصيلي)</h3>
+
+<input id="country" placeholder="الدولة">
+<input id="region" placeholder="المنطقة">
+<input id="district" placeholder="الحي">
+<input id="street" placeholder="الشارع">
+
+<input id="building" placeholder="رقم المبنى">
+<input id="extra" placeholder="الرقم الإضافي">
+<input id="postal" placeholder="الرمز البريدي">
+
+<input id="email" placeholder="البريد الإلكتروني">
 
 <hr>
 
@@ -37,16 +60,16 @@
 <hr>
 
 <select id="payment">
-<option>تمارا</option>
-<option>تحويل</option>
+<option value="تمارا">تمارا</option>
+<option value="تحويل">تحويل</option>
 </select>
 
-<input id="tamara_auth" placeholder="رمز الموافقة">
+<input id="tamara_auth" placeholder="رمز الموافقة (تمارا)">
 <input id="tamara_order" placeholder="رقم طلب تمارا">
 
 <select id="shipping">
-<option>لا يحتاج شحن</option>
-<option>يحتاج شحن</option>
+<option value="لا يحتاج شحن">لا يحتاج شحن</option>
+<option value="يحتاج شحن">يحتاج شحن</option>
 </select>
 
 <button onclick="checkout()">تأكيد الطلب</button>
