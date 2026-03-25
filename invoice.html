@@ -3,55 +3,62 @@
 <head>
 <meta charset="UTF-8">
 <title>فاتورة</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
 
-<div class="invoice" id="invoice"></div>
+<div class="invoice" id="inv"></div>
 
-<button onclick="downloadPDF()">تحميل PDF</button>
 <button onclick="location.href='index.html'">رجوع</button>
 
 <script>
 
-let order = JSON.parse(localStorage.getItem("currentOrder"));
+let o = JSON.parse(localStorage.getItem("order"));
 
-let rows="", sub=0;
+let rows = "";
+let total = 0;
 
-order.cart.forEach(p=>{
-let t=p.price*p.qty;
-sub+=t;
+o.cart.forEach(p=>{
+let t = p.price * p.qty;
+total += t;
 
-rows+=`<tr>
+rows += `<tr>
 <td>${p.name}</td>
 <td>${p.qty}</td>
 <td>${p.price}</td>
-<td>${t.toFixed(2)}</td>
+<td>${t}</td>
 </tr>`;
 });
 
-let tax=sub*0.15;
-
-document.getElementById("invoice").innerHTML=`
+document.getElementById("inv").innerHTML = `
 
 <h2>فاتورة إلكترونية</h2>
 
 <div class="row">
 
 <div class="box">
-<h4>مصدرة من</h4>
-<p>منصة في خدمتك</p>
-<p>المملكة العربية السعودية</p>
-<p>حائل - حي النقرة - شارع سعد المشاط</p>
+<h3>مصدرة من</h3>
+منصة في خدمتك<br>
+المملكة العربية السعودية<br>
+حائل - حي النقرة - شارع سعد المشاط<br>
++966597771565<br>
+info@fi-khidmatik.com<br>
+www.khidmatik.com<br>
+FL-765735204<br>
+312495447600003
 </div>
 
 <div class="box">
-<h4>مصدرة إلى</h4>
-<p>${order.customer}</p>
-<p>المملكة العربية السعودية</p>
-<p>${order.city} - حي ${order.district} - شارع ${order.street} - رقم المبنى ${order.building} - الرقم الإضافي ${order.extra} - الرمز البريدي ${order.postal}</p>
+<h3>مصدرة إلى</h3>
+
+${o.customer}<br>
+المملكة العربية السعودية<br><br>
+
+${o.city} - حي ${o.district} - شارع ${o.street} - رقم المبنى ${o.building} - الرقم الإضافي ${o.extra} - الرمز البريدي ${o.postal}<br><br>
+
+${o.phone}<br>
+${o.email}
 </div>
 
 </div>
@@ -61,14 +68,10 @@ document.getElementById("invoice").innerHTML=`
 ${rows}
 </table>
 
-<h3>المجموع: ${sub}</h3>
-<h3>الضريبة: ${tax.toFixed(2)}</h3>
-<h2>الإجمالي: ${(sub+tax).toFixed(2)}</h2>
+<h3>المجموع: ${total.toFixed(2)} ريال</h3>
+
 `;
 
-function downloadPDF(){
-html2pdf().from(invoice).save();
-}
 </script>
 
 </body>
