@@ -1,1 +1,50 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>لوحة التحكم</title>
+</head>
 
+<body>
+
+<h2>لوحة التحكم</h2>
+
+<table border="1">
+<tr>
+<th>رقم</th>
+<th>العميل</th>
+<th>الدفع</th>
+<th>رمز</th>
+<th>تمارا</th>
+</tr>
+
+<tbody id="table"></tbody>
+
+</table>
+
+<script>
+
+let orders = JSON.parse(localStorage.getItem("orders")) || [];
+
+let html = "";
+
+orders.forEach(o => {
+
+html += `
+<tr>
+<td>${o.id}</td>
+<td>${o.customer}</td>
+<td>${o.payment}</td>
+<td>${o.tamara_auth || "-"}</td>
+<td>${o.tamara_order || "-"}</td>
+</tr>
+`;
+
+});
+
+document.getElementById("table").innerHTML = html;
+
+</script>
+
+</body>
+</html>
