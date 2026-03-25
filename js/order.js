@@ -13,7 +13,7 @@ let orderNumber = "FK-2026-" + String(newNumber).padStart(6, '0');
 
 localStorage.setItem("lastOrderNumber", newNumber);
 
-// 🔥 تنسيق الوقت 12 ساعة
+// 🔥 تنسيق الوقت 12 ساعة (ص / م)
 let timeInput = document.getElementById("order_time").value;
 
 let formattedTime = "-";
@@ -33,6 +33,7 @@ formattedTime = h + ":" + minute + period;
 
 }
 
+// 🔥 إنشاء الطلب
 let order = {
 
 order_number: orderNumber,
@@ -42,6 +43,18 @@ time: formattedTime,
 customer: document.getElementById("name").value,
 phone: document.getElementById("phone").value,
 address: document.getElementById("address").value,
+
+// 🔥 العنوان الوطني الكامل
+country: document.getElementById("country").value,
+region: document.getElementById("region").value,
+district: document.getElementById("district").value,
+street: document.getElementById("street").value,
+
+building: document.getElementById("building").value,
+extra: document.getElementById("extra").value,
+postal: document.getElementById("postal").value,
+
+email: document.getElementById("email").value,
 
 cart: cart,
 
@@ -53,8 +66,10 @@ shipping: document.getElementById("shipping").value
 
 };
 
+// 🔥 حفظ الطلب
 localStorage.setItem("currentOrder", JSON.stringify(order));
 
+// 🔥 الانتقال للفاتورة
 window.location.href = "invoice.html";
 
 }
