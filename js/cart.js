@@ -4,9 +4,8 @@ function addToCart(){
 
 let product = {
 name: document.getElementById("product_name").value,
-price: document.getElementById("product_price").value,
-id: document.getElementById("product_id").value,
-code: document.getElementById("product_code").value
+desc: document.getElementById("product_desc").value,
+price: document.getElementById("product_price").value
 };
 
 cart.push(product);
