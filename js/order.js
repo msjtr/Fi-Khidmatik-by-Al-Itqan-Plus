@@ -6,11 +6,13 @@ return;
 }
 
 let order = {
+// 🔥 رقم طلب متسلسل
+let lastNumber = localStorage.getItem("lastOrderNumber") || 1375;
+let newNumber = parseInt(lastNumber) + 1;
 
-order_number: document.getElementById("order_number").value || "-",
-date: document.getElementById("order_date").value || "-",
-time: document.getElementById("order_time").value || "-",
+let orderNumber = "FK-2026-" + String(newNumber).padStart(6, '0');
 
+localStorage.setItem("lastOrderNumber", newNumber);
 customer: document.getElementById("name").value,
 phone: document.getElementById("phone").value,
 address: document.getElementById("address").value,
