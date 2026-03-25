@@ -21,9 +21,7 @@
 
 <script>
 
-let orders = JSON.parse(localStorage.getItem("orders"));
-let index = localStorage.getItem("currentOrder");
-let order = orders[index];
+let order = JSON.parse(localStorage.getItem("currentOrder"));
 
 let subtotal = 0;
 let rows = "";
@@ -37,7 +35,7 @@ subtotal += total;
 rows += `
 <tr>
 <td>${p.name}</td>
-<td>${p.desc}</td>
+<td>${p.desc || "-"}</td>
 <td>1</td>
 <td>${p.price}</td>
 <td>${total}</td>
@@ -53,40 +51,36 @@ document.getElementById("invoice").innerHTML = `
 
 <div class="header">
 
-<!-- يمين: الشعار -->
 <div class="logo">
 <img src="images/logo.svg">
 </div>
 
-<!-- وسط: العنوان -->
-<div class="center-title">
+<div style="text-align:center;">
 <h2>فاتورة إلكترونية</h2>
 <p>منصة في خدمتك</p>
 </div>
 
-<!-- يسار: بيانات الطلب -->
-<div class="order-info">
-<p><b>رقم الطلب:</b> ${order.order_number || "-"}</p>
-<p><b>التاريخ:</b> ${order.date || "-"}</p>
-<p><b>الوقت:</b> ${order.time || "-"}</p>
-</div>
-
-</div>
-
-<hr>
+<div style="text-align:left;">
 <p>رقم الطلب: ${order.order_number}</p>
 <p>التاريخ: ${order.date}</p>
 <p>الوقت: ${order.time}</p>
+</div>
+
+</div>
 
 <hr>
 
-<p>اسم العميل: ${order.customer}</p>
-<p>العنوان: ${order.address}</p>
-<p>الجوال: ${order.phone}</p>
+<p><b>اسم العميل:</b> ${order.customer}</p>
+<p><b>العنوان:</b> ${order.address}</p>
+<p><b>الجوال:</b> ${order.phone}</p>
 
 <hr>
 
-<p>تفاصيل الشحن: ${order.shipping}</p>
+<p><b>طريقة الدفع:</b> ${order.payment}</p>
+<p><b>رمز تمارا:</b> ${order.tamara_auth || "-"}</p>
+<p><b>طلب تمارا:</b> ${order.tamara_order || "-"}</p>
+
+<p><b>تفاصيل الشحن:</b> ${order.shipping}</p>
 
 <table>
 <tr>
@@ -102,7 +96,7 @@ ${rows}
 </table>
 
 <div class="total">
-<p>المجموع: ${subtotal}</p>
+<p>مجموع السلة: ${subtotal}</p>
 <p>الضريبة: ${tax.toFixed(2)}</p>
 <h3>الإجمالي: ${final.toFixed(2)} ريال</h3>
 </div>
