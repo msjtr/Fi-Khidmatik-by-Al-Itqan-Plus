@@ -21,14 +21,22 @@
 
 <script>
 
+// 🔥 حماية لو ما فيه بيانات
 let order = JSON.parse(localStorage.getItem("currentOrder"));
+
+if(!order){
+document.getElementById("invoice").innerHTML = "<h3>لا توجد بيانات طلب</h3>";
+throw new Error("No order data");
+}
 
 let subtotal = 0;
 let rows = "";
 
+// 🔥 بناء المنتجات
 order.cart.forEach(p=>{
 
-let total = parseFloat(p.price);
+let price = parseFloat(p.price) || 0;
+let total = price;
 
 subtotal += total;
 
@@ -37,7 +45,7 @@ rows += `
 <td>${p.name}</td>
 <td>${p.desc || "-"}</td>
 <td>1</td>
-<td>${p.price}</td>
+<td>${price}</td>
 <td>${total}</td>
 </tr>
 `;
@@ -47,23 +55,25 @@ rows += `
 let tax = subtotal * 0.15;
 let final = subtotal + tax;
 
+// 🔥 بناء الفاتورة
 document.getElementById("invoice").innerHTML = `
 
+<!-- الهيدر -->
 <div class="header">
 
 <div class="logo">
 <img src="images/logo.svg">
 </div>
 
-<div style="text-align:center;">
+<div class="center-title">
 <h2>فاتورة إلكترونية</h2>
 <p>منصة في خدمتك</p>
 </div>
 
-<div style="text-align:left;">
-<p>رقم الطلب: ${order.order_number}</p>
-<p>التاريخ: ${order.date}</p>
-<p>الوقت: ${order.time}</p>
+<div class="order-info">
+<p><b>رقم الطلب:</b> ${order.order_number || "-"}</p>
+<p><b>التاريخ:</b> ${order.date || "-"}</p>
+<p><b>الوقت:</b> ${order.time || "-"}</p>
 </div>
 
 </div>
@@ -73,10 +83,8 @@ document.getElementById("invoice").innerHTML = `
 <!-- 🔥 مصدرة من / إلى -->
 <div class="row">
 
-<!-- مصدرة من -->
 <div class="box">
-
-<h4 style="color:#1e3a8a;">مصدرة من</h4>
+<h4>مصدرة من</h4>
 
 <p>منصة في خدمتك</p>
 <p>المملكة العربية السعودية</p>
@@ -96,12 +104,10 @@ document.getElementById("invoice").innerHTML = `
 
 </div>
 
-<!-- مصدرة إلى -->
 <div class="box">
+<h4>مصدرة إلى</h4>
 
-<h4 style="color:#1e3a8a;">مصدرة إلى</h4>
-
-<p><b>اسم العميل:</b> ${order.customer}</p>
+<p><b>اسم العميل:</b> ${order.customer || "-"}</p>
 
 <p><b>الدولة:</b> ${order.country || "-"}</p>
 <p><b>المنطقة:</b> ${order.region || "-"}</p>
@@ -112,7 +118,7 @@ document.getElementById("invoice").innerHTML = `
 <p><b>الرقم الإضافي:</b> ${order.extra || "-"}</p>
 <p><b>الرمز البريدي:</b> ${order.postal || "-"}</p>
 
-<p><b>رقم الهاتف:</b> ${order.phone}</p>
+<p><b>رقم الهاتف:</b> ${order.phone || "-"}</p>
 <p><b>البريد الإلكتروني:</b> ${order.email || "-"}</p>
 
 </div>
@@ -121,18 +127,21 @@ document.getElementById("invoice").innerHTML = `
 
 <hr>
 
-<p><b>طريقة الدفع:</b> ${order.payment}</p>
+<!-- الدفع -->
+<div class="section">
+<p><b>طريقة الدفع:</b> ${order.payment || "-"}</p>
 <p><b>رمز تمارا:</b> ${order.tamara_auth || "-"}</p>
 <p><b>طلب تمارا:</b> ${order.tamara_order || "-"}</p>
+<p><b>تفاصيل الشحن:</b> ${order.shipping || "-"}</p>
+</div>
 
-<p><b>تفاصيل الشحن:</b> ${order.shipping}</p>
-
+<!-- الجدول -->
 <table>
 <tr>
-<th>المنتج</th>
+<th>اسم المنتج</th>
 <th>الوصف</th>
 <th>الكمية</th>
-<th>السعر</th>
+<th>السعر الفردي</th>
 <th>الإجمالي</th>
 </tr>
 
@@ -140,16 +149,39 @@ ${rows}
 
 </table>
 
+<!-- الإجمالي -->
 <div class="total">
-<p>مجموع السلة: ${subtotal}</p>
-<p>الضريبة: ${tax.toFixed(2)}</p>
-<h3>الإجمالي: ${final.toFixed(2)} ريال</h3>
+<p><span>مجموع السلة</span><span>${subtotal.toFixed(2)}</span></p>
+<p><span>ضريبة القيمة المضافة (15%)</span><span>${tax.toFixed(2)}</span></p>
+
+<h3>
+<span>الإجمالي النهائي</span>
+<span>${final.toFixed(2)} ريال</span>
+</h3>
+</div>
+
+<!-- الفوتر -->
+<div class="footer">
+<p>شكراً لتعاملك مع منصة في خدمتك</p>
 </div>
 
 `;
 
+// 🔥 PDF احترافي
 function downloadPDF(){
-html2pdf().from(document.querySelector(".invoice")).save("فاتورة.pdf");
+
+let element = document.querySelector(".invoice");
+
+let opt = {
+  margin: 5,
+  filename: 'فاتورة.pdf',
+  image: { type: 'jpeg', quality: 1 },
+  html2canvas: { scale: 2 },
+  jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+};
+
+html2pdf().set(opt).from(element).save();
+
 }
 
 function goHome(){
