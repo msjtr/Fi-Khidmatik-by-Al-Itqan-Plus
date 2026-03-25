@@ -1,12 +1,15 @@
 function checkout(){
 
-let orders = JSON.parse(localStorage.getItem("orders")) || [];
+if(cart.length === 0){
+alert("السلة فارغة");
+return;
+}
 
 let order = {
 
-order_number: document.getElementById("order_number").value,
-date: document.getElementById("order_date").value,
-time: document.getElementById("order_time").value,
+order_number: document.getElementById("order_number").value || "-",
+date: document.getElementById("order_date").value || "-",
+time: document.getElementById("order_time").value || "-",
 
 customer: document.getElementById("name").value,
 phone: document.getElementById("phone").value,
@@ -22,12 +25,8 @@ shipping: document.getElementById("shipping").value
 
 };
 
-orders.push(order);
+localStorage.setItem("currentOrder", JSON.stringify(order));
 
-localStorage.setItem("orders", JSON.stringify(orders));
-localStorage.setItem("currentOrder", orders.length - 1);
-
-// 🔥 تحويل للفاتورة
 window.location.href = "invoice.html";
 
 }
