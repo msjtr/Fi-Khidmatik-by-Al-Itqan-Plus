@@ -5,7 +5,6 @@ alert("السلة فارغة");
 return;
 }
 
-let order = {
 // 🔥 رقم طلب متسلسل
 let lastNumber = localStorage.getItem("lastOrderNumber") || 1375;
 let newNumber = parseInt(lastNumber) + 1;
@@ -13,6 +12,33 @@ let newNumber = parseInt(lastNumber) + 1;
 let orderNumber = "FK-2026-" + String(newNumber).padStart(6, '0');
 
 localStorage.setItem("lastOrderNumber", newNumber);
+
+// 🔥 تنسيق الوقت 12 ساعة
+let timeInput = document.getElementById("order_time").value;
+
+let formattedTime = "-";
+
+if(timeInput){
+
+let [hour, minute] = timeInput.split(":");
+
+let h = parseInt(hour);
+
+let period = h >= 12 ? "م" : "ص";
+
+h = h % 12;
+if(h === 0) h = 12;
+
+formattedTime = h + ":" + minute + period;
+
+}
+
+let order = {
+
+order_number: orderNumber,
+date: document.getElementById("order_date").value || "-",
+time: formattedTime,
+
 customer: document.getElementById("name").value,
 phone: document.getElementById("phone").value,
 address: document.getElementById("address").value,
