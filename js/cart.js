@@ -33,6 +33,10 @@ function renderCart(){
 let html = "";
 let total = 0;
 
+if(window.cart.length === 0){
+html = "السلة فارغة";
+} else {
+
 window.cart.forEach((p,i)=>{
 
 let t = p.price * p.qty;
@@ -46,6 +50,7 @@ ${p.name} - ${p.price} ريال
 });
 
 html += `<h3>المجموع: ${total.toFixed(2)} ريال</h3>`;
+}
 
 document.getElementById("cart").innerHTML = html;
 }
