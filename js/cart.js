@@ -11,14 +11,7 @@ alert("أدخل اسم المنتج والسعر");
 return;
 }
 
-let product = {
-name: name,
-desc: desc,
-price: price
-};
-
-cart.push(product);
-
+cart.push({name, desc, price});
 renderCart();
 
 document.getElementById("product_name").value = "";
@@ -32,14 +25,8 @@ function renderCart(){
 let html = "";
 
 cart.forEach((p,i)=>{
-
-html += `
-<div>
-${p.name} - ${p.price}
-<button onclick="removeItem(${i})">حذف</button>
-</div>
-`;
-
+html += `<div>${p.name} - ${p.price}
+<button onclick="removeItem(${i})">حذف</button></div>`;
 });
 
 document.getElementById("cart").innerHTML = html;
