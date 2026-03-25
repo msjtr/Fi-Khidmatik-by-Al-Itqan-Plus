@@ -5,7 +5,6 @@
 <title>فاتورة</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
 <link rel="stylesheet" href="css/style.css">
 
 </head>
@@ -23,35 +22,25 @@
 
 let order = JSON.parse(localStorage.getItem("currentOrder"));
 
-if(!order){
-document.getElementById("invoice").innerHTML = "<h3>لا يوجد طلب</h3>";
-throw new Error("No data");
-}
-
 let subtotal = 0;
 let rows = "";
 
-// المنتجات
 order.cart.forEach(p=>{
-let price = parseFloat(p.price) || 0;
-let total = price;
+let total = parseFloat(p.price);
 subtotal += total;
 
-rows += `
-<tr>
+rows += `<tr>
 <td>${p.name}</td>
-<td>${p.desc || "-"}</td>
+<td>${p.desc}</td>
 <td>1</td>
-<td>${price}</td>
+<td>${p.price}</td>
 <td>${total}</td>
-</tr>
-`;
+</tr>`;
 });
 
 let tax = subtotal * 0.15;
 let final = subtotal + tax;
 
-// بناء الفاتورة
 document.getElementById("invoice").innerHTML = `
 
 <div class="header">
@@ -66,9 +55,9 @@ document.getElementById("invoice").innerHTML = `
 </div>
 
 <div style="text-align:left;">
-<p>رقم الطلب: ${order.order_number || "-"}</p>
-<p>التاريخ: ${order.date || "-"}</p>
-<p>الوقت: ${order.time || "-"}</p>
+<p>رقم الطلب: ${order.order_number}</p>
+<p>التاريخ: ${order.date}</p>
+<p>الوقت: ${order.time}</p>
 </div>
 
 </div>
@@ -77,64 +66,34 @@ document.getElementById("invoice").innerHTML = `
 
 <div class="row">
 
-<!-- 🔵 مصدرة من -->
 <div class="box">
 <h4>مصدرة من</h4>
-
 <p>منصة في خدمتك</p>
 <p>المملكة العربية السعودية</p>
-
-<p>
-المنطقة: حائل - الحي: النقرة - الشارع: سعد المشاط
-</p>
-
-<p>
-رقم المبنى: 3085 - الرقم الفرعي: 7718<br>
-الرمز البريدي: 55431
-</p>
-
+<p>حائل - حي النقرة - شارع سعد المشاط</p>
 <p>رقم الهاتف: +966597771565</p>
-<p>البريد الإلكتروني: info@fi-khidmatik.com</p>
-<p>الموقع الإلكتروني: www.khidmatik.com</p>
-
-<p>رقم شهادة العمل الحر: FL-765735204</p>
+<p>البريد: info@fi-khidmatik.com</p>
+<p>الموقع: www.khidmatik.com</p>
+<p>شهادة العمل الحر: FL-765735204</p>
 <p>الرقم الضريبي: 312495447600003</p>
-
 </div>
 
-<!-- 🔵 مصدرة إلى (نفس التنسيق) -->
 <div class="box">
 <h4>مصدرة إلى</h4>
-
-<p>اسم العميل: ${order.customer || "-"}</p>
-<p>الدولة: ${order.country || "-"}</p>
-
-<p>
-المنطقة: ${order.region || "-"} - 
-الحي: ${order.district || "-"} - 
-الشارع: ${order.street || "-"}
-</p>
-
-<p>
-رقم المبنى: ${order.building || "-"} - 
-الرقم الإضافي: ${order.extra || "-"}<br>
-الرمز البريدي: ${order.postal || "-"}
-</p>
-
-<p>رقم الهاتف: ${order.phone || "-"}</p>
-<p>البريد الإلكتروني: ${order.email || "-"}</p>
-
+<p>${order.customer}</p>
+<p>${order.address}</p>
+<p>${order.phone}</p>
+<p>${order.email}</p>
 </div>
 
 </div>
 
 <hr>
 
-<p>طريقة الدفع: ${order.payment || "-"}</p>
-<p>رمز تمارا: ${order.tamara_auth || "-"}</p>
-<p>طلب تمارا: ${order.tamara_order || "-"}</p>
-
-<p>تفاصيل الشحن: ${order.shipping || "-"}</p>
+<p>طريقة الدفع: ${order.payment}</p>
+<p>رمز تمارا: ${order.tamara_auth}</p>
+<p>طلب تمارا: ${order.tamara_order}</p>
+<p>تفاصيل الشحن: ${order.shipping}</p>
 
 <table>
 <tr>
@@ -144,15 +103,13 @@ document.getElementById("invoice").innerHTML = `
 <th>السعر</th>
 <th>الإجمالي</th>
 </tr>
-
 ${rows}
-
 </table>
 
 <div class="total">
-<p>مجموع السلة: ${subtotal.toFixed(2)}</p>
-<p>ضريبة القيمة المضافة: ${tax.toFixed(2)}</p>
-<h3>الإجمالي النهائي: ${final.toFixed(2)} ريال</h3>
+<p>مجموع السلة: ${subtotal}</p>
+<p>الضريبة: ${tax.toFixed(2)}</p>
+<h3>الإجمالي: ${final.toFixed(2)} ريال</h3>
 </div>
 
 `;
