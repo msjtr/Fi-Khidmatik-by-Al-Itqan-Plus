@@ -41,7 +41,9 @@ function checkout() {
         building: getVal('building'),
         extra: getVal('extra'),
         postal: getVal('postal'),
-        cart: safeCart,
+
+        items: safeCart, // 🔥 أهم تعديل
+
         payment: getVal('payment'),
         tamaraAuth: getVal('payment') === 'تمارا' ? getVal('tamara_auth') : '',
         shipping: getVal('shipping')
@@ -50,7 +52,7 @@ function checkout() {
     // حفظ محلي
     localStorage.setItem('currentOrder', JSON.stringify(order));
 
-    // 🔥 حفظ في Firebase
+    // حفظ Firebase
     db.collection("orders").add(order)
         .then(() => {
             console.log("✅ تم حفظ الطلب");
