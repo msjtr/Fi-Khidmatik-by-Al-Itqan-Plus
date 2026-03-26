@@ -13,13 +13,12 @@
             <h1>📋 طلب شراء جديد</h1>
         </div>
 
-        <!-- رقم الطلب (يدوي) -->
+        <!-- رقم الطلب -->
         <div class="form-section">
             <div class="row">
                 <div class="form-group">
                     <label>🔢 رقم الطلب</label>
                     <input type="text" id="order_number_manual" placeholder="FK-0000" value="FK-0000">
-                    <small>يبدأ بـ FK-0000 ثم أكمل الرقم يدوياً</small>
                 </div>
             </div>
         </div>
@@ -45,10 +44,10 @@
             <h2>👤 معلومات العميل</h2>
             <div class="row">
                 <div class="form-group">
-                    <input type="text" id="name" placeholder="الاسم الكامل" required>
+                    <input type="text" id="name" placeholder="الاسم الكامل">
                 </div>
                 <div class="form-group">
-                    <input type="tel" id="phone" placeholder="رقم الجوال" required>
+                    <input type="tel" id="phone" placeholder="رقم الجوال">
                 </div>
                 <div class="form-group">
                     <input type="email" id="email" placeholder="البريد الإلكتروني">
@@ -62,24 +61,12 @@
         <div class="form-section">
             <h2>📍 العنوان</h2>
             <div class="row">
-                <div class="form-group">
-                    <input type="text" id="city" placeholder="المدينة">
-                </div>
-                <div class="form-group">
-                    <input type="text" id="district" placeholder="الحي">
-                </div>
-                <div class="form-group">
-                    <input type="text" id="street" placeholder="الشارع">
-                </div>
-                <div class="form-group">
-                    <input type="text" id="building" placeholder="رقم المبنى">
-                </div>
-                <div class="form-group">
-                    <input type="text" id="extra" placeholder="الرقم الإضافي">
-                </div>
-                <div class="form-group">
-                    <input type="text" id="postal" placeholder="الرمز البريدي">
-                </div>
+                <div class="form-group"><input type="text" id="city" placeholder="المدينة"></div>
+                <div class="form-group"><input type="text" id="district" placeholder="الحي"></div>
+                <div class="form-group"><input type="text" id="street" placeholder="الشارع"></div>
+                <div class="form-group"><input type="text" id="building" placeholder="رقم المبنى"></div>
+                <div class="form-group"><input type="text" id="extra" placeholder="الرقم الإضافي"></div>
+                <div class="form-group"><input type="text" id="postal" placeholder="الرمز البريدي"></div>
             </div>
         </div>
 
@@ -89,24 +76,12 @@
         <div class="form-section">
             <h2>🛒 إضافة منتج</h2>
             <div class="row">
-                <div class="form-group">
-                    <input type="text" id="product_code" placeholder="كود المنتج" required>
-                </div>
-                <div class="form-group">
-                    <input type="text" id="product_name" placeholder="اسم المنتج" required>
-                </div>
-                <div class="form-group">
-                    <input type="text" id="product_desc" placeholder="وصف المنتج (اختياري)">
-                </div>
-                <div class="form-group">
-                    <input type="number" id="product_price" placeholder="السعر (ريال)" step="0.01" required>
-                </div>
-                <div class="form-group">
-                    <input type="number" id="product_qty" placeholder="الكمية" value="1" min="1" required>
-                </div>
-                <div class="form-group">
-                    <input type="number" id="product_discount" placeholder="الخصم (ريال)" step="0.01" value="0">
-                </div>
+                <div class="form-group"><input type="text" id="product_code" placeholder="كود المنتج"></div>
+                <div class="form-group"><input type="text" id="product_name" placeholder="اسم المنتج"></div>
+                <div class="form-group"><input type="text" id="product_desc" placeholder="وصف المنتج"></div>
+                <div class="form-group"><input type="number" id="product_price" placeholder="السعر"></div>
+                <div class="form-group"><input type="number" id="product_qty" placeholder="الكمية" value="1"></div>
+                <div class="form-group"><input type="number" id="product_discount" placeholder="الخصم" value="0"></div>
             </div>
             <button class="btn-add" onclick="addToCart()">➕ أضف إلى السلة</button>
         </div>
@@ -121,19 +96,18 @@
 
         <hr>
 
-        <!-- معلومات الدفع والشحن -->
+        <!-- الدفع والشحن -->
         <div class="form-section">
-            <h2>💳 معلومات الدفع والشحن</h2>
+            <h2>💳 الدفع والشحن</h2>
             <div class="row">
                 <div class="form-group">
                     <label>طريقة الدفع</label>
                     <select id="payment">
                         <option value="تمارا">تمارا</option>
                         <option value="تحويل بنكي">تحويل بنكي</option>
-                        <option value="مدى">مدى</option>
                     </select>
                 </div>
-                <div class="form-group" id="tamara_auth_group" style="display:none;">
+                <div class="form-group" id="tamara_group">
                     <input type="text" id="tamara_auth" placeholder="رمز الموافقة على الطلب في تمارا">
                 </div>
                 <div class="form-group">
@@ -146,14 +120,12 @@
             </div>
         </div>
 
-        <button class="btn-checkout" onclick="checkout()">✅ تأكيد الطلب وإنشاء الفاتورة</button>
+        <button class="btn-checkout" onclick="checkout()">✅ تأكيد الطلب</button>
     </div>
 
     <script>
-        // إظهار/إخفاء حقل تمارا حسب الاختيار
         document.getElementById('payment').addEventListener('change', function() {
-            const group = document.getElementById('tamara_auth_group');
-            group.style.display = this.value === 'تمارا' ? 'block' : 'none';
+            document.getElementById('tamara_group').style.display = this.value === 'تمارا' ? 'block' : 'none';
         });
     </script>
     <script src="js/cart.js"></script>
