@@ -133,55 +133,31 @@ function loadInvoice() {
     }
 
     let html = `<div class="invoice" id="invoiceToPrint">
-        <!-- الهوامش العلوية -->
         <div class="top-margin">
             <div>رقم شهادة العمل الحر: FL-765735204</div>
             <div>الرقم الضريبي: 312495447600003</div>
         </div>
-        
-        <!-- الشعار -->
         <div class="logo-center">
-            <img src="images/logo.svg" onerror="this.src='https://via.placeholder.com/100?text=Logo'">
+            <img src="images/logo.svg" onerror="this.style.display='none'" alt="شعار المنصة">
         </div>
-        
-        <!-- رقم الفاتورة والتاريخ -->
         <div class="invoice-header">
             <p><strong>رقم الفاتورة:</strong> ${order.orderNumber || 'FK-0000'}</p>
             <p><strong>التاريخ:</strong> ${displayDate} ${order.time && order.time !== '-' ? ' - ' + order.time : ''}</p>
         </div>
-        
-        <!-- قسم المصدر والمستلم (مصدرة من يمين، مصدرة إلى يسار) -->
         <div class="invoice-parties">
-            <!-- مصدرة من (المنصة) - على اليمين -->
             <div class="invoice-from">
                 <h3>📌 مصدرة من:</h3>
-                <p>
-                    <strong>منصة في خدمتك</strong><br>
-                    المملكة العربية السعودية<br>
-                    حائل - حي النقرة - شارع سعد المشاط - مبنى 3085<br>
-                    الرقم الإضافي: 7718 - الرمز البريدي: 55431
-                </p>
+                <p><strong>منصة في خدمتك</strong><br>المملكة العربية السعودية<br>حائل - حي النقرة - شارع سعد المشاط - مبنى 3085<br>الرقم الإضافي: 7718 - الرمز البريدي: 55431</p>
             </div>
-            <!-- مصدرة إلى (العميل) - على اليسار -->
             <div class="invoice-to">
                 <h3>📌 مصدرة إلى:</h3>
-                <p>
-                    <strong>${escapeHtml(order.customer) || '-'}</strong><br>
-                    المملكة العربية السعودية<br>
-                    ${order.city || ''} ${order.district ? '- ' + order.district : ''} ${order.street ? '- ' + order.street : ''} ${order.building ? '- ' + order.building : ''} ${order.extra ? '- ' + order.extra : ''} ${order.postal ? '- ' + order.postal : ''}<br>
-                    هاتف: ${order.phone || '-'}<br>
-                    بريد: ${order.email || 'غير مدخل'}
-                </p>
+                <p><strong>${escapeHtml(order.customer) || '-'}</strong><br>المملكة العربية السعودية<br>${order.city || ''} ${order.district ? '- ' + order.district : ''} ${order.street ? '- ' + order.street : ''} ${order.building ? '- ' + order.building : ''} ${order.extra ? '- ' + order.extra : ''} ${order.postal ? '- ' + order.postal : ''}<br>هاتف: ${order.phone || '-'}<br>بريد: ${order.email || 'غير مدخل'}</p>
             </div>
         </div>
-        
-        <!-- الدفع والشحن -->
         <div class="payment-shipping">
             ${paymentLine}
             <span>🚚 خدمة الشحن: ${order.shipping || '-'}</span>
         </div>
-        
-        <!-- جدول المنتجات -->
         <h3>📦 تفاصيل الطلب</h3>
         <table class="products-table">
             <thead>
@@ -197,8 +173,6 @@ function loadInvoice() {
             </thead>
             <tbody>${cartRows}</tbody>
         </table>
-        
-        <!-- ملخص الحساب -->
         <div class="totals-wrapper">
             <div class="totals-labels">
                 <p>المجموع الفرعي</p>
@@ -214,14 +188,11 @@ function loadInvoice() {
                 <h2>الإجمالي النهائي: ${grandTotal.toFixed(2)} ريال</h2>
             </div>
         </div>
-        
-        <!-- شريط الاتصال السفلي -->
         <div class="contact-bar">
             <span>📞 +966597771565</span>
             <span>✉️ info@fi-khidmatik.com</span>
             <span>🌐 www.khidmatik.com</span>
         </div>
-        
         <p class="thanks">شكراً لتسوقكم معنا</p>
     </div>`;
 
@@ -234,11 +205,12 @@ function downloadPDF() {
         alert('لا يوجد فاتورة للتحميل');
         return;
     }
+
     html2pdf().from(element).set({
         margin: [0.5, 0.5, 0.5, 0.5],
-        filename: 'فاتورة.pdf',
+        filename: 'فاتورة_' + new Date().toLocaleDateString('ar-SA') + '.pdf',
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, letterRendering: true },
+        html2canvas: { scale: 2, letterRendering: true, useCORS: false },
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
     }).save();
 }
