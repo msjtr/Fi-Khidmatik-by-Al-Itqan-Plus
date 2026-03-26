@@ -1,8 +1,8 @@
 // order.js - معالجة الطلب والفاتورة
 
 function checkout() {
-    // التحقق من السلة
-    if (!window.cart || window.cart.length === 0) {
+    // تأكد من وجود السلة وأنها مصفوفة
+    if (!Array.isArray(window.cart) || window.cart.length === 0) {
         alert('❌ السلة فارغة! أضف منتجات أولاً.');
         return;
     }
@@ -85,7 +85,7 @@ function loadInvoice() {
         subtotal += total;
         cartRows += `
             <tr>
-                <td>${escapeHtml(item.name)}${item.desc ? '<br><small>' + escapeHtml(item.desc) + '</small>' : ''}</td>
+                <td>${escapeHtml(item.name)}${item.desc ? '<br><small>' + escapeHtml(item.desc) + '</small>' : ''}${item.desc ? '<br><small>' + escapeHtml(item.desc) + '</small>' : ''}</td>
                 <td>${item.qty}</td>
                 <td>${item.price.toFixed(2)}</td>
                 <td>${total.toFixed(2)}</td>
@@ -125,7 +125,7 @@ function loadInvoice() {
             <hr>
 
             <h3>📦 تفاصيل الطلب</h3>
-            <table>
+            <table border="1" width="100%" cellpadding="8" cellspacing="0">
                 <thead>
                     <tr><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr>
                 </thead>
