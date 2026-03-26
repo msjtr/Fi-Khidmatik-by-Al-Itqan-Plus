@@ -65,8 +65,17 @@ function checkout() {
     };
 
     localStorage.setItem('currentOrder', JSON.stringify(order));
-    window.location.href = 'invoice.html';
+   
 }
+
+// حفظ في Firebase
+db.collection("orders").add(order)
+    .then(() => {
+        console.log("تم حفظ الطلب في Firebase");
+    })
+    .catch((error) => {
+        console.error("خطأ:", error);
+    });
 
 function loadInvoice() {
     let orderJSON = localStorage.getItem('currentOrder');
