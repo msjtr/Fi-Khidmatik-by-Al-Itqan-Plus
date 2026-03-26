@@ -277,3 +277,49 @@ button:hover {
         margin: 0;
     }
 }
+
+/* تنسيق الفاتورة */
+.invoice {
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+}
+
+.invoice h3 {
+    color: #1e3a8a;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    border-right: 4px solid #1e3a8a;
+    padding-right: 10px;
+}
+
+.invoice table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+}
+
+.invoice th, .invoice td {
+    padding: 10px;
+    text-align: right;
+    border: 1px solid #ddd;
+}
+
+.invoice th {
+    background-color: #f2f2f2;
+}
+
+.invoice hr {
+    margin: 20px 0;
+    border: none;
+    border-top: 1px solid #ddd;
+}
+
+/* تنسيق شريط الدفع والشحن */
+.invoice .payment-shipping {
+    background: #f9fafb;
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    margin: 20px 0;
+}
