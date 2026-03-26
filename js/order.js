@@ -39,7 +39,9 @@ function checkout() {
             desc: item.desc || '',
             price: parseFloat(item.price) || 0,
             qty: parseInt(item.qty) || 1,
-            discount: parseFloat(item.discount) || 0
+            discount: parseFloat(item.discount) || 0,
+            image: item.image || '',
+            barcode: item.barcode || ''
         });
     }
 
@@ -91,7 +93,6 @@ function loadInvoice() {
     let totalDiscount = 0;
 
     order.cart.forEach(function(item) {
-        let code = item.code || '-';
         let name = item.name || 'منتج غير معروف';
         let desc = item.desc || '-';
         let qty = (typeof item.qty === 'number' && !isNaN(item.qty)) ? item.qty : 1;
@@ -105,14 +106,22 @@ function loadInvoice() {
 
         cartRows += `
             <tr>
-                <td>${escapeHtml(code)}</td>
                 <td>${escapeHtml(name)}</td>
+
+                <td>
+                    ${item.image ? `<img src="${item.image}" style="width:40px;height:40px;object-fit:contain">` : '-'}
+                </td>
+
+                <td>
+                    ${item.barcode ? `<img src="https://barcode.tec-it.com/barcode.ashx?data=${item.barcode}&code=Code128&dpi=96" style="height:40px;">` : '-'}
+                </td>
+
                 <td>${escapeHtml(desc)}</td>
                 <td>${qty}</td>
                 <td>${price.toFixed(2)}</td>
                 <td>${discount.toFixed(2)}</td>
                 <td>${itemTotal.toFixed(2)}</td>
-             </tr>
+            </tr>
         `;
     });
 
@@ -128,7 +137,7 @@ function loadInvoice() {
 
     let paymentLine = `<span>💳 طريقة الدفع: ${order.payment || '-'}</span>`;
     if (order.payment === 'تمارا' && order.tamaraAuth) {
-        paymentLine += `<span>🔑 رمز الموافقة: ${order.tamaraAuth}</span>`;
+        paymentLine += `<span>رمز الموافقة على الطلب في تمارا: ${order.tamaraAuth}</span>`;
     }
 
     let html = `<div class="invoice" id="invoiceToPrint">
@@ -161,8 +170,9 @@ function loadInvoice() {
         <table class="products-table">
             <thead>
                 <tr>
-                    <th>كود المنتج</th>
                     <th>اسم المنتج</th>
+                    <th>الصورة</th>
+                    <th>الباركود</th>
                     <th>الوصف</th>
                     <th>الكمية</th>
                     <th>السعر</th>
@@ -209,19 +219,9 @@ function downloadPDF() {
         margin: [10, 10, 10, 10],
         filename: 'فاتورة_' + new Date().toLocaleDateString('ar-SA') + '.pdf',
         image: { type: 'jpeg', quality: 1 },
-        html2canvas: {
-            scale: 3,
-            useCORS: true,
-            scrollY: 0
-        },
-        jsPDF: {
-            unit: 'mm',
-            format: 'a4',
-            orientation: 'portrait'
-        },
-        pagebreak: {
-            mode: ['avoid-all', 'css', 'legacy']
-        }
+        html2canvas: { scale: 3, useCORS: true, scrollY: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
     html2pdf().set(opt).from(element).save();
