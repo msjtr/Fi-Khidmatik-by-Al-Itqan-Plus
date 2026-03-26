@@ -8,7 +8,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
-    <div class="invoice-container" id="invoiceContent"></div>
+    <div class="invoice-wrapper">
+        <div id="invoiceContent"></div>
+    </div>
     <div class="action-buttons">
         <button class="btn-pdf" onclick="downloadPDF()">📥 تحميل PDF</button>
         <button class="btn-new" onclick="newOrder()">🔄 طلب جديد</button>
