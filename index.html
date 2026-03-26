@@ -1,527 +1,141 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>نظام طلب الشراء</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    body {
-        font-family: 'Tahoma', 'Segoe UI', Arial, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 20px;
-        min-height: 100vh;
-    }
-
-    .container, .invoice {
-        background: #fff;
-        padding: 30px;
-        border-radius: 15px;
-        max-width: 900px;
-        margin: 20px auto;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-    }
-
-    h2 {
-        color: #1e3a8a;
-        margin-bottom: 20px;
-        border-bottom: 3px solid #1e3a8a;
-        padding-bottom: 10px;
-    }
-
-    h3 {
-        color: #334155;
-        margin: 15px 0 10px 0;
-    }
-
-    hr {
-        margin: 20px 0;
-        border: none;
-        border-top: 2px solid #e2e8f0;
-    }
-
-    input, select {
-        width: 100%;
-        padding: 12px;
-        margin: 8px 0;
-        border: 1px solid #cbd5e1;
-        border-radius: 8px;
-        font-size: 14px;
-        transition: all 0.3s;
-    }
-
-    input:focus, select:focus {
-        outline: none;
-        border-color: #1e3a8a;
-        box-shadow: 0 0 0 3px rgba(30,58,138,0.1);
-    }
-
-    button {
-        padding: 12px 24px;
-        background: #1e3a8a;
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 16px;
-        font-weight: bold;
-        transition: all 0.3s;
-        margin: 10px 5px;
-    }
-
-    button:hover {
-        background: #1e40af;
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    }
-
-    .row {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 15px;
-        margin: 15px 0;
-    }
-
-    .cart-item {
-        background: #f8fafc;
-        padding: 15px;
-        margin: 10px 0;
-        border-radius: 10px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border: 1px solid #e2e8f0;
-    }
-
-    .cart-item-info {
-        flex: 1;
-    }
-
-    .cart-item-price {
-        font-weight: bold;
-        color: #1e3a8a;
-        margin-left: 15px;
-    }
-
-    .remove-btn {
-        background: #dc2626;
-        padding: 6px 12px;
-        font-size: 12px;
-    }
-
-    .remove-btn:hover {
-        background: #b91c1c;
-    }
-
-    .total {
-        background: #f1f5f9;
-        padding: 15px;
-        border-radius: 10px;
-        margin-top: 15px;
-        font-size: 18px;
-        font-weight: bold;
-        text-align: left;
-    }
-
-    .checkout-btn {
-        background: #10b981;
-        width: 100%;
-        margin-top: 20px;
-    }
-
-    .checkout-btn:hover {
-        background: #059669;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 20px 0;
-    }
-
-    th, td {
-        padding: 12px;
-        text-align: right;
-        border: 1px solid #e2e8f0;
-    }
-
-    th {
-        background: #f1f5f9;
-        font-weight: bold;
-        color: #1e3a8a;
-    }
-
-    .invoice h3, .invoice h2 {
-        margin: 15px 0;
-    }
-
-    .pdf-btn {
-        background: #ef4444;
-        display: block;
-        width: 200px;
-        margin: 20px auto;
-    }
-
-    .pdf-btn:hover {
-        background: #dc2626;
-    }
-
-    @media print {
-        button, .pdf-btn {
-            display: none;
-        }
-    }
-
-    .alert {
-        padding: 12px;
-        background: #fee2e2;
-        color: #991b1b;
-        border-radius: 8px;
-        margin: 10px 0;
-        text-align: center;
-    }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>طلب شراء | منصة في خدمتك</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
-<div id="mainApp">
-    <!-- نموذج الطلب -->
-    <div class="container" id="orderForm">
-        <h2>📋 طلب شراء جديد</h2>
-        
-        <div class="row">
-            <input type="text" id="order_date" placeholder="📅 التاريخ (مثال: 11-03-2026)" value="11-03-2026">
-            <input type="time" id="order_time">
+    <div class="container">
+        <div class="header">
+            <img src="images/logo.svg" alt="شعار المنصة" class="logo" onerror="this.style.display='none'">
+            <h1>📋 طلب شراء جديد</h1>
         </div>
 
-        <hr>
-
-        <h3>👤 معلومات العميل</h3>
-        <div class="row">
-            <input type="text" id="name" placeholder="اسم العميل">
-            <input type="tel" id="phone" placeholder="رقم الجوال">
-            <input type="email" id="email" placeholder="البريد الإلكتروني">
-        </div>
-
-        <hr>
-
-        <h3>📍 العنوان</h3>
-        <div class="row">
-            <input type="text" id="city" placeholder="المدينة">
-            <input type="text" id="district" placeholder="الحي">
-            <input type="text" id="street" placeholder="الشارع">
-            <input type="text" id="building" placeholder="رقم المبنى">
-            <input type="text" id="extra" placeholder="الرقم الإضافي">
-            <input type="text" id="postal" placeholder="الرمز البريدي">
-        </div>
-
-        <hr>
-
-        <h3>🛒 إضافة منتج</h3>
-        <div class="row">
-            <input type="text" id="product_name" placeholder="اسم المنتج">
-            <input type="text" id="product_desc" placeholder="الوصف">
-            <input type="number" id="product_price" placeholder="السعر (ريال)">
-        </div>
-        <button onclick="addToCart()">➕ إضافة للسلة</button>
-
-        <hr>
-
-        <h3>🛍️ سلة المشتريات</h3>
-        <div id="cart"></div>
-
-        <hr>
-
-        <h3>💳 معلومات الدفع والشحن</h3>
-        <div class="row">
-            <select id="payment">
-                <option value="تمارا">تمارا</option>
-                <option value="تحويل بنكي">تحويل بنكي</option>
-                <option value="مدى">مدى</option>
-            </select>
-            <input type="text" id="tamara_auth" placeholder="رمز الموافقة (إن وجد)">
-            <input type="text" id="tamara_order" placeholder="رقم طلب تمارا (إن وجد)">
-            <select id="shipping">
-                <option value="لا يحتاج شحن">لا يحتاج شحن</option>
-                <option value="يحتاج شحن">يحتاج شحن</option>
-            </select>
-        </div>
-
-        <button class="checkout-btn" onclick="checkout()">✅ تأكيد الطلب وإنشاء الفاتورة</button>
-    </div>
-</div>
-
-<script>
-// سلة المشتريات
-window.cart = [];
-
-// إضافة منتج للسلة
-function addToCart() {
-    let name = document.getElementById("product_name").value;
-    let desc = document.getElementById("product_desc").value;
-    let price = document.getElementById("product_price").value;
-
-    if (!name || !price) {
-        alert("❌ يرجى إدخال اسم المنتج والسعر");
-        return;
-    }
-
-    price = parseFloat(price);
-    if (isNaN(price) || price <= 0) {
-        alert("❌ يرجى إدخال سعر صحيح");
-        return;
-    }
-
-    window.cart.push({
-        name: name,
-        desc: desc,
-        price: price,
-        qty: 1
-    });
-
-    renderCart();
-    
-    // تفريغ الحقول
-    document.getElementById("product_name").value = "";
-    document.getElementById("product_desc").value = "";
-    document.getElementById("product_price").value = "";
-}
-
-// عرض السلة
-function renderCart() {
-    let html = "";
-    let total = 0;
-
-    if (window.cart.length === 0) {
-        html = '<div class="alert">⚠️ السلة فارغة</div>';
-    } else {
-        window.cart.forEach((p, i) => {
-            let t = p.price * p.qty;
-            total += t;
-            
-            html += `
-                <div class="cart-item">
-                    <div class="cart-item-info">
-                        <strong>${p.name}</strong>
-                        ${p.desc ? `<br><small>${p.desc}</small>` : ''}
-                    </div>
-                    <div class="cart-item-price">${p.price.toFixed(2)} ريال</div>
-                    <button class="remove-btn" onclick="removeItem(${i})">🗑️ حذف</button>
+        <!-- معلومات الطلب -->
+        <div class="form-section">
+            <div class="row">
+                <div class="form-group">
+                    <label>📅 التاريخ</label>
+                    <input type="text" id="order_date" placeholder="مثال: 11-03-2026" value="11-03-2026">
                 </div>
-            `;
-        });
-        
-        html += `<div class="total">💰 المجموع: ${total.toFixed(2)} ريال</div>`;
-    }
-
-    document.getElementById("cart").innerHTML = html;
-}
-
-// حذف منتج من السلة
-function removeItem(i) {
-    if (confirm("هل تريد حذف هذا المنتج؟")) {
-        window.cart.splice(i, 1);
-        renderCart();
-    }
-}
-
-// تأكيد الطلب
-function checkout() {
-    if (!window.cart || window.cart.length === 0) {
-        alert("❌ السلة فارغة! أضف منتجات أولاً");
-        return;
-    }
-
-    // التحقق من البيانات الأساسية
-    let name = document.getElementById("name").value;
-    if (!name) {
-        alert("❌ يرجى إدخال اسم العميل");
-        return;
-    }
-
-    // توليد رقم الطلب
-    let last = localStorage.getItem("order_num") || "1375";
-    let n = parseInt(last) + 1;
-    localStorage.setItem("order_num", n);
-
-    // تنسيق الوقت
-    let time = "-";
-    let t = document.getElementById("order_time").value;
-    if (t) {
-        let parts = t.split(":");
-        let h = parseInt(parts[0]);
-        let m = parts[1];
-        let period = h >= 12 ? "م" : "ص";
-        h = h % 12 || 12;
-        time = h + ":" + m + " " + period;
-    }
-
-    // جمع البيانات
-    function getVal(id) {
-        let el = document.getElementById(id);
-        return el ? el.value : "";
-    }
-
-    let order = {
-        order_number: "FK-2026-" + String(n).padStart(6, '0'),
-        date: getVal("order_date") || new Date().toLocaleDateString('ar-SA'),
-        time: time,
-        customer: getVal("name"),
-        phone: getVal("phone"),
-        email: getVal("email"),
-        city: getVal("city"),
-        district: getVal("district"),
-        street: getVal("street"),
-        building: getVal("building"),
-        extra: getVal("extra"),
-        postal: getVal("postal"),
-        cart: window.cart,
-        payment: getVal("payment"),
-        tamara_auth: getVal("tamara_auth"),
-        tamara_order: getVal("tamara_order"),
-        shipping: getVal("shipping")
-    };
-
-    localStorage.setItem("order", JSON.stringify(order));
-    
-    // عرض الفاتورة
-    showInvoice();
-}
-
-// عرض الفاتورة
-function showInvoice() {
-    let o = JSON.parse(localStorage.getItem("order"));
-    
-    if (!o) {
-        document.getElementById("mainApp").innerHTML = '<div class="container"><div class="alert">❌ لا يوجد طلب لعرضه</div></div>';
-        return;
-    }
-
-    let rows = "";
-    let total = 0;
-    
-    o.cart.forEach(p => {
-        let t = p.price * p.qty;
-        total += t;
-        rows += `
-            <tr>
-                <td>${p.name}${p.desc ? '<br><small>' + p.desc + '</small>' : ''}</td>
-                <td>${p.qty}</td>
-                <td>${p.price.toFixed(2)}</td>
-                <td>${t.toFixed(2)}</td>
-            </tr>
-        `;
-    });
-    
-    let tax = total * 0.15;
-    let final = total + tax;
-    
-    let invoiceHTML = `
-        <div class="container invoice" id="inv">
-            <h2>🧾 فاتورة إلكترونية</h2>
-            <p><strong>رقم الفاتورة:</strong> ${o.order_number}</p>
-            <p><strong>التاريخ:</strong> ${o.date} ${o.time ? ' - ' + o.time : ''}</p>
-            
-            <hr>
-            
-            <h3>🏢 منصة في خدمتك</h3>
-            <p>
-                المملكة العربية السعودية<br>
-                حائل - حي النقرة - شارع سعد المشاط<br>
-                رقم الهاتف: 0550000000
-            </p>
-            
-            <hr>
-            
-            <h3>👤 فاتورة إلى</h3>
-            <p>
-                <strong>${o.customer}</strong><br>
-                ${o.city} - حي ${o.district} - شارع ${o.street}<br>
-                رقم المبنى: ${o.building} - الرقم الإضافي: ${o.extra}<br>
-                الرمز البريدي: ${o.postal}<br>
-                الهاتف: ${o.phone}<br>
-                البريد الإلكتروني: ${o.email}
-            </p>
-            
-            <hr>
-            
-            <h3>📦 تفاصيل الطلب</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>المنتج</th>
-                        <th>الكمية</th>
-                        <th>السعر</th>
-                        <th>الإجمالي</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${rows}
-                </tbody>
-            </table>
-            
-            <div style="text-align: left;">
-                <h3>المجموع الفرعي: ${total.toFixed(2)} ريال</h3>
-                <h3>الضريبة (15%): ${tax.toFixed(2)} ريال</h3>
-                <h2 style="color: #1e3a8a;">الإجمالي النهائي: ${final.toFixed(2)} ريال</h2>
+                <div class="form-group">
+                    <label>⏰ الوقت</label>
+                    <input type="time" id="order_time">
+                </div>
             </div>
-            
-            <hr>
-            
-            <p><strong>طريقة الدفع:</strong> ${o.payment}</p>
-            ${o.tamara_auth ? `<p><strong>رمز الموافقة تمارا:</strong> ${o.tamara_auth}</p>` : ''}
-            ${o.tamara_order ? `<p><strong>رقم طلب تمارا:</strong> ${o.tamara_order}</p>` : ''}
-            <p><strong>خدمة الشحن:</strong> ${o.shipping}</p>
-            
-            <br>
-            <p style="text-align: center;">شكراً لتسوقكم معنا</p>
         </div>
-        <div style="text-align: center; margin-top: 20px;">
-            <button class="pdf-btn" onclick="downloadPDF()">📥 تحميل الفاتورة PDF</button>
-            <button onclick="newOrder()">🔄 طلب جديد</button>
+
+        <hr>
+
+        <!-- معلومات العميل -->
+        <div class="form-section">
+            <h2>👤 معلومات العميل</h2>
+            <div class="row">
+                <div class="form-group">
+                    <input type="text" id="name" placeholder="الاسم الكامل" required>
+                </div>
+                <div class="form-group">
+                    <input type="tel" id="phone" placeholder="رقم الجوال" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="email" placeholder="البريد الإلكتروني">
+                </div>
+            </div>
         </div>
-    `;
-    
-    document.getElementById("mainApp").innerHTML = invoiceHTML;
-}
 
-// تحميل PDF
-function downloadPDF() {
-    const element = document.getElementById("inv");
-    if (element) {
-        html2pdf()
-            .from(element)
-            .set({
-                margin: [10, 10, 10, 10],
-                filename: 'فاتورة_' + new Date().toLocaleDateString('ar-SA') + '.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, letterRendering: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            })
-            .save();
-    } else {
-        alert("حدث خطأ في تحميل الفاتورة");
-    }
-}
+        <hr>
 
-// طلب جديد
-function newOrder() {
-    localStorage.removeItem("order");
-    window.cart = [];
-    location.reload();
-}
+        <!-- العنوان -->
+        <div class="form-section">
+            <h2>📍 العنوان</h2>
+            <div class="row">
+                <div class="form-group">
+                    <input type="text" id="city" placeholder="المدينة">
+                </div>
+                <div class="form-group">
+                    <input type="text" id="district" placeholder="الحي">
+                </div>
+                <div class="form-group">
+                    <input type="text" id="street" placeholder="الشارع">
+                </div>
+                <div class="form-group">
+                    <input type="text" id="building" placeholder="رقم المبنى">
+                </div>
+                <div class="form-group">
+                    <input type="text" id="extra" placeholder="الرقم الإضافي">
+                </div>
+                <div class="form-group">
+                    <input type="text" id="postal" placeholder="الرمز البريدي">
+                </div>
+            </div>
+        </div>
 
-// التحقق من وجود طلب مخزن
-if (localStorage.getItem("order")) {
-    showInvoice();
-}
-</script>
+        <hr>
 
+        <!-- إضافة منتج -->
+        <div class="form-section">
+            <h2>🛒 إضافة منتج</h2>
+            <div class="row">
+                <div class="form-group">
+                    <input type="text" id="product_name" placeholder="اسم المنتج" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="product_desc" placeholder="وصف المنتج (اختياري)">
+                </div>
+                <div class="form-group">
+                    <input type="number" id="product_price" placeholder="السعر (ريال)" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <input type="number" id="product_qty" placeholder="الكمية" value="1" min="1" required>
+                </div>
+            </div>
+            <button class="btn-add" onclick="addToCart()">➕ أضف إلى السلة</button>
+        </div>
+
+        <hr>
+
+        <!-- سلة المشتريات -->
+        <div class="form-section">
+            <h2>🛍️ سلة المشتريات</h2>
+            <div id="cart"></div>
+        </div>
+
+        <hr>
+
+        <!-- معلومات الدفع والشحن -->
+        <div class="form-section">
+            <h2>💳 معلومات الدفع والشحن</h2>
+            <div class="row">
+                <div class="form-group">
+                    <label>طريقة الدفع</label>
+                    <select id="payment">
+                        <option value="تمارا">تمارا</option>
+                        <option value="تحويل بنكي">تحويل بنكي</option>
+                        <option value="مدى">مدى</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="tamara_auth" placeholder="رمز الموافقة تمارا (اختياري)">
+                </div>
+                <div class="form-group">
+                    <input type="text" id="tamara_order" placeholder="رقم طلب تمارا (اختياري)">
+                </div>
+                <div class="form-group">
+                    <label>خدمة الشحن</label>
+                    <select id="shipping">
+                        <option value="لا يحتاج شحن">لا يحتاج شحن</option>
+                        <option value="يحتاج شحن">يحتاج شحن</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-checkout" onclick="checkout()">✅ تأكيد الطلب وإنشاء الفاتورة</button>
+    </div>
+
+    <script src="js/cart.js"></script>
+    <script src="js/order.js"></script>
 </body>
 </html>
