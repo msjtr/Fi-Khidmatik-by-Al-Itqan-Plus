@@ -1,4 +1,3 @@
-// order.js
 function checkout() {
     if (!window.cart || window.cart.length === 0) {
         alert('❌ السلة فارغة');
@@ -206,13 +205,30 @@ function downloadPDF() {
         return;
     }
 
-    html2pdf().from(element).set({
-        margin: [0.5, 0.5, 0.5, 0.5],
+    const opt = {
+        margin: [10, 10, 10, 10],
         filename: 'فاتورة_' + new Date().toLocaleDateString('ar-SA') + '.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, letterRendering: true, useCORS: false },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-    }).save();
+        image: { type: 'jpeg', quality: 1 },
+        html2canvas: {
+            scale: 3,
+            useCORS: true,
+            scrollY: 0
+        },
+        jsPDF: {
+            unit: 'mm',
+            format: 'a4',
+            orientation: 'portrait'
+        },
+        pagebreak: {
+            mode: ['avoid-all', 'css', 'legacy']
+        }
+    };
+
+    html2pdf().set(opt).from(element).save();
+}
+
+function printInvoice() {
+    window.print();
 }
 
 function newOrder() {
