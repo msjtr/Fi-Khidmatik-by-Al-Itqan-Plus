@@ -1,6 +1,6 @@
 // order.js
 function checkout() {
-    if (window.cart.length === 0) {
+    if (!window.cart || window.cart.length === 0) {
         alert('❌ السلة فارغة');
         return;
     }
@@ -44,7 +44,17 @@ function checkout() {
         building: getVal('building'),
         extra: getVal('extra'),
         postal: getVal('postal'),
-        cart: window.cart.map(item => ({ ...item })),
+        cart: window.cart.map(function(item) { 
+            return {
+                code: item.code,
+                name: item.name,
+                desc: item.desc,
+                price: item.price,
+                qty: item.qty,
+                discount: item.discount,
+                image: item.image
+            };
+        }),
         payment: getVal('payment'),
         tamaraAuth: getVal('payment') === 'تمارا' ? getVal('tamara_auth') : '',
         shipping: getVal('shipping')
@@ -62,40 +72,55 @@ function loadInvoice() {
     }
 
     let order = JSON.parse(orderJSON);
+    
+    if (!order.cart || !Array.isArray(order.cart) || order.cart.length === 0) {
+        document.getElementById('invoiceContent').innerHTML = '<div class="container"><div class="empty-cart">⚠️ السلة فارغة أو لا توجد منتجات</div></div>';
+        return;
+    }
+
     let cartRows = '';
     let subtotal = 0;
     let totalDiscount = 0;
 
-    for (let i = 0; i < order.cart.length; i++) {
-        let item = order.cart[i];
-        let itemSubtotal = item.price * item.qty;
-        let itemDiscount = item.discount || 0;
-        let itemTotal = itemSubtotal - itemDiscount;
+    order.cart.forEach(function(item) {
+        let code = item.code || '-';
+        let name = item.name || 'منتج غير معروف';
+        let desc = item.desc || '-';
+        let qty = item.qty || 1;
+        let price = parseFloat(item.price) || 0;
+        let discount = parseFloat(item.discount) || 0;
+        let image = item.image || 'https://via.placeholder.com/50?text=Product';
+        
+        let itemSubtotal = price * qty;
+        let itemTotal = itemSubtotal - discount;
         subtotal += itemSubtotal;
-        totalDiscount += itemDiscount;
+        totalDiscount += discount;
 
-        cartRows += `<tr>
-            <td><img src="${item.image}" width="50" height="50" style="object-fit:cover;" onerror="this.src='https://via.placeholder.com/50'"></td>
-            <td>${item.code}</td>
-            <td>${item.name}</td>
-            <td>${item.desc || '-'}</td>
-            <td>${item.qty}</td>
-            <td>${item.price.toFixed(2)}</td>
-            <td>${itemDiscount.toFixed(2)}</td>
-            <td>${itemTotal.toFixed(2)}</td>
-        </tr>`;
-    }
+        cartRows += `
+            <tr>
+                <td><img src="${image}" width="50" height="50" style="object-fit:cover;" onerror="this.src='https://via.placeholder.com/50?text=No+Image'"></td>
+                <td>${escapeHtml(code)}</td>
+                <td>${escapeHtml(name)}</td>
+                <td>${escapeHtml(desc)}</td>
+                <td>${qty}</td>
+                <td>${price.toFixed(2)}</td>
+                <td>${discount.toFixed(2)}</td>
+                <td>${itemTotal.toFixed(2)}</td>
+            </tr>
+        `;
+    });
 
-    let tax = (subtotal - totalDiscount) * 0.15;
-    let grandTotal = subtotal - totalDiscount + tax;
+    let taxableAmount = subtotal - totalDiscount;
+    let tax = taxableAmount * 0.15;
+    let grandTotal = taxableAmount + tax;
 
-    let displayDate = order.date;
+    let displayDate = order.date || '';
     if (displayDate && displayDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
         let parts = displayDate.split('-');
         displayDate = parts[2] + '-' + parts[1] + '-' + parts[0];
     }
 
-    let paymentLine = `<span>💳 طريقة الدفع: ${order.payment}</span>`;
+    let paymentLine = `<span>💳 طريقة الدفع: ${order.payment || '-'}</span>`;
     if (order.payment === 'تمارا' && order.tamaraAuth) {
         paymentLine += `<span>🔑 رمز الموافقة: ${order.tamaraAuth}</span>`;
     }
@@ -106,11 +131,11 @@ function loadInvoice() {
             <div>الرقم الضريبي: 312495447600003</div>
         </div>
         <div class="logo-center">
-            <img src="images/logo.svg" onerror="this.src='https://via.placeholder.com/100'">
+            <img src="images/logo.svg" onerror="this.src='https://via.placeholder.com/100?text=Logo'">
         </div>
         <div class="invoice-header">
-            <p><strong>رقم الفاتورة:</strong> ${order.orderNumber}</p>
-            <p><strong>التاريخ:</strong> ${displayDate} ${order.time !== '-' ? ' - ' + order.time : ''}</p>
+            <p><strong>رقم الفاتورة:</strong> ${order.orderNumber || 'FK-0000'}</p>
+            <p><strong>التاريخ:</strong> ${displayDate} ${order.time && order.time !== '-' ? ' - ' + order.time : ''}</p>
         </div>
         <div class="invoice-parties">
             <div class="invoice-from">
@@ -119,19 +144,40 @@ function loadInvoice() {
             </div>
             <div class="invoice-to">
                 <h3>📌 مصدرة إلى:</h3>
-                <p><strong>${order.customer}</strong><br>المملكة العربية السعودية<br>${order.city} - ${order.district} - ${order.street} - ${order.building} - ${order.extra} - ${order.postal}<br>هاتف: ${order.phone}<br>بريد: ${order.email || 'غير مدخل'}</p>
+                <p><strong>${escapeHtml(order.customer) || '-'}</strong><br>المملكة العربية السعودية<br>${order.city || ''} ${order.district ? '- ' + order.district : ''} ${order.street ? '- ' + order.street : ''} ${order.building ? '- ' + order.building : ''} ${order.extra ? '- ' + order.extra : ''} ${order.postal ? '- ' + order.postal : ''}<br>هاتف: ${order.phone || '-'}<br>بريد: ${order.email || 'غير مدخل'}</p>
             </div>
         </div>
-        <div class="payment-shipping">${paymentLine}<span>🚚 خدمة الشحن: ${order.shipping}</span></div>
+        <div class="payment-shipping">${paymentLine}<span>🚚 خدمة الشحن: ${order.shipping || '-'}</span></div>
         <h3>📦 تفاصيل الطلب</h3>
         <table class="products-table">
-            <thead><tr><th>صورة</th><th>كود</th><th>المنتج</th><th>الوصف</th><th>الكمية</th><th>السعر</th><th>الخصم</th><th>الإجمالي</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>صورة</th>
+                    <th>كود المنتج</th>
+                    <th>اسم المنتج</th>
+                    <th>الوصف</th>
+                    <th>الكمية</th>
+                    <th>السعر</th>
+                    <th>الخصم</th>
+                    <th>الإجمالي</th>
+                </tr>
+            </thead>
             <tbody>${cartRows}</tbody>
         </table>
         <div class="totals-wrapper">
-            <div class="totals-labels"><p>المجموع الفرعي</p><p>الخصم الكلي</p><p>الضريبة (15%)</p></div>
-            <div class="totals-values"><p>${subtotal.toFixed(2)} ريال</p><p>${totalDiscount.toFixed(2)} ريال</p><p>${tax.toFixed(2)} ريال</p></div>
-            <div class="grand-total"><h2>الإجمالي النهائي: ${grandTotal.toFixed(2)} ريال</h2></div>
+            <div class="totals-labels">
+                <p>المجموع الفرعي</p>
+                <p>الخصم الكلي</p>
+                <p>الضريبة (15%)</p>
+            </div>
+            <div class="totals-values">
+                <p>${subtotal.toFixed(2)} ريال</p>
+                <p>${totalDiscount.toFixed(2)} ريال</p>
+                <p>${tax.toFixed(2)} ريال</p>
+            </div>
+            <div class="grand-total">
+                <h2>الإجمالي النهائي: ${grandTotal.toFixed(2)} ريال</h2>
+            </div>
         </div>
         <div class="contact-bar">
             <span>📞 +966597771565</span>
@@ -147,7 +193,7 @@ function loadInvoice() {
 function downloadPDF() {
     let element = document.getElementById('invoiceToPrint');
     if (!element) {
-        alert('لا يوجد فاتورة');
+        alert('لا يوجد فاتورة للتحميل');
         return;
     }
     html2pdf().from(element).set({
@@ -162,6 +208,16 @@ function downloadPDF() {
 function newOrder() {
     localStorage.removeItem('currentOrder');
     window.location.href = 'index.html';
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
 }
 
 if (window.location.pathname.includes('invoice.html')) {
