@@ -13,7 +13,7 @@
             <h1>📋 طلب شراء جديد</h1>
         </div>
 
-        <!-- معلومات الطلب -->
+        <!-- معلومات الطلب (تاريخ ووقت) -->
         <div class="form-section">
             <div class="row">
                 <div class="form-group">
@@ -74,10 +74,13 @@
 
         <hr>
 
-        <!-- إضافة منتج -->
+        <!-- إضافة منتج (مع رقم المنتج، كود، خصم) -->
         <div class="form-section">
             <h2>🛒 إضافة منتج</h2>
             <div class="row">
+                <div class="form-group">
+                    <input type="text" id="product_code" placeholder="كود المنتج" required>
+                </div>
                 <div class="form-group">
                     <input type="text" id="product_name" placeholder="اسم المنتج" required>
                 </div>
@@ -89,6 +92,9 @@
                 </div>
                 <div class="form-group">
                     <input type="number" id="product_qty" placeholder="الكمية" value="1" min="1" required>
+                </div>
+                <div class="form-group">
+                    <input type="number" id="product_discount" placeholder="الخصم (ريال)" step="0.01" value="0">
                 </div>
             </div>
             <button class="btn-add" onclick="addToCart()">➕ أضف إلى السلة</button>
@@ -116,11 +122,8 @@
                         <option value="مدى">مدى</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <input type="text" id="tamara_auth" placeholder="رمز الموافقة تمارا (اختياري)">
-                </div>
-                <div class="form-group">
-                    <input type="text" id="tamara_order" placeholder="رقم طلب تمارا (اختياري)">
+                <div class="form-group" id="tamara_auth_group" style="display:none;">
+                    <input type="text" id="tamara_auth" placeholder="رمز الموافقة على الطلب في تمارا">
                 </div>
                 <div class="form-group">
                     <label>خدمة الشحن</label>
@@ -135,6 +138,13 @@
         <button class="btn-checkout" onclick="checkout()">✅ تأكيد الطلب وإنشاء الفاتورة</button>
     </div>
 
+    <script>
+        // إظهار/إخفاء حقل تمارا حسب الاختيار
+        document.getElementById('payment').addEventListener('change', function() {
+            const group = document.getElementById('tamara_auth_group');
+            group.style.display = this.value === 'تمارا' ? 'block' : 'none';
+        });
+    </script>
     <script src="js/cart.js"></script>
     <script src="js/order.js"></script>
 </body>
