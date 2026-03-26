@@ -1,6 +1,9 @@
 // cart.js - إدارة سلة المشتريات
 
-window.cart = window.cart || [];
+// تهيئة السلة كمصفوفة فارغة
+if (typeof window.cart === 'undefined' || !Array.isArray(window.cart)) {
+    window.cart = [];
+}
 
 function addToCart() {
     const name = document.getElementById('product_name').value.trim();
@@ -14,10 +17,10 @@ function addToCart() {
     }
     if (isNaN(qty) || qty < 1) qty = 1;
 
-    // التحقق إذا كان المنتج موجوداً بالفعل
-    const existing = window.cart.find(item => item.name === name && item.desc === desc);
-    if (existing) {
-        existing.qty += qty;
+    // البحث عن منتج مكرر
+    const existingIndex = window.cart.findIndex(item => item.name === name && item.desc === desc);
+    if (existingIndex !== -1) {
+        window.cart[existingIndex].qty += qty;
     } else {
         window.cart.push({
             name: name,
@@ -39,6 +42,11 @@ function addToCart() {
 function renderCart() {
     const cartDiv = document.getElementById('cart');
     if (!cartDiv) return;
+
+    // تأكد من أن cart مصفوفة
+    if (!Array.isArray(window.cart)) {
+        window.cart = [];
+    }
 
     if (window.cart.length === 0) {
         cartDiv.innerHTML = '<div class="empty-cart">🛒 السلة فارغة، أضف منتجات</div>';
