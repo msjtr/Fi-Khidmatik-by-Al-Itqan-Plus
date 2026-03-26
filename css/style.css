@@ -185,14 +185,36 @@ button:hover {
 /* Invoice Styles */
 .invoice {
     padding: 20px;
-    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
 }
 
+/* الهامش العلوي */
+.top-margin {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 10px;
+    padding: 5px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+/* الشعار في المنتصف */
+.logo-center {
+    text-align: center;
+    margin: 20px 0;
+}
+.logo-center img {
+    max-width: 100px;
+    height: auto;
+}
+
+/* رأس الفاتورة (رقم الفاتورة والتاريخ) */
 .invoice-header {
     text-align: left;
     margin-bottom: 20px;
 }
 
+/* قسم المصدر والمستلم */
 .invoice-parties {
     display: flex;
     justify-content: space-between;
@@ -202,11 +224,9 @@ button:hover {
     padding: 20px;
     border-radius: 12px;
 }
-
 .invoice-from, .invoice-to {
     flex: 1;
 }
-
 .invoice-from h3, .invoice-to h3 {
     color: #1e3a8a;
     margin-bottom: 10px;
@@ -214,6 +234,7 @@ button:hover {
     padding-right: 10px;
 }
 
+/* طريقة الدفع والشحن */
 .payment-shipping {
     background: #f1f5f9;
     padding: 12px;
@@ -225,38 +246,66 @@ button:hover {
     gap: 15px;
 }
 
+/* جدول المنتجات */
 .products-table {
     width: 100%;
     border-collapse: collapse;
     margin: 20px 0;
 }
-
 .products-table th, .products-table td {
     padding: 10px;
     text-align: center;
     border: 1px solid #ddd;
 }
-
 .products-table th {
     background-color: #f2f2f2;
     font-weight: bold;
 }
 
-.totals-section {
+/* ملخص الحساب */
+.totals-wrapper {
     display: flex;
     justify-content: space-between;
-    margin: 20px 0;
+    align-items: flex-start;
     background: #f9fafb;
-    padding: 15px;
+    padding: 20px;
     border-radius: 12px;
+    margin: 20px 0;
+    flex-wrap: wrap;
 }
-
-.totals-left {
-    text-align: left;
-}
-
-.totals-right {
+.totals-labels {
     text-align: right;
+    font-weight: bold;
+    color: #1f2937;
+}
+.totals-values {
+    text-align: left;
+    font-weight: bold;
+    color: #1e3a8a;
+}
+.grand-total {
+    flex: 1;
+    text-align: center;
+    border-right: 1px solid #cbd5e1;
+    border-left: 1px solid #cbd5e1;
+    padding: 0 20px;
+}
+.grand-total h2 {
+    margin: 0;
+    color: #1e3a8a;
+}
+
+/* شريط الاتصال السفلي */
+.contact-bar {
+    background: #f1f5f9;
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin: 20px 0 10px;
+    font-size: 14px;
+    flex-wrap: wrap;
 }
 
 .thanks {
@@ -267,13 +316,24 @@ button:hover {
     color: #1e3a8a;
 }
 
+/* استجابة للجوال */
 @media (max-width: 768px) {
     .invoice-parties {
         flex-direction: column;
     }
-    .totals-section {
+    .totals-wrapper {
         flex-direction: column;
+        align-items: stretch;
         gap: 10px;
+    }
+    .grand-total {
+        border: none;
+        padding: 10px 0;
+        text-align: center;
+    }
+    .contact-bar {
+        gap: 15px;
+        font-size: 12px;
     }
     .cart-item {
         flex-direction: column;
