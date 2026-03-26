@@ -3,105 +3,94 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>فاتورة احترافية</title>
+<title>الفاتورة | منصة في خدمتك</title>
 
 <style>
 body {
-    background: linear-gradient(135deg, #eef2f7, #dfe7f3);
+    font-family: 'Segoe UI', Tahoma;
+    background: linear-gradient(135deg,#1e3c72,#2a5298);
     margin: 0;
     padding: 20px;
-    font-family: 'Segoe UI', Tahoma;
 }
 
-/* صفحة الفاتورة */
 .invoice {
     background: #fff;
-    border-radius: 12px;
-    padding: 30px;
     max-width: 900px;
     margin: auto;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-    page-break-after: always;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 
-/* الهيدر */
-.header {
+.logo-center {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.logo-center img {
+    max-width: 140px;
+}
+
+.invoice-header {
     display: flex;
     justify-content: space-between;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 15px;
+    margin-bottom: 15px;
 }
 
-.logo img {
-    width: 120px;
-}
-
-.title {
-    text-align: left;
-    color: #1a73e8;
-}
-
-/* معلومات */
-.info {
+.invoice-parties {
     display: flex;
     justify-content: space-between;
     margin-top: 20px;
 }
 
-/* جدول */
-table {
+.invoice-parties div {
+    width: 48%;
+}
+
+.products-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
 }
 
-th {
-    background: #1a73e8;
-    color: #fff;
-    padding: 10px;
-}
-
-td {
+.products-table th, .products-table td {
     border: 1px solid #ddd;
     padding: 8px;
     text-align: center;
 }
 
-/* المجموع */
-.total-box {
+.products-table th {
+    background: #2a5298;
+    color: #fff;
+}
+
+.totals {
     margin-top: 20px;
     text-align: left;
 }
 
-.total-box h2 {
-    color: #1a73e8;
+.total-final {
+    font-size: 20px;
+    font-weight: bold;
+    color: green;
 }
 
-/* فوتر */
-.footer {
-    margin-top: 25px;
-    border-top: 1px solid #eee;
-    padding-top: 10px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 14px;
-}
-
-/* أزرار */
-.actions {
+.buttons {
     text-align: center;
     margin-top: 20px;
 }
 
 button {
-    padding: 10px 15px;
-    margin: 5px;
-    background: #1a73e8;
-    color: #fff;
+    padding: 10px 20px;
     border: none;
-    border-radius: 6px;
+    margin: 5px;
+    border-radius: 8px;
     cursor: pointer;
 }
+
+.btn-pdf { background:#4CAF50;color:#fff;}
+.btn-print { background:#2196F3;color:#fff;}
+.btn-new { background:#ff9800;color:#fff;}
 </style>
 
 </head>
@@ -110,10 +99,10 @@ button {
 
 <div id="invoiceContent"></div>
 
-<div class="actions">
-    <button onclick="downloadPDF()">📥 تحميل PDF</button>
-    <button onclick="window.print()">🖨️ طباعة</button>
-    <button onclick="newOrder()">🔄 طلب جديد</button>
+<div class="buttons">
+    <button class="btn-pdf" onclick="downloadPDF()">📥 تحميل PDF</button>
+    <button class="btn-print" onclick="window.print()">🖨️ طباعة</button>
+    <button class="btn-new" onclick="newOrder()">🔄 طلب جديد</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
