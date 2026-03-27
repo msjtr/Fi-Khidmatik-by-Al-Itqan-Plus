@@ -451,3 +451,7 @@ img {
     size: A4;
     margin: 0;
 }
+
+html, body {
+    height: auto !important;
+}
