@@ -1,7 +1,8 @@
+/* invoice.css - تنسيق الفاتورة الاحترافي (نسخة موحدة ومُحسّنة للـ PDF والطباعة) */
 
-/* invoice.css - تنسيق الفاتورة الاحترافي (نسخة معدلة) */
-
-/* تنسيقات عامة */
+/* ============================================
+   تنسيقات عامة
+   ============================================ */
 * {
     margin: 0;
     padding: 0;
@@ -15,9 +16,9 @@ body {
     font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
 }
 
-/* حاوية الفاتورة الخارجية */
-.invoice-wrapper {
-    max-width: 1000px;
+/* حاوية الفاتورة الخارجية - استخدام الاسم الصحيح */
+.invoice-container {
+    max-width: 1100px;
     margin: 0 auto;
 }
 
@@ -26,31 +27,31 @@ body {
     background: white;
     border-radius: 20px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-    overflow: visible;
+    overflow: hidden;
 }
 
-/* المحتوى الداخلي - إزالة أي قيود على العرض */
+/* المحتوى الداخلي */
 .invoice-content {
     padding: 30px;
     width: 100%;
 }
 
-/* الهوامش العلوية */
+/* الهوامش العلوية - إصلاح الهوامش */
 .top-margin {
     background: #1e293b;
     color: #e2e8f0;
-    padding: 12px 20px;
+    padding: 12px 25px;
     display: flex;
     justify-content: space-between;
     font-size: 12px;
-    margin: -30px -30px 20px -30px;
-    border-radius: 20px 20px 0 0;
+    border-radius: 12px;
+    margin-bottom: 25px;
 }
 
 /* الشعار */
 .logo-center {
     text-align: center;
-    margin: 15px 0 25px 0;
+    margin-bottom: 25px;
 }
 .logo-center img {
     max-width: 100px;
@@ -63,7 +64,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding-bottom: 15px;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     border-bottom: 2px solid #e2e8f0;
 }
 .invoice-number {
@@ -250,97 +251,104 @@ button:hover {
 }
 
 /* ============================================
-   تنسيق الطباعة والـ PDF - الإصلاح الجوهري
+   تنسيق الطباعة والـ PDF - حل جذري للمشاكل
    ============================================ */
 @media print {
     /* إعادة تعيين كل شيء للطباعة */
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-    
     body {
-        background: white;
-        padding: 0;
-        margin: 0;
+        background: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
     }
     
-    .buttons, .btn-pdf, .btn-print, .btn-new {
+    /* إخفاء الأزرار */
+    .buttons, button, .btn-pdf, .btn-print, .btn-new {
         display: none !important;
     }
     
-    .invoice-wrapper {
-        max-width: 100%;
-        margin: 0;
-        padding: 0;
+    /* إعادة تعيين حاوية الفاتورة */
+    .invoice-container {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
     
+    /* تنسيق الفاتورة للطباعة */
     .invoice {
-        box-shadow: none;
-        border-radius: 0;
-        margin: 0;
-        padding: 0;
-        background: white;
-        overflow: visible;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        overflow: visible !important;
     }
     
+    /* المحتوى الداخلي */
     .invoice-content {
-        padding: 0.4cm !important;
-        width: 100%;
-        max-width: 100%;
+        padding: 0.5cm !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
     
-    /* إصلاح الهوامش العلوية للطباعة */
+    /* الهوامش العلوية للطباعة */
     .top-margin {
-        background: #f1f5f9;
-        color: #333;
-        margin: -0.4cm -0.4cm 0.4cm -0.4cm;
-        padding: 8px 15px;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+        background: #f1f5f9 !important;
+        color: #333 !important;
+        padding: 8px 15px !important;
+        margin-bottom: 15px !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
     
-    /* الحفاظ على الألوان في الطباعة */
-    .invoice-from, .invoice-to {
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+    /* الحفاظ على الألوان الخلفية في الطباعة */
+    .invoice-from, .invoice-to,
+    .payment-shipping span,
+    .contact-bar {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
     
+    /* ألوان الجدول */
     .products-table th {
-        background: #1e3a8a;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+        background: #1e3a8a !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
     
-    .payment-shipping, .contact-bar, .totals-wrapper {
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+    .products-table td {
+        background: white !important;
     }
     
-    /* منع كسر الصفحات داخل الجدول */
+    /* منع كسر الصفحات داخل العناصر المهمة */
+    .invoice-parties, 
+    .payment-shipping, 
+    .totals-wrapper, 
+    .contact-bar {
+        page-break-inside: avoid !important;
+    }
+    
+    /* منع كسر الصفوف في الجدول */
     .products-table tr {
-        page-break-inside: avoid;
-        page-break-after: auto;
+        page-break-inside: avoid !important;
+        page-break-after: auto !important;
     }
     
     .products-table {
-        page-break-inside: auto;
-    }
-    
-    /* ضمان عدم اقتصاص المحتوى */
-    .invoice, .invoice-content, .invoice-parties, .totals-wrapper {
-        page-break-inside: avoid;
-    }
-    
-    /* إزالة الظلال والخلفيات الزائدة */
-    .invoice {
-        box-shadow: none;
+        page-break-inside: auto !important;
     }
     
     /* تحسين عرض الجدول */
-    .products-table td, .products-table th {
-        border: 1px solid #ccc;
+    .products-table td, 
+    .products-table th {
+        border: 1px solid #ccc !important;
+    }
+    
+    /* ضمان ظهور كل المحتوى */
+    .invoice, 
+    .invoice-content, 
+    .invoice-parties, 
+    .totals-wrapper {
+        page-break-inside: avoid !important;
     }
 }
 
@@ -384,7 +392,8 @@ button:hover {
         border-bottom: 1px solid #e2e8f0;
     }
     
-    .products-table th, .products-table td {
+    .products-table th, 
+    .products-table td {
         padding: 6px 3px;
         font-size: 11px;
     }
@@ -400,10 +409,10 @@ button:hover {
     }
     
     .top-margin {
-        margin: -15px -15px 15px -15px;
         font-size: 10px;
         flex-wrap: wrap;
         gap: 5px;
+        text-align: center;
     }
     
     button {
