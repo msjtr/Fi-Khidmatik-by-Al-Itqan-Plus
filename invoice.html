@@ -537,20 +537,59 @@
     // ============================================
     // طباعة - استخدام الطباعة المدمجة
     // ============================================
-    function printInvoice() {
-        const element = document.getElementById('invoiceToPrint');
-        if (!element) {
-            alert('لا توجد فاتورة للطباعة');
-            return;
-        }
-        window.print();
+    async function printInvoice() {
+    const element = document.getElementById('invoiceToPrint');
+    if (!element) {
+        alert('لا توجد فاتورة للطباعة');
+        return;
     }
 
-    function newOrder() {
-        localStorage.removeItem('currentOrder');
-        window.location.href = "index.html";
-    }
+    await waitForImages(element);
 
+    const canvas = await html2canvas(element, {
+        scale: 3,
+        useCORS: true,
+        backgroundColor: "#ffffff"
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+
+    const printWindow = window.open('', '_blank');
+
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>طباعة الفاتورة</title>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                    text-align: center;
+                }
+                img {
+                    width: 100%;
+                    max-width: 794px;
+                }
+                @page {
+                    size: A4;
+                    margin: 0;
+                }
+            </style>
+        </head>
+        <body>
+            <img src="${imgData}" />
+        </body>
+        </html>
+    `);
+
+    printWindow.document.close();
+
+    printWindow.onload = function () {
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+    };
+}
     // ============================================
     // عرض الفاتورة
     // ============================================
