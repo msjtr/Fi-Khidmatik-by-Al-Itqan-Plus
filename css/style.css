@@ -1,1 +1,413 @@
 
+/* invoice.css - تنسيق الفاتورة الاحترافي (نسخة معدلة) */
+
+/* تنسيقات عامة */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 40px 20px;
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+}
+
+/* حاوية الفاتورة الخارجية */
+.invoice-wrapper {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* تنسيق الفاتورة الأساسي */
+.invoice {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    overflow: visible;
+}
+
+/* المحتوى الداخلي - إزالة أي قيود على العرض */
+.invoice-content {
+    padding: 30px;
+    width: 100%;
+}
+
+/* الهوامش العلوية */
+.top-margin {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin: -30px -30px 20px -30px;
+    border-radius: 20px 20px 0 0;
+}
+
+/* الشعار */
+.logo-center {
+    text-align: center;
+    margin: 15px 0 25px 0;
+}
+.logo-center img {
+    max-width: 100px;
+    height: auto;
+}
+
+/* رأس الفاتورة */
+.invoice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e2e8f0;
+}
+.invoice-number {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1e3a8a;
+}
+.invoice-number span {
+    background: #e0e7ff;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    margin-right: 8px;
+}
+.invoice-date {
+    font-size: 14px;
+    color: #475569;
+}
+
+/* معلومات المصدر والمستلم */
+.invoice-parties {
+    display: flex;
+    gap: 25px;
+    margin-bottom: 25px;
+}
+.invoice-from, .invoice-to {
+    flex: 1;
+    padding: 18px;
+    border-radius: 12px;
+}
+.invoice-from {
+    background: #fef9e3;
+    border-right: 4px solid #f59e0b;
+}
+.invoice-to {
+    background: #e0f2fe;
+    border-right: 4px solid #0284c7;
+}
+.invoice-from h3, .invoice-to h3 {
+    font-size: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.invoice-from p, .invoice-to p {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #334155;
+}
+
+/* الدفع والشحن */
+.payment-shipping {
+    background: #f1f5f9;
+    padding: 12px 20px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+.payment-shipping span {
+    background: white;
+    padding: 6px 15px;
+    border-radius: 25px;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* جدول المنتجات */
+.products-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 25px;
+}
+.products-table th {
+    background: #1e3a8a;
+    color: white;
+    padding: 12px 8px;
+    font-size: 14px;
+    border: 1px solid #2e4a9a;
+}
+.products-table td {
+    padding: 10px 8px;
+    text-align: center;
+    border: 1px solid #e2e8f0;
+    font-size: 13px;
+    background: white;
+}
+
+/* ملخص الحساب */
+.totals-wrapper {
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+}
+.totals-labels p, .totals-values p {
+    margin: 6px 0;
+}
+.totals-labels {
+    text-align: right;
+    font-weight: 600;
+}
+.totals-values {
+    text-align: left;
+    font-weight: 600;
+    color: #059669;
+}
+.grand-total {
+    text-align: center;
+    padding: 0 20px;
+    border-right: 1px solid #cbd5e1;
+    border-left: 1px solid #cbd5e1;
+}
+.grand-total h2 {
+    font-size: 20px;
+    color: #1e3a8a;
+    margin: 0;
+}
+
+/* شريط الاتصال */
+.contact-bar {
+    background: #f1f5f9;
+    padding: 12px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+    font-size: 13px;
+}
+
+/* تذييل */
+.thanks {
+    text-align: center;
+    padding-top: 15px;
+    font-size: 14px;
+    color: #475569;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* أزرار التحكم */
+.buttons {
+    text-align: center;
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+button {
+    padding: 12px 28px;
+    border: none;
+    border-radius: 40px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+.btn-pdf { background: #dc2626; color: white; }
+.btn-print { background: #2563eb; color: white; }
+.btn-new { background: #f59e0b; color: white; }
+
+/* حالة فارغة */
+.empty-state {
+    text-align: center;
+    padding: 60px;
+    background: white;
+    border-radius: 20px;
+    font-size: 18px;
+    color: #666;
+}
+
+/* ============================================
+   تنسيق الطباعة والـ PDF - الإصلاح الجوهري
+   ============================================ */
+@media print {
+    /* إعادة تعيين كل شيء للطباعة */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        background: white;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .buttons, .btn-pdf, .btn-print, .btn-new {
+        display: none !important;
+    }
+    
+    .invoice-wrapper {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .invoice {
+        box-shadow: none;
+        border-radius: 0;
+        margin: 0;
+        padding: 0;
+        background: white;
+        overflow: visible;
+    }
+    
+    .invoice-content {
+        padding: 0.4cm !important;
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    /* إصلاح الهوامش العلوية للطباعة */
+    .top-margin {
+        background: #f1f5f9;
+        color: #333;
+        margin: -0.4cm -0.4cm 0.4cm -0.4cm;
+        padding: 8px 15px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    /* الحفاظ على الألوان في الطباعة */
+    .invoice-from, .invoice-to {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    .products-table th {
+        background: #1e3a8a;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    .payment-shipping, .contact-bar, .totals-wrapper {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    /* منع كسر الصفحات داخل الجدول */
+    .products-table tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+    
+    .products-table {
+        page-break-inside: auto;
+    }
+    
+    /* ضمان عدم اقتصاص المحتوى */
+    .invoice, .invoice-content, .invoice-parties, .totals-wrapper {
+        page-break-inside: avoid;
+    }
+    
+    /* إزالة الظلال والخلفيات الزائدة */
+    .invoice {
+        box-shadow: none;
+    }
+    
+    /* تحسين عرض الجدول */
+    .products-table td, .products-table th {
+        border: 1px solid #ccc;
+    }
+}
+
+/* ============================================
+   استجابة للجوال
+   ============================================ */
+@media (max-width: 768px) {
+    body {
+        padding: 20px 10px;
+    }
+    
+    .invoice-content {
+        padding: 15px;
+    }
+    
+    .invoice-parties {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .invoice-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+    
+    .invoice-number {
+        text-align: center;
+    }
+    
+    .totals-wrapper {
+        flex-direction: column;
+        text-align: center;
+        gap: 12px;
+    }
+    
+    .grand-total {
+        border: none;
+        padding: 10px 0;
+        border-top: 1px solid #e2e8f0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .products-table th, .products-table td {
+        padding: 6px 3px;
+        font-size: 11px;
+    }
+    
+    .payment-shipping {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .contact-bar {
+        gap: 12px;
+        font-size: 11px;
+    }
+    
+    .top-margin {
+        margin: -15px -15px 15px -15px;
+        font-size: 10px;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    
+    button {
+        padding: 8px 20px;
+        font-size: 12px;
+    }
+}
