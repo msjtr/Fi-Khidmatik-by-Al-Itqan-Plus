@@ -32,3 +32,29 @@ const db = getFirestore(app);
 
 // تصدير العناصر الأساسية لاستخدامها في الملفات الأخرى
 export { db, collection, addDoc, doc, getDoc, getDocs, updateDoc, query, orderBy, where };
+
+import { 
+  getFirestore,
+  collection,
+  addDoc,
+  doc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  query,
+  orderBy,
+  limit
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+export {
+  db,
+  collection,
+  addDoc,
+  doc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  query,
+  orderBy,
+  limit
+};
