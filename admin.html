@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <script type="module" src="js/admin.js"></script>
 </head>
 <body class="bg-gray-100">
     <div class="flex h-screen">
@@ -16,24 +17,20 @@
                 <h1 class="text-xl font-bold text-blue-600"><i class="fas fa-cog ml-2"></i>لوحة الأدمن</h1>
             </div>
             <nav class="flex-1 p-4 space-y-2">
-                <a href="orders.html" class="block p-2 rounded hover:bg-gray-100"><i class="fas fa-truck ml-2"></i>الطلبات</a>
-                <a href="customers.html" class="block p-2 rounded hover:bg-gray-100"><i class="fas fa-users ml-2"></i>العملاء</a>
-                <a href="products.html" class="block p-2 rounded hover:bg-gray-100"><i class="fas fa-boxes ml-2"></i>المنتجات</a>
-                <a href="inventory.html" class="block p-2 rounded hover:bg-gray-100"><i class="fas fa-warehouse ml-2"></i>المخزون</a>
-                <a href="payments.html" class="block p-2 rounded hover:bg-gray-100"><i class="fas fa-credit-card ml-2"></i>طرق الدفع</a>
-                <a href="invoice-settings.html" class="block p-2 rounded hover:bg-gray-100"><i class="fas fa-file-invoice ml-2"></i>تعليمات الفاتورة</a>
-                <a href="general-settings.html" class="block p-2 rounded hover:bg-gray-100"><i class="fas fa-sliders-h ml-2"></i>إعدادات عامة</a>
+                <a href="orders.html" target="contentFrame" class="block p-2 rounded hover:bg-gray-100"><i class="fas fa-truck ml-2"></i>الطلبات</a>
+                <a href="customers.html" target="contentFrame" class="block p-2 rounded hover:bg-gray-100"><i class="fas fa-users ml-2"></i>العملاء</a>
+                <a href="products.html" target="contentFrame" class="block p-2 rounded hover:bg-gray-100"><i class="fas fa-boxes ml-2"></i>المنتجات</a>
+                <a href="inventory.html" target="contentFrame" class="block p-2 rounded hover:bg-gray-100"><i class="fas fa-warehouse ml-2"></i>المخزون</a>
+                <a href="payments.html" target="contentFrame" class="block p-2 rounded hover:bg-gray-100"><i class="fas fa-credit-card ml-2"></i>طرق الدفع</a>
+                <a href="invoice-settings.html" target="contentFrame" class="block p-2 rounded hover:bg-gray-100"><i class="fas fa-file-invoice ml-2"></i>تعليمات الفاتورة</a>
+                <a href="general-settings.html" target="contentFrame" class="block p-2 rounded hover:bg-gray-100"><i class="fas fa-sliders-h ml-2"></i>إعدادات عامة</a>
             </nav>
         </aside>
 
         <!-- المحتوى -->
         <main class="flex-1 p-6 overflow-y-auto">
-            <iframe src="orders.html" class="w-full h-full border-0" name="contentFrame" id="contentFrame"></iframe>
+            <iframe name="contentFrame" id="contentFrame" src="orders.html" class="w-full h-full border-0" style="min-height: 85vh;"></iframe>
         </main>
     </div>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-    <script src="js/firebase.js"></script>
-    <script src="js/admin.js"></script>
 </body>
 </html>
