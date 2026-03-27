@@ -6,7 +6,7 @@
     <title>الفاتورة | منصة في خدمتك</title>
     <style>
         /* ============================================
-           التنسيقات الأساسية للعرض على الشاشة
+           التنسيقات الأساسية - موحدة وخالية من التعارض
            ============================================ */
         * {
             margin: 0;
@@ -218,6 +218,7 @@
             display: flex;
             justify-content: center;
             gap: 15px;
+            flex-wrap: wrap;
         }
         button {
             padding: 12px 28px;
@@ -234,6 +235,7 @@
         }
         .btn-pdf { background: #dc2626; color: white; }
         .btn-print { background: #2563eb; color: white; }
+        .btn-png { background: #10b981; color: white; }
         .btn-new { background: #f59e0b; color: white; }
 
         .error-state, .empty-state {
@@ -257,13 +259,14 @@
             .payment-shipping { flex-direction: column; align-items: center; }
             .contact-bar { gap: 12px; font-size: 11px; }
             .top-margin { font-size: 10px; flex-wrap: wrap; gap: 5px; text-align: center; }
+            .buttons { gap: 10px; }
+            button { padding: 8px 16px; font-size: 12px; }
         }
 
         /* ============================================
-           تنسيق الطباعة - الحل النهائي لمنع القطع
+           تنسيق الطباعة - منع القطع بشكل نهائي
            ============================================ */
         @media print {
-            /* إعادة تعيين كل شيء للطباعة */
             * {
                 margin: 0;
                 padding: 0;
@@ -276,19 +279,16 @@
                 margin: 0 !important;
             }
             
-            /* إخفاء الأزرار */
-            .buttons, button, .btn-pdf, .btn-print, .btn-new {
+            .buttons, button, .btn-pdf, .btn-print, .btn-png, .btn-new {
                 display: none !important;
             }
             
-            /* تنسيق الحاوية */
             .invoice-container {
                 max-width: 100% !important;
                 margin: 0 !important;
                 padding: 0 !important;
             }
             
-            /* تنسيق الفاتورة */
             .invoice {
                 box-shadow: none !important;
                 border-radius: 0 !important;
@@ -298,19 +298,18 @@
                 overflow: visible !important;
             }
             
-            /* المحتوى الداخلي */
             .invoice-content {
                 padding: 0.3cm !important;
                 width: 100% !important;
                 max-width: 100% !important;
             }
             
-            /* منع كسر الصفحات في جميع العناصر */
             .invoice-parties,
             .payment-shipping,
             .totals-wrapper,
             .contact-bar,
             .thanks,
+            .products-table tr,
             .invoice-from,
             .invoice-to,
             .top-margin {
@@ -318,19 +317,11 @@
                 break-inside: avoid !important;
             }
             
-            /* تثبيت عرض الجدول */
             .products-table {
                 width: 100% !important;
                 table-layout: fixed !important;
             }
             
-            /* منع كسر صفوف الجدول */
-            .products-table tr {
-                page-break-inside: avoid !important;
-                break-inside: avoid !important;
-            }
-            
-            /* تحسين عرض الخلايا */
             .products-table td,
             .products-table th {
                 white-space: normal !important;
@@ -341,16 +332,14 @@
                 border: 1px solid #ccc !important;
             }
             
-            /* تحديد عرض الأعمدة بدقة */
-            .products-table th:nth-child(1) { width: 18%; } /* اسم المنتج */
-            .products-table th:nth-child(2) { width: 10%; } /* الكود */
-            .products-table th:nth-child(3) { width: 22%; } /* الوصف */
-            .products-table th:nth-child(4) { width: 8%; }  /* الكمية */
-            .products-table th:nth-child(5) { width: 12%; } /* السعر */
-            .products-table th:nth-child(6) { width: 12%; } /* الخصم */
-            .products-table th:nth-child(7) { width: 18%; } /* الإجمالي */
+            .products-table th:nth-child(1) { width: 18%; }
+            .products-table th:nth-child(2) { width: 10%; }
+            .products-table th:nth-child(3) { width: 22%; }
+            .products-table th:nth-child(4) { width: 8%; }
+            .products-table th:nth-child(5) { width: 12%; }
+            .products-table th:nth-child(6) { width: 12%; }
+            .products-table th:nth-child(7) { width: 18%; }
             
-            /* الحفاظ على الألوان */
             .top-margin,
             .invoice-from,
             .invoice-to,
@@ -361,32 +350,26 @@
                 print-color-adjust: exact !important;
             }
             
-            /* تنسيق الهوامش العلوية */
             .top-margin {
                 background: #f1f5f9 !important;
                 color: #333 !important;
-                margin-bottom: 12px !important;
+                margin-bottom: 10px !important;
                 padding: 6px 12px !important;
             }
             
-            /* تصغير حجم الخط للعناوين الطويلة */
             .invoice-from p, 
             .invoice-to p {
                 font-size: 11px !important;
                 line-height: 1.4 !important;
             }
             
-            /* تحسين عرض الإجمالي */
             .grand-total h2 {
                 font-size: 16px !important;
             }
-            
-            /* ضمان عدم تجاوز المحتوى */
-            .invoice-content {
-                overflow: visible !important;
-            }
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -395,7 +378,8 @@
 </div>
 
 <div class="buttons">
-    <button class="btn-pdf" onclick="printInvoice()">📥 حفظ كـ PDF</button>
+    <button class="btn-pdf" onclick="saveAsPDF()">📥 حفظ كـ PDF</button>
+    <button class="btn-png" onclick="saveAsPNG()">🖼️ حفظ كـ PNG</button>
     <button class="btn-print" onclick="printInvoice()">🖨️ طباعة</button>
     <button class="btn-new" onclick="newOrder()">🔄 طلب جديد</button>
 </div>
@@ -425,25 +409,136 @@
         `;
     }
 
-    // دالة الطباعة - تستخدم خاصية الطباعة المدمجة في المتصفح
+    function showLoading(btn, originalText) {
+        btn.innerHTML = '⏳ جاري التحضير...';
+        btn.disabled = true;
+    }
+
+    function hideLoading(btn, originalText) {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+
+    // انتظار تحميل الصور
+    async function waitForImages(element) {
+        const images = element.querySelectorAll('img');
+        await Promise.all(Array.from(images).map(img => {
+            if (img.complete) return Promise.resolve();
+            return new Promise(resolve => {
+                img.onload = resolve;
+                img.onerror = resolve;
+            });
+        }));
+    }
+
+    // ============================================
+    // حفظ كـ PDF - طريقة محسنة
+    // ============================================
+    async function saveAsPDF() {
+        const element = document.getElementById('invoiceToPrint');
+        if (!element) {
+            alert('لا توجد فاتورة للتحميل');
+            return;
+        }
+
+        const btn = document.querySelector('.btn-pdf');
+        const originalText = btn.innerHTML;
+        showLoading(btn, originalText);
+
+        await waitForImages(element);
+
+        const opt = {
+            margin: [0.3, 0.3, 0.3, 0.3],
+            filename: `فاتورة_${new Date().toISOString().slice(0,10)}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 2.5,
+                letterRendering: true,
+                useCORS: false,
+                logging: false,
+                windowWidth: element.scrollWidth,
+                windowHeight: element.scrollHeight
+            },
+            jsPDF: { 
+                unit: 'in', 
+                format: 'a4', 
+                orientation: 'portrait'
+            }
+        };
+
+        try {
+            await html2pdf().set(opt).from(element).save();
+        } catch (err) {
+            console.error('PDF error:', err);
+            alert('حدث خطأ في إنشاء PDF، سيتم استخدام الطباعة بدلاً من ذلك');
+            window.print();
+        } finally {
+            hideLoading(btn, originalText);
+        }
+    }
+
+    // ============================================
+    // حفظ كـ PNG - ميزة جديدة
+    // ============================================
+    async function saveAsPNG() {
+        const element = document.getElementById('invoiceToPrint');
+        if (!element) {
+            alert('لا توجد فاتورة للتحميل');
+            return;
+        }
+
+        const btn = document.querySelector('.btn-png');
+        const originalText = btn.innerHTML;
+        showLoading(btn, originalText);
+
+        await waitForImages(element);
+
+        try {
+            // إنشاء canvas من العنصر
+            const canvas = await html2canvas(element, {
+                scale: 3,
+                backgroundColor: '#ffffff',
+                logging: false,
+                useCORS: false,
+                windowWidth: element.scrollWidth,
+                windowHeight: element.scrollHeight
+            });
+            
+            // تحويل canvas إلى رابط صورة
+            const link = document.createElement('a');
+            link.download = `فاتورة_${new Date().toISOString().slice(0,10)}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            
+            alert('✅ تم حفظ الفاتورة كصورة PNG بنجاح');
+        } catch (err) {
+            console.error('PNG error:', err);
+            alert('❌ حدث خطأ في حفظ الصورة');
+        } finally {
+            hideLoading(btn, originalText);
+        }
+    }
+
+    // ============================================
+    // طباعة - استخدام الطباعة المدمجة
+    // ============================================
     function printInvoice() {
         const element = document.getElementById('invoiceToPrint');
         if (!element) {
             alert('لا توجد فاتورة للطباعة');
             return;
         }
-
-        // فتح نافذة الطباعة المدمجة في المتصفح
         window.print();
     }
 
-    // دالة الطلب الجديد
     function newOrder() {
         localStorage.removeItem('currentOrder');
         window.location.href = "index.html";
     }
 
-    // دالة عرض الفاتورة
+    // ============================================
+    // عرض الفاتورة
+    // ============================================
     async function loadInvoice() {
         let order = null;
 
@@ -451,7 +546,6 @@
         const urlParams = new URLSearchParams(window.location.search);
         const orderId = urlParams.get('orderId');
 
-        // إذا كان هناك دالة Firebase متاحة
         if (orderId && typeof window.getOrderFromFirebase === 'function') {
             try {
                 order = await window.getOrderFromFirebase(orderId);
@@ -463,7 +557,6 @@
             }
         }
 
-        // إذا لم نجد، نبحث في localStorage
         if (!order) {
             const stored = localStorage.getItem('currentOrder');
             if (stored) {
@@ -475,20 +568,17 @@
             }
         }
 
-        // إذا لم توجد بيانات
         if (!order) {
             showError("لا توجد بيانات للفاتورة. يرجى إنشاء طلب أولاً.");
             return;
         }
 
-        // التأكد من وجود سلة
         let items = order.cart || order.items || [];
         if (!items.length) {
             showError("السلة فارغة. لا توجد منتجات لعرضها.");
             return;
         }
 
-        // حساب الإجماليات
         let cartRows = '';
         let subtotal = 0;
         let totalDiscount = 0;
@@ -520,7 +610,6 @@
         let tax = taxableAmount * 0.15;
         let grandTotal = taxableAmount + tax;
 
-        // تنسيق التاريخ
         let displayDate = order.date || '-';
         if (displayDate && displayDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
             let parts = displayDate.split('-');
@@ -528,7 +617,6 @@
         }
         let timeDisplay = (order.time && order.time !== '-') ? ' - ' + order.time : '';
 
-        // بناء HTML الفاتورة
         let html = `
             <div class="invoice" id="invoiceToPrint">
                 <div class="invoice-content">
@@ -629,6 +717,8 @@
 
     // ربط الدوال بالنافذة
     window.loadInvoice = loadInvoice;
+    window.saveAsPDF = saveAsPDF;
+    window.saveAsPNG = saveAsPNG;
     window.printInvoice = printInvoice;
     window.newOrder = newOrder;
 
