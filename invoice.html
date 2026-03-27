@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>الفاتورة | منصة في خدمتك</title>
     <style>
-        /* Reset */
+        /* ============================================
+           RESET & BASE STYLES
+           ============================================ */
         * {
             margin: 0;
             padding: 0;
@@ -19,13 +21,17 @@
             min-height: 100vh;
         }
 
-        /* حاوية الفاتورة */
+        /* ============================================
+           INVOICE CONTAINER
+           ============================================ */
         .invoice-container {
             max-width: 1100px;
             margin: 0 auto;
         }
 
-        /* تنسيق الفاتورة الأساسي */
+        /* ============================================
+           INVOICE CARD
+           ============================================ */
         .invoice {
             background: white;
             border-radius: 20px;
@@ -33,12 +39,16 @@
             overflow: hidden;
         }
 
-        /* المحتوى الداخلي للفاتورة */
+        /* ============================================
+           INVOICE CONTENT - تم إزالة الهوامش السالبة
+           ============================================ */
         .invoice-content {
             padding: 30px;
         }
 
-        /* الهوامش العلوية */
+        /* ============================================
+           TOP MARGIN SECTION - تم إصلاح الهوامش نهائياً
+           ============================================ */
         .top-margin {
             background: #1e293b;
             color: #e2e8f0;
@@ -46,25 +56,31 @@
             display: flex;
             justify-content: space-between;
             font-size: 12px;
-            margin: -30px -30px 20px -30px;
+            border-radius: 12px;
+            margin-bottom: 25px;
         }
 
-        /* الشعار */
+        /* ============================================
+           LOGO
+           ============================================ */
         .logo-center {
             text-align: center;
             margin-bottom: 25px;
         }
         .logo-center img {
             max-width: 100px;
+            height: auto;
         }
 
-        /* رأس الفاتورة */
+        /* ============================================
+           INVOICE HEADER
+           ============================================ */
         .invoice-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding-bottom: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             border-bottom: 2px solid #e2e8f0;
         }
         .invoice-number {
@@ -84,7 +100,9 @@
             color: #475569;
         }
 
-        /* معلومات المصدر والمستلم */
+        /* ============================================
+           PARTIES SECTION
+           ============================================ */
         .invoice-parties {
             display: flex;
             gap: 25px;
@@ -116,7 +134,9 @@
             color: #334155;
         }
 
-        /* الدفع والشحن */
+        /* ============================================
+           PAYMENT & SHIPPING
+           ============================================ */
         .payment-shipping {
             background: #f1f5f9;
             padding: 12px 20px;
@@ -132,9 +152,14 @@
             padding: 6px 15px;
             border-radius: 25px;
             font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        /* جدول المنتجات */
+        /* ============================================
+           PRODUCTS TABLE
+           ============================================ */
         .products-table {
             width: 100%;
             border-collapse: collapse;
@@ -152,9 +177,12 @@
             text-align: center;
             border: 1px solid #e2e8f0;
             font-size: 13px;
+            background: white;
         }
 
-        /* ملخص الحساب */
+        /* ============================================
+           TOTALS SECTION
+           ============================================ */
         .totals-wrapper {
             background: #f8fafc;
             padding: 20px;
@@ -186,9 +214,12 @@
         .grand-total h2 {
             font-size: 20px;
             color: #1e3a8a;
+            margin: 0;
         }
 
-        /* شريط الاتصال */
+        /* ============================================
+           CONTACT BAR
+           ============================================ */
         .contact-bar {
             background: #f1f5f9;
             padding: 12px;
@@ -201,7 +232,9 @@
             font-size: 13px;
         }
 
-        /* تذييل */
+        /* ============================================
+           THANKS FOOTER
+           ============================================ */
         .thanks {
             text-align: center;
             padding-top: 15px;
@@ -210,7 +243,9 @@
             border-top: 1px solid #e2e8f0;
         }
 
-        /* أزرار التحكم */
+        /* ============================================
+           BUTTONS
+           ============================================ */
         .buttons {
             text-align: center;
             margin-top: 30px;
@@ -235,62 +270,101 @@
         .btn-print { background: #2563eb; color: white; }
         .btn-new { background: #f59e0b; color: white; }
 
-        /* حالة فارغة */
+        /* ============================================
+           EMPTY STATE
+           ============================================ */
         .empty-state {
             text-align: center;
             padding: 60px;
             background: white;
             border-radius: 20px;
+            font-size: 18px;
+            color: #666;
         }
 
-        /* استجابة */
+        /* ============================================
+           RESPONSIVE DESIGN
+           ============================================ */
         @media (max-width: 768px) {
             body { padding: 20px 10px; }
-            .invoice-parties { flex-direction: column; }
-            .invoice-header { flex-direction: column; text-align: center; gap: 10px; }
-            .totals-wrapper { flex-direction: column; text-align: center; gap: 10px; }
-            .grand-total { border: none; padding: 10px 0; border-top: 1px solid #ddd; }
-            .products-table th, .products-table td { padding: 6px 3px; font-size: 11px; }
             .invoice-content { padding: 15px; }
-            .top-margin { margin: -15px -15px 15px -15px; }
+            .invoice-parties { flex-direction: column; gap: 15px; }
+            .invoice-header { flex-direction: column; text-align: center; gap: 10px; }
+            .invoice-number { text-align: center; }
+            .totals-wrapper { flex-direction: column; text-align: center; gap: 12px; }
+            .grand-total { border: none; padding: 10px 0; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+            .products-table th, .products-table td { padding: 6px 3px; font-size: 11px; }
+            .payment-shipping { flex-direction: column; align-items: center; }
+            .contact-bar { gap: 12px; font-size: 11px; }
+            .top-margin { font-size: 10px; flex-wrap: wrap; gap: 5px; text-align: center; }
+            button { padding: 8px 20px; font-size: 12px; }
         }
 
-        /* تنسيق الطباعة */
+        /* ============================================
+           PRINT STYLES - إصلاح كامل للطباعة
+           ============================================ */
         @media print {
             body {
                 background: white;
                 padding: 0;
                 margin: 0;
             }
-            .buttons {
-                display: none;
+            
+            .buttons, button {
+                display: none !important;
             }
-            .invoice {
-                box-shadow: none;
+            
+            .invoice-container {
+                max-width: 100%;
                 margin: 0;
                 padding: 0;
             }
-            .invoice-content {
-                padding: 0.3cm;
+            
+            .invoice {
+                box-shadow: none;
+                border-radius: 0;
+                margin: 0;
+                padding: 0;
+                background: white;
+                overflow: visible;
             }
+            
+            .invoice-content {
+                padding: 0.5cm !important;
+            }
+            
             .top-margin {
                 background: #f1f5f9;
                 color: #333;
-                margin: -0.3cm -0.3cm 0.3cm -0.3cm;
+                margin-bottom: 15px;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
+            
+            .invoice-from, .invoice-to,
+            .payment-shipping span,
+            .contact-bar {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
             .products-table th {
                 background: #1e3a8a;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-            .payment-shipping span, .contact-bar {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            tr, .products-table {
+            
+            .invoice-parties, .payment-shipping, .totals-wrapper, .contact-bar {
                 page-break-inside: avoid;
+            }
+            
+            .products-table tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+            
+            .products-table td, .products-table th {
+                border: 1px solid #ccc;
             }
         }
     </style>
@@ -519,8 +593,7 @@ function downloadPDF() {
             scale: 3,
             letterRendering: true,
             useCORS: false,
-            logging: false,
-            windowWidth: element.scrollWidth + 100
+            logging: false
         },
         jsPDF: { 
             unit: 'in', 
