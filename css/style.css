@@ -3,6 +3,10 @@
 /* ============================================
    تنسيقات عامة
    ============================================ */
+#invoiceToPrint {
+    width: 794px; /* A4 ثابت */
+    margin: auto;
+}
 * {
     margin: 0;
     padding: 0;
@@ -27,7 +31,7 @@ body {
     background: white;
     border-radius: 20px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-    overflow: hidden;
+    overflow: visible;
 }
 
 /* المحتوى الداخلي */
@@ -436,4 +440,9 @@ button:hover {
     .grand-total h2 {
         font-size: 16px !important;
     }
+}
+
+img {
+    max-width: 100%;
+    height: auto;
 }
