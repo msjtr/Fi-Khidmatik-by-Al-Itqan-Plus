@@ -1,4 +1,3 @@
-// استيراد من firebase.js
 import {
     db,
     collection,
@@ -26,7 +25,6 @@ import {
     getOrdersWithCustomers
 } from './firebase.js';
 
-// إعادة تصدير كل الدوال لاستخدامها في الصفحات الأخرى
 export {
     db,
     collection,
