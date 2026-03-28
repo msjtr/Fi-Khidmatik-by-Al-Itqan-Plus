@@ -15,17 +15,18 @@ import {
     deleteProduct,
     loadOrders,
     addOrder,
+    updateOrder,
     deleteOrder,
-    updateOrderStatus,
+    loadCustomers,
+    addCustomer,
+    updateCustomer,
+    deleteCustomer,
     getSettings,
     setSettings,
-    loadCustomers,      // ✅ الآن موجودة في firebase.js
-    addCustomer,        // ✅ الآن موجودة في firebase.js
-    deleteCustomer,     // ✅ الآن موجودة في firebase.js
-    updateCustomer      // ✅ الآن موجودة في firebase.js
+    getOrdersWithCustomers
 } from './firebase.js';
 
-// إعادة تصدير
+// إعادة تصدير كل الدوال لاستخدامها في الصفحات الأخرى
 export {
     db,
     collection,
@@ -42,12 +43,13 @@ export {
     deleteProduct,
     loadOrders,
     addOrder,
+    updateOrder,
     deleteOrder,
-    updateOrderStatus,
-    getSettings,
-    setSettings,
     loadCustomers,
     addCustomer,
+    updateCustomer,
     deleteCustomer,
-    updateCustomer
+    getSettings,
+    setSettings,
+    getOrdersWithCustomers
 };
