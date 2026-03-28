@@ -10,28 +10,152 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     <style>
-        /* نفس التنسيقات السابقة مع إضافة تنسيق للمودال */
         body { background: #f1f5f9; font-family: 'Tahoma', system-ui; }
-        .sidebar-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-radius: 0.75rem; cursor: pointer; transition: all 0.2s; color: #374151; }
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #374151;
+        }
         .sidebar-item:hover { background-color: #f3f4f6; }
-        .sidebar-active { background-color: #eff6ff; color: #1e40af; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .badge-status { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; }
-        .btn-primary { background-color: #2563eb; color: white; font-weight: 700; padding: 0.5rem 1rem; border-radius: 0.5rem; transition: all 0.2s; cursor: pointer; border: none; }
+        .sidebar-active {
+            background-color: #eff6ff;
+            color: #1e40af;
+            font-weight: 600;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .badge-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .btn-primary {
+            background-color: #2563eb;
+            color: white;
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
         .btn-primary:hover { background-color: #1d4ed8; }
-        .btn-danger { background-color: #dc2626; color: white; font-weight: 700; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; }
+        .btn-danger {
+            background-color: #dc2626;
+            color: white;
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
         .btn-danger:hover { background-color: #b91c1c; }
-        .btn-success { background-color: #16a34a; color: white; font-weight: 700; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; }
+        .btn-success {
+            background-color: #16a34a;
+            color: white;
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
         .btn-success:hover { background-color: #15803d; }
-        .btn-secondary { background-color: #6b7280; color: white; font-weight: 700; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; }
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
         .btn-secondary:hover { background-color: #4b5563; }
-        input, select, textarea { border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; outline: none; width: 100%; }
-        input:focus, select:focus, textarea:focus { ring: 2px solid #3b82f6; border-color: #3b82f6; }
-        .modal-backdrop { position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; z-index: 50; }
-        .modal-content { background: white; border-radius: 1rem; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; padding: 1.5rem; }
-        .image-preview { width: 80px; height: 80px; object-fit: cover; border-radius: 0.5rem; border: 1px solid #ddd; }
-        .cart-item { background: #f9fafb; border-radius: 0.5rem; padding: 0.5rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; }
-        .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        input, select, textarea {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            outline: none;
+            width: 100%;
+        }
+        input:focus, select:focus, textarea:focus {
+            ring: 2px solid #3b82f6;
+            border-color: #3b82f6;
+        }
+        .card-hover:hover {
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            transform: translateY(-2px);
+            transition: 0.2s;
+        }
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(2px);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 1rem;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 1.5rem;
+            width: 800px;
+        }
+        .image-preview {
+            display: inline-block;
+            position: relative;
+            margin: 5px;
+        }
+        .image-preview img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .remove-image {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: red;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            text-align: center;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 8px 0;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -51,7 +175,7 @@
             <div data-section="invoice" class="sidebar-item" id="nav-invoice"><i class="fas fa-file-invoice-dollar w-6"></i> <span>تعليمات الفاتورة</span></div>
             <div data-section="general" class="sidebar-item" id="nav-general"><i class="fas fa-sliders-h w-6"></i> <span>الإعدادات العامة</span></div>
         </nav>
-        <div class="p-4 border-t border-gray-200 text-xs text-gray-400">نظام إداري متكامل v5.0</div>
+        <div class="p-4 border-t border-gray-200 text-xs text-gray-400">نظام إداري متكامل v6.0</div>
     </aside>
 
     <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
@@ -60,7 +184,7 @@
 </div>
 
 <script>
-    // ------------------- Firebase -------------------
+    // Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
         authDomain: "msjt301-974bb.firebaseapp.com",
@@ -73,7 +197,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // دوال مساعدة
+    // Helper functions
     async function getCollection(collectionName) {
         const snapshot = await db.collection(collectionName).get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -88,7 +212,7 @@
         await db.collection(collectionName).doc(id).delete();
     }
 
-    // ====================== الطلبات ======================
+    // Orders
     async function loadOrders() {
         const snapshot = await db.collection('orders').get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -96,13 +220,14 @@
     async function addOrder(data) {
         const newOrder = {
             orderNumber: data.orderNumber || `ORD-${Date.now()}`,
-            customer: data.customer,
-            payment: data.payment,
+            customerName: data.customerName,
+            customerPhone: data.customerPhone,
+            paymentMethod: data.paymentMethod,
             status: data.status || 'غير مدفوع',
             date: data.date || new Date().toISOString().slice(0,10),
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             items: data.items || [],
-            total: data.total || 0,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            totalAmount: data.totalAmount
         };
         return await addDocument('orders', newOrder);
     }
@@ -113,12 +238,12 @@
         await deleteDocument('orders', id);
     }
 
-    // ====================== العملاء ======================
+    // Customers
     async function loadCustomers() {
         let customers = await getCollection('customers');
         if (customers.length > 0) return customers;
         const orders = await loadOrders();
-        const uniqueNames = [...new Set(orders.map(o => o.customer).filter(n => n))];
+        const uniqueNames = [...new Set(orders.map(o => o.customerName).filter(n => n))];
         return uniqueNames.map(name => ({ id: name, name, phone: '', email: '', address: '' }));
     }
     async function addCustomer(data) {
@@ -131,7 +256,7 @@
         await deleteDocument('customers', id);
     }
 
-    // ====================== المنتجات (مع دعم الصور المتعددة) ======================
+    // Products
     async function loadProducts() {
         return await getCollection('products');
     }
@@ -150,7 +275,7 @@
         await updateDocument('products', id, { quantity });
     }
 
-    // ====================== الإعدادات ======================
+    // Settings
     async function getSettingsDoc(docId) {
         const docRef = db.collection('settings').doc(docId);
         const docSnap = await docRef.get();
@@ -160,7 +285,7 @@
         await db.collection('settings').doc(docId).set(data, { merge: true });
     }
 
-    // ====================== استيراد Excel ======================
+    // Excel import with advanced columns (same as before)
     function importProductsFromExcel(file, callback) {
         const reader = new FileReader();
         reader.onload = async function(e) {
@@ -169,7 +294,7 @@
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
             const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
             if (!rows || rows.length < 2) {
-                callback({ success: false, error: 'الملف فارغ' });
+                callback({ success: false, error: 'الملف فارغ أو لا يحتوي على بيانات' });
                 return;
             }
             const headers = rows[0];
@@ -194,12 +319,6 @@
                 if (!row || row.length === 0) continue;
                 const name = colIndex.name !== -1 ? row[colIndex.name] : null;
                 if (!name) continue;
-                const images = [];
-                if (colIndex.mainImage !== -1 && row[colIndex.mainImage]) images.push(row[colIndex.mainImage].toString().trim());
-                if (colIndex.image2 !== -1 && row[colIndex.image2]) images.push(row[colIndex.image2].toString().trim());
-                if (colIndex.image3 !== -1 && row[colIndex.image3]) images.push(row[colIndex.image3].toString().trim());
-                if (colIndex.image4 !== -1 && row[colIndex.image4]) images.push(row[colIndex.image4].toString().trim());
-                if (colIndex.image5 !== -1 && row[colIndex.image5]) images.push(row[colIndex.image5].toString().trim());
                 const product = {
                     name: name.toString().trim(),
                     code: colIndex.code !== -1 ? (row[colIndex.code] || '').toString().trim() : '',
@@ -209,9 +328,14 @@
                     costPrice: colIndex.cost !== -1 ? parseFloat(row[colIndex.cost]) || 0 : 0,
                     price: colIndex.price !== -1 ? parseFloat(row[colIndex.price]) || 0 : 0,
                     discountPrice: colIndex.discountPrice !== -1 ? parseFloat(row[colIndex.discountPrice]) || 0 : 0,
-                    images: images,
-                    imageUrl: images.length > 0 ? images[0] : '/images/default-product.png'
+                    images: []
                 };
+                if (colIndex.mainImage !== -1 && row[colIndex.mainImage]) product.images.push(row[colIndex.mainImage].toString().trim());
+                if (colIndex.image2 !== -1 && row[colIndex.image2]) product.images.push(row[colIndex.image2].toString().trim());
+                if (colIndex.image3 !== -1 && row[colIndex.image3]) product.images.push(row[colIndex.image3].toString().trim());
+                if (colIndex.image4 !== -1 && row[colIndex.image4]) product.images.push(row[colIndex.image4].toString().trim());
+                if (colIndex.image5 !== -1 && row[colIndex.image5]) product.images.push(row[colIndex.image5].toString().trim());
+                product.imageUrl = product.images.length > 0 ? product.images[0] : '/images/default-product.png';
                 await addProduct(product);
                 count++;
             }
@@ -220,23 +344,275 @@
         reader.readAsArrayBuffer(file);
     }
 
-    // ====================== تحميل قالب Excel ======================
+    // Download Excel template
     window.downloadProductTemplate = () => {
         const headers = [
-            'اسم المنتج','كود المنتج','باركود المنتج','وصف المنتج','الكمية','سعر التكلفة','سعر البيع','سعر التخفيض',
-            'الصورة الرئيسية','صورة 2','صورة 3','صورة 4','صورة 5'
+            'اسم المنتج',
+            'كود المنتج',
+            'باركود المنتج',
+            'وصف المنتج',
+            'الكمية',
+            'سعر التكلفة',
+            'سعر البيع',
+            'سعر التخفيض',
+            'الصورة الرئيسية',
+            'صورة 2',
+            'صورة 3',
+            'صورة 4',
+            'صورة 5'
         ];
         const exampleRow = [
-            'منتج تجريبي','PROD-001','1234567890123','وصف المنتج',10,50,100,80,
-            'https://example.com/img1.jpg','https://example.com/img2.jpg','https://example.com/img3.jpg','https://example.com/img4.jpg','https://example.com/img5.jpg'
+            'منتج تجريبي',
+            'PROD-001',
+            '1234567890123',
+            'هذا وصف للمنتج التجريبي',
+            '10',
+            '50',
+            '100',
+            '80',
+            'https://example.com/image1.jpg',
+            'https://example.com/image2.jpg',
+            'https://example.com/image3.jpg',
+            'https://example.com/image4.jpg',
+            'https://example.com/image5.jpg'
         ];
-        const ws = XLSX.utils.aoa_to_sheet([headers, exampleRow]);
+        const data = [headers, exampleRow];
+        const ws = XLSX.utils.aoa_to_sheet(data);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'منتجات');
         XLSX.writeFile(wb, 'قالب_استيراد_المنتجات.xlsx');
     };
 
-    // ====================== عرض الأقسام ======================
+    // ---------- Modal for Product Edit / Add ----------
+    let currentEditingProductId = null;
+    let productImagesBase64 = []; // array of base64 strings
+
+    function showProductModal(product = null) {
+        currentEditingProductId = product ? product.id : null;
+        productImagesBase64 = [];
+        if (product && product.images) {
+            productImagesBase64 = [...product.images];
+        }
+        const modalHtml = `
+            <div id="productModal" class="modal-backdrop">
+                <div class="modal-content">
+                    <h3 class="text-xl font-bold mb-4">${product ? 'تعديل المنتج' : 'إضافة منتج جديد'}</h3>
+                    <form id="productForm" class="space-y-3">
+                        <div><label>اسم المنتج *</label><input type="text" id="prodName" value="${product ? product.name : ''}" required></div>
+                        <div><label>كود المنتج</label><input type="text" id="prodCode" value="${product ? product.code || '' : ''}"></div>
+                        <div><label>باركود المنتج</label><input type="text" id="prodBarcode" value="${product ? product.barcode || '' : ''}"></div>
+                        <div><label>الوصف</label><textarea id="prodDesc" rows="3">${product ? product.description || '' : ''}</textarea></div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label>الكمية</label><input type="number" id="prodQuantity" value="${product ? product.quantity || 0 : 0}"></div>
+                            <div><label>سعر التكلفة</label><input type="number" id="prodCost" value="${product ? product.costPrice || 0 : 0}"></div>
+                            <div><label>سعر البيع</label><input type="number" id="prodPrice" value="${product ? product.price || 0 : 0}"></div>
+                            <div><label>سعر التخفيض</label><input type="number" id="prodDiscount" value="${product ? product.discountPrice || 0 : 0}"></div>
+                        </div>
+                        <div>
+                            <label>الصور (يمكن رفع عدة صور)</label>
+                            <input type="file" id="productImages" multiple accept="image/*">
+                            <div id="imagePreviewContainer" class="flex flex-wrap gap-2 mt-2">
+                                ${productImagesBase64.map((img, idx) => `
+                                    <div class="image-preview">
+                                        <img src="${img}" style="width:80px;height:80px;object-fit:cover;">
+                                        <div class="remove-image" onclick="removeImageAtIndex(${idx})">×</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="flex justify-end gap-2 pt-3">
+                            <button type="button" onclick="closeModal()" class="btn-secondary">إلغاء</button>
+                            <button type="submit" class="btn-primary">حفظ</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        document.getElementById('productForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('prodName').value;
+            if (!name) return alert('الاسم مطلوب');
+            const productData = {
+                name,
+                code: document.getElementById('prodCode').value,
+                barcode: document.getElementById('prodBarcode').value,
+                description: document.getElementById('prodDesc').value,
+                quantity: parseFloat(document.getElementById('prodQuantity').value) || 0,
+                costPrice: parseFloat(document.getElementById('prodCost').value) || 0,
+                price: parseFloat(document.getElementById('prodPrice').value) || 0,
+                discountPrice: parseFloat(document.getElementById('prodDiscount').value) || 0,
+                images: productImagesBase64,
+                imageUrl: productImagesBase64.length > 0 ? productImagesBase64[0] : '/images/default-product.png'
+            };
+            if (currentEditingProductId) {
+                await updateProduct(currentEditingProductId, productData);
+            } else {
+                await addProduct(productData);
+            }
+            closeModal();
+            renderSection('products');
+        });
+        document.getElementById('productImages').addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files);
+            for (let file of files) {
+                const reader = new FileReader();
+                await new Promise((resolve) => {
+                    reader.onload = (ev) => {
+                        productImagesBase64.push(ev.target.result);
+                        resolve();
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+            updateImagePreview();
+        });
+        window.removeImageAtIndex = (idx) => {
+            productImagesBase64.splice(idx, 1);
+            updateImagePreview();
+        };
+        function updateImagePreview() {
+            const container = document.getElementById('imagePreviewContainer');
+            container.innerHTML = productImagesBase64.map((img, idx) => `
+                <div class="image-preview">
+                    <img src="${img}" style="width:80px;height:80px;object-fit:cover;">
+                    <div class="remove-image" onclick="removeImageAtIndex(${idx})">×</div>
+                </div>
+            `).join('');
+        }
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('productModal');
+        if (modal) modal.remove();
+    }
+
+    // ---------- New Order Modal with Product Selection ----------
+    let cartItems = [];
+
+    function showNewOrderModal() {
+        cartItems = [];
+        renderNewOrderModal();
+    }
+
+    async function renderNewOrderModal() {
+        const products = await loadProducts();
+        const modalHtml = `
+            <div id="orderModal" class="modal-backdrop">
+                <div class="modal-content" style="width:900px">
+                    <h3 class="text-xl font-bold mb-4">إنشاء طلب جديد</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <h4 class="font-semibold mb-2">بيانات العميل</h4>
+                            <input type="text" id="customerName" placeholder="اسم العميل" class="mb-2">
+                            <input type="text" id="customerPhone" placeholder="رقم الهاتف" class="mb-2">
+                            <select id="paymentMethod" class="mb-4">
+                                <option value="نقدي">نقدي</option>
+                                <option value="بطاقة ائتمان">بطاقة ائتمان</option>
+                                <option value="تحويل بنكي">تحويل بنكي</option>
+                            </select>
+                            <h4 class="font-semibold mb-2">إضافة منتج إلى السلة</h4>
+                            <select id="productSelect" class="mb-2">
+                                <option value="">-- اختر منتج --</option>
+                                ${products.map(p => `<option value="${p.id}" data-price="${p.price}" data-name="${p.name}">${p.name} - ${p.price} ريال</option>`).join('')}
+                            </select>
+                            <div class="flex gap-2">
+                                <input type="number" id="productQty" placeholder="الكمية" value="1" class="w-24">
+                                <button onclick="addToCart()" class="btn-primary text-sm">إضافة إلى السلة</button>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold mb-2">السلة</h4>
+                            <div id="cartItemsList" class="max-h-64 overflow-y-auto border rounded p-2 bg-gray-50"></div>
+                            <div class="mt-2 font-bold">المجموع: <span id="cartTotal">0</span> ريال</div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-2 mt-4">
+                        <button onclick="closeModal()" class="btn-secondary">إلغاء</button>
+                        <button onclick="saveNewOrder()" class="btn-primary">حفظ الطلب</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        window.addToCart = () => {
+            const select = document.getElementById('productSelect');
+            const productId = select.value;
+            if (!productId) return;
+            const product = products.find(p => p.id === productId);
+            const qty = parseInt(document.getElementById('productQty').value) || 1;
+            const existing = cartItems.find(item => item.productId === productId);
+            if (existing) {
+                existing.quantity += qty;
+            } else {
+                cartItems.push({
+                    productId: product.id,
+                    name: product.name,
+                    price: product.price,
+                    quantity: qty
+                });
+            }
+            updateCartDisplay();
+            document.getElementById('productQty').value = '1';
+            select.value = '';
+        };
+        window.updateCartDisplay = () => {
+            const container = document.getElementById('cartItemsList');
+            let total = 0;
+            container.innerHTML = cartItems.map((item, idx) => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                return `
+                    <div class="cart-item">
+                        <span>${item.name} x ${item.quantity}</span>
+                        <span>${itemTotal} ريال</span>
+                        <div>
+                            <button onclick="adjustCartItem(${idx}, -1)" class="text-blue-600">-</button>
+                            <button onclick="adjustCartItem(${idx}, 1)" class="text-blue-600">+</button>
+                            <button onclick="removeCartItem(${idx})" class="text-red-600 ml-2"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('cartTotal').innerText = total;
+        };
+        window.adjustCartItem = (idx, delta) => {
+            if (cartItems[idx].quantity + delta > 0) {
+                cartItems[idx].quantity += delta;
+            } else {
+                cartItems.splice(idx, 1);
+            }
+            updateCartDisplay();
+        };
+        window.removeCartItem = (idx) => {
+            cartItems.splice(idx, 1);
+            updateCartDisplay();
+        };
+        window.saveNewOrder = async () => {
+            const customerName = document.getElementById('customerName').value;
+            const customerPhone = document.getElementById('customerPhone').value;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            if (!customerName) return alert('يرجى إدخال اسم العميل');
+            if (cartItems.length === 0) return alert('أضف منتجات إلى السلة');
+            const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            await addOrder({
+                orderNumber: `ORD-${Date.now()}`,
+                customerName,
+                customerPhone,
+                paymentMethod,
+                status: 'غير مدفوع',
+                date: new Date().toISOString().slice(0,10),
+                items: cartItems,
+                totalAmount
+            });
+            closeModal();
+            renderSection('orders');
+        };
+    }
+
+    // ---------- باقي الأقسام (مختصرة لكن كاملة) ----------
+    // نعيد استخدام الأقسام السابقة ولكن مع تعديل زر إضافة طلب ليفتح المودال الجديد
+    // سأقوم بدمجها مع تعديل بسيط في renderOrders ليستخدم showNewOrderModal
     let currentSection = 'orders';
     async function renderSection(section) {
         const container = document.getElementById('page-content');
@@ -258,33 +634,37 @@
         }
     }
 
-    // ====================== عرض الطلبات ======================
+    // Orders section with new button
     async function renderOrders(container) {
         container.innerHTML = `<div class="loading-spinner"></div><div class="text-center">جاري تحميل الطلبات...</div>`;
         let orders = await loadOrders();
         const getStatusClass = (status) => {
-            const map = { 'مدفوع':'bg-green-100 text-green-700', 'غير مدفوع':'bg-red-100 text-red-700', 'مسترجع':'bg-orange-100 text-orange-700', 'ملغي':'bg-gray-100 text-gray-700' };
+            const map = {
+                'مدفوع': 'bg-green-100 text-green-700',
+                'غير مدفوع': 'bg-red-100 text-red-700',
+                'مسترجع': 'bg-orange-100 text-orange-700',
+                'ملغي': 'bg-gray-100 text-gray-700'
+            };
             return map[status] || 'bg-gray-100';
         };
         container.innerHTML = `
             <div class="bg-white rounded-2xl shadow p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold"><i class="fas fa-truck-fast ml-2"></i>الطلبات</h2>
-                    <button onclick="window.showAddOrderModal()" class="btn-primary"><i class="fas fa-plus ml-1"></i>طلب جديد</button>
+                    <button onclick="window.showNewOrderModal()" class="btn-primary"><i class="fas fa-plus ml-1"></i>طلب جديد</button>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full">
                         <thead class="bg-gray-100">
-                            <tr><th class="p-3">رقم الطلب</th><th class="p-3">العميل</th><th class="p-3">طريقة الدفع</th><th class="p-3">الحالة</th><th class="p-3">المجموع</th><th class="p-3">التاريخ</th><th class="p-3">إجراءات</th></tr>
+                            <tr><th class="p-3">رقم الطلب</th><th class="p-3">اسم العميل</th><th class="p-3">طريقة الدفع</th><th class="p-3">الحالة</th><th class="p-3">التاريخ</th><th class="p-3">الإجراءات</th></tr>
                         </thead>
                         <tbody>
-                            ${orders.length === 0 ? '<tr><td colspan="7" class="text-center p-6">لا توجد طلبات</td></tr>' : orders.map(order => `
+                            ${orders.length === 0 ? '<tr><td colspan="6" class="text-center p-6">لا توجد طلبات</td></tr>' : orders.map(order => `
                                 <tr class="border-b">
                                     <td class="p-3">${order.orderNumber || order.id.slice(-6)}</td>
-                                    <td class="p-3">${order.customer || '-'}</td>
-                                    <td class="p-3">${order.payment || '-'}</td>
+                                    <td class="p-3">${order.customerName || '-'}</td>
+                                    <td class="p-3">${order.paymentMethod || '-'}</td>
                                     <td class="p-3"><span class="badge-status ${getStatusClass(order.status)}">${order.status || 'غير مدفوع'}</span></td>
-                                    <td class="p-3">${order.total || 0} ريال</td>
                                     <td class="p-3">${order.date || '-'}</td>
                                     <td class="p-3">
                                         <button onclick="window.editOrder('${order.id}')" class="text-blue-600 ml-2"><i class="fas fa-edit"></i></button>
@@ -298,98 +678,6 @@
                 </div>
             </div>
         `;
-
-        // شاشة إضافة طلب مع قائمة المنتجات وسلة
-        window.showAddOrderModal = async () => {
-            const products = await loadProducts();
-            if (products.length === 0) { alert('لا توجد منتجات لإضافتها للطلب'); return; }
-            let cart = []; // { productId, name, price, quantity }
-            let total = 0;
-            const modalDiv = document.createElement('div');
-            modalDiv.className = 'modal-backdrop';
-            const renderCart = () => {
-                const cartContainer = modalDiv.querySelector('#cartItems');
-                if (!cartContainer) return;
-                cartContainer.innerHTML = cart.map((item, idx) => `
-                    <div class="cart-item">
-                        <div><strong>${item.name}</strong> - ${item.price} ريال × ${item.quantity}</div>
-                        <div class="flex gap-2">
-                            <input type="number" value="${item.quantity}" min="1" class="w-20" data-idx="${idx}" onchange="window.updateCartQty(${idx}, this.value)">
-                            <button onclick="window.removeFromCart(${idx})" class="text-red-600"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-                `).join('');
-                total = cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
-                modalDiv.querySelector('#cartTotal').innerText = total;
-            };
-            modalDiv.innerHTML = `
-                <div class="modal-content">
-                    <h3 class="text-xl font-bold mb-4">إضافة طلب جديد</h3>
-                    <div class="mb-3"><label>اسم العميل:</label><input id="customerName" class="border rounded p-2 w-full"></div>
-                    <div class="mb-3"><label>طريقة الدفع:</label><input id="paymentMethod" class="border rounded p-2 w-full" placeholder="نقدي / بطاقة / ..."></div>
-                    <div class="mb-3"><label>إضافة منتج:</label>
-                        <select id="productSelect" class="border rounded p-2 w-full">
-                            <option value="">-- اختر منتج --</option>
-                            ${products.map(p => `<option value="${p.id}" data-price="${p.price}" data-name="${p.name}">${p.name} - ${p.price} ريال</option>`).join('')}
-                        </select>
-                        <div class="flex gap-2 mt-2"><input type="number" id="productQty" value="1" min="1" class="w-24"><button id="addToCartBtn" class="btn-primary">أضف للسلة</button></div>
-                    </div>
-                    <div class="mb-3"><label>المنتجات المختارة:</label><div id="cartItems"></div><div class="font-bold mt-2">الإجمالي: <span id="cartTotal">0</span> ريال</div></div>
-                    <div class="flex gap-2 mt-4">
-                        <button id="saveOrderBtn" class="btn-primary">حفظ الطلب</button>
-                        <button id="closeModalBtn" class="btn-secondary">إلغاء</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modalDiv);
-            const addToCart = () => {
-                const select = modalDiv.querySelector('#productSelect');
-                const qtyInput = modalDiv.querySelector('#productQty');
-                const selectedOption = select.options[select.selectedIndex];
-                if (!selectedOption.value) return;
-                const productId = selectedOption.value;
-                const name = selectedOption.dataset.name;
-                const price = parseFloat(selectedOption.dataset.price);
-                const qty = parseInt(qtyInput.value) || 1;
-                const existing = cart.find(i => i.productId === productId);
-                if (existing) existing.quantity += qty;
-                else cart.push({ productId, name, price, quantity: qty });
-                renderCart();
-                select.selectedIndex = 0;
-                qtyInput.value = 1;
-            };
-            window.updateCartQty = (idx, newQty) => {
-                const q = parseInt(newQty);
-                if (!isNaN(q) && q > 0) cart[idx].quantity = q;
-                else cart[idx].quantity = 1;
-                renderCart();
-            };
-            window.removeFromCart = (idx) => {
-                cart.splice(idx, 1);
-                renderCart();
-            };
-            modalDiv.querySelector('#addToCartBtn').onclick = addToCart;
-            modalDiv.querySelector('#saveOrderBtn').onclick = async () => {
-                const customer = modalDiv.querySelector('#customerName').value.trim();
-                const payment = modalDiv.querySelector('#paymentMethod').value.trim();
-                if (!customer) { alert('أدخل اسم العميل'); return; }
-                if (cart.length === 0) { alert('أضف منتجات للطلب'); return; }
-                const orderNumber = `ORD-${Date.now()}`;
-                await addOrder({
-                    orderNumber,
-                    customer,
-                    payment,
-                    status: 'غير مدفوع',
-                    items: cart.map(i => ({ productId: i.productId, name: i.name, price: i.price, quantity: i.quantity })),
-                    total: total,
-                    date: new Date().toISOString().slice(0,10)
-                });
-                modalDiv.remove();
-                renderSection('orders');
-            };
-            modalDiv.querySelector('#closeModalBtn').onclick = () => modalDiv.remove();
-        };
-
         window.editOrder = async (id) => {
             let orders = await loadOrders();
             let order = orders.find(o => o.id === id);
@@ -404,7 +692,7 @@
         window.refundOrder = async (id) => { if (confirm('استرداد الطلب؟')) await updateOrderStatus(id, 'مسترجع') && renderSection('orders'); };
     }
 
-    // ====================== عرض العملاء (نفس السابق) ======================
+    // Customers (بسيطة)
     async function renderCustomers(container) {
         container.innerHTML = `<div class="loading-spinner"></div><div class="text-center">جاري تحميل العملاء...</div>`;
         let customers = await loadCustomers();
@@ -415,36 +703,32 @@
                     <button onclick="window.showAddCustomerModal()" class="btn-primary"><i class="fas fa-plus ml-1"></i>عميل جديد</button>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="min-w-full">
-                        <thead class="bg-gray-100"><tr><th class="p-3">الاسم</th><th class="p-3">الهاتف</th><th class="p-3">البريد</th><th class="p-3">العنوان</th><th class="p-3">إجراءات</th></tr></thead>
-                        <tbody>${customers.length === 0 ? '<tr><td colspan="5" class="text-center p-6">لا يوجد عملاء</td></tr>' : customers.map(c => `
-                            <tr class="border-b">
-                                <td class="p-3">${c.name}</td><td class="p-3">${c.phone || '-'}</td><td class="p-3">${c.email || '-'}</td><td class="p-3">${c.address || '-'}</td>
-                                <td class="p-3"><button onclick="window.editCustomer('${c.id}')" class="text-blue-600 ml-2"><i class="fas fa-edit"></i></button><button onclick="window.deleteCustomerItem('${c.id}')" class="text-red-600"><i class="fas fa-trash"></i></button></td>
-                            </tr>`).join('')}</tbody>
-                    </table>
+                    <table class="min-w-full"><thead class="bg-gray-100"><tr><th class="p-3">الاسم</th><th class="p-3">الهاتف</th><th class="p-3">البريد</th><th class="p-3">العنوان</th><th class="p-3">إجراءات</th></tr></thead><tbody>
+                        ${customers.length === 0 ? '<tr><td colspan="5" class="text-center p-6">لا يوجد عملاء</td></tr>' : customers.map(c => `
+                            <tr><td class="p-3">${c.name}</td><td class="p-3">${c.phone || '-'}</td><td class="p-3">${c.email || '-'}</td><td class="p-3">${c.address || '-'}</td>
+                            <td><button onclick="window.editCustomer('${c.id}')" class="text-blue-600 ml-2"><i class="fas fa-edit"></i></button><button onclick="window.deleteCustomerItem('${c.id}')" class="text-red-600"><i class="fas fa-trash"></i></button></td></tr>
+                        `).join('')}
+                    </tbody></table>
                 </div>
             </div>
         `;
         window.showAddCustomerModal = async () => {
-            const name = prompt('الاسم:'); if (!name) return;
+            const name = prompt('الاسم:'); if(!name) return;
             const phone = prompt('الهاتف:'); const email = prompt('البريد:'); const address = prompt('العنوان:');
-            await addCustomer({ name, phone, email, address });
-            renderSection('customers');
+            await addCustomer({ name, phone, email, address }); renderSection('customers');
         };
         window.editCustomer = async (id) => {
-            let customers = await loadCustomers();
-            let cust = customers.find(c => c.id === id);
-            if (!cust) return;
-            const name = prompt('الاسم الجديد:', cust.name); if (!name) return;
-            const phone = prompt('الهاتف الجديد:', cust.phone); const email = prompt('البريد الجديد:', cust.email); const address = prompt('العنوان الجديد:', cust.address);
-            await updateCustomer(id, { name, phone, email, address });
-            renderSection('customers');
+            let customers = await loadCustomers(); let cust = customers.find(c=>c.id===id);
+            const name = prompt('الاسم الجديد:', cust.name); if(!name) return;
+            const phone = prompt('الهاتف الجديد:', cust.phone);
+            const email = prompt('البريد الجديد:', cust.email);
+            const address = prompt('العنوان الجديد:', cust.address);
+            await updateCustomer(id, { name, phone, email, address }); renderSection('customers');
         };
-        window.deleteCustomerItem = async (id) => { if (confirm('حذف العميل؟')) await deleteCustomer(id) && renderSection('customers'); };
+        window.deleteCustomerItem = async (id) => { if(confirm('حذف العميل؟')) await deleteCustomer(id) && renderSection('customers'); };
     }
 
-    // ====================== المنتجات (مع شاشة تعديل متكاملة) ======================
+    // Products section with edit modal
     async function renderProducts(container) {
         container.innerHTML = `<div class="loading-spinner"></div><div class="text-center">جاري تحميل المنتجات...</div>`;
         let products = await loadProducts();
@@ -453,8 +737,8 @@
                 <div class="flex flex-wrap justify-between items-center mb-6 gap-2">
                     <h2 class="text-2xl font-bold"><i class="fas fa-boxes ml-2"></i>المنتجات</h2>
                     <div class="flex gap-2">
-                        <button onclick="window.showProductModal()" class="btn-primary"><i class="fas fa-plus ml-1"></i>منتج جديد</button>
-                        <button onclick="window.downloadProductTemplate()" class="btn-secondary"><i class="fas fa-download ml-1"></i>قالب Excel</button>
+                        <button onclick="window.showProductModal()" class="btn-primary"><i class="fas fa-plus ml-1"></i>إضافة منتج</button>
+                        <button onclick="window.downloadProductTemplate()" class="btn-secondary"><i class="fas fa-download ml-1"></i>تحميل قالب Excel</button>
                         <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="window.handleExcelUpload(this)">
                         <button onclick="document.getElementById('excelFileInput').click()" class="btn-success"><i class="fas fa-file-excel ml-1"></i>رفع Excel</button>
                     </div>
@@ -467,7 +751,7 @@
                             <p class="text-blue-600 font-bold">${p.price} ريال</p>
                             <p class="text-gray-600">الكمية: ${p.quantity || 0}</p>
                             <div class="flex justify-between mt-3 pt-2 border-t">
-                                <button onclick="window.showProductModal('${p.id}')" class="text-blue-600"><i class="fas fa-edit ml-1"></i>تعديل</button>
+                                <button onclick="window.editProductModal('${p.id}')" class="text-blue-600"><i class="fas fa-edit ml-1"></i>تعديل</button>
                                 <button onclick="window.deleteProductItem('${p.id}')" class="text-red-600"><i class="fas fa-trash ml-1"></i>حذف</button>
                             </div>
                         </div>
@@ -475,147 +759,42 @@
                 </div>
             </div>
         `;
-
-        // شاشة تعديل/إضافة المنتج
-        window.showProductModal = async (productId = null) => {
-            let product = null;
-            if (productId) {
-                const products = await loadProducts();
-                product = products.find(p => p.id === productId);
-                if (!product) return;
-            }
-            const modalDiv = document.createElement('div');
-            modalDiv.className = 'modal-backdrop';
-            const images = product?.images ? [...product.images] : [];
-            const imagePreviews = () => images.map((img, idx) => `
-                <div class="relative inline-block ml-2 mb-2">
-                    <img src="${img}" class="image-preview">
-                    <button type="button" onclick="window.removeImage(${idx})" class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs">×</button>
-                </div>
-            `).join('');
-            modalDiv.innerHTML = `
-                <div class="modal-content">
-                    <h3 class="text-xl font-bold mb-4">${product ? 'تعديل المنتج' : 'منتج جديد'}</h3>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div><label>اسم المنتج *</label><input id="prodName" class="border rounded p-2" value="${product?.name || ''}"></div>
-                        <div><label>كود المنتج</label><input id="prodCode" class="border rounded p-2" value="${product?.code || ''}"></div>
-                        <div><label>باركود</label><input id="prodBarcode" class="border rounded p-2" value="${product?.barcode || ''}"></div>
-                        <div><label>الكمية</label><input id="prodQty" type="number" class="border rounded p-2" value="${product?.quantity || 0}"></div>
-                        <div><label>سعر التكلفة</label><input id="prodCost" type="number" class="border rounded p-2" value="${product?.costPrice || 0}"></div>
-                        <div><label>سعر البيع *</label><input id="prodPrice" type="number" class="border rounded p-2" value="${product?.price || 0}"></div>
-                        <div><label>سعر التخفيض</label><input id="prodDiscount" type="number" class="border rounded p-2" value="${product?.discountPrice || 0}"></div>
-                    </div>
-                    <div class="mt-3"><label>الوصف</label><textarea id="prodDesc" rows="2" class="border rounded p-2">${product?.description || ''}</textarea></div>
-                    <div class="mt-3"><label>الصور (يمكن رفع عدة صور)</label>
-                        <input type="file" id="imageUpload" accept="image/*" multiple class="mb-2">
-                        <div id="imagePreviewContainer" class="flex flex-wrap">${imagePreviews()}</div>
-                    </div>
-                    <div class="flex gap-2 mt-4">
-                        <button id="saveProductBtn" class="btn-primary">حفظ</button>
-                        <button id="closeModalBtn" class="btn-secondary">إلغاء</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modalDiv);
-            const uploadInput = modalDiv.querySelector('#imageUpload');
-            const previewContainer = modalDiv.querySelector('#imagePreviewContainer');
-            window.removeImage = (idx) => {
-                images.splice(idx, 1);
-                previewContainer.innerHTML = images.map((img, i) => `
-                    <div class="relative inline-block ml-2 mb-2">
-                        <img src="${img}" class="image-preview">
-                        <button type="button" onclick="window.removeImage(${i})" class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs">×</button>
-                    </div>
-                `).join('');
-            };
-            uploadInput.addEventListener('change', (e) => {
-                const files = Array.from(e.target.files);
-                files.forEach(file => {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        images.push(ev.target.result);
-                        previewContainer.innerHTML = images.map((img, i) => `
-                            <div class="relative inline-block ml-2 mb-2">
-                                <img src="${img}" class="image-preview">
-                                <button type="button" onclick="window.removeImage(${i})" class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs">×</button>
-                            </div>
-                        `).join('');
-                    };
-                    reader.readAsDataURL(file);
-                });
-                uploadInput.value = '';
-            });
-            modalDiv.querySelector('#saveProductBtn').onclick = async () => {
-                const name = modalDiv.querySelector('#prodName').value.trim();
-                if (!name) { alert('اسم المنتج مطلوب'); return; }
-                const price = parseFloat(modalDiv.querySelector('#prodPrice').value);
-                if (isNaN(price)) { alert('سعر البيع مطلوب'); return; }
-                const productData = {
-                    name,
-                    code: modalDiv.querySelector('#prodCode').value.trim(),
-                    barcode: modalDiv.querySelector('#prodBarcode').value.trim(),
-                    description: modalDiv.querySelector('#prodDesc').value.trim(),
-                    quantity: parseInt(modalDiv.querySelector('#prodQty').value) || 0,
-                    costPrice: parseFloat(modalDiv.querySelector('#prodCost').value) || 0,
-                    price: price,
-                    discountPrice: parseFloat(modalDiv.querySelector('#prodDiscount').value) || 0,
-                    images: images,
-                    imageUrl: images.length > 0 ? images[0] : '/images/default-product.png'
-                };
-                if (product) {
-                    await updateProduct(product.id, productData);
-                } else {
-                    await addProduct(productData);
-                }
-                modalDiv.remove();
-                renderSection('products');
-            };
-            modalDiv.querySelector('#closeModalBtn').onclick = () => modalDiv.remove();
+        window.editProductModal = async (id) => {
+            let products = await loadProducts();
+            let product = products.find(p => p.id === id);
+            if (product) showProductModal(product);
         };
-
-        window.deleteProductItem = async (id) => { if (confirm('حذف المنتج؟')) await deleteProduct(id) && renderSection('products'); };
+        window.deleteProductItem = async (id) => { if(confirm('حذف المنتج؟')) await deleteProduct(id) && renderSection('products'); };
         window.handleExcelUpload = (input) => {
             const file = input.files[0];
-            if (file) importProductsFromExcel(file, (res) => { if(res.success) alert(`تم استيراد ${res.count} منتج`); else alert(res.error || 'فشل'); renderSection('products'); });
+            if (file) importProductsFromExcel(file, (res) => { if(res.success) alert(`تم استيراد ${res.count} منتج`); else alert(res.error || 'فشل الاستيراد'); renderSection('products'); });
             input.value = '';
         };
     }
 
-    // ====================== المخزون (نفس السابق) ======================
+    // Inventory (same)
     async function renderInventory(container) {
         container.innerHTML = `<div class="loading-spinner"></div><div class="text-center">جاري تحميل المخزون...</div>`;
         let products = await loadProducts();
         container.innerHTML = `
             <div class="bg-white rounded-2xl shadow p-6">
                 <h2 class="text-2xl font-bold mb-6"><i class="fas fa-warehouse ml-2"></i>المخزون</h2>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full">
-                        <thead class="bg-gray-100"><tr><th class="p-3">المنتج</th><th class="p-3">الكمية الحالية</th><th class="p-3">تحديث الكمية</th></tr></thead>
-                        <tbody>
-                            ${products.length === 0 ? '<tr><td colspan="3" class="text-center p-6">لا توجد منتجات</td></tr>' : products.map(p => `
-                                <tr class="border-b">
-                                    <td class="p-3">${p.name}</td>
-                                    <td class="p-3"><span class="font-bold ${p.quantity < 5 ? 'text-red-600' : 'text-green-600'}">${p.quantity || 0}</span></td>
-                                    <td class="p-3"><div class="flex gap-2"><input type="number" id="qty-${p.id}" value="${p.quantity || 0}" class="border rounded p-2 w-24"><button onclick="window.updateQuantity('${p.id}')" class="btn-primary text-sm py-1">تحديث</button></div></td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
+                <div class="overflow-x-auto"><table class="min-w-full"><thead class="bg-gray-100"><tr><th class="p-3">المنتج</th><th class="p-3">الكمية الحالية</th><th class="p-3">تحديث الكمية</th></tr></thead><tbody>
+                    ${products.length === 0 ? '<tr><td colspan="3" class="text-center p-6">لا توجد منتجات</td></tr>' : products.map(p => `
+                        <tr><td class="p-3">${p.name}</td><td class="p-3"><span class="font-bold ${p.quantity < 5 ? 'text-red-600' : 'text-green-600'}">${p.quantity || 0}</span></td>
+                        <td><div class="flex gap-2"><input type="number" id="qty-${p.id}" value="${p.quantity || 0}" class="border rounded p-2 w-24"><button onclick="window.updateQuantity('${p.id}')" class="btn-primary text-sm py-1">تحديث</button></div></td></tr>
+                    `).join('')}
+                </tbody></table></div>
             </div>
         `;
         window.updateQuantity = async (id) => {
             const input = document.getElementById(`qty-${id}`);
             const newQty = parseInt(input.value);
-            if (!isNaN(newQty)) {
-                await updateProductQuantity(id, newQty);
-                renderSection('inventory');
-                alert('تم تحديث الكمية');
-            } else alert('أدخل رقماً صحيحاً');
+            if (!isNaN(newQty)) { await updateProductQuantity(id, newQty); renderSection('inventory'); alert('تم تحديث الكمية'); } else alert('أدخل رقماً صحيحاً');
         };
     }
 
-    // ====================== طرق الدفع (نفس السابق) ======================
+    // Payment methods
     async function renderPaymentMethods(container) {
         let methodsDoc = await getSettingsDoc('paymentMethods');
         let methods = methodsDoc?.methods || ['نقدي', 'بطاقة ائتمان', 'تحويل بنكي'];
@@ -625,9 +804,7 @@
                     <h2 class="text-2xl font-bold"><i class="fas fa-credit-card ml-2"></i>طرق الدفع</h2>
                     <button onclick="window.addPaymentMethod()" class="btn-primary"><i class="fas fa-plus ml-1"></i>إضافة طريقة</button>
                 </div>
-                <ul class="space-y-2">
-                    ${methods.map((m, idx) => `<li class="flex justify-between items-center border p-3 rounded"><span>${m}</span><button onclick="window.deletePaymentMethod(${idx})" class="text-red-600"><i class="fas fa-trash"></i></button></li>`).join('')}
-                </ul>
+                <ul class="space-y-2">${methods.map((m, idx) => `<li class="flex justify-between items-center border p-3 rounded"><span>${m}</span><button onclick="window.deletePaymentMethod(${idx})" class="text-red-600"><i class="fas fa-trash"></i></button></li>`).join('')}</ul>
             </div>
         `;
         window.addPaymentMethod = async () => {
@@ -649,7 +826,7 @@
         };
     }
 
-    // ====================== تعليمات الفاتورة ======================
+    // Invoice instructions
     async function renderInvoiceInstructions(container) {
         let invoiceDoc = await getSettingsDoc('invoiceInstructions');
         let text = invoiceDoc?.text || 'شكراً لتسوقكم معنا.';
@@ -667,7 +844,7 @@
         };
     }
 
-    // ====================== الإعدادات العامة ======================
+    // General settings
     async function renderGeneralSettings(container) {
         let general = await getSettingsDoc('general');
         let data = general || { siteName: 'متجرك', currency: 'ريال', platformStamp: 'جميع الحقوق محفوظة', contactEmail: 'info@shop.com', whatsapp: '' };
@@ -697,7 +874,7 @@
         };
     }
 
-    // ====================== التنقل ======================
+    // Navigation
     function setActiveNav(section) {
         document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('sidebar-active'));
         document.getElementById(`nav-${section}`)?.classList.add('sidebar-active');
@@ -714,6 +891,9 @@
         });
     });
 
+    window.showProductModal = showProductModal;
+    window.showNewOrderModal = showNewOrderModal;
+    window.closeModal = closeModal;
     renderSection('orders');
 </script>
 </body>
