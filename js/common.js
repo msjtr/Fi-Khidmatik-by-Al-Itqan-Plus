@@ -1,4 +1,4 @@
-// استيراد من firebase.js فقط (كل الدوال موجودة هناك)
+// استيراد من firebase.js
 import {
     db,
     collection,
@@ -18,10 +18,14 @@ import {
     deleteOrder,
     updateOrderStatus,
     getSettings,
-    setSettings
+    setSettings,
+    loadCustomers,      // أضف هذا
+    addCustomer,        // أضف هذا
+    deleteCustomer,     // أضف هذا
+    updateCustomer      // أضف هذا (اختياري)
 } from './firebase.js';
 
-// فقط إعادة تصدير (لا تعيد تعريف الدوال)
+// إعادة تصدير
 export {
     db,
     collection,
@@ -41,5 +45,9 @@ export {
     deleteOrder,
     updateOrderStatus,
     getSettings,
-    setSettings
+    setSettings,
+    loadCustomers,      // أضف هذا
+    addCustomer,        // أضف هذا
+    deleteCustomer,     // أضف هذا
+    updateCustomer      // أضف هذا
 };
