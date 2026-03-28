@@ -19,10 +19,10 @@ import {
     updateOrderStatus,
     getSettings,
     setSettings,
-    loadCustomers,      // أضف هذا
-    addCustomer,        // أضف هذا
-    deleteCustomer,     // أضف هذا
-    updateCustomer      // أضف هذا (اختياري)
+    loadCustomers,      // ✅ الآن موجودة في firebase.js
+    addCustomer,        // ✅ الآن موجودة في firebase.js
+    deleteCustomer,     // ✅ الآن موجودة في firebase.js
+    updateCustomer      // ✅ الآن موجودة في firebase.js
 } from './firebase.js';
 
 // إعادة تصدير
@@ -46,8 +46,8 @@ export {
     updateOrderStatus,
     getSettings,
     setSettings,
-    loadCustomers,      // أضف هذا
-    addCustomer,        // أضف هذا
-    deleteCustomer,     // أضف هذا
-    updateCustomer      // أضف هذا
+    loadCustomers,
+    addCustomer,
+    deleteCustomer,
+    updateCustomer
 };
