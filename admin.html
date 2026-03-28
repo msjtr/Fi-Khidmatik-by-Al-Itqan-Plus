@@ -53,28 +53,23 @@
             </nav>
             <div class="p-4 border-t border-gray-200 text-xs text-gray-400">نظام إداري متكامل v7.0</div>
         </aside>
-
         <main class="flex-1 p-4 overflow-hidden">
             <iframe name="contentFrame" id="contentFrame" src="admin/modules/orders.html" class="w-full h-full"></iframe>
         </main>
     </div>
-
     <script>
         const links = document.querySelectorAll('.sidebar-item');
         const iframe = document.getElementById('contentFrame');
-        
         function setActive(section) {
             links.forEach(link => link.classList.remove('sidebar-active'));
             const activeLink = Array.from(links).find(link => link.getAttribute('data-section') === section);
             if (activeLink) activeLink.classList.add('sidebar-active');
         }
-        
         iframe.addEventListener('load', () => {
             const src = iframe.contentWindow.location.pathname;
             const section = src.split('/').pop().replace('.html', '');
             setActive(section);
         });
-        
         links.forEach(link => {
             link.addEventListener('click', () => {
                 const section = link.getAttribute('data-section');
