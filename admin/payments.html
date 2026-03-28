@@ -5,53 +5,84 @@
     <title>طرق الدفع</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-    <script src="../js/firebase.js"></script>
-    <script src="../js/admin.js"></script>
-</head>
-<body class="bg-gray-50 p-6">
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex justify-between mb-4">
-            <h2 class="text-2xl font-bold">طرق الدفع</h2>
-            <button onclick="addPaymentMethod()" class="bg-blue-600 text-white px-4 py-2 rounded">+ إضافة طريقة</button>
-        </div>
-        <ul id="payment-methods-list" class="space-y-2"></ul>
-    </div>
-
-    <script>
+    <script type="module">
+        import { db, doc, getDoc, setDoc } from '../js/firebase.js';
+        
         let paymentMethods = [];
+
         async function loadPaymentMethods() {
-            const doc = await db.collection('settings').doc('paymentMethods').get();
-            if (doc.exists) paymentMethods = doc.data().methods || [];
-            else paymentMethods = ['نقدي', 'بطاقة ائتمان', 'تحويل بنكي'];
+            const docRef = doc(db, 'settings', 'paymentMethods');
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                paymentMethods = docSnap.data().methods || [];
+            } else {
+                paymentMethods = ['نقدي', 'بطاقة ائتمان', 'تحويل بنكي'];
+                await saveMethods();
+            }
             renderMethods();
         }
+
         function renderMethods() {
             const list = document.getElementById('payment-methods-list');
+            if (!list) return;
+            
+            if (paymentMethods.length === 0) {
+                list.innerHTML = '<li class="text-center text-gray-500 p-4">لا توجد طرق دفع</li>';
+                return;
+            }
+            
             list.innerHTML = paymentMethods.map((method, index) => `
-                <li class="flex justify-between items-center border p-2 rounded">
-                    ${method}
-                    <button onclick="deleteMethod(${index})" class="text-red-600"><i class="fas fa-trash"></i></button>
+                <li class="flex justify-between items-center border rounded-lg p-3 hover:bg-gray-50">
+                    <span><i class="fas fa-credit-card text-gray-500 ml-2"></i>${method}</span>
+                    <button onclick="window.deleteMethod(${index})" class="text-red-600 hover:text-red-800">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </li>
             `).join('');
         }
+
+        async function saveMethods() {
+            const docRef = doc(db, 'settings', 'paymentMethods');
+            await setDoc(docRef, { methods: paymentMethods });
+        }
+
         window.addPaymentMethod = () => {
             const newMethod = prompt('أدخل طريقة الدفع الجديدة:');
-            if (newMethod) {
-                paymentMethods.push(newMethod);
+            if (newMethod && newMethod.trim()) {
+                paymentMethods.push(newMethod.trim());
                 saveMethods();
+                renderMethods();
             }
         };
+
         window.deleteMethod = (index) => {
-            paymentMethods.splice(index, 1);
-            saveMethods();
+            if (confirm('هل تريد حذف طريقة الدفع هذه؟')) {
+                paymentMethods.splice(index, 1);
+                saveMethods();
+                renderMethods();
+            }
         };
-        async function saveMethods() {
-            await db.collection('settings').doc('paymentMethods').set({ methods: paymentMethods });
-            renderMethods();
-        }
+
         loadPaymentMethods();
+        
+        window.addPaymentMethod = addPaymentMethod;
+        window.deleteMethod = deleteMethod;
     </script>
+</head>
+<body class="bg-gray-50 p-6">
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold"><i class="fas fa-credit-card ml-2"></i>طرق الدفع</h2>
+            <button onclick="addPaymentMethod()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                <i class="fas fa-plus ml-1"></i>إضافة طريقة
+            </button>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-4">
+            <ul id="payment-methods-list" class="space-y-2">
+                <li class="text-center text-gray-500">جاري التحميل...</li>
+            </ul>
+        </div>
+        <p class="text-sm text-gray-500 mt-4"><i class="fas fa-info-circle ml-1"></i>طرق الدفع المتاحة ستظهر في صفحة إتمام الطلب</p>
+    </div>
 </body>
 </html>
