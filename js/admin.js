@@ -22,10 +22,20 @@ export async function deleteDocument(collectionName, id) {
     await deleteDoc(docRef);
 }
 
+// ========== الطلبات ==========
 export async function getOrders() {
     const q = query(collection(db, 'orders'), orderBy('orderDate', 'desc'));
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+export async function addOrder(orderData) {
+    const newOrder = {
+        ...orderData,
+        orderDate: new Date().toISOString().slice(0, 10),
+        createdAt: new Date().toISOString()
+    };
+    return await addDocument('orders', newOrder);
 }
 
 export async function updateOrderStatus(id, status) {
@@ -36,6 +46,7 @@ export async function deleteOrder(id) {
     await deleteDocument('orders', id);
 }
 
+// ========== العملاء ==========
 export async function getCustomers() {
     return await getCollection('customers');
 }
@@ -52,12 +63,12 @@ export async function deleteCustomer(id) {
     await deleteDocument('customers', id);
 }
 
+// ========== المنتجات ==========
 export async function getProducts() {
     return await getCollection('products');
 }
 
 export async function addProduct(productData) {
-    // التأكد من وجود صورة افتراضية إذا كانت فارغة
     if (!productData.imageUrl || productData.imageUrl.trim() === '') {
         productData.imageUrl = '/images/default-product.png';
     }
