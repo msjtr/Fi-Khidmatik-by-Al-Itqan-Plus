@@ -1,3 +1,8 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+<script src="https://cdn.tailwindcss.com"></script>
+
 <script type="module">
 import { getSettings, setSettings } from '../../js/common.js';
 
@@ -10,37 +15,36 @@ async function init() {
 }
 
 function render() {
-    document.getElementById('payment-methods-container').innerHTML = `
+    document.body.innerHTML = `
+    <div class="p-6">
+        <h2 class="font-bold mb-4">طرق الدفع</h2>
+
+        ${methods.map((m,i)=>`
         <div>
-            <button onclick="addMethod()">إضافة</button>
-            <ul>
-                ${methods.map((m, i) => `
-                    <li>
-                        ${m}
-                        <button onclick="del(${i})">حذف</button>
-                    </li>
-                `).join('')}
-            </ul>
-        </div>
-    `;
+            ${m}
+            <button onclick="del(${i})">حذف</button>
+        </div>`).join('')}
+
+        <button onclick="add()">إضافة</button>
+    </div>`;
 }
 
-window.addMethod = async () => {
-    const m = prompt('اسم الطريقة');
+window.add = async () => {
+    const m = prompt('طريقة الدفع');
     if (!m) return;
     methods.push(m);
-    await save();
+    await setSettings('paymentMethods', { methods });
+    init();
 };
 
 window.del = async (i) => {
     methods.splice(i, 1);
-    await save();
-};
-
-async function save() {
     await setSettings('paymentMethods', { methods });
-    render();
-}
+    init();
+};
 
 init();
 </script>
+</head>
+<body></body>
+</html>
