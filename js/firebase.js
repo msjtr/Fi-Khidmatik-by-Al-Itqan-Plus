@@ -43,10 +43,13 @@ export const loadProducts = () => getCollection('products');
 export const addProduct = (data) =>
     addDoc(collection(db, 'products'), data);
 
+export const updateProduct = (id, data) =>
+    updateDoc(doc(db, 'products', id), data);
+
 export const deleteProduct = (id) =>
     deleteDoc(doc(db, 'products', id));
 
-// ===================== العملاء (يجب أن تكون قبل الطلبات) =====================
+// ===================== العملاء =====================
 export const loadCustomers = () => getCollection('customers');
 
 export const addCustomer = (data) =>
@@ -84,7 +87,7 @@ export const deleteOrder = (id) =>
 // ===================== جلب الطلبات مع بيانات العميل =====================
 export const getOrdersWithCustomers = async () => {
     const orders = await getCollection('orders');
-    const customers = await loadCustomers(); // ✅ الآن loadCustomers معرفة مسبقاً
+    const customers = await loadCustomers();
     const customersMap = {};
     customers.forEach(c => {
         customersMap[c.id] = c;
