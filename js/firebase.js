@@ -46,6 +46,25 @@ export const addProduct = (data) =>
 export const deleteProduct = (id) =>
     deleteDoc(doc(db, 'products', id));
 
+// ===================== العملاء (يجب أن تكون قبل الطلبات) =====================
+export const loadCustomers = () => getCollection('customers');
+
+export const addCustomer = (data) =>
+    addDoc(collection(db, 'customers'), {
+        ...data,
+        createdAt: data.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    });
+
+export const updateCustomer = (id, data) =>
+    updateDoc(doc(db, 'customers', id), {
+        ...data,
+        updatedAt: new Date().toISOString()
+    });
+
+export const deleteCustomer = (id) =>
+    deleteDoc(doc(db, 'customers', id));
+
 // ===================== الطلبات =====================
 export const loadOrders = () => getCollection('orders');
 
@@ -65,7 +84,7 @@ export const deleteOrder = (id) =>
 // ===================== جلب الطلبات مع بيانات العميل =====================
 export const getOrdersWithCustomers = async () => {
     const orders = await getCollection('orders');
-    const customers = await loadCustomers();
+    const customers = await loadCustomers(); // ✅ الآن loadCustomers معرفة مسبقاً
     const customersMap = {};
     customers.forEach(c => {
         customersMap[c.id] = c;
@@ -80,25 +99,6 @@ export const getOrdersWithCustomers = async () => {
         }
     }));
 };
-
-// ===================== العملاء =====================
-export const loadCustomers = () => getCollection('customers');
-
-export const addCustomer = (data) =>
-    addDoc(collection(db, 'customers'), {
-        ...data,
-        createdAt: data.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-    });
-
-export const updateCustomer = (id, data) =>
-    updateDoc(doc(db, 'customers', id), {
-        ...data,
-        updatedAt: new Date().toISOString()
-    });
-
-export const deleteCustomer = (id) =>
-    deleteDoc(doc(db, 'customers', id));
 
 // ===================== الإعدادات =====================
 export async function getSettings(id) {
