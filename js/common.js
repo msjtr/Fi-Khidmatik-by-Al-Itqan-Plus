@@ -1,3 +1,4 @@
+// استيراد من firebase.js
 import {
     db,
     collection,
@@ -11,7 +12,7 @@ import {
     getCollection,
     loadProducts,
     addProduct,
-    updateProduct,        // ✅ أضف هذا
+    updateProduct,
     deleteProduct,
     loadOrders,
     addOrder,
@@ -26,6 +27,7 @@ import {
     getOrdersWithCustomers
 } from './firebase.js';
 
+// إعادة تصدير كل الدوال
 export {
     db,
     collection,
@@ -39,7 +41,7 @@ export {
     getCollection,
     loadProducts,
     addProduct,
-    updateProduct,        // ✅ أضف هذا
+    updateProduct,
     deleteProduct,
     loadOrders,
     addOrder,
