@@ -46,30 +46,27 @@
                         <table class="min-w-full">
                             <thead class="bg-gray-100">
                                 <tr>
-                                    <th class="p-3 text-right">رقم الطلب</th>
-                                    <th class="p-3 text-right">العميل</th>
-                                    <th class="p-3 text-right">طريقة الدفع</th>
-                                    <th class="p-3 text-right">الحالة</th>
-                                    <th class="p-3 text-right">التاريخ</th>
-                                    <th class="p-3 text-right">الإجراءات</th>
-                                 </tr>
+                                    <th class="p-3">رقم الطلب</th>
+                                    <th class="p-3">العميل</th>
+                                    <th class="p-3">طريقة الدفع</th>
+                                    <th class="p-3">الحالة</th>
+                                    <th class="p-3">التاريخ</th>
+                                    <th class="p-3">الإجراءات</th>
+                                </tr>
                             </thead>
                             <tbody>
                                 ${orders.length === 0 ? '<tr><td colspan="6" class="text-center p-6">لا توجد طلبات</td></tr>' : orders.map(order => `
-                                    <tr class="border-b hover:bg-gray-50">
-                                        <td class="p-3 font-mono">${order.orderNumber || order.id.slice(-6)}</td>
-                                        <td class="p-3">
-                                            <div class="font-semibold">${order.customerName || '-'}</div>
-                                            <div class="text-xs text-gray-500">${order.customerPhone || ''}</div>
-                                        </td>
-                                        <td class="p-3">${order.paymentMethod || '-'} ${order.paymentApproved ? '<span class="text-green-600 text-xs">✓</span>' : ''}</td>
+                                    <tr class="border-b">
+                                        <td class="p-3">${order.orderNumber || order.id.slice(-6)}</td>
+                                        <td class="p-3">${order.customer || order.customerName || '-'}<br><small class="text-gray-500">${order.customerPhone || ''}</small></td>
+                                        <td class="p-3">${order.payment || order.paymentMethod || '-'} ${order.paymentApproved ? '✓' : ''}</td>
                                         <td class="p-3"><span class="px-2 py-1 rounded-full text-xs ${getStatusClass(order.status)}">${order.status || 'غير مدفوع'}</span></td>
                                         <td class="p-3">${order.date || '-'}</td>
                                         <td class="p-3">
-                                            <button onclick="window.editOrder('${order.id}')" class="text-blue-600 hover:text-blue-800 ml-2" title="تعديل"><i class="fas fa-edit"></i></button>
-                                            <button onclick="window.deleteOrderItem('${order.id}')" class="text-red-600 hover:text-red-800 ml-2" title="حذف"><i class="fas fa-trash"></i></button>
-                                            <button onclick="window.refundOrder('${order.id}')" class="text-orange-600 hover:text-orange-800 ml-2" title="استرداد"><i class="fas fa-undo-alt"></i></button>
-                                            <button onclick="window.exportInvoice('${order.id}')" class="text-green-600 hover:text-green-800" title="تصدير فاتورة"><i class="fas fa-file-pdf"></i></button>
+                                            <button onclick="window.editOrder('${order.id}')" class="text-blue-600 ml-2"><i class="fas fa-edit"></i></button>
+                                            <button onclick="window.deleteOrderItem('${order.id}')" class="text-red-600 ml-2"><i class="fas fa-trash"></i></button>
+                                            <button onclick="window.refundOrder('${order.id}')" class="text-orange-600 ml-2"><i class="fas fa-undo-alt"></i></button>
+                                            <button onclick="window.exportInvoice('${order.id}')" class="text-green-600"><i class="fas fa-file-pdf"></i></button>
                                         </td>
                                     </tr>
                                 `).join('')}
@@ -83,7 +80,7 @@
         // Modal for creating/editing order
         async function showOrderModal(order = null) {
             currentOrderId = order ? order.id : null;
-            cartItems = order ? (order.items || []) : [];
+            cartItems = order ? (order.items || order.cart || []) : [];
             const paymentMethods = (await getSettings('paymentMethods'))?.methods || ['نقدي', 'بطاقة ائتمان', 'تحويل بنكي', 'تمارا', 'تابي'];
             const modalHtml = `
                 <div id="orderModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="backdrop-filter: blur(2px);">
@@ -92,20 +89,17 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <h4 class="font-semibold mb-2">بيانات العميل</h4>
-                                <input type="text" id="customerName" placeholder="اسم العميل *" class="w-full border rounded p-2 mb-2" value="${order ? order.customerName || '' : ''}">
-                                <input type="text" id="customerPhone" placeholder="رقم الهاتف" class="w-full border rounded p-2 mb-2" value="${order ? order.customerPhone || '' : ''}">
-                                <input type="email" id="customerEmail" placeholder="البريد الإلكتروني" class="w-full border rounded p-2 mb-2" value="${order ? order.customerEmail || '' : ''}">
-                                <input type="text" id="nationalAddress" placeholder="العنوان الوطني" class="w-full border rounded p-2 mb-2" value="${order ? order.nationalAddress || '' : ''}">
-                                <input type="text" id="shippingAddress" placeholder="عنوان الشحن" class="w-full border rounded p-2 mb-2" value="${order ? order.shippingAddress || '' : ''}">
+                                <input type="text" id="customerName" placeholder="اسم العميل *" class="w-full border rounded p-2 mb-2" value="${order ? (order.customer || order.customerName || '') : ''}">
+                                <input type="text" id="customerPhone" placeholder="رقم الهاتف" class="w-full border rounded p-2 mb-2" value="${order ? (order.customerPhone || '') : ''}">
+                                <input type="email" id="customerEmail" placeholder="البريد الإلكتروني" class="w-full border rounded p-2 mb-2" value="${order ? (order.customerEmail || '') : ''}">
+                                <input type="text" id="nationalAddress" placeholder="العنوان الوطني" class="w-full border rounded p-2 mb-2" value="${order ? (order.nationalAddress || '') : ''}">
+                                <input type="text" id="shippingAddress" placeholder="عنوان الشحن" class="w-full border rounded p-2 mb-2" value="${order ? (order.shippingAddress || '') : ''}">
                                 <h4 class="font-semibold mb-2 mt-3">طريقة الدفع</h4>
                                 <select id="paymentMethod" class="w-full border rounded p-2 mb-2">
-                                    ${paymentMethods.map(m => `<option value="${m}" ${order && order.paymentMethod === m ? 'selected' : ''}>${m}</option>`).join('')}
+                                    ${paymentMethods.map(m => `<option value="${m}" ${order && (order.payment === m || order.paymentMethod === m) ? 'selected' : ''}>${m}</option>`).join('')}
                                 </select>
-                                <div id="paymentApprovalDiv" style="display: ${order && (order.paymentMethod === 'تمارا' || order.paymentMethod === 'تابي') ? 'block' : 'none'}" class="mb-2">
-                                    <label class="flex items-center gap-2">
-                                        <input type="checkbox" id="paymentApproved" ${order && order.paymentApproved ? 'checked' : ''}> 
-                                        <span>تمت الموافقة على الدفع</span>
-                                    </label>
+                                <div id="paymentApprovalDiv" style="display: ${order && (order.payment === 'تمارا' || order.payment === 'تابي' || order.paymentMethod === 'تمارا' || order.paymentMethod === 'تابي') ? 'block' : 'none'}" class="mb-2">
+                                    <label><input type="checkbox" id="paymentApproved" ${order && order.paymentApproved ? 'checked' : ''}> تمت الموافقة على الدفع</label>
                                 </div>
                                 <h4 class="font-semibold mb-2 mt-3">إضافة منتج إلى السلة</h4>
                                 <select id="productSelect" class="w-full border rounded p-2 mb-2">
@@ -145,7 +139,7 @@
                 if (!productId) return;
                 const product = products.find(p => p.id === productId);
                 const qty = parseInt(document.getElementById('productQty').value) || 1;
-                const existing = cartItems.find(item => item.productId === productId);
+                const existing = cartItems.find(item => (item.productId === productId || item.id === productId));
                 if (existing) {
                     existing.quantity += qty;
                 } else {
@@ -165,15 +159,15 @@
                 const container = document.getElementById('cartItemsList');
                 let total = 0;
                 container.innerHTML = cartItems.map((item, idx) => {
-                    const itemTotal = item.price * item.quantity;
+                    const itemTotal = (item.price || 0) * (item.quantity || 0);
                     total += itemTotal;
                     return `
                         <div class="flex justify-between items-center border-b py-2">
                             <span>${item.name} x ${item.quantity}</span>
                             <span>${itemTotal} ريال</span>
                             <div>
-                                <button onclick="adjustCartItem(${idx}, -1)" class="text-blue-600 px-1">-</button>
-                                <button onclick="adjustCartItem(${idx}, 1)" class="text-blue-600 px-1">+</button>
+                                <button onclick="adjustCartItem(${idx}, -1)" class="text-blue-600">-</button>
+                                <button onclick="adjustCartItem(${idx}, 1)" class="text-blue-600">+</button>
                                 <button onclick="removeCartItem(${idx})" class="text-red-600 ml-2"><i class="fas fa-trash"></i></button>
                             </div>
                         </div>
@@ -206,18 +200,21 @@
                 const paymentMethod = document.getElementById('paymentMethod').value;
                 const paymentApproved = document.getElementById('paymentApproved')?.checked || false;
                 if (cartItems.length === 0) return alert('أضف منتجات إلى السلة');
-                const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const totalAmount = cartItems.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 0)), 0);
                 const orderData = {
-                    customerName,
+                    customer: customerName,
+                    customerName: customerName,
                     customerPhone,
                     customerEmail,
                     nationalAddress,
                     shippingAddress,
+                    payment: paymentMethod,
                     paymentMethod,
                     paymentApproved,
                     status: 'غير مدفوع',
                     date: new Date().toISOString().slice(0,10),
                     items: cartItems,
+                    cart: cartItems,
                     totalAmount
                 };
                 if (currentOrderId) {
@@ -238,7 +235,7 @@
         }
         
         async function deleteOrderItem(id) {
-            if (confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
+            if (confirm('حذف الطلب؟')) {
                 await deleteOrder(id);
                 await loadData();
                 renderOrders();
@@ -246,7 +243,7 @@
         }
         
         async function refundOrder(id) {
-            if (confirm('هل تريد استرداد هذا الطلب؟')) {
+            if (confirm('استرداد الطلب؟')) {
                 await updateOrder(id, { status: 'مسترجع' });
                 await loadData();
                 renderOrders();
@@ -259,50 +256,40 @@
             const general = await getSettings('general');
             const platformStamp = general?.platformStamp || 'جميع الحقوق محفوظة';
             const invoiceInstructions = (await getSettings('invoiceInstructions'))?.text || 'شكراً لتسوقكم معنا.';
+            const items = order.items || order.cart || [];
+            const total = order.totalAmount || items.reduce((s, i) => s + (i.price * i.quantity), 0);
             const invoiceHtml = `
                 <div style="padding:20px; font-family:Tahoma; direction:rtl;">
-                    <div style="border-bottom:2px solid #2563eb; margin-bottom:20px; padding-bottom:10px;">
-                        <h1 style="font-size:24px; margin:0;">فاتورة شراء</h1>
-                        <p style="margin:5px 0;">رقم الطلب: ${order.orderNumber}</p>
-                        <p style="margin:5px 0;">التاريخ: ${order.date}</p>
+                    <div style="border-bottom:2px solid #2563eb; margin-bottom:20px;">
+                        <h1 style="font-size:24px;">فاتورة شراء</h1>
+                        <p>رقم الطلب: ${order.orderNumber}</p>
+                        <p>التاريخ: ${order.date}</p>
                     </div>
                     <div style="margin-bottom:20px;">
-                        <h3 style="margin-bottom:10px;">بيانات العميل</h3>
-                        <p><strong>الاسم:</strong> ${order.customerName}</p>
-                        <p><strong>الهاتف:</strong> ${order.customerPhone}</p>
-                        <p><strong>البريد الإلكتروني:</strong> ${order.customerEmail || '-'}</p>
-                        <p><strong>العنوان الوطني:</strong> ${order.nationalAddress || '-'}</p>
-                        <p><strong>عنوان الشحن:</strong> ${order.shippingAddress || '-'}</p>
-                        <p><strong>طريقة الدفع:</strong> ${order.paymentMethod} ${order.paymentApproved ? '(تمت الموافقة)' : ''}</p>
-                        <p><strong>حالة الطلب:</strong> ${order.status}</p>
+                        <h3>بيانات العميل</h3>
+                        <p>الاسم: ${order.customer || order.customerName}</p>
+                        <p>الهاتف: ${order.customerPhone || ''}</p>
+                        <p>البريد الإلكتروني: ${order.customerEmail || '-'}</p>
+                        <p>العنوان الوطني: ${order.nationalAddress || '-'}</p>
+                        <p>عنوان الشحن: ${order.shippingAddress || '-'}</p>
+                        <p>طريقة الدفع: ${order.payment || order.paymentMethod} ${order.paymentApproved ? '(موافق)' : ''}</p>
+                        <p>حالة الطلب: ${order.status}</p>
                     </div>
                     <div style="margin-bottom:20px;">
-                        <h3 style="margin-bottom:10px;">المنتجات</h3>
+                        <h3>المنتجات</h3>
                         <table style="width:100%; border-collapse:collapse;">
-                            <thead>
-                                <tr style="background:#f3f4f6;">
-                                    <th style="padding:8px; border:1px solid #ddd; text-align:right;">المنتج</th>
-                                    <th style="padding:8px; border:1px solid #ddd; text-align:right;">الكمية</th>
-                                    <th style="padding:8px; border:1px solid #ddd; text-align:right;">السعر</th>
-                                    <th style="padding:8px; border:1px solid #ddd; text-align:right;">الإجمالي</th>
-                                </tr>
-                            </thead>
+                            <thead><tr style="background:#f3f4f6;"><th style="padding:8px; border:1px solid #ddd;">المنتج</th><th style="padding:8px; border:1px solid #ddd;">الكمية</th><th style="padding:8px; border:1px solid #ddd;">السعر</th><th style="padding:8px; border:1px solid #ddd;">الإجمالي</th></tr></thead>
                             <tbody>
-                                ${order.items.map(item => `
-                                    <tr>
-                                        <td style="padding:8px; border:1px solid #ddd;">${item.name}</td>
-                                        <td style="padding:8px; border:1px solid #ddd;">${item.quantity}</td>
-                                        <td style="padding:8px; border:1px solid #ddd;">${item.price} ريال</td>
-                                        <td style="padding:8px; border:1px solid #ddd;">${item.price * item.quantity} ريال</td>
-                                    </tr>
+                                ${items.map(item => `
+                                    <tr><td style="padding:8px; border:1px solid #ddd;">${item.name}</td><td style="padding:8px; border:1px solid #ddd;">${item.quantity}</td><td style="padding:8px; border:1px solid #ddd;">${item.price} ريال</td><td style="padding:8px; border:1px solid #ddd;">${item.price * item.quantity} ريال</td></tr>
                                 `).join('')}
                             </tbody>
                         </table>
-                        <p style="font-weight:bold; margin-top:10px;">الإجمالي: ${order.totalAmount} ريال</p>
+                        <p style="font-weight:bold; margin-top:10px;">الإجمالي: ${total} ريال</p>
                     </div>
                     <div style="margin-top:30px; border-top:1px solid #ccc; padding-top:10px; text-align:center;">
                         <div>${invoiceInstructions}</div>
-                        <div style="margin-top:5px;">${platformStamp}</div>
+                        <div>${platformStamp}</div>
                     </div>
                 </div>
             `;
@@ -336,7 +323,6 @@
     </script>
     <style>
         body { background: #f1f5f9; font-family: 'Tahoma', system-ui; margin: 0; padding: 1rem; }
-        .badge-status { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; }
     </style>
 </head>
 <body>
