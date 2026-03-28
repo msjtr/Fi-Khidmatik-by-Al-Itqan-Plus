@@ -43,7 +43,7 @@ export const loadProducts = () => getCollection('products');
 export const addProduct = (data) =>
     addDoc(collection(db, 'products'), data);
 
-export const updateProduct = (id, data) =>
+export const updateProduct = (id, data) =>   // ✅ هذه الدالة المفقودة
     updateDoc(doc(db, 'products', id), data);
 
 export const deleteProduct = (id) =>
