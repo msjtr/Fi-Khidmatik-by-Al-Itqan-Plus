@@ -83,7 +83,7 @@ export const updateOrder = (id, data) =>
 export const deleteOrder = (id) =>
     deleteDoc(doc(db, 'orders', id));
 
-// ===================== جلب الطلبات مع تفاصيل العميل =====================
+// ===================== جلب الطلبات مع تفاصيل العميل والمنتجات =====================
 export const getOrdersWithDetails = async () => {
     try {
         const orders = await getCollection('orders');
