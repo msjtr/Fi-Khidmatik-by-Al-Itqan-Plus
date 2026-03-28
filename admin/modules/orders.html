@@ -17,31 +17,66 @@ async function init() {
 function render() {
     document.body.innerHTML = `
     <div class="p-6">
+
         <h2 class="text-xl font-bold mb-4">الطلبات</h2>
 
-        <table class="w-full bg-white rounded shadow">
+        ${orders.length === 0 ? `
+            <p class="text-center text-gray-500">لا يوجد طلبات</p>
+        ` : `
+
+        <table class="w-full bg-white rounded shadow text-center">
             <thead class="bg-gray-100">
                 <tr>
-                    <th class="p-2">رقم</th>
-                    <th class="p-2">العميل</th>
-                    <th class="p-2">الإجمالي</th>
-                    <th class="p-2">الإجراء</th>
+                    <th>رقم الطلب</th>
+                    <th>الجوال</th>
+                    <th>طريقة الدفع</th>
+                    <th>الحالة</th>
+                    <th>التاريخ</th>
+                    <th>الإجراء</th>
                 </tr>
             </thead>
 
             <tbody>
                 ${orders.map(o => `
                     <tr class="border-b">
-                        <td class="p-2">${o.id}</td>
-                        <td class="p-2">${o.customer || '-'}</td>
-                        <td class="p-2">${o.totalAmount || 0}</td>
-                        <td class="p-2">
-                            <button onclick="del('${o.id}')" class="text-red-600">حذف</button>
+
+                        <!-- رقم الطلب -->
+                        <td class="font-bold text-blue-600">
+                            ${o.orderNumber || o.id}
                         </td>
+
+                        <!-- الجوال -->
+                        <td>
+                            ${o.phone || '-'}
+                        </td>
+
+                        <!-- الدفع -->
+                        <td>
+                            ${o.payment || '-'}
+                        </td>
+
+                        <!-- الحالة -->
+                        <td class="${o.status === 'مدفوع' ? 'text-green-600' : 'text-red-600'}">
+                            ${o.status || '-'}
+                        </td>
+
+                        <!-- التاريخ -->
+                        <td>
+                            ${o.date || '-'}
+                        </td>
+
+                        <!-- حذف -->
+                        <td>
+                            <button onclick="del('${o.id}')" class="text-red-600">
+                                حذف
+                            </button>
+                        </td>
+
                     </tr>
                 `).join('')}
             </tbody>
         </table>
+        `}
     </div>
     `;
 }
