@@ -1,58 +1,271 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المخزون - متجرك الذكي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .low-stock {
+            background-color: #fee2e2;
+            border-right: 4px solid #ef4444;
+        }
+        .out-stock {
+            background-color: #fef3c7;
+            border-right: 4px solid #f59e0b;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 p-6">
 
-<script type="module">
-import { loadProducts, updateProductQuantity } from '../../js/common.js';
+<div class="max-w-6xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">📦 إدارة المخزون</h1>
+        <button id="addProductBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow">
+            + إضافة منتج جديد
+        </button>
+    </div>
 
-let products = [];
+    <!-- إحصائيات المخزون -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow p-4">
+            <p class="text-gray-500 text-sm">إجمالي المنتجات</p>
+            <p id="totalProducts" class="text-2xl font-bold text-gray-800">0</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <p class="text-gray-500 text-sm">منتجات منخفضة المخزون</p>
+            <p id="lowStockCount" class="text-2xl font-bold text-orange-600">0</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <p class="text-gray-500 text-sm">منتجات نفدت</p>
+            <p id="outStockCount" class="text-2xl font-bold text-red-600">0</p>
+        </div>
+    </div>
 
-async function init() {
-    products = await loadProducts();
-    render();
-}
-
-function render() {
-    document.body.innerHTML = `
-    <div class="p-6">
-        <h2 class="text-xl font-bold mb-4">المخزون</h2>
-
-        <table class="w-full bg-white shadow rounded">
-            <thead class="bg-gray-100">
-                <tr>
-                    <th class="p-2">المنتج</th>
-                    <th class="p-2">الكمية</th>
-                    <th class="p-2">تعديل</th>
+    <!-- قائمة المنتجات -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-gray-100 border-b">
+                <tr class="text-right">
+                    <th class="p-3">المنتج</th>
+                    <th class="p-3">السعر</th>
+                    <th class="p-3">الكمية</th>
+                    <th class="p-3">الحالة</th>
+                    <th class="p-3">الإجراءات</th>
                 </tr>
             </thead>
-
-            <tbody>
-                ${products.map(p => `
-                <tr class="border-b">
-                    <td class="p-2">${p.name}</td>
-                    <td class="p-2">${p.quantity || 0}</td>
-                    <td class="p-2">
-                        <input id="q-${p.id}" type="number" value="${p.quantity || 0}" class="border w-20 text-center">
-                        <button onclick="save('${p.id}')" class="bg-blue-600 text-white px-2 py-1">حفظ</button>
-                    </td>
-                </tr>
-                `).join('')}
+            <tbody id="productsTableBody">
+                <tr><td colspan="5" class="text-center p-4 text-gray-500">جاري التحميل...</td></tr>
             </tbody>
         </table>
     </div>
-    `;
-}
+</div>
 
-window.save = async (id) => {
-    const val = document.getElementById(`q-${id}`).value;
-    await updateProductQuantity(id, parseInt(val));
+<!-- مودال إضافة/تعديل منتج -->
+<div id="productModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modalTitle" class="text-xl font-bold">إضافة منتج جديد</h2>
+                <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <form id="productForm">
+                <div class="mb-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">اسم المنتج *</label>
+                    <input type="text" id="productName" required class="w-full border rounded-lg px-3 py-2">
+                </div>
+                <div class="mb-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">السعر *</label>
+                    <input type="number" id="productPrice" required step="0.01" class="w-full border rounded-lg px-3 py-2">
+                </div>
+                <div class="mb-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">الكمية *</label>
+                    <input type="number" id="productQuantity" required min="0" class="w-full border rounded-lg px-3 py-2">
+                </div>
+                <div class="mb-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">الوصف</label>
+                    <textarea id="productDesc" rows="3" class="w-full border rounded-lg px-3 py-2"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">الحد الأدنى للتنبيه</label>
+                    <input type="number" id="minStock" value="5" class="w-full border rounded-lg px-3 py-2">
+                </div>
+                <div class="flex justify-end gap-2 mt-4">
+                    <button type="button" id="cancelModalBtn" class="px-4 py-2 border rounded-lg hover:bg-gray-100">إلغاء</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">حفظ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { loadProducts, addProduct, updateProduct, deleteProduct } from '../../js/common.js';
+
+    let products = [];
+    let currentEditId = null;
+
+    const productsTableBody = document.getElementById('productsTableBody');
+    const totalProductsSpan = document.getElementById('totalProducts');
+    const lowStockCountSpan = document.getElementById('lowStockCount');
+    const outStockCountSpan = document.getElementById('outStockCount');
+
+    async function init() {
+        products = await loadProducts();
+        updateStats();
+        render();
+    }
+
+    function updateStats() {
+        totalProductsSpan.textContent = products.length;
+        const lowStock = products.filter(p => p.quantity > 0 && p.quantity <= (p.minStock || 5)).length;
+        const outStock = products.filter(p => p.quantity === 0).length;
+        lowStockCountSpan.textContent = lowStock;
+        outStockCountSpan.textContent = outStock;
+    }
+
+    function getStockStatus(product) {
+        if (product.quantity === 0) {
+            return '<span class="text-red-600 font-semibold">⚠️ نفد من المخزون</span>';
+        } else if (product.quantity <= (product.minStock || 5)) {
+            return '<span class="text-orange-600 font-semibold">⚠️ منخفض</span>';
+        }
+        return '<span class="text-green-600">✅ متوفر</span>';
+    }
+
+    function getRowClass(product) {
+        if (product.quantity === 0) return 'out-stock';
+        if (product.quantity <= (product.minStock || 5)) return 'low-stock';
+        return '';
+    }
+
+    function render() {
+        if (products.length === 0) {
+            productsTableBody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-500">لا يوجد منتجات</td></tr>';
+            return;
+        }
+
+        productsTableBody.innerHTML = products.map(p => `
+            <tr class="border-b hover:bg-gray-50 ${getRowClass(p)}">
+                <td class="p-3">
+                    <div>
+                        <div class="font-semibold">${escapeHtml(p.name)}</div>
+                        <div class="text-xs text-gray-500">${p.desc ? escapeHtml(p.desc.substring(0, 50)) : ''}</div>
+                    </div>
+                </td>
+                <td class="p-3">${p.price} ر.س</td>
+                <td class="p-3">
+                    <div class="flex items-center gap-2">
+                        <span>${p.quantity}</span>
+                        <button onclick="quickUpdateStock('${p.id}', ${p.quantity - 1})" class="text-red-600 px-2">-</button>
+                        <button onclick="quickUpdateStock('${p.id}', ${p.quantity + 1})" class="text-green-600 px-2">+</button>
+                    </div>
+                </td>
+                <td class="p-3">${getStockStatus(p)}</td>
+                <td class="p-3">
+                    <button onclick="editProduct('${p.id}')" class="text-blue-600 hover:text-blue-800 ml-2">✏️ تعديل</button>
+                    <button onclick="deleteProductHandler('${p.id}')" class="text-red-600 hover:text-red-800">🗑️ حذف</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    window.quickUpdateStock = async (id, newQuantity) => {
+        if (newQuantity < 0) return;
+        try {
+            await updateProduct(id, { quantity: newQuantity });
+            await init();
+        } catch (err) {
+            console.error(err);
+            alert('حدث خطأ في تحديث الكمية');
+        }
+    };
+
+    function openModal(editId = null) {
+        currentEditId = editId;
+        if (editId) {
+            const product = products.find(p => p.id === editId);
+            if (product) {
+                document.getElementById('modalTitle').innerText = 'تعديل منتج';
+                document.getElementById('productName').value = product.name || '';
+                document.getElementById('productPrice').value = product.price || '';
+                document.getElementById('productQuantity').value = product.quantity || 0;
+                document.getElementById('productDesc').value = product.desc || '';
+                document.getElementById('minStock').value = product.minStock || 5;
+            }
+        } else {
+            document.getElementById('modalTitle').innerText = 'إضافة منتج جديد';
+            document.getElementById('productForm').reset();
+            document.getElementById('minStock').value = 5;
+        }
+        document.getElementById('productModal').classList.remove('hidden');
+        document.getElementById('productModal').classList.add('flex');
+    }
+
+    function closeModal() {
+        document.getElementById('productModal').classList.add('hidden');
+        document.getElementById('productModal').classList.remove('flex');
+        currentEditId = null;
+    }
+
+    async function saveProduct(event) {
+        event.preventDefault();
+        const data = {
+            name: document.getElementById('productName').value.trim(),
+            price: parseFloat(document.getElementById('productPrice').value),
+            quantity: parseInt(document.getElementById('productQuantity').value),
+            desc: document.getElementById('productDesc').value.trim(),
+            minStock: parseInt(document.getElementById('minStock').value),
+            updatedAt: new Date().toISOString()
+        };
+        if (!data.name || !data.price) {
+            alert('اسم المنتج والسعر مطلوبان');
+            return;
+        }
+        try {
+            if (currentEditId) {
+                await updateProduct(currentEditId, data);
+            } else {
+                data.createdAt = new Date().toISOString();
+                await addProduct(data);
+            }
+            closeModal();
+            await init();
+        } catch (err) {
+            console.error(err);
+            alert('حدث خطأ أثناء الحفظ');
+        }
+    }
+
+    window.editProduct = (id) => openModal(id);
+    window.deleteProductHandler = async (id) => {
+        if (confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
+            try {
+                await deleteProduct(id);
+                await init();
+            } catch (err) {
+                console.error(err);
+                alert('حدث خطأ أثناء الحذف');
+            }
+        }
+    };
+
+    document.getElementById('addProductBtn').onclick = () => openModal();
+    document.getElementById('closeModalBtn').onclick = closeModal;
+    document.getElementById('cancelModalBtn').onclick = closeModal;
+    document.getElementById('productForm').onsubmit = saveProduct;
+
     init();
-};
-
-init();
 </script>
-</head>
-<body></body>
+</body>
 </html>
