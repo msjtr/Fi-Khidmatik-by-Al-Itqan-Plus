@@ -7,30 +7,94 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <!-- Firebase SDK v9 compat -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     <style>
         body { background: #f1f5f9; font-family: 'Tahoma', system-ui; }
-        .sidebar-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border-radius: 0.75rem; cursor: pointer; transition: all 0.2s; color: #374151; }
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #374151;
+        }
         .sidebar-item:hover { background-color: #f3f4f6; }
-        .sidebar-active { background-color: #eff6ff; color: #1e40af; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .badge-status { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; }
-        .btn-primary { background-color: #2563eb; color: white; font-weight: 700; padding: 0.5rem 1rem; border-radius: 0.5rem; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .sidebar-active {
+            background-color: #eff6ff;
+            color: #1e40af;
+            font-weight: 600;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .badge-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .btn-primary {
+            background-color: #2563eb;
+            color: white;
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
         .btn-primary:hover { background-color: #1d4ed8; }
-        .btn-danger { background-color: #dc2626; color: white; font-weight: 700; padding: 0.5rem 1rem; border-radius: 0.5rem; }
+        .btn-danger {
+            background-color: #dc2626;
+            color: white;
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
         .btn-danger:hover { background-color: #b91c1c; }
-        .btn-success { background-color: #16a34a; color: white; font-weight: 700; padding: 0.5rem 1rem; border-radius: 0.5rem; }
+        .btn-success {
+            background-color: #16a34a;
+            color: white;
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
         .btn-success:hover { background-color: #15803d; }
-        .btn-secondary { background-color: #6b7280; color: white; font-weight: 700; padding: 0.5rem 1rem; border-radius: 0.5rem; }
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
         .btn-secondary:hover { background-color: #4b5563; }
-        .card-hover:hover { box-shadow: 0 10px 20px rgba(0,0,0,0.05); transform: translateY(-2px); transition: 0.2s; }
-        input, select, textarea { border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; outline: none; }
-        input:focus, select:focus, textarea:focus { ring: 2px solid #3b82f6; }
+        input, select, textarea {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            outline: none;
+        }
+        input:focus, select:focus, textarea:focus {
+            ring: 2px solid #3b82f6;
+            border-color: #3b82f6;
+        }
+        .card-hover:hover {
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            transform: translateY(-2px);
+            transition: 0.2s;
+        }
     </style>
 </head>
 <body class="antialiased">
 
 <div class="flex h-screen overflow-hidden">
+    <!-- الشريط الجانبي -->
     <aside class="w-72 bg-white shadow-xl z-10 flex flex-col overflow-y-auto border-l border-gray-200">
         <div class="p-5 border-b border-gray-200">
             <h1 class="text-2xl font-extrabold text-blue-700"><i class="fas fa-tachometer-alt ml-2"></i>لوحة التحكم</h1>
@@ -45,16 +109,17 @@
             <div data-section="invoice" class="sidebar-item" id="nav-invoice"><i class="fas fa-file-invoice-dollar w-6"></i> <span>تعليمات الفاتورة</span></div>
             <div data-section="general" class="sidebar-item" id="nav-general"><i class="fas fa-sliders-h w-6"></i> <span>الإعدادات العامة</span></div>
         </nav>
-        <div class="p-4 border-t border-gray-200 text-xs text-gray-400">نظام إداري متكامل v5.0</div>
+        <div class="p-4 border-t border-gray-200 text-xs text-gray-400">نظام إداري متكامل v4.0</div>
     </aside>
 
+    <!-- المحتوى الرئيسي -->
     <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
         <div id="page-content"></div>
     </main>
 </div>
 
 <script>
-    // Firebase config
+    // ------------------- إعدادات Firebase -------------------
     const firebaseConfig = {
         apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
         authDomain: "msjt301-974bb.firebaseapp.com",
@@ -67,7 +132,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // دوال مساعدة عامة
+    // ------------------- دوال مساعدة عامة -------------------
     async function getCollection(collectionName) {
         const snapshot = await db.collection(collectionName).get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -82,68 +147,40 @@
         await db.collection(collectionName).doc(id).delete();
     }
 
-    // دوال خاصة (معدلة لتتناسب مع هيكل البيانات الحالي)
-    async function loadCustomers() {
-        // أولاً نحاول تحميل مجموعة العملاء إذا كانت موجودة
-        let customers = await getCollection('customers');
-        // إذا كانت فارغة، نقوم باستخراج العملاء من حقل phone في الطلبات
-        if (customers.length === 0) {
-            const orders = await loadOrders();
-            const phoneMap = new Map();
-            orders.forEach(order => {
-                if (order.phone && !phoneMap.has(order.phone)) {
-                    phoneMap.set(order.phone, {
-                        name: `عميل ${order.phone}`,
-                        phone: order.phone,
-                        email: '',
-                        address: order.shipping || ''
-                    });
-                }
-            });
-            customers = Array.from(phoneMap.values()).map((data, idx) => ({ id: `auto_${idx}`, ...data }));
-        }
-        return customers;
-    }
-
+    // ------------------- دوال الطلبات (تتوافق مع حقولك) -------------------
     async function loadOrders() {
-        const snapshot = await db.collection('orders').get();
-        return snapshot.docs.map(doc => {
-            const data = doc.data();
-            // تحويل الحقول الموجودة إلى الحقول المتوقعة
-            return {
-                id: doc.id,
-                customerId: data.phone || data.customerId || 'غير معروف', // استخدام رقم الهاتف كمعرف مؤقت
-                customerPhone: data.phone || '',
-                totalAmount: parseFloat(data.payment) || data.totalAmount || 0,
-                orderDate: data.orderDate || (data.time ? data.time : (data.timestamp ? new Date(data.timestamp).toISOString().slice(0,10) : '')),
-                status: data.status || 'غير معروف',
-                items: data.items || [],
-                original: data // الاحتفاظ بالبيانات الأصلية
-            };
-        });
+        try {
+            const snapshot = await db.collection('orders').orderBy('timestamp', 'desc').get();
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (e) {
+            // إذا لم يكن هناك حقل timestamp، نحمّل بدون ترتيب
+            const snapshot = await db.collection('orders').get();
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        }
     }
-
     async function addOrder(data) {
-        const orderData = {
-            ...data,
-            orderDate: new Date().toISOString().slice(0,10),
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            payment: data.totalAmount,
-            phone: data.customerId,
-            status: data.status,
-            time: new Date().toLocaleTimeString('ar-SA')
+        const newOrder = {
+            orderNumber: data.orderNumber || `ORD-${Date.now()}`,
+            phone: data.phone,
+            payment: data.payment,
+            status: data.status || 'غير مدفوع',
+            time: data.time || new Date().toLocaleTimeString('ar-EG'),
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            items: data.items || []
         };
-        return await addDocument('orders', orderData);
+        return await addDocument('orders', newOrder);
     }
-
     async function updateOrderStatus(id, status) {
         await updateDocument('orders', id, { status });
     }
-
     async function deleteOrder(id) {
         await deleteDocument('orders', id);
     }
 
+    // ------------------- دوال العملاء -------------------
+    async function loadCustomers() {
+        return await getCollection('customers');
+    }
     async function addCustomer(data) {
         return await addDocument('customers', data);
     }
@@ -154,6 +191,7 @@
         await deleteDocument('customers', id);
     }
 
+    // ------------------- دوال المنتجات -------------------
     async function loadProducts() {
         return await getCollection('products');
     }
@@ -172,6 +210,7 @@
         await updateDocument('products', id, { quantity });
     }
 
+    // ------------------- دوال الإعدادات -------------------
     async function getSettingsDoc(docId) {
         const docRef = db.collection('settings').doc(docId);
         const docSnap = await docRef.get();
@@ -181,6 +220,7 @@
         await db.collection('settings').doc(docId).set(data, { merge: true });
     }
 
+    // ------------------- استيراد Excel -------------------
     function importProductsFromExcel(file, callback) {
         const reader = new FileReader();
         reader.onload = async function(e) {
@@ -205,7 +245,7 @@
         reader.readAsArrayBuffer(file);
     }
 
-    // ===================== عرض الأقسام =====================
+    // ------------------- عرض الأقسام -------------------
     let currentSection = 'orders';
 
     async function renderSection(section) {
@@ -223,14 +263,9 @@
         }
     }
 
-    // ----- قسم الطلبات (معدل لقراءة البيانات الحالية) -----
+    // ---------- الطلبات ----------
     async function renderOrders(container) {
         let orders = await loadOrders();
-        let customers = await loadCustomers();
-        const getCustomerName = (phone) => {
-            let c = customers.find(c => c.phone === phone);
-            return c ? c.name : phone || 'غير معروف';
-        };
         const getStatusClass = (status) => {
             const map = {
                 'مدفوع': 'bg-green-100 text-green-700',
@@ -249,16 +284,23 @@
                 <div class="overflow-x-auto">
                     <table class="min-w-full">
                         <thead class="bg-gray-100">
-                            <tr><th class="p-3 text-right">رقم الطلب</th><th class="p-3 text-right">العميل</th><th class="p-3 text-right">المبلغ</th><th class="p-3 text-right">الحالة</th><th class="p-3 text-right">التاريخ</th><th class="p-3 text-right">إجراءات</th></tr>
+                            <tr>
+                                <th class="p-3 text-right">رقم الطلب</th>
+                                <th class="p-3 text-right">الهاتف</th>
+                                <th class="p-3 text-right">المبلغ</th>
+                                <th class="p-3 text-right">الحالة</th>
+                                <th class="p-3 text-right">التاريخ/الوقت</th>
+                                <th class="p-3 text-right">إجراءات</th>
+                            </tr>
                         </thead>
                         <tbody id="orders-tbody">
                             ${orders.map(order => `
                                 <tr class="border-b">
-                                    <td class="p-3">${order.id.slice(-6)}</td>
-                                    <td class="p-3">${getCustomerName(order.customerPhone)}</td>
-                                    <td class="p-3">${order.totalAmount} ريال</td>
-                                    <td class="p-3"><span class="badge-status ${getStatusClass(order.status)}">${order.status}</span></td>
-                                    <td class="p-3">${order.orderDate}</td>
+                                    <td class="p-3">${order.orderNumber || order.id.slice(-6)}</td>
+                                    <td class="p-3">${order.phone || '-'}</td>
+                                    <td class="p-3">${order.payment || 0} ريال</td>
+                                    <td class="p-3"><span class="badge-status ${getStatusClass(order.status)}">${order.status || 'غير مدفوع'}</span></td>
+                                    <td class="p-3">${order.time || order.orderDate || ''}</td>
                                     <td class="p-3">
                                         <button onclick="window.editOrder('${order.id}')" class="text-blue-600 ml-2"><i class="fas fa-edit"></i></button>
                                         <button onclick="window.deleteOrderItem('${order.id}')" class="text-red-600 ml-2"><i class="fas fa-trash"></i></button>
@@ -271,18 +313,21 @@
                 </div>
             </div>
         `;
+
         window.showAddOrderModal = async () => {
-            let customers = await loadCustomers();
-            if (!customers.length) {
-                alert('لا يوجد عملاء. الرجاء إضافة عميل أولاً.');
-                return;
-            }
-            const customerOptions = customers.map(c => `${c.phone}|${c.name}`).join('\n');
-            const phone = prompt(`أدخل رقم هاتف العميل:\n${customerOptions}`);
+            const phone = prompt('رقم هاتف العميل:');
             if (!phone) return;
-            const total = prompt('المبلغ الإجمالي:');
-            if (!total) return;
-            await addOrder({ customerId: phone, totalAmount: parseFloat(total), status: 'غير مدفوع', items: [] });
+            const payment = parseFloat(prompt('المبلغ الإجمالي:'));
+            if (isNaN(payment)) return;
+            const orderNumber = prompt('رقم الطلب (اتركه فارغاً لإنشاء تلقائي):', `ORD-${Date.now()}`);
+            await addOrder({
+                orderNumber: orderNumber || `ORD-${Date.now()}`,
+                phone,
+                payment,
+                status: 'غير مدفوع',
+                time: new Date().toLocaleTimeString('ar-EG'),
+                items: []
+            });
             renderSection('orders');
         };
         window.editOrder = async (id) => {
@@ -309,7 +354,7 @@
         };
     }
 
-    // ----- قسم العملاء (معدل لقراءة العملاء من الطلبات إذا لزم) -----
+    // ---------- العملاء ----------
     async function renderCustomers(container) {
         let customers = await loadCustomers();
         container.innerHTML = `
@@ -320,12 +365,20 @@
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full">
-                        <thead class="bg-gray-100"><tr><th class="p-3">الاسم</th><th class="p-3">الهاتف</th><th class="p-3">البريد</th><th class="p-3">العنوان</th><th class="p-3">إجراءات</th></tr></thead>
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="p-3 text-right">الاسم</th>
+                                <th class="p-3 text-right">الهاتف</th>
+                                <th class="p-3 text-right">البريد</th>
+                                <th class="p-3 text-right">العنوان</th>
+                                <th class="p-3 text-right">إجراءات</th>
+                            </tr>
+                        </thead>
                         <tbody>
                             ${customers.map(c => `
                                 <tr class="border-b">
                                     <td class="p-3">${c.name}</td>
-                                    <td class="p-3">${c.phone}</td>
+                                    <td class="p-3">${c.phone || ''}</td>
                                     <td class="p-3">${c.email || ''}</td>
                                     <td class="p-3">${c.address || ''}</td>
                                     <td class="p-3">
@@ -368,13 +421,205 @@
         };
     }
 
-    // باقي الأقسام (products, inventory, payment-methods, invoice, general) كما هي من الكود السابق (نفسها بدون تعديل)
-    // ... (سأضيفها مختصرة لتجنب طول الرد، لكن يمكنك استخدام نفس الكود السابق لهذه الأقسام)
+    // ---------- المنتجات ----------
+    async function renderProducts(container) {
+        let products = await loadProducts();
+        container.innerHTML = `
+            <div class="bg-white rounded-2xl shadow p-6">
+                <div class="flex flex-wrap justify-between items-center mb-6 gap-2">
+                    <h2 class="text-2xl font-bold"><i class="fas fa-boxes ml-2"></i>المنتجات</h2>
+                    <div class="flex gap-2">
+                        <button onclick="window.showAddProductModal()" class="btn-primary"><i class="fas fa-plus ml-1"></i>إضافة يدوي</button>
+                        <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="window.handleExcelUpload(this)">
+                        <button onclick="document.getElementById('excelFileInput').click()" class="btn-success"><i class="fas fa-file-excel ml-1"></i>رفع Excel</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6" id="products-grid">
+                    ${products.map(p => `
+                        <div class="border rounded-lg p-4 shadow-sm card-hover">
+                            <img src="${p.imageUrl || '/images/default-product.png'}" class="w-full h-40 object-cover rounded mb-3" onerror="this.src='/images/default-product.png'">
+                            <h3 class="font-bold text-lg">${p.name}</h3>
+                            <p class="text-blue-600 font-bold">${p.price} ريال</p>
+                            <p class="text-gray-600 text-sm">الكمية: ${p.quantity || 0}</p>
+                            <div class="flex justify-between mt-3 pt-2 border-t">
+                                <button onclick="window.editProduct('${p.id}')" class="text-blue-600"><i class="fas fa-edit ml-1"></i>تعديل</button>
+                                <button onclick="window.deleteProductItem('${p.id}')" class="text-red-600"><i class="fas fa-trash ml-1"></i>حذف</button>
+                            </div>
+                        </div>
+                    `).join('') || '<div class="col-span-full text-center p-8 text-gray-500">لا توجد منتجات</div>'}
+                </div>
+            </div>
+        `;
+        window.showAddProductModal = () => {
+            const name = prompt('اسم المنتج:');
+            if (!name) return;
+            const price = parseFloat(prompt('السعر:'));
+            if (isNaN(price)) return;
+            const quantity = parseInt(prompt('الكمية:') || 0);
+            let imageUrl = prompt('رابط الصورة (اتركه فارغاً للصورة الافتراضية):', '');
+            if (!imageUrl || imageUrl.trim() === '') imageUrl = '/images/default-product.png';
+            addProduct({ name, price, quantity, imageUrl }).then(() => renderSection('products'));
+        };
+        window.editProduct = async (id) => {
+            let products = await loadProducts();
+            let prod = products.find(p => p.id === id);
+            if (!prod) return;
+            const name = prompt('الاسم الجديد:', prod.name);
+            if (!name) return;
+            const price = parseFloat(prompt('السعر الجديد:', prod.price));
+            if (isNaN(price)) return;
+            const quantity = parseInt(prompt('الكمية الجديدة:', prod.quantity) || 0);
+            let imageUrl = prompt('رابط الصورة الجديد:', prod.imageUrl);
+            if (!imageUrl || imageUrl.trim() === '') imageUrl = '/images/default-product.png';
+            await updateProduct(id, { name, price, quantity, imageUrl });
+            renderSection('products');
+        };
+        window.deleteProductItem = async (id) => {
+            if (confirm('حذف المنتج؟')) {
+                await deleteProduct(id);
+                renderSection('products');
+            }
+        };
+        window.handleExcelUpload = (input) => {
+            const file = input.files[0];
+            if (file) {
+                importProductsFromExcel(file, (result) => {
+                    if (result.success) {
+                        alert(`تم استيراد ${result.count} منتج بنجاح`);
+                        renderSection('products');
+                    } else alert('فشل الاستيراد');
+                });
+            }
+            input.value = '';
+        };
+    }
 
-    // ===================== التنقل بين الأقسام =====================
+    // ---------- المخزون ----------
+    async function renderInventory(container) {
+        let products = await loadProducts();
+        container.innerHTML = `
+            <div class="bg-white rounded-2xl shadow p-6">
+                <h2 class="text-2xl font-bold mb-6"><i class="fas fa-warehouse ml-2"></i>المخزون</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="p-3 text-right">المنتج</th>
+                                <th class="p-3 text-right">الكمية الحالية</th>
+                                <th class="p-3 text-right">تحديث الكمية</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${products.map(p => `
+                                <tr class="border-b">
+                                    <td class="p-3 font-semibold">${p.name}</td>
+                                    <td class="p-3"><span class="font-bold ${p.quantity < 5 ? 'text-red-600' : 'text-green-600'}">${p.quantity || 0}</span></td>
+                                    <td class="p-3"><div class="flex items-center gap-2"><input type="number" id="qty-${p.id}" value="${p.quantity || 0}" class="border rounded p-2 w-24 text-center"><button onclick="window.updateQuantity('${p.id}')" class="btn-primary text-sm py-1">تحديث</button></div></td>
+                                </tr>
+                            `).join('') || '<tr><td colspan="3" class="text-center p-6">لا توجد منتجات</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        window.updateQuantity = async (id) => {
+            const input = document.getElementById(`qty-${id}`);
+            const newQty = parseInt(input.value);
+            if (!isNaN(newQty)) {
+                await updateProductQuantity(id, newQty);
+                renderSection('inventory');
+                alert('تم تحديث الكمية');
+            } else alert('أدخل رقماً صحيحاً');
+        };
+    }
+
+    // ---------- طرق الدفع ----------
+    async function renderPaymentMethods(container) {
+        let methodsDoc = await getSettingsDoc('paymentMethods');
+        let methods = methodsDoc?.methods || ['نقدي', 'بطاقة ائتمان', 'تحويل بنكي'];
+        container.innerHTML = `
+            <div class="bg-white rounded-2xl shadow p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold"><i class="fas fa-credit-card ml-2"></i>طرق الدفع</h2>
+                    <button onclick="window.addPaymentMethod()" class="btn-primary"><i class="fas fa-plus ml-1"></i>إضافة طريقة</button>
+                </div>
+                <ul id="methods-list" class="space-y-2">
+                    ${methods.map((m, idx) => `<li class="flex justify-between items-center border p-3 rounded"><span>${m}</span><button onclick="window.deletePaymentMethod(${idx})" class="text-red-600"><i class="fas fa-trash"></i></button></li>`).join('')}
+                </ul>
+            </div>
+        `;
+        window.addPaymentMethod = async () => {
+            const newMethod = prompt('أدخل طريقة الدفع الجديدة:');
+            if (newMethod && newMethod.trim()) {
+                let current = await getSettingsDoc('paymentMethods');
+                let methods = current?.methods || [];
+                methods.push(newMethod.trim());
+                await setSettingsDoc('paymentMethods', { methods });
+                renderSection('payment-methods');
+            }
+        };
+        window.deletePaymentMethod = async (idx) => {
+            let current = await getSettingsDoc('paymentMethods');
+            let methods = current?.methods || [];
+            methods.splice(idx, 1);
+            await setSettingsDoc('paymentMethods', { methods });
+            renderSection('payment-methods');
+        };
+    }
+
+    // ---------- تعليمات الفاتورة ----------
+    async function renderInvoiceInstructions(container) {
+        let invoiceDoc = await getSettingsDoc('invoiceInstructions');
+        let text = invoiceDoc?.text || 'شكراً لتسوقكم معنا. في حال وجود استفسار يرجى التواصل مع الدعم.';
+        container.innerHTML = `
+            <div class="bg-white rounded-2xl shadow p-6">
+                <h2 class="text-2xl font-bold mb-4"><i class="fas fa-file-invoice-dollar ml-2"></i>تعليمات الفاتورة</h2>
+                <textarea id="invoiceText" rows="6" class="w-full border rounded-lg p-3">${text}</textarea>
+                <button onclick="window.saveInvoiceInstructions()" class="btn-primary mt-4">حفظ التعليمات</button>
+            </div>
+        `;
+        window.saveInvoiceInstructions = async () => {
+            const newText = document.getElementById('invoiceText').value;
+            await setSettingsDoc('invoiceInstructions', { text: newText });
+            alert('تم حفظ التعليمات');
+        };
+    }
+
+    // ---------- الإعدادات العامة ----------
+    async function renderGeneralSettings(container) {
+        let general = await getSettingsDoc('general');
+        let data = general || { siteName: 'متجرك', currency: 'ريال', platformStamp: 'جميع الحقوق محفوظة', contactEmail: 'info@shop.com', whatsapp: '' };
+        container.innerHTML = `
+            <div class="bg-white rounded-2xl shadow p-6">
+                <h2 class="text-2xl font-bold mb-4"><i class="fas fa-sliders-h ml-2"></i>الإعدادات العامة</h2>
+                <div class="space-y-4">
+                    <div><label class="block font-semibold">اسم الموقع:</label><input id="siteName" type="text" class="w-full border rounded p-2" value="${data.siteName || ''}"></div>
+                    <div><label class="block font-semibold">رمز العملة:</label><input id="currency" type="text" class="w-full border rounded p-2" value="${data.currency || ''}"></div>
+                    <div><label class="block font-semibold">ختم المنصة:</label><textarea id="platformStamp" rows="2" class="w-full border rounded p-2">${data.platformStamp || ''}</textarea></div>
+                    <div><label class="block font-semibold">بريد الدعم:</label><input id="contactEmail" type="email" class="w-full border rounded p-2" value="${data.contactEmail || ''}"></div>
+                    <div><label class="block font-semibold">واتساب الدعم:</label><input id="whatsapp" type="text" class="w-full border rounded p-2" value="${data.whatsapp || ''}"></div>
+                    <button onclick="window.saveGeneralSettings()" class="btn-primary">حفظ الإعدادات</button>
+                </div>
+            </div>
+        `;
+        window.saveGeneralSettings = async () => {
+            const settings = {
+                siteName: document.getElementById('siteName').value,
+                currency: document.getElementById('currency').value,
+                platformStamp: document.getElementById('platformStamp').value,
+                contactEmail: document.getElementById('contactEmail').value,
+                whatsapp: document.getElementById('whatsapp').value
+            };
+            await setSettingsDoc('general', settings);
+            alert('تم حفظ الإعدادات');
+        };
+    }
+
+    // ------------------- التنقل بين الأقسام -------------------
     function setActiveNav(section) {
         document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('sidebar-active'));
-        document.getElementById(`nav-${section}`).classList.add('sidebar-active');
+        const activeEl = document.getElementById(`nav-${section}`);
+        if (activeEl) activeEl.classList.add('sidebar-active');
     }
     window.changeSection = (section) => {
         currentSection = section;
@@ -388,6 +633,7 @@
         });
     });
 
+    // تحميل القسم الافتراضي
     renderSection('orders');
 </script>
 </body>
