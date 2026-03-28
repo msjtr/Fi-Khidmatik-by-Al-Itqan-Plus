@@ -6,8 +6,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="../../css/admin.css">
     <script type="module">
-        import { loadOrders, loadProducts, addOrder, updateOrder, deleteOrder, getSettings } from '../js/common.js';
+        import { loadOrders, loadProducts, addOrder, updateOrder, deleteOrder, getSettings } from '../../js/common.js';
         
         let orders = [];
         let products = [];
@@ -18,12 +20,10 @@
             await loadData();
             renderOrders();
         }
-
         async function loadData() {
             orders = await loadOrders();
             products = await loadProducts();
         }
-
         function renderOrders() {
             const container = document.getElementById('orders-container');
             if (!container) return;
@@ -40,27 +40,20 @@
                 <div class="bg-white rounded-2xl shadow p-6">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-2xl font-bold"><i class="fas fa-truck-fast ml-2"></i>الطلبات</h2>
-                        <button onclick="window.showOrderModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"><i class="fas fa-plus ml-1"></i>طلب جديد</button>
+                        <button onclick="window.showOrderModal()" class="btn-primary"><i class="fas fa-plus ml-1"></i>طلب جديد</button>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full">
                             <thead class="bg-gray-100">
-                                <tr>
-                                    <th class="p-3">رقم الطلب</th>
-                                    <th class="p-3">العميل</th>
-                                    <th class="p-3">طريقة الدفع</th>
-                                    <th class="p-3">الحالة</th>
-                                    <th class="p-3">التاريخ</th>
-                                    <th class="p-3">الإجراءات</th>
-                                </tr>
+                                <tr><th class="p-3">رقم الطلب</th><th class="p-3">العميل</th><th class="p-3">طريقة الدفع</th><th class="p-3">الحالة</th><th class="p-3">التاريخ</th><th class="p-3">الإجراءات</th>\\
                             </thead>
                             <tbody>
-                                ${orders.length === 0 ? '<tr><td colspan="6" class="text-center p-6">لا توجد طلبات</td></tr>' : orders.map(order => `
+                                ${orders.length === 0 ? '发展<td colspan="6" class="text-center p-6">لا توجد طلبات发展' : orders.map(order => `
                                     <tr class="border-b">
                                         <td class="p-3">${order.orderNumber || order.id.slice(-6)}</td>
                                         <td class="p-3">${order.customer || order.customerName || '-'}<br><small class="text-gray-500">${order.customerPhone || ''}</small></td>
                                         <td class="p-3">${order.payment || order.paymentMethod || '-'} ${order.paymentApproved ? '✓' : ''}</td>
-                                        <td class="p-3"><span class="px-2 py-1 rounded-full text-xs ${getStatusClass(order.status)}">${order.status || 'غير مدفوع'}</span></td>
+                                        <td class="p-3"><span class="badge-status ${getStatusClass(order.status)}">${order.status || 'غير مدفوع'}</span></td>
                                         <td class="p-3">${order.date || '-'}</td>
                                         <td class="p-3">
                                             <button onclick="window.editOrder('${order.id}')" class="text-blue-600 ml-2"><i class="fas fa-edit"></i></button>
@@ -77,14 +70,13 @@
             `;
         }
 
-        // Modal for creating/editing order
         async function showOrderModal(order = null) {
             currentOrderId = order ? order.id : null;
             cartItems = order ? (order.items || order.cart || []) : [];
             const paymentMethods = (await getSettings('paymentMethods'))?.methods || ['نقدي', 'بطاقة ائتمان', 'تحويل بنكي', 'تمارا', 'تابي'];
             const modalHtml = `
-                <div id="orderModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="backdrop-filter: blur(2px);">
-                    <div class="bg-white rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                <div id="orderModal" class="modal-backdrop">
+                    <div class="modal-content">
                         <h3 class="text-xl font-bold mb-4">${order ? 'تعديل الطلب' : 'إنشاء طلب جديد'}</h3>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
@@ -108,7 +100,7 @@
                                 </select>
                                 <div class="flex gap-2">
                                     <input type="number" id="productQty" placeholder="الكمية" value="1" class="w-24 border rounded p-2">
-                                    <button onclick="addToCart()" class="bg-blue-600 text-white px-4 py-2 rounded">إضافة إلى السلة</button>
+                                    <button onclick="addToCart()" class="btn-primary text-sm">إضافة إلى السلة</button>
                                 </div>
                             </div>
                             <div>
@@ -118,21 +110,21 @@
                             </div>
                         </div>
                         <div class="flex justify-end gap-2 mt-4">
-                            <button onclick="closeModal()" class="bg-gray-500 text-white px-4 py-2 rounded">إلغاء</button>
-                            <button onclick="saveOrder()" class="bg-blue-600 text-white px-4 py-2 rounded">حفظ الطلب</button>
+                            <button onclick="closeModal()" class="btn-secondary">إلغاء</button>
+                            <button onclick="saveOrder()" class="btn-primary">حفظ الطلب</button>
                         </div>
                     </div>
                 </div>
             `;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
             updateCartDisplay();
-            
+
             document.getElementById('paymentMethod').addEventListener('change', (e) => {
                 const val = e.target.value;
                 const div = document.getElementById('paymentApprovalDiv');
                 div.style.display = (val === 'تمارا' || val === 'تابي') ? 'block' : 'none';
             });
-            
+
             window.addToCart = () => {
                 const select = document.getElementById('productSelect');
                 const productId = select.value;
@@ -140,56 +132,31 @@
                 const product = products.find(p => p.id === productId);
                 const qty = parseInt(document.getElementById('productQty').value) || 1;
                 const existing = cartItems.find(item => (item.productId === productId || item.id === productId));
-                if (existing) {
-                    existing.quantity += qty;
-                } else {
-                    cartItems.push({
-                        productId: product.id,
-                        name: product.name,
-                        price: product.price,
-                        quantity: qty
-                    });
-                }
+                if (existing) existing.quantity += qty;
+                else cartItems.push({ productId: product.id, name: product.name, price: product.price, quantity: qty });
                 updateCartDisplay();
                 document.getElementById('productQty').value = '1';
                 select.value = '';
             };
-            
             window.updateCartDisplay = () => {
                 const container = document.getElementById('cartItemsList');
                 let total = 0;
                 container.innerHTML = cartItems.map((item, idx) => {
                     const itemTotal = (item.price || 0) * (item.quantity || 0);
                     total += itemTotal;
-                    return `
-                        <div class="flex justify-between items-center border-b py-2">
-                            <span>${item.name} x ${item.quantity}</span>
-                            <span>${itemTotal} ريال</span>
-                            <div>
-                                <button onclick="adjustCartItem(${idx}, -1)" class="text-blue-600">-</button>
-                                <button onclick="adjustCartItem(${idx}, 1)" class="text-blue-600">+</button>
-                                <button onclick="removeCartItem(${idx})" class="text-red-600 ml-2"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </div>
-                    `;
+                    return `<div class="flex justify-between items-center border-b py-2"><span>${item.name} x ${item.quantity}</span><span>${itemTotal} ريال</span><div><button onclick="adjustCartItem(${idx}, -1)" class="text-blue-600">-</button><button onclick="adjustCartItem(${idx}, 1)" class="text-blue-600">+</button><button onclick="removeCartItem(${idx})" class="text-red-600 ml-2"><i class="fas fa-trash"></i></button></div></div>`;
                 }).join('');
                 document.getElementById('cartTotal').innerText = total;
             };
-            
             window.adjustCartItem = (idx, delta) => {
-                if (cartItems[idx].quantity + delta > 0) {
-                    cartItems[idx].quantity += delta;
-                } else {
-                    cartItems.splice(idx, 1);
-                }
+                if (cartItems[idx].quantity + delta > 0) cartItems[idx].quantity += delta;
+                else cartItems.splice(idx, 1);
                 updateCartDisplay();
             };
-            
             window.removeCartItem = (idx) => {
                 cartItems.splice(idx, 1);
                 updateCartDisplay();
             };
-            
             window.saveOrder = async () => {
                 const customerName = document.getElementById('customerName').value.trim();
                 if (!customerName) return alert('اسم العميل مطلوب');
@@ -202,54 +169,29 @@
                 if (cartItems.length === 0) return alert('أضف منتجات إلى السلة');
                 const totalAmount = cartItems.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 0)), 0);
                 const orderData = {
-                    customer: customerName,
-                    customerName: customerName,
-                    customerPhone,
-                    customerEmail,
-                    nationalAddress,
-                    shippingAddress,
-                    payment: paymentMethod,
-                    paymentMethod,
-                    paymentApproved,
-                    status: 'غير مدفوع',
-                    date: new Date().toISOString().slice(0,10),
-                    items: cartItems,
-                    cart: cartItems,
-                    totalAmount
+                    customer: customerName, customerName: customerName, customerPhone, customerEmail, nationalAddress, shippingAddress,
+                    payment: paymentMethod, paymentMethod: paymentMethod, paymentApproved,
+                    status: 'غير مدفوع', date: new Date().toISOString().slice(0,10),
+                    items: cartItems, cart: cartItems, totalAmount
                 };
-                if (currentOrderId) {
-                    await updateOrder(currentOrderId, orderData);
-                } else {
-                    orderData.orderNumber = `ORD-${Date.now()}`;
-                    await addOrder(orderData);
-                }
+                if (currentOrderId) await updateOrder(currentOrderId, orderData);
+                else { orderData.orderNumber = `ORD-${Date.now()}`; await addOrder(orderData); }
                 closeModal();
                 await loadData();
                 renderOrders();
             };
         }
-        
+
         async function editOrder(id) {
             const order = orders.find(o => o.id === id);
             if (order) await showOrderModal(order);
         }
-        
         async function deleteOrderItem(id) {
-            if (confirm('حذف الطلب؟')) {
-                await deleteOrder(id);
-                await loadData();
-                renderOrders();
-            }
+            if (confirm('حذف الطلب؟')) { await deleteOrder(id); await loadData(); renderOrders(); }
         }
-        
         async function refundOrder(id) {
-            if (confirm('استرداد الطلب؟')) {
-                await updateOrder(id, { status: 'مسترجع' });
-                await loadData();
-                renderOrders();
-            }
+            if (confirm('استرداد الطلب؟')) { await updateOrder(id, { status: 'مسترجع' }); await loadData(); renderOrders(); }
         }
-        
         async function exportInvoice(orderId) {
             const order = orders.find(o => o.id === orderId);
             if (!order) return;
@@ -265,32 +207,9 @@
                         <p>رقم الطلب: ${order.orderNumber}</p>
                         <p>التاريخ: ${order.date}</p>
                     </div>
-                    <div style="margin-bottom:20px;">
-                        <h3>بيانات العميل</h3>
-                        <p>الاسم: ${order.customer || order.customerName}</p>
-                        <p>الهاتف: ${order.customerPhone || ''}</p>
-                        <p>البريد الإلكتروني: ${order.customerEmail || '-'}</p>
-                        <p>العنوان الوطني: ${order.nationalAddress || '-'}</p>
-                        <p>عنوان الشحن: ${order.shippingAddress || '-'}</p>
-                        <p>طريقة الدفع: ${order.payment || order.paymentMethod} ${order.paymentApproved ? '(موافق)' : ''}</p>
-                        <p>حالة الطلب: ${order.status}</p>
-                    </div>
-                    <div style="margin-bottom:20px;">
-                        <h3>المنتجات</h3>
-                        <table style="width:100%; border-collapse:collapse;">
-                            <thead><tr style="background:#f3f4f6;"><th style="padding:8px; border:1px solid #ddd;">المنتج</th><th style="padding:8px; border:1px solid #ddd;">الكمية</th><th style="padding:8px; border:1px solid #ddd;">السعر</th><th style="padding:8px; border:1px solid #ddd;">الإجمالي</th></tr></thead>
-                            <tbody>
-                                ${items.map(item => `
-                                    <tr><td style="padding:8px; border:1px solid #ddd;">${item.name}</td><td style="padding:8px; border:1px solid #ddd;">${item.quantity}</td><td style="padding:8px; border:1px solid #ddd;">${item.price} ريال</td><td style="padding:8px; border:1px solid #ddd;">${item.price * item.quantity} ريال</td></tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                        <p style="font-weight:bold; margin-top:10px;">الإجمالي: ${total} ريال</p>
-                    </div>
-                    <div style="margin-top:30px; border-top:1px solid #ccc; padding-top:10px; text-align:center;">
-                        <div>${invoiceInstructions}</div>
-                        <div>${platformStamp}</div>
-                    </div>
+                    <div><h3>بيانات العميل</h3><p>الاسم: ${order.customer || order.customerName}</p><p>الهاتف: ${order.customerPhone || ''}</p><p>البريد: ${order.customerEmail || '-'}</p><p>العنوان الوطني: ${order.nationalAddress || '-'}</p><p>عنوان الشحن: ${order.shippingAddress || '-'}</p><p>طريقة الدفع: ${order.payment || order.paymentMethod} ${order.paymentApproved ? '(موافق)' : ''}</p><p>حالة الطلب: ${order.status}</p></div>
+                    <div><h3>المنتجات</h3><table style="width:100%; border-collapse:collapse;"><thead><tr style="background:#f3f4f6;"><th style="padding:8px; border:1px solid #ddd;">المنتج</th><th style="padding:8px; border:1px solid #ddd;">الكمية</th><th style="padding:8px; border:1px solid #ddd;">السعر</th><th style="padding:8px; border:1px solid #ddd;">الإجمالي</th>\\</thead><tbody>${items.map(item => `<tr><td style="padding:8px; border:1px solid #ddd;">${item.name}</td><td style="padding:8px; border:1px solid #ddd;">${item.quantity}</td><td style="padding:8px; border:1px solid #ddd;">${item.price} ريال</td><td style="padding:8px; border:1px solid #ddd;">${item.price * item.quantity} ريال</td></tr>`).join('')}</tbody></table><p style="font-weight:bold; margin-top:10px;">الإجمالي: ${total} ريال</p></div>
+                    <div style="margin-top:30px; border-top:1px solid #ccc; padding-top:10px; text-align:center;"><div>${invoiceInstructions}</div><div>${platformStamp}</div></div>
                 </div>
             `;
             const element = document.createElement('div');
@@ -306,19 +225,19 @@
                 document.body.removeChild(element);
             });
         }
-        
+
         function closeModal() {
             const modal = document.getElementById('orderModal');
             if (modal) modal.remove();
         }
-        
+
         window.showOrderModal = showOrderModal;
         window.editOrder = editOrder;
         window.deleteOrderItem = deleteOrderItem;
         window.refundOrder = refundOrder;
         window.exportInvoice = exportInvoice;
         window.closeModal = closeModal;
-        
+
         init();
     </script>
     <style>
