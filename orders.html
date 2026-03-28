@@ -6,7 +6,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script type="module">
-        import { getOrders, getCustomers, updateOrderStatus, deleteOrder, addOrder } from './js/admin.js';
+        import { getOrders, getCustomers, addOrder, updateOrderStatus, deleteOrder } from '../js/admin.js';
         
         let orders = [];
         let customers = [];
@@ -90,20 +90,21 @@
             }
             const customerList = customers.map(c => `${c.id}|${c.name}`).join('\n');
             const customerId = prompt(`أدخل معرف العميل:\n${customerList}`);
+            if (!customerId) return;
             const total = prompt('المبلغ الإجمالي:');
-            if (customerId && total) {
-                await addOrder({
-                    customerId,
-                    totalAmount: parseFloat(total),
-                    status: 'غير مدفوع',
-                    items: []
-                });
-                loadData();
-            }
+            if (!total) return;
+            await addOrder({
+                customerId,
+                totalAmount: parseFloat(total),
+                status: 'غير مدفوع',
+                items: []
+            });
+            loadData();
         };
 
         loadData();
         
+        // ربط الدوال بالنافذة للاستخدام في onclick
         window.editOrder = editOrder;
         window.deleteOrderItem = deleteOrderItem;
         window.refundOrder = refundOrder;
@@ -121,9 +122,18 @@
         <div class="overflow-x-auto">
             <table class="min-w-full">
                 <thead class="bg-gray-100">
-                    <tr><th class="p-3">رقم الطلب</th><th class="p-3">العميل</th><th class="p-3">المبلغ</th><th class="p-3">الحالة</th><th class="p-3">التاريخ</th><th class="p-3">الإجراءات</th></tr>
+                    <tr>
+                        <th class="p-3 text-right">رقم الطلب</th>
+                        <th class="p-3 text-right">العميل</th>
+                        <th class="p-3 text-right">المبلغ</th>
+                        <th class="p-3 text-right">الحالة</th>
+                        <th class="p-3 text-right">التاريخ</th>
+                        <th class="p-3 text-right">الإجراءات</th>
+                    </tr>
                 </thead>
-                <tbody id="orders-list"><tr><td colspan="6" class="text-center p-6">جاري التحميل...</td></tr></tbody>
+                <tbody id="orders-list">
+                    <tr><td colspan="6" class="text-center p-6 text-gray-500">جاري التحميل...</td></tr>
+                </tbody>
             </table>
         </div>
     </div>
