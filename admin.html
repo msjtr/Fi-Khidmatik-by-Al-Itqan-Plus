@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-    <!-- Firebase SDK (الإصدار 9 compat) -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     <style>
@@ -45,7 +45,8 @@
             padding: 0.5rem 1rem;
             border-radius: 0.5rem;
             transition: all 0.2s;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            cursor: pointer;
+            border: none;
         }
         .btn-primary:hover {
             background-color: #1d4ed8;
@@ -56,6 +57,8 @@
             font-weight: 700;
             padding: 0.5rem 1rem;
             border-radius: 0.5rem;
+            cursor: pointer;
+            border: none;
         }
         .btn-danger:hover {
             background-color: #b91c1c;
@@ -66,6 +69,8 @@
             font-weight: 700;
             padding: 0.5rem 1rem;
             border-radius: 0.5rem;
+            cursor: pointer;
+            border: none;
         }
         .btn-success:hover {
             background-color: #15803d;
@@ -76,9 +81,8 @@
             font-weight: 700;
             padding: 0.5rem 1rem;
             border-radius: 0.5rem;
-        }
-        .btn-secondary:hover {
-            background-color: #4b5563;
+            cursor: pointer;
+            border: none;
         }
         .card-hover:hover {
             box-shadow: 0 10px 20px rgba(0,0,0,0.05);
@@ -92,11 +96,8 @@
             outline: none;
         }
         input:focus, select:focus, textarea:focus {
-            ring: 2px solid #3b82f6;
-        }
-        .modal-backdrop {
-            background-color: rgba(0,0,0,0.5);
-            backdrop-filter: blur(2px);
+            outline: 2px solid #3b82f6;
+            outline-offset: 1px;
         }
     </style>
 </head>
@@ -118,7 +119,7 @@
             <div data-section="invoice" class="sidebar-item" id="nav-invoice"><i class="fas fa-file-invoice-dollar w-6"></i> <span>تعليمات الفاتورة</span></div>
             <div data-section="general" class="sidebar-item" id="nav-general"><i class="fas fa-sliders-h w-6"></i> <span>الإعدادات العامة</span></div>
         </nav>
-        <div class="p-4 border-t border-gray-200 text-xs text-gray-400">نظام إداري متكامل v4.0</div>
+        <div class="p-4 border-t border-gray-200 text-xs text-gray-400">نظام إداري متكامل v5.0</div>
     </aside>
 
     <!-- المحتوى الرئيسي -->
@@ -156,10 +157,78 @@
         await db.collection(collectionName).doc(id).delete();
     }
 
-    // ===================== دوال خاصة =====================
-    async function loadCustomers() {
-        return await getCollection('customers');
+    // ===================== دوال خاصة متوافقة مع هيكل البيانات الحالي =====================
+    
+    // جلب الطلبات (متوافق مع الحقول الموجودة: orderNumber, payment, phone, status, time, timestamp)
+    async function loadOrders() {
+        try {
+            const snapshot = await db.collection('orders').get();
+            let orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            // ترتيب حسب timestamp إذا كان موجوداً
+            orders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            return orders;
+        } catch (e) {
+            console.error("خطأ في جلب الطلبات", e);
+            return [];
+        }
     }
+    
+    // إضافة طلب جديد
+    async function addOrder(data) {
+        const orderData = {
+            orderNumber: data.orderNumber || `ORD-${Date.now()}`,
+            payment: data.totalAmount?.toString() || data.payment || "0",
+            phone: data.phone || "",
+            status: data.status || "غير مدفوع",
+            time: new Date().toLocaleTimeString('ar-SA'),
+            timestamp: Date.now(),
+            shipping: data.shipping || "",
+            street: data.street || ""
+        };
+        return await addDocument('orders', orderData);
+    }
+    
+    // تحديث حالة الطلب
+    async function updateOrderStatus(id, status) {
+        await updateDocument('orders', id, { status });
+    }
+    
+    // حذف طلب
+    async function deleteOrder(id) {
+        await deleteDocument('orders', id);
+    }
+    
+    // جلب العملاء (من الطلبات أو من مجموعة منفصلة)
+    async function loadCustomers() {
+        // محاولة جلب العملاء من مجموعة customers إذا كانت موجودة
+        let customers = [];
+        try {
+            const customersSnapshot = await db.collection('customers').get();
+            customers = customersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch(e) {
+            console.log("مجموعة العملاء غير موجودة");
+        }
+        
+        // إذا لم يكن هناك عملاء، نقوم باستخراجهم من الطلبات بناءً على رقم الهاتف
+        if (customers.length === 0) {
+            const orders = await loadOrders();
+            const uniquePhones = new Map();
+            orders.forEach(order => {
+                if (order.phone && !uniquePhones.has(order.phone)) {
+                    uniquePhones.set(order.phone, {
+                        id: `cust_${order.phone}`,
+                        name: `عميل ${order.phone.slice(-4)}`,
+                        phone: order.phone,
+                        email: "",
+                        address: order.shipping || ""
+                    });
+                }
+            });
+            customers = Array.from(uniquePhones.values());
+        }
+        return customers;
+    }
+    
     async function addCustomer(data) {
         return await addDocument('customers', data);
     }
@@ -169,32 +238,8 @@
     async function deleteCustomer(id) {
         await deleteDocument('customers', id);
     }
-
-    async function loadOrders() {
-        try {
-            const snapshot = await db.collection('orders').orderBy('orderDate', 'desc').get();
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } catch (e) {
-            console.warn("خطأ في ترتيب الطلبات، جاري تحميلها بدون ترتيب", e);
-            const snapshot = await db.collection('orders').get();
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        }
-    }
-    async function addOrder(data) {
-        const orderData = {
-            ...data,
-            orderDate: new Date().toISOString().slice(0,10),
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        return await addDocument('orders', orderData);
-    }
-    async function updateOrderStatus(id, status) {
-        await updateDocument('orders', id, { status });
-    }
-    async function deleteOrder(id) {
-        await deleteDocument('orders', id);
-    }
-
+    
+    // دوال المنتجات (كما هي)
     async function loadProducts() {
         return await getCollection('products');
     }
@@ -212,7 +257,7 @@
     async function updateProductQuantity(id, quantity) {
         await updateDocument('products', id, { quantity });
     }
-
+    
     // دوال الإعدادات
     async function getSettingsDoc(docId) {
         const docRef = db.collection('settings').doc(docId);
@@ -222,8 +267,8 @@
     async function setSettingsDoc(docId, data) {
         await db.collection('settings').doc(docId).set(data, { merge: true });
     }
-
-    // استيراد Excel
+    
+    // استيراد Excel للمنتجات
     function importProductsFromExcel(file, callback) {
         const reader = new FileReader();
         reader.onload = async function(e) {
@@ -247,10 +292,10 @@
         };
         reader.readAsArrayBuffer(file);
     }
-
+    
     // ===================== عرض الأقسام =====================
     let currentSection = 'orders';
-
+    
     async function renderSection(section) {
         const container = document.getElementById('page-content');
         if (!container) return;
@@ -265,24 +310,33 @@
             default: await renderOrders(container);
         }
     }
-
-    // ----- قسم الطلبات -----
+    
+    // ----- قسم الطلبات (متوافق مع البيانات الحالية) -----
     async function renderOrders(container) {
         let orders = await loadOrders();
         let customers = await loadCustomers();
-        const getCustomerName = (id) => {
-            let c = customers.find(c => c.id === id);
-            return c ? c.name : 'غير معروف';
+        
+        const getCustomerName = (phone) => {
+            let c = customers.find(c => c.phone === phone);
+            return c ? c.name : phone || 'غير معروف';
         };
+        
         const getStatusClass = (status) => {
             const map = {
                 'مدفوع': 'bg-green-100 text-green-700',
                 'غير مدفوع': 'bg-red-100 text-red-700',
                 'مسترجع': 'bg-orange-100 text-orange-700',
-                'ملغي': 'bg-gray-100 text-gray-700'
+                'ملغي': 'bg-gray-100 text-gray-700',
+                'حالة': 'bg-gray-100 text-gray-700'
             };
-            return map[status] || 'bg-gray-100';
+            return map[status] || 'bg-gray-100 text-gray-700';
         };
+        
+        const formatDate = (timestamp) => {
+            if (!timestamp) return '-';
+            return new Date(timestamp).toLocaleDateString('ar-SA');
+        };
+        
         container.innerHTML = `
             <div class="bg-white rounded-2xl shadow p-6">
                 <div class="flex justify-between items-center mb-6">
@@ -291,49 +345,54 @@
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full">
-                        <thead class="bg-gray-100">……
-                            <th class="p-3 text-right">رقم الطلب</th>
-                            <th class="p-3 text-right">العميل</th>
-                            <th class="p-3 text-right">المبلغ</th>
-                            <th class="p-3 text-right">الحالة</th>
-                            <th class="p-3 text-right">التاريخ</th>
-                            <th class="p-3 text-right">إجراءات</th>
-                        </tr>
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="p-3 text-right">رقم الطلب</th>
+                                <th class="p-3 text-right">العميل</th>
+                                <th class="p-3 text-right">المبلغ</th>
+                                <th class="p-3 text-right">الحالة</th>
+                                <th class="p-3 text-right">التاريخ</th>
+                                <th class="p-3 text-right">إجراءات</th>
+                            </tr>
                         </thead>
                         <tbody id="orders-tbody">
                             ${orders.map(order => `
-                                <tr class="border-b">
-                                    <td class="p-3">${order.id.slice(-6)}</td>
-                                    <td class="p-3">${getCustomerName(order.customerId)}</td>
-                                    <td class="p-3">${order.totalAmount} ريال</td>
-                                    <td class="p-3"><span class="badge-status ${getStatusClass(order.status)}">${order.status}</span></td>
-                                    <td class="p-3">${order.orderDate}</td>
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="p-3 font-mono text-sm">${order.orderNumber || order.id.slice(-8)}</td>
                                     <td class="p-3">
-                                        <button onclick="window.editOrder('${order.id}')" class="text-blue-600 ml-2"><i class="fas fa-edit"></i></button>
-                                        <button onclick="window.deleteOrderItem('${order.id}')" class="text-red-600 ml-2"><i class="fas fa-trash"></i></button>
-                                        <button onclick="window.refundOrder('${order.id}')" class="text-orange-600"><i class="fas fa-undo-alt"></i></button>
+                                        <div class="font-semibold">${getCustomerName(order.phone)}</div>
+                                        <div class="text-xs text-gray-500">${order.phone || ''}</div>
+                                    </td>
+                                    <td class="p-3 font-bold">${order.payment || '0'} ريال</td>
+                                    <td class="p-3"><span class="badge-status ${getStatusClass(order.status)}">${order.status || 'غير محدد'}</span></td>
+                                    <td class="p-3">${order.time || formatDate(order.timestamp)}</td>
+                                    <td class="p-3">
+                                        <button onclick="window.editOrder('${order.id}')" class="text-blue-600 hover:text-blue-800 ml-2"><i class="fas fa-edit"></i></button>
+                                        <button onclick="window.deleteOrderItem('${order.id}')" class="text-red-600 hover:text-red-800 ml-2"><i class="fas fa-trash"></i></button>
+                                        <button onclick="window.refundOrder('${order.id}')" class="text-orange-600 hover:text-orange-800"><i class="fas fa-undo-alt"></i></button>
                                     </td>
                                 </tr>
-                            `).join('') || '<tr><td colspan="6" class="text-center p-6">لا توجد طلبات</td></tr>'}
+                            `).join('') || '<tr><td colspan="6" class="text-center p-6 text-gray-500">لا توجد طلبات</td></tr>'}
                         </tbody>
                     </table>
                 </div>
             </div>
         `;
+        
         window.showAddOrderModal = async () => {
-            let customers = await loadCustomers();
-            if (!customers.length) {
-                alert('لا يوجد عملاء. الرجاء إضافة عميل أولاً.');
-                return;
-            }
-            const customerOptions = customers.map(c => `${c.id}|${c.name}`).join('\n');
-            const customerId = prompt(`أدخل معرف العميل:\n${customerOptions}`);
-            if (!customerId) return;
-            const total = prompt('المبلغ الإجمالي:');
-            if (!total) return;
-            await addOrder({ customerId, totalAmount: parseFloat(total), status: 'غير مدفوع', items: [] });
+            const phone = prompt('رقم الهاتف:');
+            if (!phone) return;
+            const payment = prompt('المبلغ:');
+            if (!payment) return;
+            await addOrder({ 
+                phone, 
+                totalAmount: payment,
+                orderNumber: `ORD-${Date.now().toString().slice(-8)}`,
+                status: 'غير مدفوع'
+            });
             renderSection('orders');
         };
+        
         window.editOrder = async (id) => {
             let orders = await loadOrders();
             let order = orders.find(o => o.id === id);
@@ -344,21 +403,23 @@
                 renderSection('orders');
             }
         };
+        
         window.deleteOrderItem = async (id) => {
-            if (confirm('حذف الطلب؟')) {
+            if (confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
                 await deleteOrder(id);
                 renderSection('orders');
             }
         };
+        
         window.refundOrder = async (id) => {
-            if (confirm('استرداد الطلب؟')) {
+            if (confirm('هل تريد استرداد هذا الطلب؟')) {
                 await updateOrderStatus(id, 'مسترجع');
                 renderSection('orders');
             }
         };
     }
-
-    // ----- قسم العملاء -----
+    
+    // ----- قسم العملاء (من الطلبات) -----
     async function renderCustomers(container) {
         let customers = await loadCustomers();
         container.innerHTML = `
@@ -369,41 +430,42 @@
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full">
-                        <thead class="bg-gray-100">……
-                            <th class="p-3 text-right">الاسم</th>
-                            <th class="p-3 text-right">الهاتف</th>
-                            <th class="p-3 text-right">البريد</th>
-                            <th class="p-3 text-right">العنوان</th>
-                            <th class="p-3 text-right">إجراءات</th>
-                        </tr>
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="p-3 text-right">الاسم</th>
+                                <th class="p-3 text-right">الهاتف</th>
+                                <th class="p-3 text-right">العنوان</th>
+                                <th class="p-3 text-right">إجراءات</th>
+                            </tr>
                         </thead>
                         <tbody id="customers-tbody">
                             ${customers.map(c => `
-                                <tr class="border-b">
-                                    <td class="p-3">${c.name}</td>
-                                    <td class="p-3">${c.phone || ''}</td>
-                                    <td class="p-3">${c.email || ''}</td>
-                                    <td class="p-3">${c.address || ''}</td>
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="p-3 font-semibold">${c.name}</td>
+                                    <td class="p-3">${c.phone}</td>
+                                    <td class="p-3">${c.address || '-'}</td>
                                     <td class="p-3">
                                         <button onclick="window.editCustomer('${c.id}')" class="text-blue-600 ml-2"><i class="fas fa-edit"></i></button>
                                         <button onclick="window.deleteCustomerItem('${c.id}')" class="text-red-600"><i class="fas fa-trash"></i></button>
                                     </td>
                                 </tr>
-                            `).join('') || '<tr><td colspan="5" class="text-center p-6">لا يوجد عملاء</td></tr>'}
+                            `).join('') || '<tr><td colspan="4" class="text-center p-6 text-gray-500">لا يوجد عملاء. يمكن إضافتهم من الطلبات أو يدوياً</td></tr>'}
                         </tbody>
                     </table>
                 </div>
             </div>
         `;
+        
         window.showAddCustomerModal = async () => {
             const name = prompt('الاسم:');
             if (!name) return;
-            const phone = prompt('الهاتف:');
-            const email = prompt('البريد:');
+            const phone = prompt('رقم الهاتف:');
+            if (!phone) return;
             const address = prompt('العنوان:');
-            await addCustomer({ name, phone, email, address });
+            await addCustomer({ name, phone, address, email: '' });
             renderSection('customers');
         };
+        
         window.editCustomer = async (id) => {
             let customers = await loadCustomers();
             let cust = customers.find(c => c.id === id);
@@ -411,11 +473,11 @@
             const name = prompt('الاسم الجديد:', cust.name);
             if (!name) return;
             const phone = prompt('الهاتف الجديد:', cust.phone);
-            const email = prompt('البريد الجديد:', cust.email);
             const address = prompt('العنوان الجديد:', cust.address);
-            await updateCustomer(id, { name, phone, email, address });
+            await updateCustomer(id, { name, phone, address });
             renderSection('customers');
         };
+        
         window.deleteCustomerItem = async (id) => {
             if (confirm('حذف العميل؟')) {
                 await deleteCustomer(id);
@@ -423,8 +485,8 @@
             }
         };
     }
-
-    // ----- قسم المنتجات -----
+    
+    // ----- باقي الأقسام (المنتجات، المخزون، طرق الدفع، إلخ) كما هي -----
     async function renderProducts(container) {
         let products = await loadProducts();
         container.innerHTML = `
@@ -453,6 +515,7 @@
                 </div>
             </div>
         `;
+        
         window.showAddProductModal = () => {
             const name = prompt('اسم المنتج:');
             if (!name) return;
@@ -463,6 +526,7 @@
             if (!imageUrl || imageUrl.trim() === '') imageUrl = '/images/default-product.png';
             addProduct({ name, price, quantity, imageUrl }).then(() => renderSection('products'));
         };
+        
         window.editProduct = async (id) => {
             let products = await loadProducts();
             let prod = products.find(p => p.id === id);
@@ -477,12 +541,14 @@
             await updateProduct(id, { name, price, quantity, imageUrl });
             renderSection('products');
         };
+        
         window.deleteProductItem = async (id) => {
             if (confirm('حذف المنتج؟')) {
                 await deleteProduct(id);
                 renderSection('products');
             }
         };
+        
         window.handleExcelUpload = (input) => {
             const file = input.files[0];
             if (file) {
@@ -496,7 +562,7 @@
             input.value = '';
         };
     }
-
+    
     // ----- قسم المخزون -----
     async function renderInventory(container) {
         let products = await loadProducts();
@@ -505,11 +571,12 @@
                 <h2 class="text-2xl font-bold mb-6"><i class="fas fa-warehouse ml-2"></i>المخزون</h2>
                 <div class="overflow-x-auto">
                     <table class="min-w-full">
-                        <thead class="bg-gray-100">……
-                            <th class="p-3 text-right">المنتج</th>
-                            <th class="p-3 text-right">الكمية الحالية</th>
-                            <th class="p-3 text-right">تحديث الكمية</th>
-                        </tr>
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="p-3 text-right">المنتج</th>
+                                <th class="p-3 text-right">الكمية الحالية</th>
+                                <th class="p-3 text-right">تحديث الكمية</th>
+                            </tr>
                         </thead>
                         <tbody>
                             ${products.map(p => `
@@ -524,6 +591,7 @@
                 </div>
             </div>
         `;
+        
         window.updateQuantity = async (id) => {
             const input = document.getElementById(`qty-${id}`);
             const newQty = parseInt(input.value);
@@ -534,7 +602,7 @@
             } else alert('أدخل رقماً صحيحاً');
         };
     }
-
+    
     // ----- قسم طرق الدفع -----
     async function renderPaymentMethods(container) {
         let methodsDoc = await getSettingsDoc('paymentMethods');
@@ -550,6 +618,7 @@
                 </ul>
             </div>
         `;
+        
         window.addPaymentMethod = async () => {
             const newMethod = prompt('أدخل طريقة الدفع الجديدة:');
             if (newMethod && newMethod.trim()) {
@@ -560,6 +629,7 @@
                 renderSection('payment-methods');
             }
         };
+        
         window.deletePaymentMethod = async (idx) => {
             let current = await getSettingsDoc('paymentMethods');
             let methods = current?.methods || [];
@@ -568,7 +638,7 @@
             renderSection('payment-methods');
         };
     }
-
+    
     // ----- قسم تعليمات الفاتورة -----
     async function renderInvoiceInstructions(container) {
         let invoiceDoc = await getSettingsDoc('invoiceInstructions');
@@ -580,13 +650,14 @@
                 <button onclick="window.saveInvoiceInstructions()" class="btn-primary mt-4">حفظ التعليمات</button>
             </div>
         `;
+        
         window.saveInvoiceInstructions = async () => {
             const newText = document.getElementById('invoiceText').value;
             await setSettingsDoc('invoiceInstructions', { text: newText });
             alert('تم حفظ التعليمات');
         };
     }
-
+    
     // ----- قسم الإعدادات العامة -----
     async function renderGeneralSettings(container) {
         let general = await getSettingsDoc('general');
@@ -604,6 +675,7 @@
                 </div>
             </div>
         `;
+        
         window.saveGeneralSettings = async () => {
             const settings = {
                 siteName: document.getElementById('siteName').value,
@@ -616,24 +688,26 @@
             alert('تم حفظ الإعدادات');
         };
     }
-
+    
     // ===================== التنقل بين الأقسام =====================
     function setActiveNav(section) {
         document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('sidebar-active'));
-        document.getElementById(`nav-${section}`).classList.add('sidebar-active');
+        document.getElementById(`nav-${section}`)?.classList.add('sidebar-active');
     }
+    
     window.changeSection = (section) => {
         currentSection = section;
         setActiveNav(section);
         renderSection(section);
     };
+    
     document.querySelectorAll('.sidebar-item').forEach(item => {
         item.addEventListener('click', () => {
             const section = item.getAttribute('data-section');
             if (section) changeSection(section);
         });
     });
-
+    
     // تحميل القسم الافتراضي
     renderSection('orders');
 </script>
