@@ -142,7 +142,11 @@ export async function getSettings(settingType) {
 export async function saveSettings(settingType, data) {
     const docRef = doc(db, 'settings', settingType);
     await updateDoc(docRef, data).catch(async () => {
-        // إذا لم يكن موجوداً، نقوم بإنشائه
-        await addDoc(collection(db, 'settings'), { ...data, id: settingType });
+        await setDoc(docRef, data);
     });
 }
+
+// إضافة setDoc للاستيراد في admin.js (إذا لم تكن موجودة)
+import { setDoc } from './firebase.js';
+// لكننا لم نصدّر setDoc في firebase.js، لذا يجب إما إضافته أو استخدام addDoc. لتجنب التعقيد، سنقوم بتعديل saveSettings لاستخدام addDoc بدلاً من setDoc
+// لكن الأفضل أن نضيف setDoc إلى exports في firebase.js.
