@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+<meta charset="UTF-8">
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script type="module">
+import {exportAllData,importAllData} from '../../js/common.js';
+
+window.exportData=async()=>{
+const data=await exportAllData();
+const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+const a=document.createElement('a');
+a.href=URL.createObjectURL(blob);
+a.download='backup.json';
+a.click();
+};
+
+window.importData=(i)=>{
+const r=new FileReader();
+r.onload=async e=>{
+await importAllData(JSON.parse(e.target.result));
+alert('تم الاستيراد');
+};
+r.readAsText(i.files[0]);
+};
+</script>
+</head>
+
+<body class="p-6 bg-gray-100">
+<button onclick="exportData()" class="bg-green-600 text-white p-2">تصدير</button>
+<input type="file" onchange="importData(this)">
+</body>
+</html>
