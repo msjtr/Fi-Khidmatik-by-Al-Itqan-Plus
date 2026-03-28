@@ -8,7 +8,8 @@ import {
     getDocs,
     updateDoc,
     deleteDoc,
-    setDoc
+    setDoc,
+    deleteField
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // إعدادات Firebase
@@ -43,11 +44,11 @@ export const loadProducts = () => getCollection('products');
 export const addProduct = (data) =>
     addDoc(collection(db, 'products'), data);
 
-export const deleteProduct = (id) =>
-    deleteDoc(doc(db, 'products', id));
-
 export const updateProduct = (id, data) =>
     updateDoc(doc(db, 'products', id), data);
+
+export const deleteProduct = (id) =>
+    deleteDoc(doc(db, 'products', id));
 
 export const updateProductStock = (id, newStock) =>
     updateDoc(doc(db, 'products', id), { stock: newStock });
@@ -68,50 +69,30 @@ export const deleteCustomer = (id) =>
 export const loadOrders = () => getCollection('orders');
 
 export const addOrder = (data) =>
-    addDoc(collection(db, 'orders'), {
-        ...data,
-        createdAt: new Date().toISOString(),
-        status: data.status || 'جديد'
-    });
+    addDoc(collection(db, 'orders'), data);
 
 export const updateOrder = (id, data) =>
-    updateDoc(doc(db, 'orders', id), {
-        ...data,
-        updatedAt: new Date().toISOString()
-    });
+    updateDoc(doc(db, 'orders', id), data);
 
 export const deleteOrder = (id) =>
     deleteDoc(doc(db, 'orders', id));
 
-// ===================== جلب الطلبات مع تفاصيل العميل والمنتجات =====================
 export const getOrdersWithDetails = async () => {
-    try {
-        const orders = await getCollection('orders');
-        const customers = await getCollection('customers');
-        const products = await getCollection('products');
-        
-        const customersMap = {};
-        customers.forEach(c => {
-            customersMap[c.id] = c;
-        });
-        
-        const productsMap = {};
-        products.forEach(p => {
-            productsMap[p.id] = p;
-        });
-        
-        return orders.map(order => ({
-            ...order,
-            customer: customersMap[order.customerId] || { name: 'غير معروف', phone: '', email: '' },
-            items: order.items?.map(item => ({
-                ...item,
-                productDetails: productsMap[item.productId] || { name: 'منتج غير موجود', price: item.price }
-            })) || []
-        }));
-    } catch (error) {
-        console.error("خطأ في جلب الطلبات:", error);
-        return [];
-    }
+    const orders = await getCollection('orders');
+    const customers = await getCollection('customers');
+    const products = await getCollection('products');
+    
+    const customersMap = Object.fromEntries(customers.map(c => [c.id, c]));
+    const productsMap = Object.fromEntries(products.map(p => [p.id, p]));
+    
+    return orders.map(order => ({
+        ...order,
+        customer: customersMap[order.customerId] || { name: 'غير معروف' },
+        items: order.items?.map(item => ({
+            ...item,
+            productDetails: productsMap[item.productId] || null
+        })) || []
+    }));
 };
 
 // ===================== الإعدادات =====================
@@ -133,5 +114,7 @@ export {
     getDocs,
     updateDoc,
     deleteDoc,
-    setDoc
+    setDoc,
+    deleteField,
+    getCollection
 };
