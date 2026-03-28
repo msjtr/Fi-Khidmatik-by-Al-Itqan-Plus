@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-    <!-- Firebase SDK v9 compat -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     <style>
@@ -65,15 +64,6 @@
             cursor: pointer;
         }
         .btn-success:hover { background-color: #15803d; }
-        .btn-secondary {
-            background-color: #6b7280;
-            color: white;
-            font-weight: 700;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            cursor: pointer;
-        }
-        .btn-secondary:hover { background-color: #4b5563; }
         input, select, textarea {
             border: 1px solid #d1d5db;
             border-radius: 0.5rem;
@@ -88,6 +78,19 @@
             box-shadow: 0 10px 20px rgba(0,0,0,0.05);
             transform: translateY(-2px);
             transition: 0.2s;
+        }
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -109,12 +112,17 @@
             <div data-section="invoice" class="sidebar-item" id="nav-invoice"><i class="fas fa-file-invoice-dollar w-6"></i> <span>تعليمات الفاتورة</span></div>
             <div data-section="general" class="sidebar-item" id="nav-general"><i class="fas fa-sliders-h w-6"></i> <span>الإعدادات العامة</span></div>
         </nav>
-        <div class="p-4 border-t border-gray-200 text-xs text-gray-400">نظام إداري متكامل v4.0</div>
+        <div class="p-4 border-t border-gray-200 text-xs text-gray-400">نظام إداري متكامل v5.0</div>
     </aside>
 
     <!-- المحتوى الرئيسي -->
     <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
-        <div id="page-content"></div>
+        <div id="page-content">
+            <div class="flex justify-center items-center h-64">
+                <div class="loading-spinner"></div>
+                <div class="mr-3 text-gray-500">جاري التحميل...</div>
+            </div>
+        </div>
     </main>
 </div>
 
@@ -132,10 +140,15 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // ------------------- دوال مساعدة عامة -------------------
+    // ------------------- دوال مساعدة -------------------
     async function getCollection(collectionName) {
-        const snapshot = await db.collection(collectionName).get();
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        try {
+            const snapshot = await db.collection(collectionName).get();
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (err) {
+            console.error(`خطأ في جلب مجموعة ${collectionName}:`, err);
+            return [];
+        }
     }
     async function addDocument(collectionName, data) {
         return await db.collection(collectionName).add(data);
@@ -147,13 +160,14 @@
         await db.collection(collectionName).doc(id).delete();
     }
 
-    // ------------------- دوال الطلبات (تتوافق مع حقولك) -------------------
+    // ------------------- دوال الطلبات -------------------
     async function loadOrders() {
         try {
+            // محاولة الترتيب حسب timestamp (أو orderDate)
             const snapshot = await db.collection('orders').orderBy('timestamp', 'desc').get();
             return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } catch (e) {
-            // إذا لم يكن هناك حقل timestamp، نحمّل بدون ترتيب
+        } catch (err) {
+            console.warn("لا يوجد حقل timestamp، جلب بدون ترتيب", err);
             const snapshot = await db.collection('orders').get();
             return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         }
@@ -191,7 +205,7 @@
         await deleteDocument('customers', id);
     }
 
-    // ------------------- دوال المنتجات -------------------
+    // ------------------- دوال المنتجات والمخزون -------------------
     async function loadProducts() {
         return await getCollection('products');
     }
@@ -251,20 +265,31 @@
     async function renderSection(section) {
         const container = document.getElementById('page-content');
         if (!container) return;
-        switch(section) {
-            case 'orders': await renderOrders(container); break;
-            case 'customers': await renderCustomers(container); break;
-            case 'products': await renderProducts(container); break;
-            case 'inventory': await renderInventory(container); break;
-            case 'payment-methods': await renderPaymentMethods(container); break;
-            case 'invoice': await renderInvoiceInstructions(container); break;
-            case 'general': await renderGeneralSettings(container); break;
-            default: await renderOrders(container);
+        try {
+            switch(section) {
+                case 'orders': await renderOrders(container); break;
+                case 'customers': await renderCustomers(container); break;
+                case 'products': await renderProducts(container); break;
+                case 'inventory': await renderInventory(container); break;
+                case 'payment-methods': await renderPaymentMethods(container); break;
+                case 'invoice': await renderInvoiceInstructions(container); break;
+                case 'general': await renderGeneralSettings(container); break;
+                default: await renderOrders(container);
+            }
+        } catch (err) {
+            console.error("خطأ في عرض القسم:", err);
+            container.innerHTML = `<div class="bg-red-100 border border-red-400 text-red-700 p-4 rounded">حدث خطأ: ${err.message}</div>`;
         }
     }
 
     // ---------- الطلبات ----------
     async function renderOrders(container) {
+        container.innerHTML = `
+            <div class="flex justify-center items-center h-64">
+                <div class="loading-spinner"></div>
+                <div class="mr-3 text-gray-500">جاري تحميل الطلبات...</div>
+            </div>
+        `;
         let orders = await loadOrders();
         const getStatusClass = (status) => {
             const map = {
@@ -275,6 +300,7 @@
             };
             return map[status] || 'bg-gray-100';
         };
+        
         container.innerHTML = `
             <div class="bg-white rounded-2xl shadow p-6">
                 <div class="flex justify-between items-center mb-6">
@@ -286,28 +312,30 @@
                         <thead class="bg-gray-100">
                             <tr>
                                 <th class="p-3 text-right">رقم الطلب</th>
-                                <th class="p-3 text-right">الهاتف</th>
+                                <th class="p-3 text-right">رقم الهاتف</th>
                                 <th class="p-3 text-right">المبلغ</th>
                                 <th class="p-3 text-right">الحالة</th>
-                                <th class="p-3 text-right">التاريخ/الوقت</th>
-                                <th class="p-3 text-right">إجراءات</th>
+                                <th class="p-3 text-right">الوقت</th>
+                                <th class="p-3 text-right">الإجراءات</th>
                             </tr>
                         </thead>
-                        <tbody id="orders-tbody">
-                            ${orders.map(order => `
-                                <tr class="border-b">
-                                    <td class="p-3">${order.orderNumber || order.id.slice(-6)}</td>
+                        <tbody>
+                            ${orders.length === 0 ? 
+                                '<tr><td colspan="6" class="text-center p-6 text-gray-500">لا توجد طلبات</td></tr>' :
+                                orders.map(order => `
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="p-3 font-mono">${order.orderNumber || order.id.slice(-8)}</td>
                                     <td class="p-3">${order.phone || '-'}</td>
                                     <td class="p-3">${order.payment || 0} ريال</td>
                                     <td class="p-3"><span class="badge-status ${getStatusClass(order.status)}">${order.status || 'غير مدفوع'}</span></td>
                                     <td class="p-3">${order.time || order.orderDate || ''}</td>
                                     <td class="p-3">
-                                        <button onclick="window.editOrder('${order.id}')" class="text-blue-600 ml-2"><i class="fas fa-edit"></i></button>
-                                        <button onclick="window.deleteOrderItem('${order.id}')" class="text-red-600 ml-2"><i class="fas fa-trash"></i></button>
-                                        <button onclick="window.refundOrder('${order.id}')" class="text-orange-600"><i class="fas fa-undo-alt"></i></button>
+                                        <button onclick="window.editOrder('${order.id}')" class="text-blue-600 ml-2" title="تعديل"><i class="fas fa-edit"></i></button>
+                                        <button onclick="window.deleteOrderItem('${order.id}')" class="text-red-600 ml-2" title="حذف"><i class="fas fa-trash"></i></button>
+                                        <button onclick="window.refundOrder('${order.id}')" class="text-orange-600" title="استرداد"><i class="fas fa-undo-alt"></i></button>
                                     </td>
                                 </tr>
-                            `).join('') || '<tr><td colspan="6" class="text-center p-6">لا توجد طلبات</td></tr>'}
+                            `).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -325,8 +353,7 @@
                 phone,
                 payment,
                 status: 'غير مدفوع',
-                time: new Date().toLocaleTimeString('ar-EG'),
-                items: []
+                time: new Date().toLocaleTimeString('ar-EG')
             });
             renderSection('orders');
         };
@@ -356,6 +383,12 @@
 
     // ---------- العملاء ----------
     async function renderCustomers(container) {
+        container.innerHTML = `
+            <div class="flex justify-center items-center h-64">
+                <div class="loading-spinner"></div>
+                <div class="mr-3 text-gray-500">جاري تحميل العملاء...</div>
+            </div>
+        `;
         let customers = await loadCustomers();
         container.innerHTML = `
             <div class="bg-white rounded-2xl shadow p-6">
@@ -371,12 +404,14 @@
                                 <th class="p-3 text-right">الهاتف</th>
                                 <th class="p-3 text-right">البريد</th>
                                 <th class="p-3 text-right">العنوان</th>
-                                <th class="p-3 text-right">إجراءات</th>
+                                <th class="p-3 text-right">الإجراءات</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${customers.map(c => `
-                                <tr class="border-b">
+                            ${customers.length === 0 ? 
+                                '<tr><td colspan="5" class="text-center p-6 text-gray-500">لا يوجد عملاء. أضف عميلاً جديداً</td></tr>' :
+                                customers.map(c => `
+                                <tr class="border-b hover:bg-gray-50">
                                     <td class="p-3">${c.name}</td>
                                     <td class="p-3">${c.phone || ''}</td>
                                     <td class="p-3">${c.email || ''}</td>
@@ -386,12 +421,13 @@
                                         <button onclick="window.deleteCustomerItem('${c.id}')" class="text-red-600"><i class="fas fa-trash"></i></button>
                                     </td>
                                 </tr>
-                            `).join('') || '<tr><td colspan="5" class="text-center p-6">لا يوجد عملاء</td></tr>'}
+                            `).join('')}
                         </tbody>
                     </table>
                 </div>
             </div>
         `;
+
         window.showAddCustomerModal = async () => {
             const name = prompt('الاسم:');
             if (!name) return;
@@ -423,6 +459,12 @@
 
     // ---------- المنتجات ----------
     async function renderProducts(container) {
+        container.innerHTML = `
+            <div class="flex justify-center items-center h-64">
+                <div class="loading-spinner"></div>
+                <div class="mr-3 text-gray-500">جاري تحميل المنتجات...</div>
+            </div>
+        `;
         let products = await loadProducts();
         container.innerHTML = `
             <div class="bg-white rounded-2xl shadow p-6">
@@ -434,8 +476,10 @@
                         <button onclick="document.getElementById('excelFileInput').click()" class="btn-success"><i class="fas fa-file-excel ml-1"></i>رفع Excel</button>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6" id="products-grid">
-                    ${products.map(p => `
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                    ${products.length === 0 ? 
+                        '<div class="col-span-full text-center p-8 text-gray-500">لا توجد منتجات. أضف منتجاً جديداً</div>' :
+                        products.map(p => `
                         <div class="border rounded-lg p-4 shadow-sm card-hover">
                             <img src="${p.imageUrl || '/images/default-product.png'}" class="w-full h-40 object-cover rounded mb-3" onerror="this.src='/images/default-product.png'">
                             <h3 class="font-bold text-lg">${p.name}</h3>
@@ -446,7 +490,7 @@
                                 <button onclick="window.deleteProductItem('${p.id}')" class="text-red-600"><i class="fas fa-trash ml-1"></i>حذف</button>
                             </div>
                         </div>
-                    `).join('') || '<div class="col-span-full text-center p-8 text-gray-500">لا توجد منتجات</div>'}
+                    `).join('')}
                 </div>
             </div>
         `;
@@ -496,6 +540,12 @@
 
     // ---------- المخزون ----------
     async function renderInventory(container) {
+        container.innerHTML = `
+            <div class="flex justify-center items-center h-64">
+                <div class="loading-spinner"></div>
+                <div class="mr-3 text-gray-500">جاري تحميل المخزون...</div>
+            </div>
+        `;
         let products = await loadProducts();
         container.innerHTML = `
             <div class="bg-white rounded-2xl shadow p-6">
@@ -510,13 +560,15 @@
                             </tr>
                         </thead>
                         <tbody>
-                            ${products.map(p => `
+                            ${products.length === 0 ? 
+                                '<tr><td colspan="3" class="text-center p-6 text-gray-500">لا توجد منتجات</td></tr>' :
+                                products.map(p => `
                                 <tr class="border-b">
                                     <td class="p-3 font-semibold">${p.name}</td>
                                     <td class="p-3"><span class="font-bold ${p.quantity < 5 ? 'text-red-600' : 'text-green-600'}">${p.quantity || 0}</span></td>
                                     <td class="p-3"><div class="flex items-center gap-2"><input type="number" id="qty-${p.id}" value="${p.quantity || 0}" class="border rounded p-2 w-24 text-center"><button onclick="window.updateQuantity('${p.id}')" class="btn-primary text-sm py-1">تحديث</button></div></td>
                                 </tr>
-                            `).join('') || '<tr><td colspan="3" class="text-center p-6">لا توجد منتجات</td></tr>'}
+                            `).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -633,7 +685,7 @@
         });
     });
 
-    // تحميل القسم الافتراضي
+    // بدء التشغيل
     renderSection('orders');
 </script>
 </body>
