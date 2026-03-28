@@ -64,6 +64,15 @@
             cursor: pointer;
         }
         .btn-success:hover { background-color: #15803d; }
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
+        .btn-secondary:hover { background-color: #4b5563; }
         input, select, textarea {
             border: 1px solid #d1d5db;
             border-radius: 0.5rem;
@@ -97,7 +106,6 @@
 <body class="antialiased">
 
 <div class="flex h-screen overflow-hidden">
-    <!-- الشريط الجانبي -->
     <aside class="w-72 bg-white shadow-xl z-10 flex flex-col overflow-y-auto border-l border-gray-200">
         <div class="p-5 border-b border-gray-200">
             <h1 class="text-2xl font-extrabold text-blue-700"><i class="fas fa-tachometer-alt ml-2"></i>لوحة التحكم</h1>
@@ -121,7 +129,6 @@
 </div>
 
 <script>
-    // Firebase config
     const firebaseConfig = {
         apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
         authDomain: "msjt301-974bb.firebaseapp.com",
@@ -149,9 +156,8 @@
         await db.collection(collectionName).doc(id).delete();
     }
 
-    // ----- الطلبات -----
+    // الطلبات
     async function loadOrders() {
-        // نجلب جميع الطلبات بدون ترتيب (لأن الحقول مختلفة)
         const snapshot = await db.collection('orders').get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
@@ -174,13 +180,10 @@
         await deleteDocument('orders', id);
     }
 
-    // ----- العملاء -----
-    // نستخرج العملاء من الطلبات الحالية، ونضيف لهم إمكانية التعديل والإضافة في مجموعة منفصلة
+    // العملاء
     async function loadCustomers() {
-        // أولاً نجلب من مجموعة customers إن وجدت
         let customers = await getCollection('customers');
         if (customers.length > 0) return customers;
-        // وإلا نستخرج أسماء فريدة من الطلبات
         const orders = await loadOrders();
         const uniqueNames = [...new Set(orders.map(o => o.customer).filter(n => n))];
         return uniqueNames.map(name => ({ id: name, name, phone: '', email: '', address: '' }));
@@ -195,7 +198,7 @@
         await deleteDocument('customers', id);
     }
 
-    // ----- المنتجات والمخزون -----
+    // المنتجات والمخزون
     async function loadProducts() {
         return await getCollection('products');
     }
@@ -214,7 +217,7 @@
         await updateDocument('products', id, { quantity });
     }
 
-    // ----- الإعدادات -----
+    // الإعدادات
     async function getSettingsDoc(docId) {
         const docRef = db.collection('settings').doc(docId);
         const docSnap = await docRef.get();
@@ -224,32 +227,105 @@
         await db.collection('settings').doc(docId).set(data, { merge: true });
     }
 
-    // استيراد Excel
+    // استيراد Excel مع الأعمدة الجديدة
     function importProductsFromExcel(file, callback) {
         const reader = new FileReader();
         reader.onload = async function(e) {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, { type: 'array' });
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const rows = XLSX.utils.sheet_to_json(sheet);
+            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+            if (!rows || rows.length < 2) {
+                callback({ success: false, error: 'الملف فارغ أو لا يحتوي على بيانات' });
+                return;
+            }
+            const headers = rows[0];
+            const colIndex = {
+                name: headers.findIndex(h => h.includes('اسم المنتج')),
+                code: headers.findIndex(h => h.includes('كود المنتج')),
+                barcode: headers.findIndex(h => h.includes('باركود')),
+                description: headers.findIndex(h => h.includes('وصف')),
+                quantity: headers.findIndex(h => h.includes('الكمية')),
+                cost: headers.findIndex(h => h.includes('سعر التكلفة')),
+                price: headers.findIndex(h => h.includes('سعر البيع')),
+                discountPrice: headers.findIndex(h => h.includes('سعر التخفيض')),
+                mainImage: headers.findIndex(h => h.includes('الصورة الرئيسية')),
+                image2: headers.findIndex(h => h.includes('صورة 2')),
+                image3: headers.findIndex(h => h.includes('صورة 3')),
+                image4: headers.findIndex(h => h.includes('صورة 4')),
+                image5: headers.findIndex(h => h.includes('صورة 5'))
+            };
             let count = 0;
-            for (const row of rows) {
-                const name = row.name || row['اسم المنتج'];
-                const price = parseFloat(row.price || row['السعر']);
-                const quantity = parseInt(row.quantity || row['الكمية'] || 0);
-                let imageUrl = row.imageUrl || row['الصورة'] || '';
-                if (!imageUrl.trim()) imageUrl = '/images/default-product.png';
-                if (name && !isNaN(price)) {
-                    await addProduct({ name, price, quantity, imageUrl });
-                    count++;
-                }
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row || row.length === 0) continue;
+                const name = colIndex.name !== -1 ? row[colIndex.name] : null;
+                if (!name) continue;
+                const product = {
+                    name: name.toString().trim(),
+                    code: colIndex.code !== -1 ? (row[colIndex.code] || '').toString().trim() : '',
+                    barcode: colIndex.barcode !== -1 ? (row[colIndex.barcode] || '').toString().trim() : '',
+                    description: colIndex.description !== -1 ? (row[colIndex.description] || '').toString().trim() : '',
+                    quantity: colIndex.quantity !== -1 ? parseFloat(row[colIndex.quantity]) || 0 : 0,
+                    costPrice: colIndex.cost !== -1 ? parseFloat(row[colIndex.cost]) || 0 : 0,
+                    price: colIndex.price !== -1 ? parseFloat(row[colIndex.price]) || 0 : 0,
+                    discountPrice: colIndex.discountPrice !== -1 ? parseFloat(row[colIndex.discountPrice]) || 0 : 0,
+                    images: []
+                };
+                if (colIndex.mainImage !== -1 && row[colIndex.mainImage]) product.images.push(row[colIndex.mainImage].toString().trim());
+                if (colIndex.image2 !== -1 && row[colIndex.image2]) product.images.push(row[colIndex.image2].toString().trim());
+                if (colIndex.image3 !== -1 && row[colIndex.image3]) product.images.push(row[colIndex.image3].toString().trim());
+                if (colIndex.image4 !== -1 && row[colIndex.image4]) product.images.push(row[colIndex.image4].toString().trim());
+                if (colIndex.image5 !== -1 && row[colIndex.image5]) product.images.push(row[colIndex.image5].toString().trim());
+                product.imageUrl = product.images.length > 0 ? product.images[0] : '/images/default-product.png';
+                await addProduct(product);
+                count++;
             }
             callback({ success: true, count });
         };
         reader.readAsArrayBuffer(file);
     }
 
-    // ----- عرض الأقسام -----
+    // دالة تحميل قالب Excel
+    window.downloadProductTemplate = () => {
+        const headers = [
+            'اسم المنتج',
+            'كود المنتج',
+            'باركود المنتج',
+            'وصف المنتج',
+            'الكمية',
+            'سعر التكلفة',
+            'سعر البيع',
+            'سعر التخفيض',
+            'الصورة الرئيسية',
+            'صورة 2',
+            'صورة 3',
+            'صورة 4',
+            'صورة 5'
+        ];
+        const exampleRow = [
+            'منتج تجريبي',
+            'PROD-001',
+            '1234567890123',
+            'هذا وصف للمنتج التجريبي',
+            '10',
+            '50',
+            '100',
+            '80',
+            'https://example.com/image1.jpg',
+            'https://example.com/image2.jpg',
+            'https://example.com/image3.jpg',
+            'https://example.com/image4.jpg',
+            'https://example.com/image5.jpg'
+        ];
+        const data = [headers, exampleRow];
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'منتجات');
+        XLSX.writeFile(wb, 'قالب_استيراد_المنتجات.xlsx');
+    };
+
+    // باقي دوال العرض (نفس الكود السابق ولكن نضيف زر التحميل)
     let currentSection = 'orders';
 
     async function renderSection(section) {
@@ -272,7 +348,6 @@
         }
     }
 
-    // عرض الطلبات
     async function renderOrders(container) {
         container.innerHTML = `<div class="loading-spinner"></div><div class="text-center">جاري تحميل الطلبات...</div>`;
         let orders = await loadOrders();
@@ -298,7 +373,7 @@
                         </thead>
                         <tbody>
                             ${orders.length === 0 ? '<tr><td colspan="6" class="text-center p-6">لا توجد طلبات</td></tr>' : orders.map(order => `
-                                <tr class="border-b hover:bg-gray-50">
+                                <tr class="border-b">
                                     <td class="p-3">${order.orderNumber || order.id.slice(-6)}</td>
                                     <td class="p-3">${order.customer || '-'}</td>
                                     <td class="p-3">${order.payment || '-'}</td>
@@ -321,13 +396,7 @@
             if (!customer) return;
             const payment = prompt('طريقة الدفع:');
             const orderNumber = prompt('رقم الطلب (اختياري):', `ORD-${Date.now()}`);
-            await addOrder({
-                orderNumber: orderNumber,
-                customer,
-                payment,
-                status: 'غير مدفوع',
-                date: new Date().toISOString().slice(0,10)
-            });
+            await addOrder({ orderNumber, customer, payment, status: 'غير مدفوع', date: new Date().toISOString().slice(0,10) });
             renderSection('orders');
         };
         window.editOrder = async (id) => {
@@ -340,15 +409,10 @@
                 renderSection('orders');
             }
         };
-        window.deleteOrderItem = async (id) => {
-            if (confirm('حذف الطلب؟')) await deleteOrder(id) && renderSection('orders');
-        };
-        window.refundOrder = async (id) => {
-            if (confirm('استرداد الطلب؟')) await updateOrderStatus(id, 'مسترجع') && renderSection('orders');
-        };
+        window.deleteOrderItem = async (id) => { if (confirm('حذف الطلب؟')) await deleteOrder(id) && renderSection('orders'); };
+        window.refundOrder = async (id) => { if (confirm('استرداد الطلب؟')) await updateOrderStatus(id, 'مسترجع') && renderSection('orders'); };
     }
 
-    // عرض العملاء (من مجموعة customers أو مستخرجين من الطلبات)
     async function renderCustomers(container) {
         container.innerHTML = `<div class="loading-spinner"></div><div class="text-center">جاري تحميل العملاء...</div>`;
         let customers = await loadCustomers();
@@ -400,12 +464,9 @@
             await updateCustomer(id, { name, phone, email, address });
             renderSection('customers');
         };
-        window.deleteCustomerItem = async (id) => {
-            if (confirm('حذف العميل؟')) await deleteCustomer(id) && renderSection('customers');
-        };
+        window.deleteCustomerItem = async (id) => { if (confirm('حذف العميل؟')) await deleteCustomer(id) && renderSection('customers'); };
     }
 
-    // المنتجات (نفس الكود السابق)
     async function renderProducts(container) {
         container.innerHTML = `<div class="loading-spinner"></div><div class="text-center">جاري تحميل المنتجات...</div>`;
         let products = await loadProducts();
@@ -415,6 +476,7 @@
                     <h2 class="text-2xl font-bold"><i class="fas fa-boxes ml-2"></i>المنتجات</h2>
                     <div class="flex gap-2">
                         <button onclick="window.showAddProductModal()" class="btn-primary"><i class="fas fa-plus ml-1"></i>إضافة يدوي</button>
+                        <button onclick="window.downloadProductTemplate()" class="btn-secondary"><i class="fas fa-download ml-1"></i>تحميل قالب Excel</button>
                         <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="window.handleExcelUpload(this)">
                         <button onclick="document.getElementById('excelFileInput').click()" class="btn-success"><i class="fas fa-file-excel ml-1"></i>رفع Excel</button>
                     </div>
@@ -438,10 +500,10 @@
         window.showAddProductModal = () => {
             const name = prompt('اسم المنتج:');
             if (!name) return;
-            const price = parseFloat(prompt('السعر:'));
+            const price = parseFloat(prompt('سعر البيع:'));
             if (isNaN(price)) return;
             const quantity = parseInt(prompt('الكمية:') || 0);
-            let imageUrl = prompt('رابط الصورة:', '');
+            let imageUrl = prompt('رابط الصورة الرئيسية:', '');
             if (!imageUrl) imageUrl = '/images/default-product.png';
             addProduct({ name, price, quantity, imageUrl }).then(() => renderSection('products'));
         };
@@ -451,24 +513,21 @@
             if (!prod) return;
             const name = prompt('الاسم الجديد:', prod.name);
             if (!name) return;
-            const price = parseFloat(prompt('السعر الجديد:', prod.price));
+            const price = parseFloat(prompt('سعر البيع الجديد:', prod.price));
             const quantity = parseInt(prompt('الكمية الجديدة:', prod.quantity) || 0);
             let imageUrl = prompt('رابط الصورة الجديد:', prod.imageUrl);
             if (!imageUrl) imageUrl = '/images/default-product.png';
             await updateProduct(id, { name, price, quantity, imageUrl });
             renderSection('products');
         };
-        window.deleteProductItem = async (id) => {
-            if (confirm('حذف المنتج؟')) await deleteProduct(id) && renderSection('products');
-        };
+        window.deleteProductItem = async (id) => { if (confirm('حذف المنتج؟')) await deleteProduct(id) && renderSection('products'); };
         window.handleExcelUpload = (input) => {
             const file = input.files[0];
-            if (file) importProductsFromExcel(file, (res) => { if(res.success) alert(`تم استيراد ${res.count} منتج`); renderSection('products'); });
+            if (file) importProductsFromExcel(file, (res) => { if(res.success) alert(`تم استيراد ${res.count} منتج`); else alert(res.error || 'فشل الاستيراد'); renderSection('products'); });
             input.value = '';
         };
     }
 
-    // المخزون (مشابه للمنتجات)
     async function renderInventory(container) {
         container.innerHTML = `<div class="loading-spinner"></div><div class="text-center">جاري تحميل المخزون...</div>`;
         let products = await loadProducts();
@@ -502,7 +561,6 @@
         };
     }
 
-    // طرق الدفع
     async function renderPaymentMethods(container) {
         let methodsDoc = await getSettingsDoc('paymentMethods');
         let methods = methodsDoc?.methods || ['نقدي', 'بطاقة ائتمان', 'تحويل بنكي'];
@@ -512,7 +570,7 @@
                     <h2 class="text-2xl font-bold"><i class="fas fa-credit-card ml-2"></i>طرق الدفع</h2>
                     <button onclick="window.addPaymentMethod()" class="btn-primary"><i class="fas fa-plus ml-1"></i>إضافة طريقة</button>
                 </div>
-                <ul id="methods-list" class="space-y-2">
+                <ul class="space-y-2">
                     ${methods.map((m, idx) => `<li class="flex justify-between items-center border p-3 rounded"><span>${m}</span><button onclick="window.deletePaymentMethod(${idx})" class="text-red-600"><i class="fas fa-trash"></i></button></li>`).join('')}
                 </ul>
             </div>
@@ -536,7 +594,6 @@
         };
     }
 
-    // تعليمات الفاتورة
     async function renderInvoiceInstructions(container) {
         let invoiceDoc = await getSettingsDoc('invoiceInstructions');
         let text = invoiceDoc?.text || 'شكراً لتسوقكم معنا.';
@@ -554,7 +611,6 @@
         };
     }
 
-    // الإعدادات العامة
     async function renderGeneralSettings(container) {
         let general = await getSettingsDoc('general');
         let data = general || { siteName: 'متجرك', currency: 'ريال', platformStamp: 'جميع الحقوق محفوظة', contactEmail: 'info@shop.com', whatsapp: '' };
@@ -584,7 +640,6 @@
         };
     }
 
-    // التنقل
     function setActiveNav(section) {
         document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('sidebar-active'));
         document.getElementById(`nav-${section}`)?.classList.add('sidebar-active');
