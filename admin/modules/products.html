@@ -1,50 +1,129 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>المنتجات - متجرك الذكي</title>
+    <title>إدارة المنتجات</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .modal { transition: opacity 0.3s ease; }
+        .toolbar-btn {
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .toolbar-btn:hover {
+            background: #e5e7eb;
+        }
+        .product-image-preview {
+            max-width: 50px;
+            max-height: 50px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        [contenteditable="true"] {
+            min-height: 150px;
+            direction: rtl;
+            line-height: 1.6;
+        }
+        [contenteditable="true"]:focus {
+            outline: none;
+            border-color: #3b82f6;
+            ring: 2px solid #3b82f6;
+        }
+    </style>
 </head>
 <body class="bg-gray-50 p-6">
 
-<div class="max-w-6xl mx-auto">
+<div class="max-w-7xl mx-auto">
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">📦 المنتجات</h1>
-        <button id="addProductBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow">
-            + إضافة منتج
+        <h1 class="text-2xl font-bold text-gray-800">📦 إدارة المنتجات</h1>
+        <button id="newProductBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow transition">
+            <i class="fas fa-plus ml-1"></i> إضافة منتج جديد
         </button>
     </div>
 
-    <div id="productsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div class="col-span-full text-center text-gray-500">جاري التحميل...</div>
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">الصورة</th>
+                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
+                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">الكود</th>
+                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">السعر</th>
+                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">المخزون</th>
+                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                </tr>
+            </thead>
+            <tbody id="productsTableBody" class="bg-white divide-y divide-gray-200">
+                <tr><td colspan="6" class="text-center py-8 text-gray-500">جاري التحميل...</td></tr>
+            </tbody>
+        </table>
     </div>
 </div>
 
-<!-- مودال إضافة/تعديل منتج -->
-<div id="productModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+<!-- مودال إضافة/تعديل المنتج -->
+<div id="productModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50 overflow-y-auto">
+    <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
         <div class="p-6">
             <div class="flex justify-between items-center mb-4">
-                <h2 id="modalTitle" class="text-xl font-bold">إضافة منتج</h2>
+                <h2 id="modalTitle" class="text-xl font-bold">إضافة منتج جديد</h2>
                 <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
             </div>
             <form id="productForm">
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">اسم المنتج *</label>
-                    <input type="text" id="productName" required class="w-full border rounded-lg px-3 py-2">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">اسم المنتج *</label>
+                        <input type="text" id="productName" required class="w-full border rounded-lg px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">كود المنتج</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="productCode" class="flex-1 border rounded-lg px-3 py-2 bg-gray-50 font-mono" readonly>
+                            <button type="button" id="generateCodeBtn" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded transition">توليد جديد</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">الكمية (المخزون) *</label>
+                        <input type="number" id="productStock" required class="w-full border rounded-lg px-3 py-2" value="0" min="0">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">السعر *</label>
+                        <input type="number" id="productPrice" required class="w-full border rounded-lg px-3 py-2" step="0.01" min="0">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">رابط الصورة (URL)</label>
+                        <input type="url" id="productImage" class="w-full border rounded-lg px-3 py-2" placeholder="https://example.com/image.jpg">
+                        <div id="imagePreview" class="mt-2 hidden">
+                            <img id="previewImg" class="product-image-preview" alt="معاينة">
+                            <span class="text-xs text-gray-500 mr-2">معاينة</span>
+                        </div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">الوصف</label>
+                        <div class="flex flex-wrap gap-1 mb-2 border rounded-lg p-2 bg-gray-50">
+                            <button type="button" class="toolbar-btn" data-command="bold"><i class="fas fa-bold"></i></button>
+                            <button type="button" class="toolbar-btn" data-command="italic"><i class="fas fa-italic"></i></button>
+                            <button type="button" class="toolbar-btn" data-command="underline"><i class="fas fa-underline"></i></button>
+                            <button type="button" class="toolbar-btn" data-command="insertUnorderedList"><i class="fas fa-list-ul"></i></button>
+                            <button type="button" class="toolbar-btn" data-command="insertOrderedList"><i class="fas fa-list-ol"></i></button>
+                            <button type="button" class="toolbar-btn" data-command="justifyRight"><i class="fas fa-align-right"></i></button>
+                            <button type="button" class="toolbar-btn" data-command="justifyCenter"><i class="fas fa-align-center"></i></button>
+                            <button type="button" class="toolbar-btn" data-command="justifyLeft"><i class="fas fa-align-left"></i></button>
+                            <button type="button" class="toolbar-btn" data-command="createLink"><i class="fas fa-link"></i></button>
+                        </div>
+                        <div contenteditable="true" id="productDescription" class="border rounded-lg p-3 bg-white" style="direction: rtl;"></div>
+                        <input type="hidden" id="productDescriptionHidden">
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">السعر *</label>
-                    <input type="number" id="productPrice" required step="0.01" class="w-full border rounded-lg px-3 py-2">
-                </div>
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">الوصف</label>
-                    <textarea id="productDesc" rows="3" class="w-full border rounded-lg px-3 py-2"></textarea>
-                </div>
-                <div class="flex justify-end gap-2 mt-4">
-                    <button type="button" id="cancelModalBtn" class="px-4 py-2 border rounded-lg hover:bg-gray-100">إلغاء</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">حفظ</button>
+                <div class="flex justify-end gap-2 mt-6">
+                    <button type="button" id="cancelProductBtn" class="px-4 py-2 border rounded-lg hover:bg-gray-100 transition">إلغاء</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">حفظ المنتج</button>
                 </div>
             </form>
         </div>
@@ -55,116 +134,182 @@
     import { loadProducts, addProduct, updateProduct, deleteProduct } from '../../js/common.js';
 
     let products = [];
-    let currentEditId = null;
+    let currentProductId = null;
 
-    async function init() {
-        products = await loadProducts();
-        render();
+    const productsTableBody = document.getElementById('productsTableBody');
+    const productModal = document.getElementById('productModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const productForm = document.getElementById('productForm');
+    const productName = document.getElementById('productName');
+    const productCode = document.getElementById('productCode');
+    const productStock = document.getElementById('productStock');
+    const productPrice = document.getElementById('productPrice');
+    const productImage = document.getElementById('productImage');
+    const productDescription = document.getElementById('productDescription');
+    const productDescriptionHidden = document.getElementById('productDescriptionHidden');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+    const generateCodeBtn = document.getElementById('generateCodeBtn');
+    const newProductBtn = document.getElementById('newProductBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const cancelProductBtn = document.getElementById('cancelProductBtn');
+
+    function generateRandomCode() {
+        return 'PROD-' + Math.random().toString(36).substring(2, 10).toUpperCase();
     }
 
-    function render() {
-        const container = document.getElementById('productsList');
+    productImage.addEventListener('input', () => {
+        const url = productImage.value.trim();
+        if (url) {
+            previewImg.src = url;
+            imagePreview.classList.remove('hidden');
+        } else {
+            imagePreview.classList.add('hidden');
+        }
+    });
+
+    const toolbarBtns = document.querySelectorAll('.toolbar-btn');
+    toolbarBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const command = btn.dataset.command;
+            if (command === 'createLink') {
+                const url = prompt('أدخل الرابط:');
+                if (url) document.execCommand('createLink', false, url);
+            } else {
+                document.execCommand(command, false, null);
+            }
+            productDescription.focus();
+            productDescriptionHidden.value = productDescription.innerHTML;
+        });
+    });
+
+    productDescription.addEventListener('input', () => {
+        productDescriptionHidden.value = productDescription.innerHTML;
+    });
+
+    function resetForm() {
+        currentProductId = null;
+        productForm.reset();
+        productName.value = '';
+        productCode.value = generateRandomCode();
+        productStock.value = 0;
+        productPrice.value = '';
+        productImage.value = '';
+        productDescription.innerHTML = '';
+        productDescriptionHidden.value = '';
+        imagePreview.classList.add('hidden');
+        modalTitle.innerText = 'إضافة منتج جديد';
+    }
+
+    async function loadProductsTable() {
+        products = await loadProducts();
         if (products.length === 0) {
-            container.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">لا يوجد منتجات</div>';
+            productsTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">لا توجد منتجات</td></tr>';
             return;
         }
-        container.innerHTML = products.map(p => `
-            <div class="bg-white rounded-lg shadow p-4 hover:shadow-md transition">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <h3 class="font-bold text-lg">${escapeHtml(p.name)}</h3>
-                        <p class="text-blue-600 font-semibold">${p.price} ر.س</p>
-                        <p class="text-sm text-gray-500 mt-2">${escapeHtml(p.desc || '')}</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="editProduct('${p.id}')" class="text-blue-600 hover:text-blue-800">✏️ تعديل</button>
-                        <button onclick="deleteProductHandler('${p.id}')" class="text-red-600 hover:text-red-800">🗑️ حذف</button>
-                    </div>
-                </div>
-            </div>
+        productsTableBody.innerHTML = products.map(p => `
+            <tr>
+                <td class="px-4 py-3">${p.image ? `<img src="${escapeHtml(p.image)}" class="product-image-preview" onerror="this.style.display='none'">` : '—'}</td>
+                <td class="px-4 py-3 font-medium">${escapeHtml(p.name)}</td>
+                <td class="px-4 py-3 font-mono text-sm">${escapeHtml(p.code || '—')}</td>
+                <td class="px-4 py-3">${p.price} ريال</td>
+                <td class="px-4 py-3">${p.stock}</td>
+                <td class="px-4 py-3">
+                    <button onclick="editProduct('${p.id}')" class="text-blue-600 hover:text-blue-800 ml-3"><i class="fas fa-edit"></i></button>
+                    <button onclick="deleteProductHandler('${p.id}')" class="text-red-600 hover:text-red-800"><i class="fas fa-trash-alt"></i></button>
+                </td>
+            </tr>
         `).join('');
     }
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
-
-    function openModal(editId = null) {
-        currentEditId = editId;
-        if (editId) {
-            const product = products.find(p => p.id === editId);
-            if (product) {
-                document.getElementById('modalTitle').innerText = 'تعديل منتج';
-                document.getElementById('productName').value = product.name || '';
-                document.getElementById('productPrice').value = product.price || '';
-                document.getElementById('productDesc').value = product.desc || '';
-            }
+    window.editProduct = async (id) => {
+        const product = products.find(p => p.id === id);
+        if (!product) return;
+        currentProductId = id;
+        modalTitle.innerText = 'تعديل المنتج';
+        productName.value = product.name || '';
+        productCode.value = product.code || generateRandomCode();
+        productStock.value = product.stock || 0;
+        productPrice.value = product.price || '';
+        productImage.value = product.image || '';
+        productDescription.innerHTML = product.description || '';
+        productDescriptionHidden.value = product.description || '';
+        if (product.image) {
+            previewImg.src = product.image;
+            imagePreview.classList.remove('hidden');
         } else {
-            document.getElementById('modalTitle').innerText = 'إضافة منتج جديد';
-            document.getElementById('productForm').reset();
+            imagePreview.classList.add('hidden');
         }
-        document.getElementById('productModal').classList.remove('hidden');
-        document.getElementById('productModal').classList.add('flex');
-    }
+        productModal.classList.remove('hidden');
+        productModal.classList.add('flex');
+    };
 
-    function closeModal() {
-        document.getElementById('productModal').classList.add('hidden');
-        document.getElementById('productModal').classList.remove('flex');
-        currentEditId = null;
-    }
-
-    async function saveProduct(event) {
-        event.preventDefault();
-        const data = {
-            name: document.getElementById('productName').value.trim(),
-            price: parseFloat(document.getElementById('productPrice').value),
-            desc: document.getElementById('productDesc').value.trim(),
-            updatedAt: new Date().toISOString()
-        };
-        if (!data.name || !data.price) {
-            alert('اسم المنتج والسعر مطلوبان');
-            return;
-        }
+    window.deleteProductHandler = async (id) => {
+        if (!confirm('هل أنت متأكد من حذف هذا المنتج؟')) return;
         try {
-            if (currentEditId) {
-                await updateProduct(currentEditId, data);
-            } else {
-                data.createdAt = new Date().toISOString();
-                await addProduct(data);
-            }
-            closeModal();
-            await init();
+            await deleteProduct(id);
+            await loadProductsTable();
         } catch (err) {
             console.error(err);
-            alert('حدث خطأ أثناء الحفظ');
-        }
-    }
-
-    window.editProduct = (id) => openModal(id);
-    window.deleteProductHandler = async (id) => {
-        if (confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
-            try {
-                await deleteProduct(id);
-                await init();
-            } catch (err) {
-                console.error(err);
-                alert('حدث خطأ أثناء الحذف');
-            }
+            alert('حدث خطأ أثناء الحذف');
         }
     };
 
-    document.getElementById('addProductBtn').onclick = () => openModal();
-    document.getElementById('closeModalBtn').onclick = closeModal;
-    document.getElementById('cancelModalBtn').onclick = closeModal;
-    document.getElementById('productForm').onsubmit = saveProduct;
+    async function saveProduct(event) {
+        event.preventDefault();
+        const name = productName.value.trim();
+        if (!name) { alert('اسم المنتج مطلوب'); return; }
+        const stock = parseInt(productStock.value) || 0;
+        const price = parseFloat(productPrice.value);
+        if (isNaN(price) || price < 0) { alert('سعر المنتج غير صحيح'); return; }
 
-    init();
+        const data = {
+            name,
+            code: productCode.value.trim() || generateRandomCode(),
+            stock,
+            price,
+            image: productImage.value.trim() || null,
+            description: productDescriptionHidden.value,
+            updatedAt: new Date().toISOString()
+        };
+        if (!currentProductId) data.createdAt = new Date().toISOString();
+
+        try {
+            if (currentProductId) {
+                await updateProduct(currentProductId, data);
+            } else {
+                await addProduct(data);
+            }
+            closeModal();
+            await loadProductsTable();
+        } catch (err) {
+            console.error(err);
+            alert('حدث خطأ أثناء حفظ المنتج');
+        }
+    }
+
+    function closeModal() {
+        productModal.classList.add('hidden');
+        productModal.classList.remove('flex');
+        resetForm();
+    }
+
+    newProductBtn.onclick = () => {
+        resetForm();
+        productModal.classList.remove('hidden');
+        productModal.classList.add('flex');
+    };
+    closeModalBtn.onclick = closeModal;
+    cancelProductBtn.onclick = closeModal;
+    productForm.onsubmit = saveProduct;
+    generateCodeBtn.onclick = () => { productCode.value = generateRandomCode(); };
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m] || m));
+    }
+
+    await loadProductsTable();
 </script>
 </body>
 </html>
