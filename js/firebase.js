@@ -109,5 +109,6 @@ export {
     updateDoc,
     deleteDoc,
     setDoc,
-    deleteField
+    deleteField,
+    getCollection  // ✅ تمت الإضافة هنا
 };
