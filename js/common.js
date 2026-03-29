@@ -33,9 +33,8 @@ import {
     setSettings
 } from './firebase.js';
 
-// ===================== إعادة تصدير كل شيء للاستخدام في الصفحات =====================
+// ===================== إعادة تصدير كل شيء =====================
 export {
-    // الأساسيات
     db,
     collection,
     addDoc,
@@ -47,27 +46,23 @@ export {
     setDoc,
     deleteField,
     getCollection,
-    
     // دوال المنتجات
     loadProducts,
     addProduct,
     updateProduct,
     deleteProduct,
     updateProductStock,
-    
     // دوال العملاء
     loadCustomers,
     addCustomer,
     updateCustomer,
     deleteCustomer,
-    
     // دوال الطلبات
     loadOrders,
     addOrder,
     updateOrder,
     deleteOrder,
     getOrdersWithDetails,
-    
     // دوال الإعدادات
     getSettings,
     setSettings
