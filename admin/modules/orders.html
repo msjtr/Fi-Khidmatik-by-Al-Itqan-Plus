@@ -779,15 +779,7 @@
         if (order) await saveAsPDF(order);
     };
     
-    window.exportAsPNG = async (orderId) => {
-        const order = orders.find(o => o.id === orderId);
-        if (order) await saveAsPNG(order);
-    };
-    
-    window.printInvoiceHandler = async (orderId) => {
-        const order = orders.find(o => o.id === orderId);
-        if (order) await printInvoice(order);
-    };
+   
     
     // باقي الدوال (نفس الكود الأصلي)
 // إصلاح القوس الزائد
@@ -804,16 +796,7 @@ window.printInvoiceHandler = async (orderId) => {
 
 
 
-    
-// دالة تنسيق الوقت (12 ساعة مع ص/م)
-function formatTimeInvoice(time24) {
-    if (!time24) return '';
-    let [h, m] = time24.split(':');
-    let hour = parseInt(h, 10);
-    let period = hour >= 12 ? 'م' : 'ص';
-    hour = hour % 12 || 12;
-    return `${hour.toString().padStart(2, '0')}:${m} ${period}`;
-}
+
     
     // دوال التحكم (نفس الكود الأصلي)
     function generateOrderNumber() { 
