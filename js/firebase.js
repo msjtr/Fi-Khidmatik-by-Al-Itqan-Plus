@@ -98,7 +98,7 @@ export async function getSettings(id) {
 
 export const setSettings = (id, data) => setDoc(doc(db, 'settings', id), data, { merge: true });
 
-// ===================== تصدير الأساسيات (بدون تكرار) =====================
+// ===================== تصدير الأساسيات =====================
 export {
     db,
     collection,
@@ -110,5 +110,4 @@ export {
     deleteDoc,
     setDoc,
     deleteField
-    // ❌ لا تضع getCollection هنا لأنها مصدرة بالفعل في الأعلى
 };
