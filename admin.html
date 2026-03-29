@@ -1,219 +1,346 @@
-# ✅ النسخة المصححة من admin.html
-
-```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>لوحة التحكم - متجرك الذكي</title>
 
 <!-- Tailwind -->
 <script src="https://cdn.tailwindcss.com"></script>
 
-<!-- CSS -->
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/admin.css">
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
-<link rel="icon" href="data:,">
-
+<!-- CSS مخصص -->
 <style>
-.logo {
-    font-size: 1.5rem;
-    font-weight: 800;
-    background: linear-gradient(135deg,#1e40af,#3b82f6);
-    -webkit-background-clip: text;
-    color: transparent;
-}
-.sidebar-link {
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    border-radius: 10px;
-    color: #4b5563;
-}
-.sidebar-link:hover {
-    background: #f3f4f6;
-    color: #1e40af;
-}
-.sidebar-link i {
-    width: 24px;
-    font-size: 1.1rem;
-}
-.sidebar-link.active {
-    background: #eff6ff;
-    color: #1e40af;
-    font-weight: 500;
-}
+    /* إزالة أي تأثيرات افتراضية */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    }
+    
+    .logo {
+        font-size: 1.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #1e40af, #3b82f6);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+    
+    .sidebar-link {
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        color: #4b5563;
+        cursor: pointer;
+    }
+    
+    .sidebar-link:hover:not(.disabled) {
+        background: #f3f4f6;
+        color: #1e40af;
+    }
+    
+    .sidebar-link i {
+        width: 24px;
+        font-size: 1.1rem;
+    }
+    
+    .sidebar-link.active {
+        background: #eff6ff;
+        color: #1e40af;
+        font-weight: 500;
+    }
+    
+    .sidebar-link.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    /* تنسيق iframe */
+    #mainFrame {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    }
+    
+    /* شريط تمرير مخصص للـ sidebar */
+    aside nav::-webkit-scrollbar {
+        width: 4px;
+    }
+    
+    aside nav::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    
+    aside nav::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+    
+    /* تأثيرات إضافية */
+    .hover-scale {
+        transition: transform 0.2s;
+    }
+    
+    .hover-scale:hover {
+        transform: translateY(-2px);
+    }
 </style>
 </head>
+<body class="bg-gray-50">
 
-<body>
 <div class="flex h-screen overflow-hidden">
 
 <!-- SIDEBAR -->
-<aside class="w-72 bg-white shadow-xl flex flex-col border-l">
-
-    <div class="p-5 border-b">
+<aside class="w-72 bg-white shadow-xl flex flex-col border-l border-gray-200">
+    
+    <div class="p-5 border-b border-gray-200">
         <h1 class="logo">متجرك الذكي</h1>
         <p class="text-xs text-gray-500 mt-1">نظام إدارة متكامل</p>
     </div>
-
+    
     <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
-
-        <a href="admin/modules/orders.html" target="frame" class="sidebar-link active">
+        
+        <a href="admin/modules/orders.html" target="frame" class="sidebar-link active" data-module="orders">
             <i class="fas fa-shopping-cart"></i>
             <span>الطلبات</span>
         </a>
-
-        <a href="admin/modules/customers.html" target="frame" class="sidebar-link">
+        
+        <a href="admin/modules/customers.html" target="frame" class="sidebar-link" data-module="customers">
             <i class="fas fa-users"></i>
             <span>العملاء</span>
         </a>
-
-        <a href="admin/modules/products.html" target="frame" class="sidebar-link">
+        
+        <a href="admin/modules/products.html" target="frame" class="sidebar-link" data-module="products">
             <i class="fas fa-boxes"></i>
             <span>المنتجات</span>
         </a>
-
-        <div class="border-t my-3"></div>
-
-        <div class="text-xs text-gray-400 px-3 py-2">إضافات</div>
         
-        <a href="#" class="sidebar-link opacity-50 cursor-not-allowed" onclick="return false;">
+        <div class="border-t border-gray-200 my-3"></div>
+        
+        <div class="text-xs text-gray-400 px-3 py-2 font-semibold">إضافات</div>
+        
+        <div class="sidebar-link disabled" onclick="showComingSoon()">
             <i class="fas fa-warehouse"></i>
             <span>المخزون <span class="text-xs text-gray-400">(قريباً)</span></span>
-        </a>
-
-        <a href="#" class="sidebar-link opacity-50 cursor-not-allowed" onclick="return false;">
+        </div>
+        
+        <div class="sidebar-link disabled" onclick="showComingSoon()">
             <i class="fas fa-credit-card"></i>
             <span>الدفع <span class="text-xs text-gray-400">(قريباً)</span></span>
-        </a>
-
-        <a href="#" class="sidebar-link opacity-50 cursor-not-allowed" onclick="return false;">
+        </div>
+        
+        <div class="sidebar-link disabled" onclick="showComingSoon()">
             <i class="fas fa-file-invoice"></i>
             <span>الفاتورة <span class="text-xs text-gray-400">(قريباً)</span></span>
-        </a>
-
-        <a href="#" class="sidebar-link opacity-50 cursor-not-allowed" onclick="return false;">
+        </div>
+        
+        <div class="sidebar-link disabled" onclick="showComingSoon()">
             <i class="fas fa-cog"></i>
             <span>الإعدادات <span class="text-xs text-gray-400">(قريباً)</span></span>
-        </a>
-
-        <a href="#" class="sidebar-link opacity-50 cursor-not-allowed" onclick="return false;">
+        </div>
+        
+        <div class="sidebar-link disabled" onclick="showComingSoon()">
             <i class="fas fa-database"></i>
             <span>النسخ الاحتياطي <span class="text-xs text-gray-400">(قريباً)</span></span>
-        </a>
-
+        </div>
+        
     </nav>
-
-    <div class="p-4 border-t text-xs text-gray-400">
-        <i class="fas fa-code ml-1"></i> نظام إدارة متجرك الذكي
-        <br>
-        <span id="currentDate"></span>
+    
+    <div class="p-4 border-t border-gray-200 text-xs text-gray-400">
+        <div class="flex items-center gap-2 mb-1">
+            <i class="fas fa-code text-xs"></i>
+            <span>نظام إدارة متجرك الذكي</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <i class="far fa-calendar-alt text-xs"></i>
+            <span id="currentDate"></span>
+        </div>
     </div>
-
+    
 </aside>
 
 <!-- CONTENT -->
-<main class="flex-1 p-4 bg-gray-50">
-    <iframe 
-        id="mainFrame"
-        name="frame" 
-        src="admin/modules/orders.html" 
-        class="w-full h-full rounded-xl bg-white shadow-sm"
-        frameborder="0">
-    </iframe>
+<main class="flex-1 p-4 bg-gray-50 overflow-hidden">
+    <div class="bg-white rounded-xl shadow-sm h-full overflow-hidden">
+        <iframe 
+            id="mainFrame"
+            name="frame" 
+            src="admin/modules/orders.html" 
+            class="w-full h-full"
+            frameborder="0"
+            loading="lazy"
+            title="لوحة التحكم">
+        </iframe>
+    </div>
 </main>
 
 </div>
 
-<!-- Font Awesome -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<!-- Toast Notifications (لرسائل "قريباً") -->
+<div id="toast" class="fixed bottom-4 left-4 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg z-50 hidden transition-all duration-300 transform translate-x-0">
+    <i class="fas fa-info-circle ml-2"></i>
+    <span id="toastMessage"></span>
+</div>
 
 <script>
 /* =============================
-   التاريخ
+   عرض التاريخ
 ============================= */
-const dateElement = document.getElementById('currentDate');
-if (dateElement) {
-    const now = new Date();
-    dateElement.textContent = now.toLocaleDateString('ar-SA', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-    });
+function updateDate() {
+    const dateElement = document.getElementById('currentDate');
+    if (dateElement) {
+        const now = new Date();
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        dateElement.textContent = now.toLocaleDateString('ar-SA', options);
+    }
+}
+updateDate();
+
+/* =============================
+   عرض رسالة "قريباً"
+============================= */
+let toastTimeout;
+
+function showComingSoon() {
+    showToast('🚀 هذه الميزة قيد التطوير وستتوفر قريباً', 'info');
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+    
+    if (toastTimeout) clearTimeout(toastTimeout);
+    
+    toastMessage.textContent = message;
+    
+    // تغيير لون الخلفية حسب النوع
+    const colors = {
+        info: 'bg-gray-800',
+        success: 'bg-green-600',
+        error: 'bg-red-600',
+        warning: 'bg-yellow-600'
+    };
+    
+    toast.className = `fixed bottom-4 left-4 ${colors[type] || colors.info} text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300`;
+    toast.classList.remove('hidden');
+    
+    toastTimeout = setTimeout(() => {
+        toast.classList.add('hidden');
+    }, 3000);
 }
 
 /* =============================
    تفعيل الروابط + إصلاح iframe
 ============================= */
-const links = document.querySelectorAll('.sidebar-link');
+const links = document.querySelectorAll('.sidebar-link:not(.disabled)');
 const frame = document.getElementById('mainFrame');
 
+// حفظ الصفحة الحالية
+let currentPage = localStorage.getItem('currentAdminPage') || 'admin/modules/orders.html';
+
+// تحميل آخر صفحة تم زيارتها
+if (frame && currentPage) {
+    frame.setAttribute('src', currentPage);
+}
+
 // تحديث active عند تغيير iframe
-frame.addEventListener('load', () => {
-    const currentSrc = frame.getAttribute('src');
-
-    links.forEach(link => {
-        link.classList.remove('active');
-
-        const href = link.getAttribute('href');
-        if (href && currentSrc.includes(href)) {
-            link.classList.add('active');
-        }
+if (frame) {
+    frame.addEventListener('load', () => {
+        const currentSrc = frame.getAttribute('src');
+        
+        links.forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && currentSrc && currentSrc.includes(href)) {
+                link.classList.add('active');
+                // حفظ الصفحة الحالية
+                localStorage.setItem('currentAdminPage', currentSrc);
+            } else {
+                link.classList.remove('active');
+            }
+        });
     });
-});
+}
 
 // عند الضغط على الرابط
 links.forEach(link => {
-    link.addEventListener('click', function() {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        
         const href = this.getAttribute('href');
-
         if (!href || href === '#') return;
-
-        frame.setAttribute('src', href);
-
+        
+        // تغيير مصدر iframe
+        if (frame) {
+            frame.setAttribute('src', href);
+            // حفظ الصفحة في localStorage
+            localStorage.setItem('currentAdminPage', href);
+        }
+        
+        // تحديث الـ active class
         links.forEach(l => l.classList.remove('active'));
         this.classList.add('active');
+        
+        // إضافة تأثير تحميل بسيط (اختياري)
+        showLoadingEffect();
     });
 });
+
+// إضافة تأثير تحميل عند تغيير الصفحة
+function showLoadingEffect() {
+    if (frame) {
+        frame.style.opacity = '0.5';
+        setTimeout(() => {
+            frame.style.opacity = '1';
+        }, 300);
+    }
+}
+
+// إعادة تعيين تأثير التحميل عند اكتمال تحميل iframe
+if (frame) {
+    frame.addEventListener('load', () => {
+        frame.style.opacity = '1';
+    });
+}
+
+/* =============================
+   معالجة أخطاء الـ iframe
+============================= */
+if (frame) {
+    frame.addEventListener('error', () => {
+        showToast('❌ حدث خطأ في تحميل الصفحة', 'error');
+        frame.style.opacity = '1';
+    });
+}
+
+/* =============================
+   منع فتح الروابط داخل الـ iframe في نافذة جديدة
+============================= */
+window.addEventListener('message', (event) => {
+    // يمكنك إضافة منطق للتواصل بين iframe والصفحة الرئيسية إذا لزم الأمر
+    console.log('Message from iframe:', event.data);
+});
+
+// إضافة دعم لوضع الظلام (اختياري)
+const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+if (prefersDarkMode) {
+    // يمكن إضافة تنسيقات للوضع المظلم إذا رغبت
+    console.log('Dark mode is preferred');
+}
+
+// عرض رسالة ترحيب عند التحميل الأول
+console.log('🚀 لوحة التحكم جاهزة للعمل');
+showToast('✨ مرحباً بك في لوحة تحكم متجرك الذكي', 'success');
 </script>
 
 </body>
 </html>
-```
-
----
-
-# 🔧 وش تم إصلاحه (بدون ما تلاحظ فرق بالشكل)
-
-✔ إصلاح مشكلة active link
-✔ ربط iframe بشكل صحيح
-✔ تحديث الرابط عند الضغط
-✔ إضافة id للـ iframe
-✔ تحسين التوافق بدون كسر التصميم
-
----
-
-# 🔥 أهم نتيجة
-
-الآن:
-
-* التنقل داخل اللوحة ✔
-* الرابط النشط يشتغل صح ✔
-* iframe يحدث بدون مشاكل ✔
-
----
-
-إذا تبغى الخطوة الجاية 👇
-أربط لك:
-
-* Firebase داخل كل صفحة
-* الطلبات تظهر مباشرة
-* الفاتورة تسحب البيانات تلقائي
-
-قول: **"اربط اللوحة مع Firebase"** 🚀
