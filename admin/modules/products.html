@@ -36,34 +36,93 @@
             border-color: #3b82f6;
             ring: 2px solid #3b82f6;
         }
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .low-stock {
+            background-color: #fee2e2;
+            color: #dc2626;
+            font-weight: bold;
+        }
+        .out-of-stock {
+            background-color: #fecaca;
+            color: #dc2626;
+            font-weight: bold;
+        }
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
     </style>
 </head>
 <body class="bg-gray-50 p-6">
 
 <div class="max-w-7xl mx-auto">
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
         <h1 class="text-2xl font-bold text-gray-800">📦 إدارة المنتجات</h1>
-        <button id="newProductBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow transition">
-            <i class="fas fa-plus ml-1"></i> إضافة منتج جديد
-        </button>
+        <div class="flex gap-2">
+            <div class="relative">
+                <input type="text" id="searchInput" placeholder="🔍 بحث عن منتج..." 
+                       class="border rounded-lg px-4 py-2 pr-10 w-64 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+            </div>
+            <button id="newProductBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow transition">
+                <i class="fas fa-plus ml-1"></i> إضافة منتج جديد
+            </button>
+        </div>
     </div>
 
+    <!-- حاوية التحميل -->
+    <div id="loadingContainer" class="hidden py-8">
+        <div class="loading-spinner"></div>
+        <p class="text-center text-gray-500 mt-2">جاري تحميل المنتجات...</p>
+    </div>
+
+    <!-- جدول المنتجات -->
     <div class="bg-white rounded-lg shadow overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">الصورة</th>
-                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
-                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">الكود</th>
-                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">السعر</th>
-                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">المخزون</th>
-                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
-                </tr>
-            </thead>
-            <tbody id="productsTableBody" class="bg-white divide-y divide-gray-200">
-                <tr><td colspan="6" class="text-center py-8 text-gray-500">جاري التحميل...</td></tr>
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الصورة</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الاسم</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الكود</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">السعر</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المخزون</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">العمليات</th>
+                    </tr>
+                </thead>
+                <tbody id="productsTableBody" class="bg-white divide-y divide-gray-200">
+                    <tr><td colspan="7" class="text-center py-8 text-gray-500">جاري التحميل...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -79,13 +138,15 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium text-gray-700 mb-1">اسم المنتج *</label>
-                        <input type="text" id="productName" required class="w-full border rounded-lg px-3 py-2">
+                        <input type="text" id="productName" required class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">كود المنتج</label>
                         <div class="flex gap-2">
                             <input type="text" id="productCode" class="flex-1 border rounded-lg px-3 py-2 bg-gray-50 font-mono" readonly>
-                            <button type="button" id="generateCodeBtn" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded transition">توليد جديد</button>
+                            <button type="button" id="generateCodeBtn" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded transition">
+                                <i class="fas fa-sync-alt"></i> توليد
+                            </button>
                         </div>
                     </div>
                     <div>
@@ -117,26 +178,34 @@
                             <button type="button" class="toolbar-btn" data-command="justifyLeft"><i class="fas fa-align-left"></i></button>
                             <button type="button" class="toolbar-btn" data-command="createLink"><i class="fas fa-link"></i></button>
                         </div>
-                        <div contenteditable="true" id="productDescription" class="border rounded-lg p-3 bg-white" style="direction: rtl;"></div>
+                        <div contenteditable="true" id="productDescription" class="border rounded-lg p-3 bg-white" style="direction: rtl; min-height: 120px;"></div>
                         <input type="hidden" id="productDescriptionHidden">
                     </div>
                 </div>
                 <div class="flex justify-end gap-2 mt-6">
                     <button type="button" id="cancelProductBtn" class="px-4 py-2 border rounded-lg hover:bg-gray-100 transition">إلغاء</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">حفظ المنتج</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                        <i class="fas fa-save ml-1"></i> حفظ المنتج
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+<!-- Toast Notification -->
+<div id="toast" class="hidden fixed bottom-4 left-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50"></div>
+
 <script type="module">
     import { loadProducts, addProduct, updateProduct, deleteProduct } from '../../js/common.js';
 
     let products = [];
     let currentProductId = null;
+    let searchTerm = '';
 
+    // عناصر DOM
     const productsTableBody = document.getElementById('productsTableBody');
+    const loadingContainer = document.getElementById('loadingContainer');
     const productModal = document.getElementById('productModal');
     const modalTitle = document.getElementById('modalTitle');
     const productForm = document.getElementById('productForm');
@@ -153,11 +222,29 @@
     const newProductBtn = document.getElementById('newProductBtn');
     const closeModalBtn = document.getElementById('closeModalBtn');
     const cancelProductBtn = document.getElementById('cancelProductBtn');
+    const searchInput = document.getElementById('searchInput');
+    const toast = document.getElementById('toast');
+
+    // دالة عرض الإشعارات
+    function showToast(message, isError = false) {
+        toast.textContent = message;
+        toast.classList.remove('hidden', 'bg-green-500', 'bg-red-500');
+        toast.classList.add(isError ? 'bg-red-500' : 'bg-green-500');
+        setTimeout(() => {
+            toast.classList.add('hidden');
+        }, 3000);
+    }
 
     function generateRandomCode() {
         return 'PROD-' + Math.random().toString(36).substring(2, 10).toUpperCase();
     }
 
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m] || m));
+    }
+
+    // معاينة الصورة
     productImage.addEventListener('input', () => {
         const url = productImage.value.trim();
         if (url) {
@@ -168,6 +255,7 @@
         }
     });
 
+    // شريط أدوات الوصف
     const toolbarBtns = document.querySelectorAll('.toolbar-btn');
     toolbarBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -187,6 +275,79 @@
         productDescriptionHidden.value = productDescription.innerHTML;
     });
 
+    // حالة المخزون
+    function getStockStatus(stock) {
+        if (stock === 0) return { text: 'نفد', class: 'out-of-stock' };
+        if (stock <= 5) return { text: 'منخفض', class: 'low-stock' };
+        return { text: 'متوفر', class: '' };
+    }
+
+    // عرض المنتجات مع البحث
+    function renderProducts(productsToRender) {
+        if (productsToRender.length === 0) {
+            productsTableBody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-gray-500">
+                ${searchTerm ? 'لا توجد نتائج مطابقة للبحث' : 'لا توجد منتجات'}
+            </td></tr>`;
+            return;
+        }
+        
+        productsTableBody.innerHTML = productsToRender.map(p => {
+            const status = getStockStatus(p.stock);
+            return `
+            <tr class="hover:bg-gray-50 transition">
+                <td class="px-4 py-3">${p.image ? `<img src="${escapeHtml(p.image)}" class="product-image-preview" onerror="this.style.display='none'">` : '<i class="fas fa-image text-gray-300 text-2xl"></i>'}</td>
+                <td class="px-4 py-3 font-medium">${escapeHtml(p.name)}</td>
+                <td class="px-4 py-3 font-mono text-sm">${escapeHtml(p.code || '—')}</td>
+                <td class="px-4 py-3 font-bold text-blue-600">${p.price} <span class="text-xs">ريال</span></td>
+                <td class="px-4 py-3">${p.stock}</td>
+                <td class="px-4 py-3"><span class="px-2 py-1 rounded text-xs ${status.class}">${status.text}</span></td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                    <button onclick="editProduct('${p.id}')" class="text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50 transition" title="تعديل">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="deleteProductHandler('${p.id}', '${escapeHtml(p.name)}')" class="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50 transition" title="حذف">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            </tr>
+        `}).join('');
+    }
+
+    // فلترة المنتجات حسب البحث
+    function filterProducts() {
+        if (!searchTerm) return products;
+        return products.filter(p => 
+            p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            p.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            p.price?.toString().includes(searchTerm)
+        );
+    }
+
+    // تحميل وعرض المنتجات
+    async function loadProductsTable() {
+        loadingContainer.classList.remove('hidden');
+        productsTableBody.innerHTML = '<tr><td colspan="7" class="text-center py-8">جاري التحميل...</td></tr>';
+        
+        try {
+            products = await loadProducts();
+            const filtered = filterProducts();
+            renderProducts(filtered);
+        } catch (err) {
+            console.error(err);
+            productsTableBody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-red-500">❌ حدث خطأ في تحميل المنتجات</td></tr>';
+            showToast('حدث خطأ في تحميل المنتجات', true);
+        } finally {
+            loadingContainer.classList.add('hidden');
+        }
+    }
+
+    // البحث
+    searchInput.addEventListener('input', (e) => {
+        searchTerm = e.target.value;
+        const filtered = filterProducts();
+        renderProducts(filtered);
+    });
+
     function resetForm() {
         currentProductId = null;
         productForm.reset();
@@ -199,27 +360,6 @@
         productDescriptionHidden.value = '';
         imagePreview.classList.add('hidden');
         modalTitle.innerText = 'إضافة منتج جديد';
-    }
-
-    async function loadProductsTable() {
-        products = await loadProducts();
-        if (products.length === 0) {
-            productsTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">لا توجد منتجات</td></tr>';
-            return;
-        }
-        productsTableBody.innerHTML = products.map(p => `
-            <tr>
-                <td class="px-4 py-3">${p.image ? `<img src="${escapeHtml(p.image)}" class="product-image-preview" onerror="this.style.display='none'">` : '—'}</td>
-                <td class="px-4 py-3 font-medium">${escapeHtml(p.name)}</td>
-                <td class="px-4 py-3 font-mono text-sm">${escapeHtml(p.code || '—')}</td>
-                <td class="px-4 py-3">${p.price} ريال</td>
-                <td class="px-4 py-3">${p.stock}</td>
-                <td class="px-4 py-3">
-                    <button onclick="editProduct('${p.id}')" class="text-blue-600 hover:text-blue-800 ml-3"><i class="fas fa-edit"></i></button>
-                    <button onclick="deleteProductHandler('${p.id}')" class="text-red-600 hover:text-red-800"><i class="fas fa-trash-alt"></i></button>
-                </td>
-            </tr>
-        `).join('');
     }
 
     window.editProduct = async (id) => {
@@ -244,24 +384,33 @@
         productModal.classList.add('flex');
     };
 
-    window.deleteProductHandler = async (id) => {
-        if (!confirm('هل أنت متأكد من حذف هذا المنتج؟')) return;
+    window.deleteProductHandler = async (id, name) => {
+        if (!confirm(`هل أنت متأكد من حذف المنتج "${name}"؟\nلا يمكن التراجع عن هذا الإجراء.`)) return;
         try {
             await deleteProduct(id);
+            showToast(`✅ تم حذف المنتج "${name}" بنجاح`);
             await loadProductsTable();
         } catch (err) {
             console.error(err);
-            alert('حدث خطأ أثناء الحذف');
+            showToast('❌ حدث خطأ أثناء الحذف', true);
         }
     };
 
     async function saveProduct(event) {
         event.preventDefault();
         const name = productName.value.trim();
-        if (!name) { alert('اسم المنتج مطلوب'); return; }
+        if (!name) { 
+            showToast('اسم المنتج مطلوب', true);
+            productName.focus();
+            return; 
+        }
         const stock = parseInt(productStock.value) || 0;
         const price = parseFloat(productPrice.value);
-        if (isNaN(price) || price < 0) { alert('سعر المنتج غير صحيح'); return; }
+        if (isNaN(price) || price < 0) { 
+            showToast('سعر المنتج غير صحيح', true);
+            productPrice.focus();
+            return; 
+        }
 
         const data = {
             name,
@@ -277,14 +426,16 @@
         try {
             if (currentProductId) {
                 await updateProduct(currentProductId, data);
+                showToast('✅ تم تعديل المنتج بنجاح');
             } else {
                 await addProduct(data);
+                showToast('✅ تم إضافة المنتج بنجاح');
             }
             closeModal();
             await loadProductsTable();
         } catch (err) {
             console.error(err);
-            alert('حدث خطأ أثناء حفظ المنتج');
+            showToast('❌ حدث خطأ أثناء حفظ المنتج', true);
         }
     }
 
@@ -294,21 +445,24 @@
         resetForm();
     }
 
+    // ربط الأحداث
     newProductBtn.onclick = () => {
         resetForm();
         productModal.classList.remove('hidden');
         productModal.classList.add('flex');
+        productName.focus();
     };
     closeModalBtn.onclick = closeModal;
     cancelProductBtn.onclick = closeModal;
     productForm.onsubmit = saveProduct;
     generateCodeBtn.onclick = () => { productCode.value = generateRandomCode(); };
+    
+    // إغلاق المودال عند النقر خارج المحتوى
+    productModal.onclick = (e) => {
+        if (e.target === productModal) closeModal();
+    };
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m] || m));
-    }
-
+    // بدء التحميل
     await loadProductsTable();
 </script>
 </body>
