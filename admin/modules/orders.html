@@ -790,23 +790,31 @@
     };
     
     // باقي الدوال (نفس الكود الأصلي)
-   function formatTimeInvoice(time24) {
+// إصلاح القوس الزائد
+if (order) await saveASPNG(order);
+
+window.printInvoiceHandler = async (orderId) => {
+    const order = orders.find(o => o.id === orderId);
+    if (order) await printInvoice(order);
+};
+
+// دالة تنسيق التاريخ
+function formatDateInvoice(datestr) {
+    if (!datestr) return '';
+    const d = new Date(datestr);
+    if (isNaN(d.getTime())) return datestr;
+    return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+}
+
+// دالة تنسيق الوقت (12 ساعة مع ص/م)
+function formatTimeInvoice(time24) {
     if (!time24) return '';
     let [h, m] = time24.split(':');
-    let hour = parseInt(h);
-    let ampm = hour >= 12 ? 'م' : 'ص';
+    let hour = parseInt(h, 10);
+    let period = hour >= 12 ? 'م' : 'ص';
     hour = hour % 12 || 12;
-    return `${hour.toString().padStart(2, '0')}:${m} ${ampm}`;
+    return `${hour.toString().padStart(2, '0')}:${m} ${period}`;
 }
-    
-    function formatTimeInvoice(time24) { 
-        if(!time24) return ''; 
-        let [h,m] = time24.split(':'); 
-        let hour = parseInt(h); 
-        let ampm = hour >= 12 ? 'م' : 'ص'; 
-        hour = hour % 12 || 12; 
-        return `${hour.toString().padStart(2,'0')}:${m} ${ampm}`; 
-    }
     
     // دوال التحكم (نفس الكود الأصلي)
     function generateOrderNumber() { 
