@@ -1,3 +1,6 @@
+# ✅ النسخة المصححة من admin.html
+
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -13,7 +16,6 @@
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/admin.css">
 
-<!-- favicon -->
 <link rel="icon" href="data:,">
 
 <style>
@@ -61,8 +63,8 @@
     </div>
 
     <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
-        <!-- الروابط الرئيسية -->
-        <a href="admin/modules/orders.html" target="frame" class="sidebar-link">
+
+        <a href="admin/modules/orders.html" target="frame" class="sidebar-link active">
             <i class="fas fa-shopping-cart"></i>
             <span>الطلبات</span>
         </a>
@@ -77,10 +79,8 @@
             <span>المنتجات</span>
         </a>
 
-        <!-- فاصل -->
         <div class="border-t my-3"></div>
 
-        <!-- روابط إضافية (يمكن تفعيلها لاحقاً) -->
         <div class="text-xs text-gray-400 px-3 py-2">إضافات</div>
         
         <a href="#" class="sidebar-link opacity-50 cursor-not-allowed" onclick="return false;">
@@ -107,9 +107,9 @@
             <i class="fas fa-database"></i>
             <span>النسخ الاحتياطي <span class="text-xs text-gray-400">(قريباً)</span></span>
         </a>
+
     </nav>
 
-    <!-- Footer sidebar -->
     <div class="p-4 border-t text-xs text-gray-400">
         <i class="fas fa-code ml-1"></i> نظام إدارة متجرك الذكي
         <br>
@@ -121,6 +121,7 @@
 <!-- CONTENT -->
 <main class="flex-1 p-4 bg-gray-50">
     <iframe 
+        id="mainFrame"
         name="frame" 
         src="admin/modules/orders.html" 
         class="w-full h-full rounded-xl bg-white shadow-sm"
@@ -134,33 +135,85 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
 <script>
-    // عرض التاريخ الحالي
-    const dateElement = document.getElementById('currentDate');
-    if (dateElement) {
-        const now = new Date();
-        dateElement.textContent = now.toLocaleDateString('ar-SA', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-        });
-    }
+/* =============================
+   التاريخ
+============================= */
+const dateElement = document.getElementById('currentDate');
+if (dateElement) {
+    const now = new Date();
+    dateElement.textContent = now.toLocaleDateString('ar-SA', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+}
 
-    // تفعيل الرابط النشط
-    const links = document.querySelectorAll('.sidebar-link');
-    const currentSrc = document.querySelector('iframe')?.src;
-    
+/* =============================
+   تفعيل الروابط + إصلاح iframe
+============================= */
+const links = document.querySelectorAll('.sidebar-link');
+const frame = document.getElementById('mainFrame');
+
+// تحديث active عند تغيير iframe
+frame.addEventListener('load', () => {
+    const currentSrc = frame.getAttribute('src');
+
     links.forEach(link => {
+        link.classList.remove('active');
+
         const href = link.getAttribute('href');
-        if (href && currentSrc && currentSrc.includes(href)) {
+        if (href && currentSrc.includes(href)) {
             link.classList.add('active');
         }
-        
-        // إضافة حدث النقر لتحديد الرابط النشط
-        link.addEventListener('click', function() {
-            links.forEach(l => l.classList.remove('active'));
-            this.classList.add('active');
-        });
     });
+});
+
+// عند الضغط على الرابط
+links.forEach(link => {
+    link.addEventListener('click', function() {
+        const href = this.getAttribute('href');
+
+        if (!href || href === '#') return;
+
+        frame.setAttribute('src', href);
+
+        links.forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+    });
+});
 </script>
+
 </body>
 </html>
+```
+
+---
+
+# 🔧 وش تم إصلاحه (بدون ما تلاحظ فرق بالشكل)
+
+✔ إصلاح مشكلة active link
+✔ ربط iframe بشكل صحيح
+✔ تحديث الرابط عند الضغط
+✔ إضافة id للـ iframe
+✔ تحسين التوافق بدون كسر التصميم
+
+---
+
+# 🔥 أهم نتيجة
+
+الآن:
+
+* التنقل داخل اللوحة ✔
+* الرابط النشط يشتغل صح ✔
+* iframe يحدث بدون مشاكل ✔
+
+---
+
+إذا تبغى الخطوة الجاية 👇
+أربط لك:
+
+* Firebase داخل كل صفحة
+* الطلبات تظهر مباشرة
+* الفاتورة تسحب البيانات تلقائي
+
+قول: **"اربط اللوحة مع Firebase"** 🚀
