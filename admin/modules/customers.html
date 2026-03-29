@@ -10,6 +10,34 @@
         .modal { transition: opacity 0.3s ease; }
         .customer-card { transition: all 0.2s ease; }
         .customer-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
     </style>
 </head>
 <body class="bg-gray-50 p-6">
@@ -20,6 +48,12 @@
         <button id="newCustomerBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow transition">
             <i class="fas fa-user-plus ml-1"></i> إضافة عميل جديد
         </button>
+    </div>
+
+    <!-- حاوية التحميل -->
+    <div id="loadingContainer" class="hidden">
+        <div class="loading-spinner"></div>
+        <p class="text-center text-gray-500 mt-2">جاري التحميل...</p>
     </div>
 
     <div id="customersList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -39,49 +73,58 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium text-gray-700 mb-1">الاسم الكامل *</label>
-                        <input type="text" id="name" required class="w-full border rounded-lg px-3 py-2">
+                        <input type="text" id="name" required class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">رقم الجوال *</label>
-                        <input type="tel" id="phone" required class="w-full border rounded-lg px-3 py-2">
+                        <input type="tel" id="phone" required class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" pattern="05[0-9]{8}" title="أدخل رقم جوال سعودي صحيح (مثال: 05xxxxxxxx)">
+                        <p class="text-xs text-gray-500 mt-1">مثال: 0512345678</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">البريد الإلكتروني</label>
-                        <input type="email" id="email" class="w-full border rounded-lg px-3 py-2">
+                        <input type="email" id="email" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">المدينة</label>
-                        <input type="text" id="city" class="w-full border rounded-lg px-3 py-2">
+                        <input type="text" id="city" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">الشارع</label>
-                        <input type="text" id="street" class="w-full border rounded-lg px-3 py-2">
+                        <input type="text" id="street" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">رقم إضافي</label>
-                        <input type="text" id="additionalNo" class="w-full border rounded-lg px-3 py-2">
+                        <input type="text" id="additionalNo" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">صندوق البريد</label>
-                        <input type="text" id="poBox" class="w-full border rounded-lg px-3 py-2">
+                        <input type="text" id="poBox" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                 </div>
                 <div class="flex justify-end gap-2 mt-6">
                     <button type="button" id="cancelBtn" class="px-4 py-2 border rounded-lg hover:bg-gray-100 transition">إلغاء</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">حفظ العميل</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                        <i class="fas fa-save ml-1"></i> حفظ العميل
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+<!-- Toast Notification -->
+<div id="toast" class="hidden fixed bottom-4 left-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50"></div>
+
 <script type="module">
     import { loadCustomers, addCustomer, updateCustomer, deleteCustomer } from '../../js/common.js';
 
     let customers = [];
     let currentCustomerId = null;
+    let isLoading = false;
 
+    // عناصر DOM
     const customersListDiv = document.getElementById('customersList');
+    const loadingContainer = document.getElementById('loadingContainer');
     const modal = document.getElementById('customerModal');
     const modalTitle = document.getElementById('modalTitle');
     const form = document.getElementById('customerForm');
@@ -95,36 +138,102 @@
     const newCustomerBtn = document.getElementById('newCustomerBtn');
     const closeModalBtn = document.getElementById('closeModalBtn');
     const cancelBtn = document.getElementById('cancelBtn');
+    const toast = document.getElementById('toast');
+
+    // دالة عرض الإشعارات
+    function showToast(message, isError = false) {
+        toast.textContent = message;
+        toast.classList.remove('hidden', 'bg-green-500', 'bg-red-500');
+        toast.classList.add(isError ? 'bg-red-500' : 'bg-green-500');
+        setTimeout(() => {
+            toast.classList.add('hidden');
+        }, 3000);
+    }
 
     function escapeHtml(str) {
         if (!str) return '';
         return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m] || m));
     }
 
+    // عرض حالة التحميل
+    function setLoading(loading) {
+        isLoading = loading;
+        if (loading) {
+            loadingContainer.classList.remove('hidden');
+            customersListDiv.classList.add('opacity-50');
+        } else {
+            loadingContainer.classList.add('hidden');
+            customersListDiv.classList.remove('opacity-50');
+        }
+    }
+
     async function init() {
-        customers = await loadCustomers();
-        render();
+        setLoading(true);
+        try {
+            customers = await loadCustomers();
+            render();
+        } catch (err) {
+            console.error('خطأ في تحميل العملاء:', err);
+            customersListDiv.innerHTML = `<div class="col-span-full text-center text-red-500 py-8">❌ حدث خطأ في تحميل العملاء</div>`;
+            showToast('حدث خطأ في تحميل العملاء', true);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function getAddressText(customer) {
+        const parts = [];
+        if (customer.city) parts.push(customer.city);
+        if (customer.street) parts.push(customer.street);
+        if (customer.additionalNo) parts.push(`رقم إضافي: ${customer.additionalNo}`);
+        if (customer.poBox) parts.push(`ص.ب: ${customer.poBox}`);
+        return parts.length > 0 ? parts.join(' - ') : 'لا يوجد عنوان';
     }
 
     function render() {
         if (customers.length === 0) {
-            customersListDiv.innerHTML = `<div class="col-span-full text-center text-gray-500 py-8">لا يوجد عملاء</div>`;
+            customersListDiv.innerHTML = `
+                <div class="col-span-full text-center py-12">
+                    <i class="fas fa-users text-6xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-500">لا يوجد عملاء</p>
+                    <button onclick="document.getElementById('newCustomerBtn').click()" class="mt-4 text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-plus ml-1"></i> أضف أول عميل
+                    </button>
+                </div>`;
             return;
         }
+        
         customersListDiv.innerHTML = customers.map(c => `
-            <div class="customer-card bg-white rounded-lg shadow p-4 hover:shadow-md transition">
+            <div class="customer-card bg-white rounded-lg shadow p-4 hover:shadow-md transition border border-gray-100">
                 <div class="flex justify-between items-start">
                     <div class="flex-1">
-                        <h3 class="font-bold text-lg">${escapeHtml(c.name)}</h3>
-                        <p class="text-sm text-gray-600 mt-1"><i class="fas fa-phone ml-1"></i> ${c.phone || 'غير مدخل'}</p>
-                        <p class="text-sm text-gray-600"><i class="fas fa-envelope ml-1"></i> ${c.email || 'غير مدخل'}</p>
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
+                                ${escapeHtml(c.name?.charAt(0) || 'ع')}
+                            </div>
+                            <h3 class="font-bold text-lg">${escapeHtml(c.name)}</h3>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-1">
+                            <i class="fas fa-phone ml-1 w-5"></i> 
+                            <span dir="ltr">${c.phone || 'غير مدخل'}</span>
+                        </p>
+                        ${c.email ? `<p class="text-sm text-gray-600"><i class="fas fa-envelope ml-1 w-5"></i> ${escapeHtml(c.email)}</p>` : ''}
                         <p class="text-xs text-gray-500 mt-2">
-                            <i class="fas fa-map-marker-alt ml-1"></i> ${c.city || ''} ${c.street ? ' - ' + c.street : ''}
+                            <i class="fas fa-map-marker-alt ml-1 w-5"></i> 
+                            ${escapeHtml(getAddressText(c))}
+                        </p>
+                        <p class="text-xs text-gray-400 mt-1">
+                            <i class="far fa-calendar-alt ml-1"></i> 
+                            تاريخ الإضافة: ${c.createdAt ? new Date(c.createdAt).toLocaleDateString('ar-SA') : 'غير محدد'}
                         </p>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="editCustomer('${c.id}')" class="text-blue-600 hover:text-blue-800 p-2"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteCustomerHandler('${c.id}')" class="text-red-600 hover:text-red-800 p-2"><i class="fas fa-trash-alt"></i></button>
+                    <div class="flex gap-1">
+                        <button onclick="editCustomer('${c.id}')" class="text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50 transition" title="تعديل">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteCustomerHandler('${c.id}', '${escapeHtml(c.name)}')" class="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50 transition" title="حذف">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -135,6 +244,8 @@
         currentCustomerId = null;
         form.reset();
         modalTitle.innerText = 'إضافة عميل جديد';
+        // إزالة رسائل الخطأ إذا وجدت
+        document.querySelectorAll('.error-message').forEach(el => el.remove());
     }
 
     function openModal(editId = null) {
@@ -156,6 +267,8 @@
         }
         modal.classList.remove('hidden');
         modal.classList.add('flex');
+        // التركيز على حقل الاسم
+        setTimeout(() => nameInput.focus(), 100);
     }
 
     function closeModal() {
@@ -164,55 +277,91 @@
         resetForm();
     }
 
+    // التحقق من صحة رقم الجوال السعودي
+    function validatePhone(phone) {
+        const saudiPhoneRegex = /^05[0-9]{8}$/;
+        if (!phone) return false;
+        return saudiPhoneRegex.test(phone);
+    }
+
     async function saveCustomer(event) {
         event.preventDefault();
-        const data = {
-            name: nameInput.value.trim(),
-            phone: phoneInput.value.trim(),
-            email: emailInput.value.trim(),
-            city: cityInput.value.trim(),
-            street: streetInput.value.trim(),
-            additionalNo: additionalNoInput.value.trim(),
-            poBox: poBoxInput.value.trim(),
-            updatedAt: new Date().toISOString()
-        };
-        if (!data.name || !data.phone) {
-            alert('الاسم ورقم الجوال مطلوبان');
+        
+        const name = nameInput.value.trim();
+        const phone = phoneInput.value.trim();
+        
+        if (!name) {
+            alert('الاسم مطلوب');
+            nameInput.focus();
             return;
         }
+        if (!phone) {
+            alert('رقم الجوال مطلوب');
+            phoneInput.focus();
+            return;
+        }
+        if (!validatePhone(phone)) {
+            alert('رقم الجوال غير صحيح. يجب أن يبدأ بـ 05 ويتكون من 10 أرقام');
+            phoneInput.focus();
+            return;
+        }
+        
+        const data = {
+            name,
+            phone,
+            email: emailInput.value.trim() || null,
+            city: cityInput.value.trim() || null,
+            street: streetInput.value.trim() || null,
+            additionalNo: additionalNoInput.value.trim() || null,
+            poBox: poBoxInput.value.trim() || null,
+            updatedAt: new Date().toISOString()
+        };
+        
         try {
             if (currentCustomerId) {
                 await updateCustomer(currentCustomerId, data);
+                showToast('✅ تم تعديل العميل بنجاح');
             } else {
                 data.createdAt = new Date().toISOString();
                 await addCustomer(data);
+                showToast('✅ تم إضافة العميل بنجاح');
             }
             closeModal();
             await init();
         } catch (err) {
             console.error(err);
-            alert('حدث خطأ أثناء الحفظ');
+            showToast('❌ حدث خطأ أثناء الحفظ', true);
         }
     }
 
     window.editCustomer = (id) => openModal(id);
-    window.deleteCustomerHandler = async (id) => {
-        if (confirm('هل أنت متأكد من حذف هذا العميل؟')) {
+    
+    window.deleteCustomerHandler = async (id, name) => {
+        const confirmed = confirm(`هل أنت متأكد من حذف العميل "${name}"؟\nلا يمكن التراجع عن هذا الإجراء.`);
+        if (confirmed) {
             try {
                 await deleteCustomer(id);
+                showToast(`✅ تم حذف العميل "${name}" بنجاح`);
                 await init();
             } catch (err) {
                 console.error(err);
-                alert('حدث خطأ أثناء الحذف');
+                showToast('❌ حدث خطأ أثناء الحذف', true);
             }
         }
     };
 
+    // ربط الأحداث
     newCustomerBtn.onclick = () => openModal();
     closeModalBtn.onclick = closeModal;
     cancelBtn.onclick = closeModal;
     form.onsubmit = saveCustomer;
+    
+    // إغلاق المودال عند الضغط خارج المحتوى
+    modal.onclick = (e) => {
+        if (e.target === modal) closeModal();
+    };
 
+    // بدء التحميل
     await init();
 </script>
 </body>
