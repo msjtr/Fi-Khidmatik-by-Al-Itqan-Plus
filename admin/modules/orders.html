@@ -783,12 +783,12 @@
     
     // باقي الدوال (نفس الكود الأصلي)
 // إصلاح القوس الزائد
-window.savePNGHandler = async (orderId) => {
+window.exportAsPNG = async (orderId) => {
     const order = orders.find(o => o.id === orderId);
     if (order) await saveAsPNG(order);
 };
+};
 // دالة تنسيق التاريخ
-
 
 
 
