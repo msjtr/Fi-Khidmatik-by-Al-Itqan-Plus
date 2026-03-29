@@ -137,7 +137,7 @@
     </div>
 </div>
 
-<!-- مودال إضافة/تعديل العميل (محدث) -->
+<!-- مودال إضافة/تعديل العميل -->
 <div id="customerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50 overflow-y-auto">
     <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
         <div class="p-6">
@@ -241,15 +241,17 @@
 <div id="toast" class="hidden fixed bottom-4 left-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50"></div>
 
 <script type="module">
-    import { loadCustomers, addCustomer, updateCustomer, deleteCustomer } from '../../js/common.js';
+    // ===================== استيراد الدوال من الملف المدمج =====================
+    import { loadCustomers, addCustomer, updateCustomer, deleteCustomer } from '../../js/firebase.js';
 
+    // ===================== المتغيرات =====================
     let customers = [];
     let deletedCustomers = [];
     let currentCustomerId = null;
     let searchTerm = '';
     let currentFilters = { city: '', dateFrom: '', dateTo: '' };
 
-    // عناصر DOM
+    // ===================== عناصر DOM =====================
     const customersListDiv = document.getElementById('customersList');
     const loadingContainer = document.getElementById('loadingContainer');
     const modal = document.getElementById('customerModal');
@@ -293,7 +295,7 @@
     const withAddressSpan = document.getElementById('withAddress');
     const withEmailSpan = document.getElementById('withEmail');
 
-    // دالة عرض الإشعارات
+    // ===================== دوال مساعدة =====================
     function showToast(message, type = 'success') {
         toast.textContent = message;
         toast.className = `fixed bottom-4 left-4 px-6 py-3 rounded-lg shadow-lg z-50`;
@@ -308,7 +310,6 @@
         return String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m] || m));
     }
 
-    // عرض حالة التحميل
     function setLoading(loading) {
         if (loading) {
             loadingContainer.classList.remove('hidden');
@@ -319,7 +320,7 @@
         }
     }
 
-    // تحديث الإحصائيات
+    // ===================== الإحصائيات =====================
     function updateStats(customersToStat) {
         const now = new Date();
         const currentMonth = now.getMonth();
@@ -340,14 +341,12 @@
         withEmailSpan.textContent = withEmail;
     }
 
-    // تعبئة قائمة المدن للفلترة
     function populateCityFilter(customersToFilter) {
         const cities = [...new Set(customersToFilter.map(c => c.city).filter(c => c))];
         filterCity.innerHTML = '<option value="">جميع المدن</option>' + 
             cities.map(city => `<option value="${escapeHtml(city)}">${escapeHtml(city)}</option>`).join('');
     }
 
-    // الحصول على نص العنوان
     function getAddressText(customer) {
         const parts = [];
         if (customer.country) parts.push(customer.country);
@@ -359,7 +358,7 @@
         return parts.length > 0 ? parts.join(' - ') : 'لا يوجد عنوان';
     }
 
-    // عرض العملاء
+    // ===================== عرض العملاء =====================
     function render(customersToRender) {
         if (!customersToRender || customersToRender.length === 0) {
             customersListDiv.innerHTML = `
@@ -411,14 +410,13 @@
         `).join('');
     }
 
-    // تحميل العملاء مع الفلترة
+    // ===================== تحميل العملاء مع الفلترة =====================
     async function loadCustomersWithFilters() {
         setLoading(true);
         try {
             const allCustomers = await loadCustomers();
             const activeCustomers = allCustomers.filter(c => !deletedCustomers.some(dc => dc.id === c.id));
             
-            // تطبيق الفلترة
             let filtered = activeCustomers;
             
             if (searchTerm) {
@@ -454,7 +452,7 @@
         }
     }
 
-    // قالب Excel
+    // ===================== قالب Excel =====================
     function downloadTemplate() {
         const templateData = [
             ['الاسم', 'رقم_الجوال', 'البريد_الإلكتروني', 'الدولة', 'المدينة', 'الشارع', 'رقم_إضافي', 'صندوق_البريد', 'الرمز_البريدي', 'ملاحظات'],
@@ -469,7 +467,7 @@
         showToast('✅ تم تحميل قالب Excel بنجاح');
     }
 
-    // تصدير CSV
+    // ===================== تصدير CSV =====================
     function exportToCSV() {
         const activeCustomers = customers.filter(c => !deletedCustomers.some(dc => dc.id === c.id));
         const headers = ['الاسم', 'رقم_الجوال', 'البريد_الإلكتروني', 'الدولة', 'المدينة', 'الشارع', 'رقم_إضافي', 'صندوق_البريد', 'الرمز_البريدي', 'ملاحظات', 'تاريخ_الإضافة'];
@@ -491,7 +489,7 @@
         showToast('✅ تم تصدير العملاء بنجاح');
     }
 
-    // سلة المهملات
+    // ===================== سلة المهملات =====================
     function loadTrash() {
         const trashList = document.getElementById('trashList');
         if (!trashList) return;
@@ -562,7 +560,7 @@
         }
     };
 
-    // استيراد CSV/Excel
+    // ===================== استيراد CSV/Excel =====================
     importFile.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -628,7 +626,7 @@
         await loadCustomersWithFilters();
     };
 
-    // دوال العميل
+    // ===================== دوال العميل =====================
     function resetForm() {
         currentCustomerId = null;
         form.reset();
@@ -739,7 +737,7 @@
         }
     };
 
-    // ربط الأحداث
+    // ===================== ربط الأحداث =====================
     newCustomerBtn.onclick = () => openModal();
     closeModalBtn.onclick = closeModal;
     cancelBtn.onclick = closeModal;
@@ -786,14 +784,16 @@
     trashModal.onclick = (e) => { if (e.target === trashModal) trashModal.classList.add('hidden'); };
     importModal.onclick = (e) => { if (e.target === importModal) importModal.classList.add('hidden'); };
 
-    // استعادة سلة المهملات
+    // ===================== استعادة سلة المهملات =====================
     const savedTrash = localStorage.getItem('deletedCustomers');
     if (savedTrash) {
         try { deletedCustomers = JSON.parse(savedTrash); } catch(e) { deletedCustomers = []; }
     }
 
-    // بدء التحميل
+    // ===================== بدء التشغيل =====================
+    console.log('🚀 بدء تشغيل صفحة العملاء...');
     await loadCustomersWithFilters();
+    console.log('✅ تم تهيئة صفحة العملاء بنجاح');
 </script>
 </body>
 </html>
