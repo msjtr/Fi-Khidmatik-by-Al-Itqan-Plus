@@ -806,14 +806,16 @@ function formatDateInvoice(datestr) {
 
     if (/^\d{4}-\d{2}-\d{2}$/.test(datestr)) {
         const [y, m, day] = datestr.split('-');
-        d = new Date(y, m - 1, day); // local time
+        d = new Date(y, m - 1, day);
     } else {
         d = new Date(datestr);
     }
 
     if (isNaN(d.getTime())) return datestr;
 
-    return d.toLocaleDateString('ar-SA');
+    return `${d.getDate().toString().padStart(2, '0')}/${
+        (d.getMonth() + 1).toString().padStart(2, '0')
+    }/${d.getFullYear()}`;
 }
 // دالة تنسيق الوقت (12 ساعة مع ص/م)
 function formatTimeInvoice(time24) {
