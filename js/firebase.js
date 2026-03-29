@@ -1,4 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
 import {
     getFirestore,
     collection,
@@ -11,29 +12,26 @@ import {
     setDoc
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-// إعدادات Firebase (ضع بيانات مشروعك الصحيحة)
+// Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
     authDomain: "msjt301-974bb.firebaseapp.com",
     projectId: "msjt301-974bb",
     storageBucket: "msjt301-974bb.firebasestorage.app",
     messagingSenderId: "186209858482",
-    appId: "1:186209858482:web:186ca610780799ef562aab"
+    appId: "1:186209858482:web:186ca610780799ef562aab",
+    measurementId: "G-NDVGC9GPQZ"
 };
 
-// تهيئة Firebase
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 const db = getFirestore(app);
 
-// ===================== دوال مساعدة عامة =====================
+// ===================== دوال مساعدة =====================
 export async function getCollection(name) {
-    try {
-        const snap = await getDocs(collection(db, name));
-        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    } catch (error) {
-        console.error(`Error fetching collection ${name}:`, error);
-        throw error;
-    }
+    const snap = await getDocs(collection(db, name));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
 // ===================== المنتجات =====================
@@ -52,28 +50,19 @@ export const updateOrderStatus = (id, status) => updateDoc(doc(db, 'orders', id)
 
 // جلب الطلبات مع تفاصيل العميل والمنتجات
 export const getOrdersWithDetails = async () => {
-    try {
-        const [orders, customers, products] = await Promise.all([
-            getCollection('orders'),
-            getCollection('customers'),
-            getCollection('products')
-        ]);
-        
-        const customersMap = Object.fromEntries(customers.map(c => [c.id, c]));
-        const productsMap = Object.fromEntries(products.map(p => [p.id, p]));
-        
-        return orders.map(order => ({
-            ...order,
-            customer: customersMap[order.customerId] || { name: 'غير معروف' },
-            items: order.items?.map(item => ({
-                ...item,
-                productDetails: productsMap[item.productId] || null
-            })) || []
-        }));
-    } catch (error) {
-        console.error("Error fetching orders with details:", error);
-        throw error;
-    }
+    const orders = await getCollection('orders');
+    const customers = await getCollection('customers');
+    const products = await getCollection('products');
+    const customersMap = Object.fromEntries(customers.map(c => [c.id, c]));
+    const productsMap = Object.fromEntries(products.map(p => [p.id, p]));
+    return orders.map(order => ({
+        ...order,
+        customer: customersMap[order.customerId] || { name: 'غير معروف' },
+        items: order.items?.map(item => ({
+            ...item,
+            productDetails: productsMap[item.productId] || null
+        })) || []
+    }));
 };
 
 // ===================== العملاء =====================
@@ -84,25 +73,10 @@ export const deleteCustomer = (id) => deleteDoc(doc(db, 'customers', id));
 
 // ===================== الإعدادات =====================
 export async function getSettings(id) {
-    try {
-        const d = await getDoc(doc(db, 'settings', id));
-        return d.exists() ? d.data() : null;
-    } catch (error) {
-        console.error("Error getting settings:", error);
-        throw error;
-    }
+    const d = await getDoc(doc(db, 'settings', id));
+    return d.exists() ? d.data() : null;
 }
 export const setSettings = (id, data) => setDoc(doc(db, 'settings', id), data, { merge: true });
 
-// ===================== تصدير جميع الأساسيات =====================
-export {
-    db,
-    collection,
-    addDoc,
-    doc,
-    getDoc,
-    getDocs,
-    updateDoc,
-    deleteDoc,
-    setDoc
-};
+// ===================== تصدير الأساسيات =====================
+export { db, collection, addDoc, doc, getDoc, getDocs, updateDoc, deleteDoc, setDoc };
