@@ -1,3 +1,4 @@
+// ===================== استيراد Firebase SDK =====================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
 import {
@@ -13,7 +14,7 @@ import {
     deleteField
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-// إعدادات Firebase
+// ===================== إعدادات Firebase =====================
 const firebaseConfig = {
     apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
     authDomain: "msjt301-974bb.firebaseapp.com",
@@ -24,7 +25,7 @@ const firebaseConfig = {
     measurementId: "G-NDVGC9GPQZ"
 };
 
-// تهيئة Firebase
+// ===================== تهيئة Firebase =====================
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const db = getFirestore(app);
@@ -100,8 +101,9 @@ export async function getSettings(id) {
 
 export const setSettings = (id, data) => setDoc(doc(db, 'settings', id), data, { merge: true });
 
-// ===================== تصدير كل شيء =====================
+// ===================== تصدير جميع الدوال والمتغيرات =====================
 export {
+    // الأساسيات
     db,
     collection,
     addDoc,
@@ -113,20 +115,24 @@ export {
     setDoc,
     deleteField,
     getCollection,
+    // المنتجات
     loadProducts,
     addProduct,
     updateProduct,
     deleteProduct,
     updateProductStock,
+    // العملاء
     loadCustomers,
     addCustomer,
     updateCustomer,
     deleteCustomer,
+    // الطلبات
     loadOrders,
     addOrder,
     updateOrder,
     deleteOrder,
     getOrdersWithDetails,
+    // الإعدادات
     getSettings,
     setSettings
 };
