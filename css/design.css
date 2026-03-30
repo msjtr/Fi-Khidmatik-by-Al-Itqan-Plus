@@ -9,10 +9,16 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 40px 20px;
-    min-height: 100vh;
+    background: #ffffff;
+    margin: 0;
+}
+
+/* فقط للعرض داخل الموقع */
+@media screen {
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 40px 20px;
+    }
 }
 
 .invoice-container {
@@ -24,7 +30,7 @@ body {
     background: white;
     border-radius: 20px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-    overflow: hidden;
+    overflow:visible;
 }
 
 .invoice-content {
@@ -267,3 +273,47 @@ button:hover {
 
 .error-state { color: #dc2626; }
 .empty-state { color: #666; }
+
+
+
+/* يمنع أي قص في الصورة و PDF */
+.invoice-content {
+    overflow: visible !important;
+}
+
+
+/* ============================================
+   إصلاح PDF + الصورة + الطباعة
+============================================ */
+
+@media print {
+    body {
+        background: #ffffff !important;
+        padding: 0 !important;
+    }
+
+    .invoice-container {
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+
+    .invoice {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+    }
+
+    .invoice-content {
+        padding: 10px !important; /* 🔥 هذا آخر تعديل */
+    }
+
+    .buttons {
+        display: none !important;
+    }
+}
+
+@media print {
+    .invoice {
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+}
