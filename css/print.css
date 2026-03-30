@@ -1,69 +1,32 @@
 @media print {
 
-    /* 🔥 ضبط الصفحة بالكامل */
+    @page {
+        size: A4;
+        margin: 10mm;
+    }
+
     html, body {
-        width: 100%;
-        height: auto;
-        margin: 0 !important;
-        padding: 0 !important;
-        background: #ffffff !important;
+        width: 210mm;
+        background: #fff !important;
     }
 
-    /* 🔥 إزالة أي مسافات خارجية */
-    body {
-        overflow: visible !important;
-    }
-
-    /* 🔥 الحاوية */
-    .invoice-container {
-        max-width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    /* 🔥 الفاتورة نفسها */
     .invoice {
         width: 100% !important;
-        margin: 0 !important;
-        padding: 10px !important;
-
-        border-radius: 0 !important;
-        box-shadow: none !important;
-
-        overflow: visible !important;
         page-break-inside: avoid;
     }
 
-    /* 🔥 المحتوى الداخلي */
-    .invoice-content {
-        padding: 10px !important;
-        overflow: visible !important;
-    }
-
-    /* 🔥 الجداول */
     table {
-        page-break-inside: avoid;
+        page-break-inside: auto;
     }
 
     tr {
         page-break-inside: avoid;
-        page-break-after: auto;
     }
 
-    /* 🔥 منع كسر العناصر */
-    .invoice-parties,
-    .totals-wrapper,
-    .contact-bar,
-    .thanks {
-        page-break-inside: avoid;
-    }
-
-    /* 🔥 إخفاء الأزرار */
     .buttons {
         display: none !important;
     }
 
-    /* 🔥 الحفاظ على الألوان */
     * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
