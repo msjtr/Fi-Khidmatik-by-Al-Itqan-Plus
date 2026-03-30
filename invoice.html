@@ -1,9 +1,85 @@
-<link rel="stylesheet" href="css/print.css">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>فاتورة</title>
 
+    <!-- التصميم -->
+    <link rel="stylesheet" href="css/design.css">
+
+    <!-- الطباعة -->
+    <link rel="stylesheet" href="css/print.css">
+</head>
+
+<body>
+
+<div class="invoice-container">
+    <div class="invoice">
+
+        <div class="invoice-content" id="invoiceContent">
+            <!-- يتم حقن الفاتورة هنا -->
+        </div>
+
+        <!-- أزرار التحكم -->
+        <div class="buttons no-print">
+            <button class="btn-print" onclick="handlePrint()">🖨️ طباعة</button>
+            <button class="btn-pdf" onclick="handlePDF()">📄 PDF</button>
+            <button class="btn-png" onclick="handleImage()">🖼️ صورة</button>
+        </div>
+
+    </div>
+</div>
+
+<!-- سكربتات النظام -->
 <script type="module">
-import { handlePrint } from './js/print/print-manager.js';
 
-window.saveAsPDF = () => handlePrint('pdf');
-window.saveAsPNG = () => handlePrint('image');
-window.printInvoice = () => handlePrint('print');
+import { generateInvoiceTemplate } from './js/print/template.js';
+import { printInvoice } from './js/print/print.service.js';
+import { generatePDF } from './js/print/pdf.service.js';
+import { generateImage } from './js/print/image.service.js';
+
+/* =============================
+   مثال بيانات (تتغير من نظامك)
+============================= */
+const order = {
+    orderNumber: "KF-1234",
+    orderDate: "2026-01-01",
+    orderTime: "14:30",
+    paymentMethodName: "مدى",
+    customer: {
+        name: "محمد الشمري",
+        phone: "0500000000",
+        email: "test@email.com",
+        city: "تبوك",
+        street: "شارع الملك"
+    },
+    items: [
+        { name: "منتج 1", price: 100, quantity: 1 },
+        { name: "منتج 2", price: 50, quantity: 2 }
+    ]
+};
+
+/* =============================
+   تحميل القالب
+============================= */
+document.getElementById('invoiceContent').innerHTML = generateInvoiceTemplate(order);
+
+/* =============================
+   أوامر الطباعة
+============================= */
+window.handlePrint = () => {
+    printInvoice('invoiceContent');
+};
+
+window.handlePDF = async () => {
+    await generatePDF('invoiceContent', order);
+};
+
+window.handleImage = async () => {
+    await generateImage('invoiceContent', order);
+};
+
 </script>
+
+</body>
+</html>
