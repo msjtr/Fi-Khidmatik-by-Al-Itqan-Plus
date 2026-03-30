@@ -308,11 +308,30 @@ window.printInvoiceHandler = async (orderId) => {
     }
 };
 
-<button onclick="printInvoiceHandler('${order.id}')" 
-class="text-green-600 hover:text-green-800 p-1">
-<i class="fas fa-print"></i> طباعة
-</button>
+<div class="flex gap-2 flex-wrap">
 
+    <button onclick="editOrder('${order.id}')" class="text-blue-600 hover:text-blue-800 p-1">
+        <i class="fas fa-edit"></i> تعديل
+    </button>
+
+    <select onchange="changeStatus('${order.id}', this.value)" class="text-sm border rounded px-2 py-1">
+        ...
+    </select>
+
+    <!-- ✅ هنا مكان زر الطباعة -->
+    <button onclick="printInvoiceHandler('${order.id}')" class="text-green-600 hover:text-green-800 p-1">
+        <i class="fas fa-print"></i> طباعة
+    </button>
+
+    <button onclick="exportAsPDF('${order.id}')" class="text-red-600 hover:text-red-800 p-1">
+        <i class="fas fa-file-pdf"></i> PDF
+    </button>
+
+    <button onclick="exportAsPNG('${order.id}')" class="text-purple-600 hover:text-purple-800 p-1">
+        <i class="fas fa-image"></i> PNG
+    </button>
+
+</div>
     
     
     // دوال تحميل البيانات (نفس الكود الأصلي)
