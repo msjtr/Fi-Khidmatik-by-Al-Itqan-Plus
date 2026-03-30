@@ -1,4 +1,4 @@
-export async function printInvoice PDF(element) {
+export async function printInvoicePDF(element) {
 
     const win = window.open('', '_blank');
     const base = window.location.origin;
