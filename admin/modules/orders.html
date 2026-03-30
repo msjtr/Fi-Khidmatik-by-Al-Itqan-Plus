@@ -266,10 +266,10 @@
 
     // ========== دوال الفاتورة المتكاملة ==========
 
-import { generateInvoiceTemplate } from '../js/print/template.js';
-import { printInvoice } from '../js/print/print.service.js';
-import { generatePDF } from '../js/print/pdf.service.js';
-import { generateImage } from '../js/print/image.service.js';
+import { generateInvoiceTemplate } from '/js/print/template.js';
+import { printInvoice } from '/js/print/print.service.js';
+import { generatePDF } from '/js/print/pdf.service.js';
+import { generateImage } from '/js/print/image.service.js';
 
 window.printInvoiceHandler = async (orderId) => {
     const order = orders.find(o => o.id === orderId);
@@ -279,30 +279,17 @@ window.printInvoiceHandler = async (orderId) => {
         return;
     }
 
-    try {
-        const tempDiv = document.createElement('div');
+    const tempDiv = document.createElement('div');
 
-        tempDiv.innerHTML = generateInvoiceTemplate({
-            ...order,
-            customer: order.customer || {},
-            items: order.items || []
-        });
+    tempDiv.innerHTML = generateInvoiceTemplate(order);
+    tempDiv.style.position = 'fixed';
+    tempDiv.style.top = '-9999px';
 
-        tempDiv.style.position = 'fixed';
-        tempDiv.style.top = '-9999px';
-        tempDiv.style.right = '-9999px';
-        tempDiv.style.width = '800px';
+    document.body.appendChild(tempDiv);
 
-        document.body.appendChild(tempDiv);
+    await printInvoice(tempDiv);
 
-        await printInvoice(tempDiv.querySelector('.invoice-print') || tempDiv);
-
-        document.body.removeChild(tempDiv);
-
-    } catch (err) {
-        console.error(err);
-        showToast('❌ خطأ في الطباعة', 'error');
-    }
+    document.body.removeChild(tempDiv);
 };
 
 
@@ -426,22 +413,43 @@ window.printInvoiceHandler = async (orderId) => {
         }
     }
     
-    // دوال التصدير المحدثة
-    window.exportAsPDF = async (orderId) => {
-        const order = orders.find(o => o.id === orderId);
-        if (order) await saveAsPDF(order);
-    };
-    
-   
-    
-    // باقي الدوال (نفس الكود الأصلي)
-// إصلاح القوس الزائد
-window.exportAsPNG = async (orderId) => {
+  window.exportAsPDF = async (orderId) => {
     const order = orders.find(o => o.id === orderId);
-    if (order) await saveAsPNG(order);
+    if (!order) return;
+
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = generateInvoiceTemplate(order);
+    document.body.appendChild(tempDiv);
+
+    await generatePDF(tempDiv, order);
+
+    document.body.removeChild(tempDiv);
 };
 
-// دالة تنسيق التاريخ
+
+window.exportAsPNG = async (orderId) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = generateInvoiceTemplate(order);
+    document.body.appendChild(tempDiv);
+
+    await generateImage(tempDiv, order);
+
+    document.body.removeChild(tempDiv);
+};
+
+
+
+
+
+
+
+
+
+    
+
 
 
 
