@@ -1,28 +1,9 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="css/print.css">
 
-<title>الفاتورة</title>
+<script type="module">
+import { handlePrint } from './js/print/print-manager.js';
 
-<link rel="stylesheet" href="./styles.css">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-</head>
-
-<body>
-
-<div class="invoice-container" id="invoiceContent"></div>
-
-<div class="buttons">
-    <button onclick="handlePDF()">PDF</button>
-    <button onclick="handlePNG()">PNG</button>
-    <button onclick="handlePrint()">طباعة</button>
-</div>
-
-<script type="module" src="./main.js"></script>
-
-</body>
-</html>
+window.saveAsPDF = () => handlePrint('pdf');
+window.saveAsPNG = () => handlePrint('image');
+window.printInvoice = () => handlePrint('print');
+</script>
