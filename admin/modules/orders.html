@@ -265,414 +265,67 @@
     let currentFilters = { status: '', customer: '', dateFrom: '', dateTo: '' };
 
     // ========== دوال الفاتورة المتكاملة ==========
-    function showLoading(message = 'جاري تحضير الفاتورة...') {
-        document.getElementById('loadingMessage').textContent = message;
-        document.getElementById('loadingOverlay').style.display = 'flex';
-    }
-    
-    function hideLoading() {
-        document.getElementById('loadingOverlay').style.display = 'none';
-    }
-    
-    function generateFileName(order, extension) {
-        const customerName = order.customer?.name || 'عميل';
-        const orderNumber = order.orderNumber || '0000';
-        const date = new Date().toISOString().slice(0,10);
-        const cleanCustomerName = customerName.replace(/[\\/:*?"<>|]/g, '-');
-        return `فاتورة_${cleanCustomerName}_${orderNumber}_${date}.${extension}`;
-    }
-    
-    function formatDateInvoice(dateStr) {
-        if(!dateStr) return ''; 
-        const d = new Date(dateStr); 
-        if(isNaN(d.getTime())) return dateStr;
-        return `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`; 
-    }
-    
-    function formatTimeInvoice(time24) { 
-        if(!time24) return ''; 
-        let [h,m] = time24.split(':'); 
-        let hour = parseInt(h); 
-        let ampm = hour >= 12 ? 'مساءً' : 'صباحاً'; 
-        hour = hour % 12 || 12; 
-        return `${hour.toString().padStart(2,'0')}:${m} ${ampm}`; 
-    }
-    
-    async function generateInvoiceHTML(order) {
-        const customer = customers.find(c => c.id === order.customerId) || {};
-        const items = order.items || [];
-        
-        let cartRows = '';
-        let subtotal = 0;
-        let totalDiscount = 0;
-        
-        for (let item of items) {
-            let price = parseFloat(item.price) || 0;
-            let qty = parseInt(item.quantity) || 1;
-            let discount = parseFloat(item.discount) || 0;
-            let itemTotal = (price * qty) - discount;
-            
-            subtotal += price * qty;
-            totalDiscount += discount;
-            
-            cartRows += `
-                <tr>
-                    <td style="padding: 10px 8px; border: 1px solid #e2e8f0; text-align: right;">${escapeHtml(item.name || '-')}</td>
-                    <td style="padding: 10px 8px; border: 1px solid #e2e8f0; text-align: center;">${escapeHtml(item.barcode || '-')}</td>
-                    <td style="padding: 10px 8px; border: 1px solid #e2e8f0; text-align: center;">${qty}</td>
-                    <td style="padding: 10px 8px; border: 1px solid #e2e8f0; text-align: left;">${price.toFixed(2)}</td>
-                    <td style="padding: 10px 8px; border: 1px solid #e2e8f0; text-align: left;">${discount.toFixed(2)}</td>
-                    <td style="padding: 10px 8px; border: 1px solid #e2e8f0; text-align: left;"><strong>${itemTotal.toFixed(2)}</strong></td>
-                </tr>
-            `;
-        }
-        
-        let taxableAmount = subtotal - totalDiscount;
-        let tax = taxableAmount * 0.15;
-        let grandTotal = taxableAmount + tax;
-        
-        let displayDate = order.orderDate || '-';
-        if (displayDate && displayDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            let parts = displayDate.split('-');
-            displayDate = parts[2] + '/' + parts[1] + '/' + parts[0];
-        }
-        
-        return `
-            <div style="direction: rtl; padding: 30px; max-width: 1100px; margin: 0 auto; background: white; font-family: 'Segoe UI', Tahoma, Arial, sans-serif;">
-                <div style="background: #1e293b; color: #e2e8f0; padding: 12px 25px; display: flex; justify-content: space-between; font-size: 12px; border-radius: 12px; margin-bottom: 25px;">
-                    <div>رقم شهادة العمل الحر: FL-765735204</div>
-                    <div>الرقم الضريبي: 312495447600003</div>
-                </div>
-                
-                <div style="text-align: center; margin-bottom: 25px;">
-                    <h1 style="font-size: 28px; color: #1e3a8a;">منصة في خدمتك</h1>
-                    <p style="color: #666;">نظام إدارة متكامل</p>
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0;">
-                    <div style="font-size: 18px; font-weight: bold; color: #1e3a8a;">
-                        رقم الفاتورة: <span style="background: #e0e7ff; padding: 4px 12px; border-radius: 20px; font-size: 14px; margin-right: 8px;">${escapeHtml(order.orderNumber)}</span>
-                    </div>
-                    <div style="font-size: 14px; color: #475569;">
-                        التاريخ: ${displayDate} | ${formatTimeInvoice(order.orderTime)}
-                    </div>
-                </div>
-                
-                <div style="display: flex; gap: 25px; margin-bottom: 25px;">
-                    <div style="flex: 1; padding: 18px; border-radius: 12px; background: #fef9e3; border-right: 4px solid #f59e0b;">
-                        <h3 style="font-size: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">📌 مصدرة من</h3>
-                        <p style="font-size: 13px; line-height: 1.7; color: #334155;">
-                            <strong>منصة في خدمتك</strong><br>
-                            المملكة العربية السعودية<br>
-                            حائل - حي النقرة - شارع سعد المشاط - مبنى 3085<br>
-                            الرقم الإضافي: 7718 - الرمز البريدي: 55431
-                        </p>
-                    </div>
-                    <div style="flex: 1; padding: 18px; border-radius: 12px; background: #e0f2fe; border-right: 4px solid #0284c7;">
-                        <h3 style="font-size: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">📌 مصدرة إلى</h3>
-                        <p style="font-size: 13px; line-height: 1.7; color: #334155;">
-                            <strong>${escapeHtml(customer.name || '-')}</strong><br>
-                            المملكة العربية السعودية<br>
-                            ${escapeHtml(customer.city || '')} ${customer.street ? '- ' + escapeHtml(customer.street) : ''}<br>
-                            هاتف: ${escapeHtml(customer.phone) || '-'}<br>
-                            بريد: ${escapeHtml(customer.email) || 'غير مدخل'}
-                        </p>
-                    </div>
-                </div>
-                
-                <div style="background: #f1f5f9; padding: 12px 20px; border-radius: 10px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 25px;">
-                    <span style="background: white; padding: 6px 15px; border-radius: 25px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">💳 طريقة الدفع: ${order.paymentMethodName || order.paymentMethod || '-'}</span>
-                    ${order.approvalCode ? `<span style="background: white; padding: 6px 15px; border-radius: 25px; font-size: 13px;">🔑 رمز الموافقة: ${escapeHtml(order.approvalCode)}</span>` : ''}
-                    <span style="background: white; padding: 6px 15px; border-radius: 25px; font-size: 13px;">🚚 حالة الشحن: ${order.shippingRequired ? 'يتطلب شحن' : 'لا يطلب شحن'}</span>
-                </div>
-                
-                <h3 style="margin: 15px 0 10px 0;">📦 تفاصيل الطلب</h3>
-                <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
-                    <thead>
-                        <tr style="background: #1e3a8a; color: white;">
-                            <th style="padding: 12px 8px; border: 1px solid #2e4a9a; text-align: right;">اسم المنتج</th>
-                            <th style="padding: 12px 8px; border: 1px solid #2e4a9a; text-align: center;">الكود</th>
-                            <th style="padding: 12px 8px; border: 1px solid #2e4a9a; text-align: center;">الكمية</th>
-                            <th style="padding: 12px 8px; border: 1px solid #2e4a9a; text-align: left;">السعر (ريال)</th>
-                            <th style="padding: 12px 8px; border: 1px solid #2e4a9a; text-align: left;">الخصم (ريال)</th>
-                            <th style="padding: 12px 8px; border: 1px solid #2e4a9a; text-align: left;">الإجمالي (ريال)</th>
-                        </tr>
-                    </thead>
-                    <tbody>${cartRows}</tbody>
-                </table>
-                
-                <div style="background: #f8fafc; padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 25px;">
-                    <div>
-                        <p style="margin: 6px 0;"><strong>المجموع الفرعي:</strong> ${subtotal.toFixed(2)} ريال</p>
-                        <p style="margin: 6px 0;"><strong>الخصم الكلي:</strong> ${totalDiscount.toFixed(2)} ريال</p>
-                        <p style="margin: 6px 0;"><strong>الضريبة (15%):</strong> ${tax.toFixed(2)} ريال</p>
-                    </div>
-                    <div style="text-align: center; padding: 0 20px; border-right: 1px solid #cbd5e1; border-left: 1px solid #cbd5e1;">
-                        <h2 style="font-size: 20px; color: #1e3a8a; margin: 0;">الإجمالي النهائي: ${grandTotal.toFixed(2)} ريال</h2>
-                    </div>
-                </div>
-                
-                <div style="background: #f1f5f9; padding: 12px; border-radius: 10px; display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-bottom: 15px; font-size: 13px;">
-                    <span>📞 +966597771565</span>
-                    <span>✉️ info@fi-khidmatik.com</span>
-                    <span>🌐 www.khidmatik.com</span>
-                </div>
-                
-                <div style="text-align: center; padding-top: 15px; font-size: 14px; color: #475569; border-top: 1px solid #e2e8f0;">
-                    شكراً لتسوقكم معنا
-                </div>
-            </div>
-        `;
-    }
-    
-    async function waitForImages(element) {
-        const images = element.querySelectorAll('img');
-        await Promise.all(Array.from(images).map(img => {
-            if (img.complete) return Promise.resolve();
-            return new Promise(resolve => {
-                img.onload = resolve;
-                img.onerror = resolve;
-            });
-        }));
-    }
-    
-    async function saveAsPDF(order) {
-        showLoading('جاري تحضير ملف PDF...');
-        
-        try {
-            const html = await generateInvoiceHTML(order);
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = html;
-            tempDiv.style.position = 'absolute';
-            tempDiv.style.left = '-9999px';
-            tempDiv.style.top = '-9999px';
-            document.body.appendChild(tempDiv);
-            
-            await waitForImages(tempDiv);
-            
-            const canvas = await html2canvas(tempDiv, {
-                scale: 3,
-                useCORS: true,
-                backgroundColor: "#ffffff",
-                logging: false
-            });
-            
-            document.body.removeChild(tempDiv);
-            
-            const imgData = canvas.toDataURL("image/jpeg", 1.0);
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            
-            const pageWidth = 210;
-            const pageHeight = 297;
-            const imgWidth = pageWidth;
-            const imgHeight = (canvas.height * imgWidth) / canvas.width;
-            
-            let heightLeft = imgHeight;
-            let position = 0;
-            
-            pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-            heightLeft -= pageHeight;
-            
-            while (heightLeft > 0) {
-                position = heightLeft - imgHeight;
-                pdf.addPage();
-                pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pageHeight;
-            }
-            
-            const fileName = generateFileName(order, 'pdf');
-            pdf.save(fileName);
-            
-            showToast(`✅ تم حفظ الفاتورة كـ PDF بنجاح\nالملف: ${fileName}`, 'success');
-        } catch (err) {
-            console.error('PDF error:', err);
-            showToast('❌ حدث خطأ في حفظ PDF', 'error');
-        } finally {
-            hideLoading();
-        }
-    }
-    
-    async function saveAsPNG(order) {
-        showLoading('جاري تحضير صورة PNG...');
-        
-        try {
-            const html = await generateInvoiceHTML(order);
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = html;
-            tempDiv.style.position = 'absolute';
-            tempDiv.style.left = '-9999px';
-            tempDiv.style.top = '-9999px';
-            document.body.appendChild(tempDiv);
-            
-            await waitForImages(tempDiv);
-            
-            const canvas = await html2canvas(tempDiv, {
-                scale: 3,
-                backgroundColor: '#ffffff',
-                logging: false
-            });
-            
-            document.body.removeChild(tempDiv);
-            
-            const fileName = generateFileName(order, 'png');
-            const link = document.createElement('a');
-            link.download = fileName;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-            
-            showToast(`✅ تم حفظ الفاتورة كصورة PNG بنجاح\nالملف: ${fileName}`, 'success');
-        } catch (err) {
-            console.error('PNG error:', err);
-            showToast('❌ حدث خطأ في حفظ الصورة', 'error');
-        } finally {
-            hideLoading();
-        }
-    }
-    
-    async function printInvoice(order) {
-        showLoading('جاري تجهيز الفاتورة للطباعة...');
-        
-        try {
-            const html = await generateInvoiceHTML(order);
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = html;
-            tempDiv.style.position = 'absolute';
-            tempDiv.style.left = '-9999px';
-            tempDiv.style.top = '-9999px';
-            document.body.appendChild(tempDiv);
-            
-            await waitForImages(tempDiv);
-            
-            const canvas = await html2canvas(tempDiv, {
-                scale: 3,
-                useCORS: true,
-                backgroundColor: "#ffffff"
-            });
-            
-            document.body.removeChild(tempDiv);
-            
-            const pageWidth = 210;
-            const pageHeight = 297;
-            const pages = [];
-            const pageHeightPx = (pageHeight * canvas.width) / pageWidth;
-            let currentPosition = 0;
-            
-            while (currentPosition < canvas.height) {
-                const pageCanvas = document.createElement('canvas');
-                const pageCtx = pageCanvas.getContext('2d');
-                const sliceHeight = Math.min(pageHeightPx, canvas.height - currentPosition);
-                
-                pageCanvas.width = canvas.width;
-                pageCanvas.height = sliceHeight;
-                
-                pageCtx.drawImage(
-                    canvas,
-                    0,
-                    currentPosition,
-                    canvas.width,
-                    sliceHeight,
-                    0,
-                    0,
-                    canvas.width,
-                    sliceHeight
-                );
-                
-                pages.push(pageCanvas.toDataURL("image/jpeg", 1.0));
-                currentPosition += sliceHeight;
-            }
-            
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <html>
-                <head>
-                    <title>فاتورة ${order.orderNumber}</title>
-                    <style>
-                        body { margin: 0; padding: 0; direction: rtl; }
-                        img { width: 100%; display: block; page-break-after: always; }
-                        img:last-child { page-break-after: auto; }
-                        @page { size: A4; margin: 0; }
-                    </style>
-                </head>
-                <body>
-                    ${pages.map(p => `<img src="${p}" />`).join('')}
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-            
-            printWindow.onload = function () {
-                printWindow.focus();
-                printWindow.print();
-                printWindow.close();
-            };
-            
-            hideLoading();
-            showToast(`✅ تم إرسال الفاتورة للطباعة`, 'success');
-        } catch (err) {
-            console.error('Print error:', err);
-            hideLoading();
-            showToast('❌ حدث خطأ في الطباعة', 'error');
-        }
-    }
-    
-    async function shareInvoice(order) {
-        if (!navigator.share) {
-            showToast('ميزة المشاركة غير مدعومة في هذا المتصفح', 'warning');
-            return;
-        }
-        
-        showLoading('جاري تجهيز الفاتورة للمشاركة...');
-        
-        try {
-            const html = await generateInvoiceHTML(order);
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = html;
-            tempDiv.style.position = 'absolute';
-            tempDiv.style.left = '-9999px';
-            tempDiv.style.top = '-9999px';
-            document.body.appendChild(tempDiv);
-            
-            await waitForImages(tempDiv);
-            
-            const canvas = await html2canvas(tempDiv, { scale: 2 });
-            document.body.removeChild(tempDiv);
-            
-            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-            const fileName = generateFileName(order, 'png');
-            const file = new File([blob], fileName, { type: 'image/png' });
-            
-            await navigator.share({
-                title: 'فاتورة',
-                text: `فاتورة العميل: ${order.customer?.name || ''}\nرقم الطلب: ${order.orderNumber}\nالتاريخ: ${formatDateInvoice(order.orderDate)}`,
-                files: [file]
-            });
-            
-            hideLoading();
-            showToast('✅ تم مشاركة الفاتورة بنجاح', 'success');
-        } catch (err) {
-            console.error('Share error:', err);
-            hideLoading();
-            if (err.name !== 'AbortError') {
-                showToast('❌ حدث خطأ في المشاركة', 'error');
-            }
-        }
+
+/* =============================
+   استيراد نظام الطباعة المركزي
+============================= */
+import { generateInvoiceTemplate } from './js/print/template.js';
+import { printInvoice } from './js/print/print.service.js';
+import { generatePDF } from './js/print/pdf.service.js';
+import { generateImage } from './js/print/image.service.js';
+
+/* =============================
+   طباعة الطلب (مباشر داخل الصفحة)
+============================= */
+window.printInvoiceHandler = async (orderId) => {
+    const order = orders.find(o => o.id === orderId);
+
+    if (!order) {
+        showToast('❌ الطلب غير موجود', 'error');
+        return;
     }
 
-    // باقي الدوال (نفس الكود الأصلي)
-    function escapeHtml(str) { 
-        if (str === undefined || str === null) return ''; 
-        if (typeof str === 'number') return str.toString();
-        return String(str).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]||m)); 
+    try {
+        // إنشاء عنصر مؤقت للفاتورة
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = generateInvoiceTemplate({
+            ...order,
+            customer: order.customer || {},
+            items: order.items || []
+        });
+
+        // إخفاء العنصر خارج الشاشة
+        tempDiv.style.position = 'fixed';
+        tempDiv.style.top = '-9999px';
+        tempDiv.style.right = '-9999px';
+        tempDiv.style.width = '800px';
+
+        document.body.appendChild(tempDiv);
+
+        // 🖨️ طباعة مباشرة
+        await printInvoice(tempDiv);
+
+        // 📄 (اختياري)
+        // await generatePDF(tempDiv, order);
+
+        // 🖼️ (اختياري)
+        // await generateImage(tempDiv, order);
+
+        // حذف العنصر بعد الطباعة
+        document.body.removeChild(tempDiv);
+
+    } catch (err) {
+        console.error(err);
+        showToast('❌ خطأ في الطباعة', 'error');
     }
+};
+
+<button onclick="printInvoiceHandler('${order.id}')" 
+class="text-green-600 hover:text-green-800 p-1">
+<i class="fas fa-print"></i> طباعة
+</button>
+
     
-    function showToast(msg, type='success') { 
-        const t = document.getElementById('toast'); 
-        t.textContent = msg; 
-        t.className = `fixed top-5 left-1/2 transform -translate-x-1/2 px-5 py-3 rounded-full shadow-lg text-white z-50 ${type}`; 
-        t.style.display = 'block'; 
-        setTimeout(() => { t.style.display = 'none'; }, 3000); 
-    }
     
     // دوال تحميل البيانات (نفس الكود الأصلي)
     async function loadCustomersList() { 
