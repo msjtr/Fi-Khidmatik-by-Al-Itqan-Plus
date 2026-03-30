@@ -1,16 +1,41 @@
-export async function generatePDF(element, order) {
+export async function printInvoice(element) {
 
-    const canvas = await html2canvas(element, {
-        scale: 3,
-        backgroundColor: "#fff"
-    });
+    const win = window.open('', '_blank');
 
-    const img = canvas.toDataURL("image/jpeg", 1);
+    const base = window.location.origin;
 
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF();
+    win.document.write(`
+    <html dir="rtl">
+    <head>
+        <meta charset="UTF-8">
 
-    pdf.addImage(img, 'JPEG', 0, 0, 210, 297);
+        <!-- ربط CSS بشكل صحيح -->
+        <link rel="stylesheet" href="${base}/css/design.css">
+        <link rel="stylesheet" href="${base}/css/print.css">
 
-    pdf.save(`invoice_${order?.orderNumber || 'file'}.pdf`);
+        <title>فاتورة</title>
+
+        <style>
+            body {
+                margin: 0;
+                padding: 20px;
+                background: #fff;
+            }
+        </style>
+    </head>
+
+    <body>
+        ${element.outerHTML}
+    </body>
+    </html>
+    `);
+
+    win.document.close();
+
+    // ⏳ انتظار تحميل CSS
+    setTimeout(() => {
+        win.focus();
+        win.print();
+        win.close();
+    }, 700); // زودناها شوي عشان Vercel
 }
