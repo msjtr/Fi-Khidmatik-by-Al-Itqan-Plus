@@ -266,11 +266,10 @@
 
     // ========== دوال الفاتورة المتكاملة ==========
 
-import { generateInvoiceTemplate } from '/js/print/template.js';
-import { printInvoice } from '/js/print/print.service.js';
-import { generatePDF } from '/js/print/pdf.service.js';
-import { generateImage } from '/js/print/image.service.js';
-
+import { generateInvoiceTemplate } from './js/print/template.js';
+import { printInvoice } from './js/print/print.service.js';
+import { generatePDF } from './js/print/pdf.service.js';
+import { generateImage } from './js/print/image.service.js';
 /* =========================
    🧠 نظام الطباعة المركزي
 ========================= */
@@ -488,34 +487,7 @@ function formatTimeInvoice(time) {
             showToast('خطأ في تحميل الطلبات', 'error');
         }
     }
-    
-  window.exportAsPDF = async (orderId) => {
-    const order = orders.find(o => o.id === orderId);
-    if (!order) return;
-
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = generateInvoiceTemplate(order);
-    document.body.appendChild(tempDiv);
-
-    await generatePDF(tempDiv, order);
-
-    document.body.removeChild(tempDiv);
-};
-
-
-window.exportAsPNG = async (orderId) => {
-    const order = orders.find(o => o.id === orderId);
-    if (!order) return;
-
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = generateInvoiceTemplate(order);
-    document.body.appendChild(tempDiv);
-
-    await generateImage(tempDiv, order);
-
-    document.body.removeChild(tempDiv);
-};
-
+ 
 
 
 
