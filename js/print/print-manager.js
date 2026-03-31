@@ -1,28 +1,34 @@
+// print-manager.js
+import { buildInvoiceHTML } from './template.js';
+import { printInvoice } from './print.service.js';
 import { generatePDF } from './pdf.service.js';
 import { generateImage } from './image.service.js';
-import { printInvoice } from './print.service.js';
 
-export function handlePrint(type, order) {
+// دالة مساعدة لإنشاء عنصر الفاتورة مؤقتاً (في حالة عدم وجود عنصر جاهز)
+export function createInvoiceElement(order, cartRows, totals) {
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = buildInvoiceHTML(order, cartRows, totals);
+    wrapper.style.position = 'fixed';
+    wrapper.style.top = '-9999px';
+    document.body.appendChild(wrapper);
+    return wrapper.firstElementChild;
+}
 
-    const el = document.querySelector('.invoice');
+// دوال رئيسية للاستخدام في الصفحات
+export async function handlePrint(order, cartRows, totals) {
+    const el = createInvoiceElement(order, cartRows, totals);
+    await printInvoice(el);
+    el.parentElement.remove();
+}
 
-    if (!el) {
-        alert('لا توجد فاتورة');
-        return;
-    }
+export async function handlePDF(order, cartRows, totals) {
+    const el = createInvoiceElement(order, cartRows, totals);
+    await generatePDF(el, order);
+    el.parentElement.remove();
+}
 
-    switch(type) {
-
-        case 'pdf':
-            return generatePDF(el, order);
-
-        case 'image':
-            return generateImage(el, order);
-
-        case 'print':
-            return printInvoice(el);
-
-        default:
-            console.warn('نوع غير معروف:', type);
-    }
+export async function handleImage(order, cartRows, totals) {
+    const el = createInvoiceElement(order, cartRows, totals);
+    await generateImage(el, order);
+    el.parentElement.remove();
 }
