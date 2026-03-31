@@ -4,7 +4,6 @@ import { printInvoice } from './print.service.js';
 import { generatePDF } from './pdf.service.js';
 import { generateImage } from './image.service.js';
 
-// دالة لبناء عنصر الفاتورة مؤقتاً
 function createInvoiceElement(order, cartRows, totals) {
   const wrapper = document.createElement('div');
   wrapper.innerHTML = buildInvoiceHTML(order, cartRows, totals);
@@ -17,7 +16,6 @@ function createInvoiceElement(order, cartRows, totals) {
   return wrapper.firstElementChild;
 }
 
-// دالة لاستخراج صفوف المنتجات والإجماليات من الطلب
 function prepareInvoiceData(order) {
   const cartRows = order.items.map(item => `
     <tr>
@@ -46,7 +44,6 @@ function prepareInvoiceData(order) {
   return { cartRows, totals };
 }
 
-// دالة مساعدة لتأمين النصوص
 function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/[&<>]/g, function(m) {
@@ -57,7 +54,6 @@ function escapeHtml(str) {
   });
 }
 
-// الدوال الرئيسية
 export async function printInvoiceHandler(order) {
   const { cartRows, totals } = prepareInvoiceData(order);
   const el = createInvoiceElement(order, cartRows, totals);
