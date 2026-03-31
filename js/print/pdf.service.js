@@ -1,47 +1,11 @@
+// pdf.service.js
 export async function generatePDF(element, order) {
-
-    const { jsPDF } = window.jspdf;
-
-    const pdf = new jsPDF({
-        orientation: 'p',
-        unit: 'mm',
-        format: 'a4'
-    });
-
-    const pageWidth = 210;
-    const pageHeight = 297;
-
-    const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff"
-    });
-
-    const imgWidth = pageWidth;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    const imgData = canvas.toDataURL('image/jpeg', 1.0);
-
-    let y = 0;
-
-    // 🔥 تقسيم فعلي
-    while (y < imgHeight) {
-
-        pdf.addImage(
-            imgData,
-            'JPEG',
-            0,
-            -y,
-            imgWidth,
-            imgHeight
-        );
-
-        y += pageHeight;
-
-        if (y < imgHeight) {
-            pdf.addPage();
-        }
-    }
-
-    pdf.save(`invoice_${order?.orderNumber || 'file'}.pdf`);
+    const opt = {
+        margin: [0.5, 0.5, 0.5, 0.5],
+        filename: `فاتورة_${order.orderNumber || order.id}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, letterRendering: true },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+    await html2pdf().set(opt).from(element).save();
 }
