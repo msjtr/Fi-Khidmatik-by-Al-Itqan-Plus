@@ -6,16 +6,16 @@
 
     <!-- التصميم -->
     <link rel="stylesheet" href="./css/design.css">
-
-    <!-- الطباعة -->
     <link rel="stylesheet" href="./css/print.css">
-</head>
 
+    <!-- المكتبات الخارجية -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
 <body>
 
 <div class="invoice-container">
     <div class="invoice">
-
         <div class="invoice-content" id="invoiceContent">
             <!-- يتم حقن الفاتورة هنا -->
         </div>
@@ -26,81 +26,91 @@
             <button class="btn-pdf" onclick="handlePDF()">📄 PDF</button>
             <button class="btn-png" onclick="handleImage()">🖼️ صورة</button>
         </div>
-
     </div>
 </div>
+
 <script type="module">
+    import { buildInvoiceHTML } from './js/print/template.js';
+    import { printInvoice } from './js/print/print.service.js';
+    import { generatePDF } from './js/print/pdf.service.js';
+    import { generateImage } from './js/print/image.service.js';
 
-import { buildInvoiceHTML } from './js/print/template.js';
-import { printInvoice } from './js/print/print.service.js';
-import { generatePDF } from './js/print/pdf.service.js';
-import { generateImage } from './js/print/image.service.js';
+    // بيانات الطلب (نموذج)
+    const order = {
+        orderNumber: "KF-2603290287",
+        date: "2026-03-29",
+        time: "14:30",
+        paymentMethod: "tamara",
+        paymentMethodName: "تمارا",
+        approvalCode: "TAM-123456",
+        shippingService: "سمسا",
 
-/* بيانات الطلب */
-const order = {
-    orderNumber: "KF-1234",
-    date: "2026-01-01",
-    time: "14:30",
-    payment: "مدى",
-    shipping: "سمسا",
+        customer: {
+            name: "محمد صالح جميعان الشمري",
+            phone: "966597771565",
+            email: "msjt301@gmail.com",
+            address: "المملكة العربية السعودية"
+        },
 
-    customer: {
-        name: "محمد الشمري",
-        phone: "0500000000",
-        email: "test@email.com"
-    },
+        items: [
+            {
+                name: "منتج تجريبي",
+                barcode: "PRD-001",
+                description: "وصف المنتج",
+                price: 1.00,
+                quantity: 1
+            }
+        ]
+    };
 
-    city: "تبوك",
-    street: "شارع الملك",
+    // تجهيز صفوف المنتجات
+    const cartRows = order.items.map(item => `
+        <tr>
+            <td>${item.name || '-'}</td>
+            <td>${item.barcode || '-'}</td>
+            <td>${item.description || '-'}</td>
+            <td>${item.quantity}</td>
+            <td>${item.price.toFixed(2)}</td>
+            <td>0</td>
+            <td>${(item.price * item.quantity).toFixed(2)}</td>
+        </tr>
+    `).join('');
 
-    items: [
-        { name: "منتج 1", price: 100, quantity: 1 },
-        { name: "منتج 2", price: 50, quantity: 2 }
-    ]
-};
+    // حساب الإجماليات
+    const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const tax = subtotal * 0.15;
+    const total = subtotal + tax;
 
-/* تجهيز الفاتورة */
-const invoiceEl = document.getElementById('invoiceContent');
+    const totals = {
+        subtotal: subtotal.toFixed(2) + ' ريال',
+        discount: '0 ريال',
+        tax: tax.toFixed(2) + ' ريال',
+        total: total.toFixed(2) + ' ريال'
+    };
 
-const cartRows = order.items.map(item => `
-<tr>
-    <td>${item.name}</td>
-    <td>-</td>
-    <td>-</td>
-    <td>${item.quantity}</td>
-    <td>${item.price}</td>
-    <td>0</td>
-    <td>${item.price * item.quantity}</td>
-</tr>
-`).join('');
+    // حقن الفاتورة
+    const invoiceEl = document.getElementById('invoiceContent');
+    invoiceEl.innerHTML = buildInvoiceHTML(order, cartRows, totals);
 
-const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-const tax = subtotal * 0.15;
-const total = subtotal + tax;
+    // تغيير عنوان الصفحة
+    document.title = `فاتورة - ${order.orderNumber}`;
 
-const totals = {
-    subtotal: subtotal.toFixed(2) + ' ريال',
-    discount: '0 ريال',
-    tax: tax.toFixed(2) + ' ريال',
-    total: total.toFixed(2) + ' ريال'
-};
+    // دوال الطباعة
+    window.handlePrint = async () => {
+        const invoiceBox = document.querySelector('.invoice');
+        await printInvoice(invoiceBox);
+    };
 
-invoiceEl.innerHTML = buildInvoiceHTML(order, cartRows, totals);
+    window.handlePDF = async () => {
+        const invoiceBox = document.querySelector('.invoice');
+        await generatePDF(invoiceBox, order);
+    };
 
-/* أوامر الطباعة */
-window.handlePrint = async () => {
-    const invoiceBox = document.querySelector('.invoice');
-    await printInvoice(invoiceBox);
-};
-
-window.handlePDF = async () => {
-    const invoiceBox = document.querySelector('.invoice');
-    await generatePDF(invoiceBox, order);
-};
-
-window.handleImage = async () => {
-    const invoiceBox = document.querySelector('.invoice');
-    await generateImage(invoiceBox, order);
-};
-
+    window.handleImage = async () => {
+        const invoiceBox = document.querySelector('.invoice');
+        await generateImage(invoiceBox, order);
+    };
 </script>
+
+</body>
+</html>
