@@ -1,43 +1,32 @@
-/* print.css */
 @media print {
+  @page {
+    size: A4;
+    margin: 0.5cm;
+  }
   body {
+    margin: 0;
+    padding: 0;
     background: white;
-    margin: 0;
-    padding: 0;
   }
-  .invoice-container {
-    margin: 0;
-    padding: 0;
-    box-shadow: none;
-    max-width: 100%;
-  }
-  .invoice {
+  .invoice-wrapper, .invoice-container, .invoice {
+    margin: 0 auto;
     padding: 0.2in;
-    margin: 0;
+    max-width: 100%;
+    box-shadow: none;
   }
-  .buttons {
+  .invoice-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .invoice-table th, .invoice-table td {
+    border: 1px solid #ccc;
+    padding: 6px;
+  }
+  .buttons, .no-print {
     display: none !important;
   }
-  .invoice-table th {
-    background: #ccc !important;
-    color: black !important;
+  * {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-  }
-  .from, .to, .payment-shipping-date, .totals, .contact {
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-  /* منع القص */
-  .invoice-content {
-    width: 100%;
-    overflow: visible;
-  }
-  table {
-    page-break-inside: avoid;
-  }
-  /* تحسين الهوامش */
-  @page {
-    margin: 0.5cm;
   }
 }
