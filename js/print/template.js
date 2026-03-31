@@ -10,6 +10,8 @@ function escapeHtml(text = '') {
 
 export function buildInvoiceHTML(order, cartRows, totals) {
 
+const base = window.location.origin;
+
 return `
 <div class="invoice" id="invoiceToPrint">
 
@@ -23,7 +25,7 @@ return `
 
 <!-- الشعار -->
 <div class="logo-center">
-    <img src="/images/logo.svg"
+    <img src="${base}/images/logo.svg"
     onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'logo-placeholder\\'>منصة في خدمتك</div>';"
     alt="شعار المنصة">
 </div>
@@ -34,7 +36,7 @@ return `
         رقم الفاتورة: <span>${escapeHtml(order?.orderNumber || 'FK-0000')}</span>
     </div>
     <div class="invoice-date">
-        ${(escapeHtml(order?.date || '-'))} ${(escapeHtml(order?.time || ''))}
+        ${escapeHtml(order?.date || '-')} ${escapeHtml(order?.time || '')}
     </div>
 </div>
 
@@ -65,8 +67,8 @@ return `
             ${order?.extra ? 'الرقم الإضافي: ' + escapeHtml(order.extra) + ' - ' : ''}
             ${order?.postal ? 'الرمز البريدي: ' + escapeHtml(order.postal) : ''}<br>
 
-            هاتف: ${escapeHtml(order?.phone || '-')}<br>
-            بريد: ${escapeHtml(order?.email || 'غير مدخل')}
+            هاتف: ${escapeHtml(order?.customer?.phone || order?.phone || '-')}<br>
+            بريد: ${escapeHtml(order?.customer?.email || order?.email || 'غير مدخل')}
         </p>
     </div>
 
@@ -97,7 +99,9 @@ return `
 </tr>
 </thead>
 
-<tbody>${cartRows || ''}</tbody>
+<tbody>
+${cartRows || `<tr><td colspan="7">لا توجد منتجات</td></tr>`}
+</tbody>
 </table>
 
 <!-- الإجماليات -->
