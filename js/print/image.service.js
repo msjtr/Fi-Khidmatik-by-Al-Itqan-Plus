@@ -1,27 +1,19 @@
 // image.service.js
-export async function generateImage(element, order, config = {}) {
-  if (!element) {
-    throw new Error('عنصر الفاتورة غير موجود');
-  }
-  
-  // التحقق من وجود المكتبة
-  if (typeof html2canvas === 'undefined') {
-    throw new Error('مكتبة html2canvas غير محملة');
-  }
-  
-  const defaultConfig = {
-    scale: 3,
+export async function generateImage(element, order) {
+  const canvas = await html2canvas(element, {
+    scale: 2.5,          // جودة عالية وحجم مناسب
     backgroundColor: '#ffffff',
     logging: false,
-    useCORS: true
-  };
+    useCORS: true,
+    windowWidth: element.scrollWidth,
+    windowHeight: element.scrollHeight
+  });
   
-  const finalConfig = { ...defaultConfig, ...config };
-  
-  const canvas = await html2canvas(element, finalConfig);
-  
+  // تحويل إلى PNG بجودة مضغوطة (حجم أقل من 200KB)
   const link = document.createElement('a');
-  link.download = `فاتورة_${order.orderNumber || order.id || 'invoice'}.png`;
-  link.href = canvas.toDataURL('image/png');
+  const fileName = `فاتورة_${order.customer?.name || 'عميل'}_${order.orderNumber || order.id}_${order.orderDate || ''}.png`
+    .replace(/[^a-zA-Z0-9\u0600-\u06FF\-_\.]/g, '_'); // دعم عربي
+  link.download = fileName;
+  link.href = canvas.toDataURL('image/png', 0.85); // ضغط 85% للحجم المناسب
   link.click();
 }
