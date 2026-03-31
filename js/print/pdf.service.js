@@ -1,31 +1,38 @@
-export async function generatePDF(element, order) {
+export function generatePDF(element) {
 
-    const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true
-    });
+    const win = window.open('', '_blank');
 
-    const imgData = canvas.toDataURL('image/png');
+    win.document.write(`
+    <html dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <title>فاتورة</title>
 
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('p', 'mm', 'a4');
+        <link rel="stylesheet" href="/css/design.css">
+        <link rel="stylesheet" href="/css/print.css">
 
-    const pageWidth = 210;
-    const pageHeight = 297;
+        <style>
+            @page {
+                size: A4;
+                margin: 10mm;
+            }
 
-    const imgWidth = pageWidth;
-    const imgHeight = canvas.height * imgWidth / canvas.width;
+            body {
+                margin: 0;
+            }
+        </style>
+    </head>
 
-    let y = 0;
+    <body>
+        ${element.outerHTML}
+    </body>
+    </html>
+    `);
 
-    while (y < imgHeight) {
-        pdf.addImage(imgData, 'PNG', 0, -y, imgWidth, imgHeight);
-        y += pageHeight;
+    win.document.close();
 
-        if (y < imgHeight) {
-            pdf.addPage();
-        }
-    }
-
-    pdf.save(`invoice_${order?.orderNumber || 'file'}.pdf`);
+    win.onload = () => {
+        win.focus();
+        win.print();
+    };
 }
