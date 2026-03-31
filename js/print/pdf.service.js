@@ -1,53 +1,55 @@
 // js/print/pdf.service.js
 
+// تحميل المكتبات مباشرة
+const script1 = document.createElement('script');
+script1.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+document.head.appendChild(script1);
+
+const script2 = document.createElement('script');
+script2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+document.head.appendChild(script2);
+
+// انتظار تحميل المكتبات
+function waitForLibraries() {
+    return new Promise((resolve) => {
+        const checkInterval = setInterval(() => {
+            if (window.html2canvas && window.jspdf) {
+                clearInterval(checkInterval);
+                resolve();
+            }
+        }, 100);
+    });
+}
+
 /**
- * تحويل عنصر HTML إلى PDF
- * @param {string|HTMLElement} element - العنصر المراد تحويله (id أو عنصر DOM)
- * @param {string} filename - اسم ملف PDF
- * @returns {Promise<void>}
+ * إنشاء PDF من عنصر HTML
  */
-export async function generatePDF(element, filename = 'document.pdf') {
+export async function generatePDF(elementId, filename = 'document.pdf') {
     try {
-        // استيراد المكتبات ديناميكياً
-        const [html2canvas, jsPDF] = await Promise.all([
-            import('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
-            import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
-        ]);
-        
-        const html2canvasModule = html2canvas.default || html2canvas;
-        const jsPDFModule = jsPDF.default || jsPDF;
+        // انتظار تحميل المكتبات
+        await waitForLibraries();
         
         // الحصول على العنصر
-        const targetElement = typeof element === 'string' 
-            ? document.getElementById(element) 
-            : element;
-        
-        if (!targetElement) {
-            throw new Error('العنصر المطلوب غير موجود');
+        const element = document.getElementById(elementId);
+        if (!element) {
+            throw new Error('العنصر غير موجود: ' + elementId);
         }
         
-        // انتظار تحميل الصور
-        await waitForImages(targetElement);
+        // إظهار رسالة للمستخدم
+        showLoadingMessage('جاري إنشاء PDF...');
         
-        // إضافة كلاس خاص للطباعة
-        targetElement.classList.add('pdf-printing');
-        
-        // إنشاء صورة من العنصر
-        const canvas = await html2canvasModule(targetElement, {
+        // تحويل العنصر إلى صورة
+        const canvas = await window.html2canvas(element, {
             scale: 2,
-            useCORS: true,
+            backgroundColor: '#ffffff',
             logging: false,
-            windowWidth: targetElement.scrollWidth,
-            windowHeight: targetElement.scrollHeight,
-            backgroundColor: '#ffffff'
+            useCORS: true
         });
         
-        // إزالة كلاس الطباعة
-        targetElement.classList.remove('pdf-printing');
-        
-        // إعدادات PDF
+        // تحويل الصورة إلى PDF
         const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDFModule({
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({
             orientation: 'portrait',
             unit: 'mm',
             format: 'a4'
@@ -58,14 +60,14 @@ export async function generatePDF(element, filename = 'document.pdf') {
         const imgWidth = pdfWidth;
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
         
+        // إضافة الصورة إلى PDF
         let heightLeft = imgHeight;
         let position = 0;
         
-        // إضافة الصفحة الأولى
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pdfHeight;
         
-        // إضافة صفحات إضافية
+        // إضافة صفحات إضافية إذا لزم الأمر
         while (heightLeft > 0) {
             position = heightLeft - imgHeight;
             pdf.addPage();
@@ -76,67 +78,50 @@ export async function generatePDF(element, filename = 'document.pdf') {
         // حفظ الملف
         pdf.save(filename);
         
+        // إخفاء رسالة التحميل
+        hideLoadingMessage();
+        
         return true;
         
     } catch (error) {
         console.error('خطأ في إنشاء PDF:', error);
+        hideLoadingMessage();
+        alert('حدث خطأ: ' + error.message);
         throw error;
     }
 }
 
-/**
- * انتظار تحميل جميع الصور
- */
-function waitForImages(element) {
-    const images = Array.from(element.querySelectorAll('img'));
-    const promises = images.map(img => {
-        if (img.complete) return Promise.resolve();
-        return new Promise((resolve) => {
-            img.onload = resolve;
-            img.onerror = resolve;
-        });
-    });
-    return Promise.all(promises);
-}
-
-/**
- * طباعة عنصر مباشرة
- */
-export async function printElement(element) {
-    const targetElement = typeof element === 'string' 
-        ? document.getElementById(element) 
-        : element;
-    
-    if (!targetElement) {
-        throw new Error('العنصر المطلوب غير موجود');
+// دالة لإظهار رسالة التحميل
+function showLoadingMessage(message) {
+    let loadingDiv = document.getElementById('pdf-loading');
+    if (!loadingDiv) {
+        loadingDiv = document.createElement('div');
+        loadingDiv.id = 'pdf-loading';
+        loadingDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 9999;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        `;
+        document.body.appendChild(loadingDiv);
     }
-    
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>طباعة</title>
-            <style>
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                body { padding: 20px; font-family: Arial, sans-serif; }
-                @media print {
-                    body { padding: 0; }
-                }
-            </style>
-        </head>
-        <body>
-            ${targetElement.outerHTML}
-        </body>
-        </html>
-    `);
-    
-    printWindow.document.close();
-    printWindow.print();
+    loadingDiv.innerHTML = message + '<br><div style="margin-top:10px;">⏳</div>';
+    loadingDiv.style.display = 'block';
 }
 
-// تصدير افتراضي للتوافق
-export default {
-    generatePDF,
-    printElement
-};
+// دالة لإخفاء رسالة التحميل
+function hideLoadingMessage() {
+    const loadingDiv = document.getElementById('pdf-loading');
+    if (loadingDiv) {
+        loadingDiv.style.display = 'none';
+    }
+}
+
+export default { generatePDF };
