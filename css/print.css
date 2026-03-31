@@ -5,30 +5,17 @@
         margin: 10mm;
     }
 
-    html, body {
+    body {
         width: 210mm;
-        background: #fff !important;
     }
 
     .invoice {
-        width: 100% !important;
         page-break-inside: avoid;
     }
 
-    table {
-        page-break-inside: auto;
-    }
-
-    tr {
+    .totals-wrapper,
+    .contact-bar,
+    .thanks {
         page-break-inside: avoid;
-    }
-
-    .buttons {
-        display: none !important;
-    }
-
-    * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
     }
 }
