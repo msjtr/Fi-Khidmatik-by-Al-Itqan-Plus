@@ -1,91 +1,86 @@
-/* ================= RESET ================= */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-html, body {
-    margin: 0 !important;
-    padding: 0 !important;
-    background: #f5f5f5;
-    font-family: Arial, sans-serif;
-}
-
-/* ================= CONTAINER ================= */
-.invoice-container {
-    max-width: 900px;
-    margin: 20px auto;
-}
-
-/* ================= INVOICE ================= */
-.invoice {
-    background: #fff;
-    border-radius: 12px;
-    padding: 20px;
-}
-
-/* 🔥 مهم جداً لمنع القص */
-.invoice,
-.invoice-content,
-#invoiceToPrint {
-    overflow: visible !important;
-}
-
-/* ================= TABLE ================= */
-.products-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.products-table th,
-.products-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center;
-}
-
-/* ================= BUTTONS ================= */
-.buttons {
-    text-align: center;
-    margin-top: 20px;
-}
-
-button {
-    padding: 10px 20px;
-    border: none;
-    margin: 5px;
-    cursor: pointer;
-}
-
-.btn-print { background: blue; color: #fff; }
-.btn-pdf { background: red; color: #fff; }
-.btn-png { background: green; color: #fff; }
-
-/* ================= PRINT FIX ================= */
 @media print {
 
+    /* 🔥 حجم الصفحة */
+    @page {
+        size: A4;
+        margin: 8mm;
+    }
+
     html, body {
+        width: 210mm;
         background: #fff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 12px;
+    }
+
+    /* 🔥 تصغير عام (هذا أهم سطر) */
+    body {
+        zoom: 0.80;
+    }
+
+    /* 🔥 الحاوية */
+    .invoice-container {
+        max-width: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
     }
 
-    .invoice-container {
-        max-width: 100% !important;
-        margin: 0 !important;
-    }
-
+    /* 🔥 الفاتورة */
     .invoice {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 5px !important;
+
         border-radius: 0 !important;
         box-shadow: none !important;
+
+        page-break-inside: avoid;
+    }
+
+    /* 🔥 منع التقطيع */
+    .invoice-content,
+    .invoice-parties,
+    .totals-wrapper,
+    .contact-bar,
+    .thanks {
+        page-break-inside: avoid;
+    }
+
+    table {
+        page-break-inside: auto;
+    }
+
+    tr {
+        page-break-inside: avoid;
+    }
+
+    /* 🔥 تصغير الشعار */
+    .logo-center img {
+        max-height: 110px !important;
+    }
+
+    /* 🔥 تقليل المسافات */
+    .invoice-parties {
+        gap: 10px !important;
+    }
+
+    .products-table th,
+    .products-table td {
+        padding: 6px !important;
+        font-size: 11px;
+    }
+
+    .totals-wrapper {
         padding: 10px !important;
     }
 
+    /* 🔥 إخفاء الأزرار */
     .buttons {
         display: none !important;
     }
 
+    /* 🔥 الألوان */
     * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
