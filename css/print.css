@@ -1,73 +1,35 @@
+/* print.css */
 @media print {
-
-    @page {
-        size: A4;
-        margin: 0;
-    }
-
-    html, body {
-        width: 794px;
-        margin: 0;
+    body {
+        background: white;
         padding: 0;
-        background: #fff !important;
-        overflow: visible;
+        margin: 0;
     }
 
-    /* 🔥 الفاتورة */
-    .invoice {
-        width: 794px;
-        min-height: 1123px;
-        padding: 15px !important;
-        margin: 0 !important;
-        border-radius: 0 !important;
-        box-shadow: none !important;
+    .invoice-container {
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
     }
 
-    /* 🔥 ترتيب المحتوى */
-    .invoice-content {
-        display: flex;
-        flex-direction: column;
-        min-height: 100%;
-    }
-
-    /* 🔥 الفوتر تحت */
-    .totals-wrapper {
-        margin-top: auto;
-    }
-
-    /* 🔥 الشعار */
-    .logo-center img {
-        max-height: 100px !important;
-    }
-
-    /* 🔥 تقليل المسافات */
-    .invoice-parties {
-        gap: 10px !important;
-    }
-
-    .products-table th,
-    .products-table td {
-        padding: 6px !important;
-        font-size: 11px;
-    }
-
-    /* 🔥 منع التقسيم بشكل ذكي */
-    .invoice,
-    .invoice-content,
-    .invoice-parties,
-    .totals-wrapper,
-    .contact-bar {
-        page-break-inside: avoid;
-    }
-
-    /* 🔥 إخفاء الأزرار */
-    .buttons {
+    .buttons, .no-print {
         display: none !important;
     }
 
-    /* 🔥 الألوان */
-    * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
+    .invoice-table th {
+        background-color: #ccc !important;
+        color: black !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .from, .to {
+        background-color: #f5f5f5 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .totals {
+        background-color: #f9f9f9 !important;
     }
 }
