@@ -2,12 +2,13 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>فاتورة</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فاتورة - نظام الفواتير</title>
+    
     <!-- التصميم -->
     <link rel="stylesheet" href="./css/design.css">
-    <link rel="stylesheet" href="./css/print.css">
-
+    <link rel="stylesheet" href="./css/print.css" media="print">
+    
     <!-- المكتبات الخارجية -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -17,10 +18,8 @@
 <div class="invoice-container">
     <div class="invoice">
         <div class="invoice-content" id="invoiceContent">
-            <!-- يتم حقن الفاتورة هنا -->
+            <!-- سيتم حقن الفاتورة هنا -->
         </div>
-
-        <!-- أزرار التحكم -->
         <div class="buttons no-print">
             <button class="btn-print" onclick="handlePrint()">🖨️ طباعة</button>
             <button class="btn-pdf" onclick="handlePDF()">📄 PDF</button>
@@ -37,14 +36,15 @@
 
     // بيانات الطلب (نموذج)
     const order = {
+        id: "KF-2603290287",
         orderNumber: "KF-2603290287",
-        date: "2026-03-29",
-        time: "14:30",
+        orderDate: "2026-03-29",
+        orderTime: "14:30",
         paymentMethod: "tamara",
         paymentMethodName: "تمارا",
-        approvalCode: "TAM-123456",
+        approvalCode: "14141414",
         shippingService: "سمسا",
-
+        
         customer: {
             name: "محمد صالح جميعان الشمري",
             phone: "966597771565",
@@ -77,7 +77,7 @@
     `).join('');
 
     // حساب الإجماليات
-    const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const subtotal = order.items.reduce((s, i) => s + (i.price * i.quantity), 0);
     const tax = subtotal * 0.15;
     const total = subtotal + tax;
 
@@ -88,11 +88,9 @@
         total: total.toFixed(2) + ' ريال'
     };
 
-    // حقن الفاتورة
+    // عرض الفاتورة
     const invoiceEl = document.getElementById('invoiceContent');
     invoiceEl.innerHTML = buildInvoiceHTML(order, cartRows, totals);
-
-    // تغيير عنوان الصفحة
     document.title = `فاتورة - ${order.orderNumber}`;
 
     // دوال الطباعة
