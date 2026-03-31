@@ -1,31 +1,23 @@
+/* دعم الطباعة - إضافات مهمة */
 @media print {
-  @page {
-    size: A4;
-    margin: 0.5cm;
-  }
   body {
+    background: white;
     margin: 0;
     padding: 0;
-    background: white;
   }
-  .invoice-wrapper, .invoice-container, .invoice {
-    margin: 0 auto;
-    padding: 0.2in;
-    max-width: 100%;
+  
+  .invoice-container {
     box-shadow: none;
+    border: none;
   }
-  .invoice-table {
-    width: 100%;
-    border-collapse: collapse;
+  
+  .invoice {
+    padding: 0;
   }
-  .invoice-table th, .invoice-table td {
-    border: 1px solid #ccc;
-    padding: 6px;
-  }
-  .buttons, .no-print {
-    display: none !important;
-  }
-  * {
+  
+  /* منع ظهور الخلفيات الملونة إن أمكن */
+  .from, .to, .payment-shipping, .date-time-box, .totals {
+    background-color: #f8f8f8 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
