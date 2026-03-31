@@ -1,23 +1,23 @@
-// template.js - بناء الفاتورة بالمحتوى الفعلي
+// template.js
 export function buildInvoiceHTML(order, cartRowsHTML, totals) {
   // بيانات ثابتة
   const freelancerCert = "FL-765735204";
   const taxNumber = "312495447600003";
   const companyName = "منصة في خدمتك";
-  const companyAddress = "المملكة العربية السعودية، حائل - حي النقرة - شارع سعد المشاط - مبنى 3085";
+  const companyAddress = "المملكة العربية السعودية - حي النقرة - شارع سعد المشاط";
   const companyExtra = "الرقم الإضافي: 7718 - الرمز البريدي: 55431";
   const companyContact = "🌐 www.khidmatik.com<br>✉️ info@fi-khidmatik.com<br>📞 +966597771565";
 
-  // بيانات العميل
   const customer = order.customer || {};
   const customerName = customer.name || "غير محدد";
   const customerPhone = customer.phone || "";
   const customerEmail = customer.email || "";
   const customerAddress = customer.address || "المملكة العربية السعودية";
 
-  // تاريخ ووقت الطلب
+  // التاريخ والوقت
   const orderDate = order.orderDate ? new Date(order.orderDate).toLocaleDateString('ar-SA') : "-";
   const orderTime = order.orderTime || "-";
+  const dateTimeString = `${orderDate} ${orderTime}`;
 
   // الدفع والشحن
   let paymentText = order.paymentMethodName || order.paymentMethod || "-";
@@ -55,14 +55,10 @@ export function buildInvoiceHTML(order, cartRowsHTML, totals) {
         </div>
       </div>
 
-      <div class="payment-shipping">
+      <div class="payment-shipping-date">
         <div><strong>طريقة الدفع:</strong> ${paymentText} ${approvalHtml}</div>
         <div><strong>خدمة الشحن:</strong> ${shippingText}</div>
-      </div>
-
-      <div style="margin-bottom: 1rem; font-size: 0.85rem; color: #4b5563;">
-        <span><strong>تاريخ الطلب:</strong> ${orderDate}</span> &nbsp;|&nbsp;
-        <span><strong>وقت الطلب:</strong> ${orderTime}</span>
+        <div><strong>تاريخ الطلب:</strong> ${dateTimeString}</div>
       </div>
 
       <table class="invoice-table">
