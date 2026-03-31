@@ -1,4 +1,3 @@
-/* design.css - تصميم الفاتورة المتكامل */
 * {
   margin: 0;
   padding: 0;
@@ -6,7 +5,7 @@
 }
 
 body {
-  font-family: 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+  font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
   background: #f0f2f5;
   padding: 2rem;
   direction: rtl;
@@ -25,13 +24,11 @@ body {
   padding: 2rem;
 }
 
-/* محتوى الفاتورة */
 .invoice-content {
   direction: rtl;
   font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
 }
 
-/* رأس الفاتورة */
 .invoice-header {
   display: flex;
   justify-content: space-between;
@@ -57,7 +54,6 @@ body {
   color: #1e40af;
 }
 
-/* معلومات الأطراف */
 .parties {
   display: flex;
   gap: 2rem;
@@ -87,20 +83,28 @@ body {
   font-size: 1rem;
 }
 
-/* الدفع والشحن والتاريخ */
-.payment-shipping-date {
+.payment-shipping {
   display: flex;
   justify-content: space-between;
   background: #f1f5f9;
   padding: 0.8rem 1rem;
   border-radius: 10px;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   flex-wrap: wrap;
   gap: 1rem;
-  font-size: 0.9rem;
 }
 
-/* الجدول */
+.date-time-box {
+  display: flex;
+  justify-content: space-between;
+  background: #f1f5f9;
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
 .invoice-table {
   width: 100%;
   border-collapse: collapse;
@@ -123,13 +127,12 @@ body {
   vertical-align: middle;
 }
 
-/* الإجماليات */
 .totals {
   background: #f8fafc;
   padding: 1rem 1.5rem;
   border-radius: 12px;
   margin-bottom: 2rem;
-  width: 320px;
+  width: 280px;
   margin-right: auto;
 }
 
@@ -149,7 +152,6 @@ body {
   padding-top: 0.5rem;
 }
 
-/* جهات الاتصال */
 .contact {
   text-align: center;
   background: #f1f5f9;
@@ -160,7 +162,6 @@ body {
   line-height: 1.6;
 }
 
-/* شكر */
 .thanks {
   text-align: center;
   font-size: 0.9rem;
@@ -170,7 +171,6 @@ body {
   margin-top: 0.5rem;
 }
 
-/* الأزرار */
 .buttons {
   display: flex;
   justify-content: center;
@@ -190,18 +190,52 @@ body {
   transition: all 0.2s;
 }
 
-.btn-print { background: #2563eb; color: white; }
-.btn-pdf { background: #dc2626; color: white; }
-.btn-png { background: #10b981; color: white; }
-
+.btn-print {
+  background: #2563eb;
+  color: white;
+}
+.btn-pdf {
+  background: #dc2626;
+  color: white;
+}
+.btn-png {
+  background: #10b981;
+  color: white;
+}
 .buttons button:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-.no-print { display: block; }
+.no-print {
+  display: block;
+}
+
 @media print {
-  .no-print { display: none !important; }
-  .invoice-container { box-shadow: none; padding: 0; margin: 0; }
-  .invoice { padding: 0.2in; }
+  body {
+    background: white;
+    margin: 0;
+    padding: 0;
+  }
+  .invoice-container {
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+  .invoice {
+    padding: 0.2in;
+  }
+  .buttons, .no-print {
+    display: none !important;
+  }
+  .invoice-table th {
+    background: #ccc !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .from, .to, .payment-shipping, .date-time-box, .totals, .contact {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
 }
