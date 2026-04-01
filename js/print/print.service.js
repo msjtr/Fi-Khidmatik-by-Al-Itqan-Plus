@@ -1,128 +1,86 @@
 // js/print/print.service.js
 
 export async function printInvoice(element) {
-  if (!element) {
-    console.error('❌ عنصر الفاتورة غير موجود');
-    return;
-  }
-
-  const invoiceHTML = element.outerHTML;
-
-  let stylesHTML = '';// js/print/print.service.js
-import { generatePDF, printElement } from './pdf.service.js';
-
-class PrintService {
-    constructor() {
-        this.printContainer = null;
-        this.init();
+    if (!element) {
+        throw new Error('عنصر الفاتورة غير موجود');
     }
     
-    init() {
-        // إنشاء حاوية الطباعة إذا لم تكن موجودة
-        if (!document.getElementById('print-container')) {
-            this.printContainer = document.createElement('div');
-            this.printContainer.id = 'print-container';
-            this.printContainer.style.position = 'absolute';
-            this.printContainer.style.left = '-9999px';
-            this.printContainer.style.top = '-9999px';
-            document.body.appendChild(this.printContainer);
-        } else {
-            this.printContainer = document.getElementById('print-container');
-        }
-    }
-    
-    /**
-     * طباعة فاتورة
-     */
-    async printInvoice(invoiceHTML, filename = 'invoice.pdf') {
+    return new Promise((resolve, reject) => {
         try {
-            // تنظيف الحاوية
-            this.printContainer.innerHTML = '';
+            // حفظ المحتوى الأصلي
+            const originalTitle = document.title;
+            document.title = 'طباعة فاتورة';
             
-            // إضافة المحتوى
-            this.printContainer.innerHTML = invoiceHTML;
+            // فتح نافذة الطباعة
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                throw new Error('لا يمكن فتح نافذة الطباعة');
+            }
             
-            // انتظار قليلاً للتأكد من تحميل المحتوى
-            await this.delay(100);
+            // نسخ محتوى الفاتورة مع التنسيقات
+            const invoiceHTML = element.outerHTML;
+            const styles = document.querySelectorAll('style, link[rel="stylesheet"]');
+            let stylesHTML = '';
+            styles.forEach(style => {
+                if (style.tagName === 'STYLE') {
+                    stylesHTML += `<style>${style.innerHTML}</style>`;
+                } else if (style.tagName === 'LINK') {
+                    stylesHTML += `<link rel="stylesheet" href="${style.href}">`;
+                }
+            });
             
-            // إنشاء PDF
-            await generatePDF(this.printContainer, filename);
+            // كتابة محتوى نافذة الطباعة
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html dir="rtl">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>فاتورة</title>
+                    ${stylesHTML}
+                    <style>
+                        body {
+                            padding: 20px;
+                            margin: 0;
+                            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+                        }
+                        .buttons, .no-print {
+                            display: none !important;
+                        }
+                        @media print {
+                            body {
+                                padding: 0;
+                                margin: 0;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${invoiceHTML}
+                    <div class="no-print" style="text-align: center; margin-top: 20px;">
+                        <button onclick="window.print()" style="padding: 10px 20px; margin: 10px;">طباعة</button>
+                        <button onclick="window.close()" style="padding: 10px 20px; margin: 10px;">إغلاق</button>
+                    </div>
+                </body>
+                </html>
+            `);
             
-            // تنظيف
-            this.printContainer.innerHTML = '';
+            printWindow.document.close();
             
-            return true;
+            // انتظار تحميل المحتوى ثم فتح الطباعة
+            printWindow.onload = () => {
+                setTimeout(() => {
+                    printWindow.focus();
+                    printWindow.print();
+                    resolve(true);
+                }, 500);
+            };
+            
+            // استعادة العنوان
+            document.title = originalTitle;
+            
         } catch (error) {
-            console.error('خطأ في طباعة الفاتورة:', error);
-            throw error;
+            console.error('خطأ في الطباعة:', error);
+            reject(error);
         }
-    }
-    
-    /**
-     * طباعة مباشرة
-     */
-    async directPrint(element) {
-        return await printElement(element);
-    }
-    
-    /**
-     * تأخير بسيط
-     */
-    delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
+    });
 }
-
-// إنشاء نسخة واحدة من الخدمة
-const printService = new PrintService();
-
-// تصدير الخدمة والدوال
-export default printService;
-export { generatePDF, printElement };
-  const styleNodes = document.querySelectorAll('link[rel="stylesheet"], style');
-  styleNodes.forEach(style => {
-    if (style.tagName === 'LINK' && style.href) {
-      stylesHTML += `<link rel="stylesheet" href="${style.href}" media="print">\n`;
-    } else if (style.tagName === 'STYLE') {
-      stylesHTML += `<style>${style.innerHTML}</style>\n`;
-    }
-  });
-
-  const extraStyles = `
-    <style>
-      @media print {
-        @page { size: A4; margin: 0.5cm; }
-        body { margin:0; padding:20px; background:white; direction:rtl; }
-        .invoice-wrapper, .invoice-container, .invoice { margin:0 auto; padding:0; max-width:100%; }
-        .invoice-table { width:100%; border-collapse:collapse; }
-        .invoice-table th, .invoice-table td { border:1px solid #ccc; padding:6px; }
-        .buttons, .no-print { display:none !important; }
-        * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-      }
-    </style>
-  `;
-
-  const printWindow = window.open('', '_blank', 'width=900,height=700,toolbar=yes,scrollbars=yes,resizable=yes');
-  if (!printWindow) {
-    alert('يرجى السماح بفتح النوافذ المنبثقة');
-    return;
-  }
-
-  printWindow.document.write(`
-    <!DOCTYPE html>
-    <html dir="rtl">
-    <head><meta charset="UTF-8"><title>فاتورة</title>${stylesHTML}${extraStyles}</head>
-    <body style="margin:0; padding:20px; background:white;">
-      <div style="max-width:1100px; margin:0 auto;">${invoiceHTML}</div>
-      <script>
-        window.onload = () => { setTimeout(() => { window.print(); window.onafterprint = () => window.close(); }, 500); };
-      <\/script>
-    </body>
-    </html>
-  `);
-  printWindow.document.close();
-  printWindow.focus();
-}
-
-// لا تحتاج لهذا السطر المكرر:
-// export { printInvoice };
