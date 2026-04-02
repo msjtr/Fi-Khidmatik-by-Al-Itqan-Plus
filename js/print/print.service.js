@@ -12,18 +12,26 @@ export async function printInvoice(element) {
                 throw new Error('لا يمكن فتح نافذة الطباعة');
             }
             
+            // جمع جميع الأنماط من الصفحة الرئيسية
             const styles = document.querySelectorAll('style, link[rel="stylesheet"]');
             let stylesHTML = '';
             styles.forEach(style => {
                 if (style.tagName === 'STYLE') {
                     stylesHTML += `<style>${style.innerHTML}</style>`;
-                } else if (style.tagName === 'LINK') {
-                    stylesHTML += `<link rel="stylesheet" href="${style.href}">`;
+                } else if (style.tagName === 'LINK' && style.href) {
+                    // تحويل المسارات النسبية إلى مطلقة
+                    let href = style.href;
+                    if (!href.startsWith('http') && !href.startsWith('//')) {
+                        href = window.location.origin + (href.startsWith('/') ? href : '/' + href);
+                    }
+                    stylesHTML += `<link rel="stylesheet" href="${href}">`;
                 }
             });
             
+            // أنماط إضافية محسنة للطباعة والشعار
             const additionalStyles = `
                 <style>
+                    /* تنسيق الشعار */
                     .logo-circle {
                         width: 80px;
                         height: 80px;
@@ -40,28 +48,64 @@ export async function printInvoice(element) {
                         width: 50px;
                         height: 50px;
                         object-fit: contain;
+                        display: block;
                     }
-                    @media print {
-                        .logo-circle {
-                            print-color-adjust: exact;
-                            -webkit-print-color-adjust: exact;
-                        }
+                    
+                    /* إصلاح المسارات النسبية للصور */
+                    img[src^="/"] {
+                        src: attr(src url);
                     }
-                    .buttons, .no-print {
-                        display: none !important;
-                    }
+                    
+                    /* تنسيق عام */
                     body {
                         padding: 20px;
                         margin: 0;
                         font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+                        background: white;
                     }
+                    
+                    /* تنسيق الفاتورة */
+                    .invoice {
+                        max-width: 800px;
+                        margin: 0 auto;
+                        background: white;
+                        padding: 20px;
+                    }
+                    
+                    /* إخفاء أزرار الطباعة */
+                    .buttons, .no-print {
+                        display: none !important;
+                    }
+                    
+                    /* إعدادات الطباعة */
                     @media print {
                         body {
                             padding: 0;
+                            margin: 0;
+                        }
+                        .invoice {
+                            margin: 0;
+                            padding: 15px;
+                        }
+                        .logo-circle {
+                            print-color-adjust: exact;
+                            -webkit-print-color-adjust: exact;
+                        }
+                        .logo-circle img {
+                            print-color-adjust: exact;
+                            -webkit-print-color-adjust: exact;
                         }
                     }
                 </style>
             `;
+            
+            // الحصول على HTML الفاتورة مع إصلاح المسارات
+            let invoiceHTML = element.outerHTML;
+            
+            // إصلاح مسارات الصور النسبية لتصبح مطلقة
+            invoiceHTML = invoiceHTML.replace(/src="\/([^"]+)"/g, (match, path) => {
+                return `src="${window.location.origin}/${path}"`;
+            });
             
             printWindow.document.write(`
                 <!DOCTYPE html>
@@ -69,14 +113,15 @@ export async function printInvoice(element) {
                 <head>
                     <meta charset="UTF-8">
                     <title>طباعة فاتورة</title>
+                    <base href="${window.location.origin}/">
                     ${stylesHTML}
                     ${additionalStyles}
                 </head>
                 <body>
-                    ${element.outerHTML}
+                    ${invoiceHTML}
                     <div class="no-print" style="text-align: center; margin-top: 20px;">
-                        <button onclick="window.print()" style="padding: 10px 20px; margin: 5px; cursor: pointer;">🖨️ طباعة</button>
-                        <button onclick="window.close()" style="padding: 10px 20px; margin: 5px; cursor: pointer;">❌ إغلاق</button>
+                        <button onclick="window.print()" style="padding: 10px 20px; margin: 5px; cursor: pointer; background: #3b82f6; color: white; border: none; border-radius: 5px;">🖨️ طباعة</button>
+                        <button onclick="window.close()" style="padding: 10px 20px; margin: 5px; cursor: pointer; background: #ef4444; color: white; border: none; border-radius: 5px;">❌ إغلاق</button>
                     </div>
                 </body>
                 </html>
@@ -84,12 +129,19 @@ export async function printInvoice(element) {
             
             printWindow.document.close();
             
+            // انتظار تحميل جميع الموارد
             printWindow.onload = () => {
                 setTimeout(() => {
                     printWindow.focus();
                     printWindow.print();
                     resolve(true);
-                }, 500);
+                }, 800);
+            };
+            
+            // معالجة الأخطاء
+            printWindow.onerror = (error) => {
+                console.error('خطأ في نافذة الطباعة:', error);
+                reject(new Error('حدث خطأ أثناء تحميل نافذة الطباعة'));
             };
             
         } catch (error) {
