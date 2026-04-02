@@ -80,3 +80,21 @@ export const setSettings = (id, data) => setDoc(doc(db, 'settings', id), data, {
 
 // ===================== تصدير الأساسيات =====================
 export { db, collection, addDoc, doc, getDoc, getDocs, updateDoc, deleteDoc, setDoc };
+
+
+// ===================== الطباعة المركزية =====================
+
+// 🖨️ طباعة مباشرة
+export function printOrderById(orderId) {
+    window.open(`print.html?id=${orderId}&auto=print`, "_blank");
+}
+
+// 📄 PDF
+export function printOrderPDFById(orderId) {
+    window.open(`print.html?id=${orderId}&auto=pdf`, "_blank");
+}
+
+// 🖼️ صورة PNG
+export function printOrderPNGById(orderId) {
+    window.open(`print.html?id=${orderId}&auto=png`, "_blank");
+}
