@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ar">
 <head>
@@ -22,17 +23,21 @@ body {
 .logo-circle {
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+  background: #1e3a8a; /* 🔥 ثابت للطباعة */
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .logo-circle img {
   width: 50px;
+  height: auto;
+  display: block;
 }
 
+/* النص */
 .header-center {
   text-align: center;
   flex: 1;
@@ -58,6 +63,7 @@ body {
 .row {
   display: flex;
   justify-content: space-between;
+  gap: 20px;
 }
 
 /* جدول */
@@ -75,8 +81,38 @@ th, td {
 
 img.product {
   width: 40px;
-  height: 40px;
+  height: auto;
   object-fit: contain;
+  display: block;
+}
+
+/* 🔥 إصلاح الطباعة */
+@media print {
+
+  body {
+    margin: 0;
+    padding: 10px;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    page-break-inside: avoid;
+    display: block;
+  }
+
+  table {
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+  }
+
+  .row {
+    break-inside: avoid;
+  }
+
 }
 </style>
 </head>
@@ -87,7 +123,7 @@ img.product {
 <div class="invoice-header">
 
   <div class="logo-circle">
-    <img src="logo.png">
+    <img src="./logo.png">
   </div>
 
   <div class="header-center">
@@ -156,7 +192,7 @@ img.product {
 
 <tr>
   <td>1</td>
-  <td><img class="product" src="product.png"></td>
+  <td><img class="product" src="./product.png"></td>
   <td>خدمة تصميم</td>
   <td>PRD-001</td>
   <td>1</td>
@@ -202,13 +238,34 @@ img.product {
 <div style="text-align:center;">شكراً لتسوقكم معنا</div>
 
 <script>
-const paymentMethod = "تمارا"; // تمارا / تابي / غيرها
+// 🔥 انتظار تحميل الصور قبل الطباعة
+window.onload = function () {
+  const imgs = document.images;
+  let loaded = 0;
+
+  for (let img of imgs) {
+    if (img.complete) loaded++;
+    else {
+      img.onload = () => {
+        loaded++;
+        if (loaded === imgs.length) ready();
+      };
+    }
+  }
+
+  if (loaded === imgs.length) ready();
+
+  function ready() {
+    console.log("جاهز للطباعة");
+  }
+};
+
+const paymentMethod = "تمارا";
 const approvalCode = "123456";
 const shipping = "شحن عادي";
 
 let approvalText = "";
 
-// تمارا + تابي
 if (paymentMethod === "تمارا" || paymentMethod === "تابي") {
   approvalText = ` | رمز الموافقة على الطلب في (${paymentMethod}): ${approvalCode}`;
 }
@@ -219,3 +276,4 @@ document.getElementById("paymentLine").innerText =
 
 </body>
 </html>
+```
