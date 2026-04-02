@@ -1,4 +1,3 @@
-```css id="g7k1sa"
 /* ================= RESET ================= */
 * {
   margin: 0;
@@ -112,6 +111,15 @@ tr:nth-child(even) {
   background: #f9fafb;
 }
 
+/* 🔥 تحسين تعدد الصفحات */
+thead {
+  display: table-header-group;
+}
+
+tfoot {
+  display: table-footer-group;
+}
+
 /* ================= الصور ================= */
 img.product {
   width: 40px;
@@ -177,17 +185,67 @@ img.product {
 
 }
 
-/* ================= مهم: توافق مع الطباعة ================= */
+/* ================= الطباعة الاحترافية ================= */
 @media print {
 
-  body {
-    background: white;
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+
+  html, body {
+    background: #fff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .invoice-container {
-    box-shadow: none;
-    border-radius: 0;
+    width: 794px !important;
+    margin: auto !important;
+    padding: 10px !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* إخفاء الأزرار */
+  .no-print,
+  button,
+  .buttons {
+    display: none !important;
+  }
+
+  /* الصور */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid !important;
+  }
+
+  .logo-circle {
+    background: #1e3a8a !important;
+  }
+
+  /* الجداول */
+  table {
+    page-break-inside: auto !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* منع القص */
+  .row,
+  .invoice-header,
+  .summary,
+  .stamp,
+  .contact,
+  .footer {
+    page-break-inside: avoid !important;
   }
 
 }
-```
