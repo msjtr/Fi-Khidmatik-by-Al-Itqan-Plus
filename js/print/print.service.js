@@ -14,12 +14,11 @@ export async function generatePDF(element, order) {
         originalElement.style.backgroundColor = '#ffffff';
         originalElement.style.width = '800px';
         
-        // تحويل الصورة إلى Base64 لضمان ظهورها
+        // تحويل الصورة إلى Base64 لضمان ظهورها في PDF
         const images = originalElement.querySelectorAll('img');
         for (const img of images) {
             if (img.src && img.src.includes('logo.svg')) {
                 try {
-                    // تحميل الصورة وتحويلها إلى Base64
                     const response = await fetch(img.src);
                     const blob = await response.blob();
                     const base64 = await new Promise((resolve) => {
@@ -48,16 +47,7 @@ export async function generatePDF(element, order) {
             backgroundColor: '#ffffff',
             useCORS: true,
             allowTaint: false,
-            logging: false,
-            onclone: (clonedDoc, element) => {
-                // تأكد من أن الصور في النسخة المستنسخة
-                const clonedImages = clonedDoc.querySelectorAll('img');
-                clonedImages.forEach(img => {
-                    if (img.src) {
-                        img.crossOrigin = 'anonymous';
-                    }
-                });
-            }
+            logging: false
         });
         
         document.body.removeChild(tempContainer);
