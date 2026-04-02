@@ -8,7 +8,6 @@ export async function generateImage(element, order) {
     showLoadingMessage('جاري إنشاء الصورة...');
     
     try {
-        // إنشاء نسخة مؤقتة
         const originalElement = element.cloneNode(true);
         originalElement.style.padding = '20px';
         originalElement.style.backgroundColor = '#ffffff';
@@ -31,7 +30,6 @@ export async function generateImage(element, order) {
         
         document.body.removeChild(tempContainer);
         
-        // تحميل الصورة
         const fileName = `فاتورة_${order.orderNumber}_${new Date().toISOString().slice(0, 10)}.png`;
         const link = document.createElement('a');
         link.download = fileName;
@@ -42,7 +40,7 @@ export async function generateImage(element, order) {
         return true;
         
     } catch (error) {
-        console.error('خطأ في إنشاء الصورة:', error);
+        console.error('خطأ في الصورة:', error);
         hideLoadingMessage();
         throw error;
     }
