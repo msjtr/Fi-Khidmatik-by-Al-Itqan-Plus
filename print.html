@@ -1,515 +1,94 @@
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فاتورة إلكترونية - منصة في خدمتك</title>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            direction: rtl;
-            font-family: 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
-            background: #f0f2f5;
-            padding: 20px;
-        }
-        
-        .invoice-wrapper {
-            max-width: 1100px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        
-        .invoice-container {
-            padding: 40px;
-            background: white;
-        }
-        
-        .invoice-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-        
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .logo-circle {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        
-        .logo-circle img {
-            width: 50px;
-            height: 50px;
-            object-fit: contain;
-        }
-        
-        .logo-text h2 {
-            color: #1e3a8a;
-            font-size: 20px;
-            margin-bottom: 5px;
-        }
-        
-        .logo-text p {
-            color: #666;
-            font-size: 12px;
-        }
-        
-        .header-center {
-            text-align: center;
-        }
-        
-        .invoice-title {
-            font-size: 28px;
-            font-weight: bold;
-            color: #1e3a8a;
-            margin-bottom: 5px;
-        }
-        
-        .tax-info {
-            text-align: left;
-        }
-        
-        .tax-card {
-            background: #1e293b;
-            color: #e2e8f0;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 12px;
-            margin-bottom: 8px;
-        }
-        
-        .divider {
-            border-top: 2px solid #e2e8f0;
-            margin: 20px 0;
-        }
-        
-        .invoice-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #f8fafc;
-            padding: 15px 20px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        
-        .invoice-number {
-            font-size: 16px;
-            font-weight: bold;
-            color: #1e3a8a;
-        }
-        
-        .invoice-number span {
-            background: #e0e7ff;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-        }
-        
-        .parties-info {
-            display: flex;
-            gap: 25px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-        
-        .party-card {
-            flex: 1;
-            padding: 20px;
-            border-radius: 12px;
-            background: #f8fafc;
-            border-right: 4px solid;
-        }
-        
-        .party-card.seller {
-            border-right-color: #f59e0b;
-        }
-        
-        .party-card.buyer {
-            border-right-color: #0284c7;
-        }
-        
-        .party-title {
-            font-size: 16px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .party-content {
-            font-size: 13px;
-            line-height: 1.8;
-        }
-        
-        .payment-shipping {
-            background: #f1f5f9;
-            padding: 15px 20px;
-            border-radius: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-        
-        .badge {
-            background: white;
-            padding: 8px 18px;
-            border-radius: 25px;
-            font-size: 13px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .products-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 30px;
-        }
-        
-        .products-table th,
-        .products-table td {
-            border: 1px solid #e2e8f0;
-            padding: 12px 10px;
-            text-align: center;
-        }
-        
-        .products-table th {
-            background: #1e3a8a;
-            color: white;
-            font-weight: bold;
-        }
-        
-        .summary {
-            background: #f8fafc;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-        }
-        
-        .summary-content {
-            display: flex;
-            justify-content: flex-end;
-        }
-        
-        .summary-box {
-            width: 320px;
-        }
-        
-        .summary-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .summary-row.total {
-            font-size: 18px;
-            font-weight: bold;
-            border-bottom: none;
-            padding-top: 12px;
-        }
-        
-        .footer {
-            text-align: center;
-            padding-top: 20px;
-            border-top: 2px solid #e2e8f0;
-        }
-        
-        .footer p {
-            font-size: 14px;
-            color: #475569;
-            margin-bottom: 10px;
-        }
-        
-        .footer .thanks {
-            font-size: 16px;
-            color: #1e3a8a;
-            font-weight: bold;
-        }
-        
-        .action-buttons {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            z-index: 1000;
-        }
-        
-        .action-btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        
-        .action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
-        }
-        
-        .btn-print { background: #3b82f6; color: white; }
-        .btn-pdf { background: #ef4444; color: white; }
-        .btn-png { background: #8b5cf6; color: white; }
-        .btn-close { background: #64748b; color: white; }
-        
-        @media print {
-            body { background: white; padding: 0; margin: 0; }
-            .action-buttons { display: none; }
-            .invoice-wrapper { box-shadow: none; border-radius: 0; }
-            .invoice-container { padding: 20px; }
-        }
-        
-        @media (max-width: 768px) {
-            .invoice-container { padding: 20px; }
-            .summary-box { width: 100%; }
-            .products-table th, .products-table td { padding: 8px 5px; font-size: 12px; }
-            .action-btn { padding: 8px 16px; font-size: 12px; }
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 50px;
-            font-size: 18px;
-            color: #666;
-        }
-        
-        .error {
-            text-align: center;
-            padding: 50px;
-            color: red;
-            font-size: 18px;
-        }
-    </style>
-</head>
-<body>
+// ========== دوال الطباعة المباشرة (بدون ملف خارجي) ==========
 
-<div id="loading" class="loading">⏳ جاري تحميل بيانات الفاتورة...</div>
-<div id="invoiceWrapper" style="display: none;"></div>
-<div class="action-buttons" id="actionButtons" style="display: none;">
-    <button class="action-btn btn-print" onclick="handlePrint()">🖨️ طباعة</button>
-    <button class="action-btn btn-pdf" onclick="handlePDF()">📄 PDF</button>
-    <button class="action-btn btn-png" onclick="handlePNG()">🖼️ صورة</button>
-    <button class="action-btn btn-close" onclick="window.close()">✖️ إغلاق</button>
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import {
-    getFirestore,
-    doc,
-    getDoc,
-    collection,
-    getDocs
-} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
-    authDomain: "msjt301-974bb.firebaseapp.com",
-    projectId: "msjt301-974bb",
-    storageBucket: "msjt301-974bb.firebasestorage.app"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const params = new URLSearchParams(window.location.search);
-const orderId = params.get("id");
-const autoAction = params.get("auto");
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
-}
-
-function formatDate(dateStr) {
-    if (!dateStr) return '-';
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
-    return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
-}
-
-async function loadInvoice() {
-    const loadingDiv = document.getElementById('loading');
-    const wrapperDiv = document.getElementById('invoiceWrapper');
-    
-    if (!orderId) {
-        loadingDiv.innerHTML = '<div class="error">❌ لا يوجد رقم طلب</div>';
-        return;
-    }
-    
-    try {
-        const orderSnap = await getDoc(doc(db, "orders", orderId));
-        if (!orderSnap.exists()) {
-            loadingDiv.innerHTML = '<div class="error">❌ الطلب غير موجود</div>';
-            return;
-        }
-        
-        const order = { id: orderSnap.id, ...orderSnap.data() };
-        
-        const customersSnap = await getDocs(collection(db, "customers"));
-        const customers = {};
-        customersSnap.forEach(doc => { customers[doc.id] = doc.data(); });
-        
-        const customer = customers[order.customerId] || {};
-        
-        let rows = '';
-        let subtotal = 0;
-        
-        if (order.items && order.items.length > 0) {
-            order.items.forEach((item, index) => {
-                const itemTotal = (item.price || 0) * (item.quantity || 0);
-                subtotal += itemTotal;
-                rows += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td style="text-align:right;">${escapeHtml(item.name || '-')}</td>
-                        <td>${item.quantity || 0}</td>
-                        <td>${((item.price || 0)).toFixed(2)}</td>
-                        <td>${itemTotal.toFixed(2)}</td>
-                    </tr>
-                `;
-            });
-        }
-        
-        let discountValue = order.discount || 0;
-        if (order.discountType === 'percent' && discountValue > 0) {
-            discountValue = (subtotal * discountValue) / 100;
-        }
-        const afterDiscount = subtotal - discountValue;
-        const tax = afterDiscount * 0.15;
-        const total = afterDiscount + tax;
-        
-        const logoBase64 = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%233b82f6'/%3E%3Ctext x='50' y='70' text-anchor='middle' fill='white' font-size='40' font-weight='bold'%3Eف%3C/text%3E%3C/svg%3E";
-        
-        wrapperDiv.innerHTML = `
-            <div class="invoice-wrapper">
-                <div class="invoice-container">
-                    <div class="invoice-header">
-                        <div class="logo-section">
-                            <div class="logo-circle"><img src="${logoBase64}"></div>
-                            <div class="logo-text"><h2>منصة في خدمتك</h2><p>Fi Khidmatik Platform</p></div>
-                        </div>
-                        <div class="header-center">
-                            <div class="invoice-title">فاتورة إلكترونية</div>
-                        </div>
-                        <div class="tax-info">
-                            <div class="tax-card">📄 رقم شهادة العمل الحر: FL-765735204</div>
-                            <div class="tax-card">🏷️ الرقم الضريبي: 312495447600003</div>
-                        </div>
-                    </div>
-                    <div class="divider"></div>
-                    <div class="invoice-info">
-                        <div class="invoice-number">رقم الفاتورة: <span>${escapeHtml(order.orderNumber || order.id)}</span></div>
-                        <div>📅 التاريخ: ${formatDate(order.orderDate)}</div>
-                    </div>
-                    <div class="parties-info">
-                        <div class="party-card seller">
-                            <div class="party-title">🏢 مصدرة من</div>
-                            <div class="party-content"><strong>منصة في خدمتك</strong><br>المملكة العربية السعودية<br>حائل - حي النقرة</div>
-                        </div>
-                        <div class="party-card buyer">
-                            <div class="party-title">👤 مصدرة إلى</div>
-                            <div class="party-content"><strong>${escapeHtml(customer.name || '-')}</strong><br>${escapeHtml(customer.city || '-')}<br>هاتف: ${escapeHtml(customer.phone || '-')}</div>
-                        </div>
-                    </div>
-                    <table class="products-table">
-                        <thead><tr><th>#</th><th>اسم المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead>
-                        <tbody>${rows || '<tr><td colspan="5">لا توجد منتجات</td></tr>'}</tbody>
-                    </table>
-                    <div class="summary">
-                        <div class="summary-content">
-                            <div class="summary-box">
-                                <div class="summary-row"><span>المجموع الفرعي:</span><span>${subtotal.toFixed(2)} ريال</span></div>
-                                <div class="summary-row"><span>الخصم:</span><span style="color:#ef4444;">- ${discountValue.toFixed(2)} ريال</span></div>
-                                <div class="summary-row"><span>الضريبة 15%:</span><span>${tax.toFixed(2)} ريال</span></div>
-                                <div class="summary-row total"><span>الإجمالي:</span><span style="color:#1e3a8a;">${total.toFixed(2)} ريال</span></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="footer">
-                        <p>🧾 هذه الفاتورة إلكترونية صادرة من منصة في خدمتك</p>
-                        <p class="thanks">شكراً لتسوقكم معنا 🤍</p>
-                    </div>
-                </div>
+// دالة إنشاء الفاتورة كـ HTML
+function generateInvoiceHTML(order, customer, items, totals) {
+    return `
+        <!DOCTYPE html>
+        <html dir="rtl">
+        <head>
+            <meta charset="UTF-8">
+            <title>فاتورة ${order.orderNumber}</title>
+            <style>
+                body { font-family: Arial; padding: 20px; margin: 0; }
+                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+                th { background: #1e3a8a; color: white; }
+                .header { text-align: center; margin-bottom: 30px; }
+                .total { font-size: 18px; font-weight: bold; margin-top: 20px; }
+                @media print { body { padding: 0; } }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h2>منصة في خدمتك</h2>
+                <h3>فاتورة إلكترونية</h3>
+                <p>رقم الفاتورة: ${order.orderNumber}</p>
+                <p>التاريخ: ${order.orderDate}</p>
             </div>
-        `;
-        
-        loadingDiv.style.display = 'none';
-        wrapperDiv.style.display = 'block';
-        document.getElementById('actionButtons').style.display = 'flex';
-        
-        if (autoAction === 'print') setTimeout(() => window.print(), 500);
-        else if (autoAction === 'pdf') setTimeout(() => handlePDF(), 500);
-        else if (autoAction === 'png') setTimeout(() => handlePNG(), 500);
-        
-    } catch (error) {
-        loadingDiv.innerHTML = `<div class="error">❌ خطأ: ${error.message}</div>`;
-    }
+            <div>
+                <p><strong>العميل:</strong> ${customer.name || '-'}</p>
+                <p><strong>الهاتف:</strong> ${customer.phone || '-'}</p>
+            </div>
+            <table>
+                <thead><tr><th>#</th><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead>
+                <tbody>
+                    ${items.map((item, i) => `
+                        <tr>
+                            <td>${i+1}</td>
+                            <td>${item.name}</td>
+                            <td>${item.quantity}</td>
+                            <td>${item.price}</td>
+                            <td>${item.quantity * item.price}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            <div class="total">
+                <p>المجموع: ${totals.subtotal} ريال</p>
+                <p>الضريبة: ${totals.tax} ريال</p>
+                <p><strong>الإجمالي: ${totals.total} ريال</strong></p>
+            </div>
+            <p style="text-align:center; margin-top:50px;">شكراً لتسوقكم معنا</p>
+        </body>
+        </html>
+    `;
 }
 
-window.handlePrint = () => window.print();
-window.handlePDF = async () => {
-    const element = document.querySelector('.invoice-wrapper');
-    if (element) await html2pdf().from(element).save(`فاتورة_${orderId}.pdf`);
-};
-window.handlePNG = async () => {
-    const element = document.querySelector('.invoice-wrapper');
-    if (element) {
-        const canvas = await html2canvas(element);
-        const link = document.createElement('a');
-        link.download = `فاتورة_${orderId}.png`;
-        link.href = canvas.toDataURL();
-        link.click();
-    }
+// طباعة مباشرة
+window.printOrder = function(orderId) {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) { showToast('الطلب غير موجود', 'error'); return; }
+    
+    const customer = customers.find(c => c.id === order.customerId) || {};
+    const items = order.items || [];
+    
+    const subtotal = items.reduce((s, i) => s + (i.price * i.quantity), 0);
+    let discountValue = order.discount || 0;
+    if (order.discountType === 'percent') discountValue = (subtotal * discountValue) / 100;
+    const afterDiscount = subtotal - discountValue;
+    const tax = afterDiscount * 0.15;
+    const total = afterDiscount + tax;
+    
+    const totals = {
+        subtotal: subtotal.toFixed(2),
+        tax: tax.toFixed(2),
+        total: total.toFixed(2)
+    };
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(generateInvoiceHTML(order, customer, items, totals));
+    printWindow.document.close();
+    printWindow.print();
 };
 
-loadInvoice();
-</script>
-</body>
-</html>
+// تحميل PDF
+window.printOrderPDF = function(orderId) {
+    showToast('جاري تحضير PDF...', 'success');
+    // يمكن إضافة مكتبة html2pdf.js هنا
+};
+
+// تحميل صورة
+window.printOrderPNG = function(orderId) {
+    showToast('جاري تحضير الصورة...', 'success');
+    // يمكن إضافة مكتبة html2canvas هنا
+};
