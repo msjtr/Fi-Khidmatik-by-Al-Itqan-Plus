@@ -1,36 +1,4 @@
-/* css/design.css */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    background: #f0f2f5;
-    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
-    padding: 20px;
-    direction: rtl;
-}
-
-.invoice-container {
-    max-width: 1100px;
-    margin: 0 auto;
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    overflow: hidden;
-}
-
-.invoice {
-    background: white;
-    padding: 30px;
-}
-
-.invoice-content {
-    background: white;
-}
-
-/* تنسيق الفاتورة */
+/* أنماط الشعار */
 .invoice-header {
     text-align: center;
     margin-bottom: 30px;
@@ -39,7 +7,6 @@ body {
 .logo {
     display: inline-block;
     text-align: center;
-    margin-bottom: 15px;
 }
 
 .logo-circle {
@@ -52,11 +19,13 @@ body {
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    overflow: hidden;
 }
 
-.logo-circle svg {
-    width: 45px;
-    height: 45px;
+.logo-circle img {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
 }
 
 .company-name {
@@ -81,221 +50,15 @@ body {
     border-radius: 3px;
 }
 
-.tax-badge {
-    background: #1e293b;
-    color: #e2e8f0;
-    padding: 12px 25px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    border-radius: 12px;
-    margin-bottom: 25px;
-}
-
-.invoice-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 15px;
-    margin-bottom: 25px;
-    border-bottom: 2px solid #e2e8f0;
-}
-
-.invoice-number {
-    font-size: 18px;
-    font-weight: bold;
-    color: #1e3a8a;
-}
-
-.invoice-number span {
-    background: #e0e7ff;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 14px;
-    margin-right: 8px;
-}
-
-.invoice-date {
-    font-size: 14px;
-    color: #475569;
-}
-
-.parties {
-    display: flex;
-    gap: 25px;
-    margin-bottom: 25px;
-}
-
-.from-box, .to-box {
-    flex: 1;
-    padding: 18px;
-    border-radius: 12px;
-}
-
-.from-box {
-    background: #fef9e3;
-    border-right: 4px solid #f59e0b;
-}
-
-.to-box {
-    background: #e0f2fe;
-    border-right: 4px solid #0284c7;
-}
-
-.from-box h3, .to-box h3 {
-    font-size: 16px;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.from-box p, .to-box p {
-    font-size: 13px;
-    line-height: 1.7;
-    color: #334155;
-}
-
-.payment-info {
-    background: #f1f5f9;
-    padding: 12px 20px;
-    border-radius: 10px;
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 25px;
-}
-
-.payment-badge {
-    background: white;
-    padding: 6px 15px;
-    border-radius: 25px;
-    font-size: 13px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.products-title {
-    margin: 15px 0 10px 0;
-    font-size: 18px;
-}
-
-.products-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 25px;
-}
-
-.products-table th {
-    background: #1e3a8a;
-    color: white;
-    padding: 12px 8px;
-    font-size: 14px;
-    border: 1px solid #2e4a9a;
-    text-align: center;
-}
-
-.products-table td {
-    padding: 10px 8px;
-    text-align: center;
-    border: 1px solid #e2e8f0;
-    font-size: 13px;
-}
-
-.totals {
-    background: #f8fafc;
-    padding: 20px;
-    border-radius: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    margin-bottom: 25px;
-}
-
-.totals-left p {
-    margin: 6px 0;
-}
-
-.totals-center {
-    text-align: center;
-    padding: 0 20px;
-    border-right: 1px solid #cbd5e1;
-    border-left: 1px solid #cbd5e1;
-}
-
-.totals-center h2 {
-    font-size: 20px;
-    color: #1e3a8a;
-    margin: 0;
-}
-
-.contact-bar {
-    background: #f1f5f9;
-    padding: 12px;
-    border-radius: 10px;
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    flex-wrap: wrap;
-    margin-bottom: 15px;
-    font-size: 13px;
-}
-
-.thanks {
-    text-align: center;
-    padding-top: 15px;
-    font-size: 14px;
-    color: #475569;
-    border-top: 1px solid #e2e8f0;
-}
-
-.buttons {
-    text-align: center;
-    margin-top: 30px;
-    padding: 20px;
-    border-top: 1px solid #e0e0e0;
-}
-
-.btn-print, .btn-pdf, .btn-png {
-    padding: 12px 30px;
-    margin: 0 10px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
-    transition: all 0.3s;
-}
-
-.btn-print {
-    background: #2563eb;
-    color: white;
-}
-
-.btn-print:hover {
-    background: #1d4ed8;
-    transform: translateY(-2px);
-}
-
-.btn-pdf {
-    background: #dc2626;
-    color: white;
-}
-
-.btn-pdf:hover {
-    background: #b91c1c;
-    transform: translateY(-2px);
-}
-
-.btn-png {
-    background: #10b981;
-    color: white;
-}
-
-.btn-png:hover {
-    background: #059669;
-    transform: translateY(-2px);
+/* دعم الطباعة */
+@media print {
+    .logo-circle {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+    
+    .logo-circle img {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
 }
