@@ -1,5 +1,6 @@
-// js/print/template.js
+// بدلاً من الاستيرادات، أضف هذا الكود مباشرة
 
+// ========== دالة escapeHtml ==========
 function escapeHtml(str) {
     if (!str) return '';
     return String(str)
@@ -10,7 +11,8 @@ function escapeHtml(str) {
         .replace(/'/g, '&#39;');
 }
 
-export function buildInvoiceHTML(order, cartRows, totals) {
+// ========== دالة buildInvoiceHTML ==========
+function buildInvoiceHTML(order, cartRows, totals) {
     // تنسيق التاريخ
     let displayDate = order.orderDate || '-';
     if (displayDate && displayDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
@@ -28,7 +30,6 @@ export function buildInvoiceHTML(order, cartRows, totals) {
         displayTime = `${hour.toString().padStart(2, '0')}:${m} ${ampm}`;
     }
     
-    // التأكد من وجود totals
     const safeTotals = {
         subtotal: totals?.subtotal || '0 ريال',
         discount: totals?.discount || '0 ريال',
@@ -36,10 +37,7 @@ export function buildInvoiceHTML(order, cartRows, totals) {
         total: totals?.total || '0 ريال'
     };
     
-    // رابط الشعار - جرب المسار النسبي أولاً
     const logoPath = '/images/logo.svg';
-    
-    // صورة احتياطية (fallback) على شكل SVG دائري بحرف "ف"
     const fallbackLogo = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%233b82f6'/%3E%3Ctext x='50' y='70' text-anchor='middle' fill='white' font-size='40' font-weight='bold'%3Eف%3C/text%3E%3C/svg%3E";
     
     return `
@@ -144,4 +142,201 @@ export function buildInvoiceHTML(order, cartRows, totals) {
     `;
 }
 
-export { escapeHtml };
+// ========== دوال الطباعة والتصدير ==========
+async function printInvoice(element) {
+    if (!element) throw new Error('عنصر الفاتورة غير موجود');
+    
+    return new Promise((resolve, reject) => {
+        try {
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) throw new Error('لا يمكن فتح نافذة الطباعة');
+            
+            const styles = document.querySelectorAll('style, link[rel="stylesheet"]');
+            let stylesHTML = '';
+            styles.forEach(style => {
+                if (style.tagName === 'STYLE') {
+                    stylesHTML += `<style>${style.innerHTML}</style>`;
+                } else if (style.tagName === 'LINK' && style.href) {
+                    let href = style.href;
+                    if (!href.startsWith('http') && !href.startsWith('//')) {
+                        href = window.location.origin + (href.startsWith('/') ? href : '/' + href);
+                    }
+                    stylesHTML += `<link rel="stylesheet" href="${href}">`;
+                }
+            });
+            
+            const additionalStyles = `
+                <style>
+                    .logo-circle {
+                        width: 80px;
+                        height: 80px;
+                        background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+                        border-radius: 50%;
+                        margin: 0 auto 12px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+                        overflow: hidden;
+                    }
+                    .logo-circle img {
+                        width: 50px;
+                        height: 50px;
+                        object-fit: contain;
+                        display: block;
+                    }
+                    body {
+                        padding: 20px;
+                        margin: 0;
+                        font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+                    }
+                    .buttons, .no-print {
+                        display: none !important;
+                    }
+                    @media print {
+                        body { padding: 0; }
+                        .logo-circle {
+                            print-color-adjust: exact;
+                            -webkit-print-color-adjust: exact;
+                        }
+                    }
+                </style>
+            `;
+            
+            let invoiceHTML = element.outerHTML;
+            invoiceHTML = invoiceHTML.replace(/src="\/([^"]+)"/g, (match, path) => {
+                return `src="${window.location.origin}/${path}"`;
+            });
+            
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html dir="rtl">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>طباعة فاتورة</title>
+                    <base href="${window.location.origin}/">
+                    ${stylesHTML}
+                    ${additionalStyles}
+                </head>
+                <body>
+                    ${invoiceHTML}
+                </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            printWindow.onload = () => {
+                setTimeout(() => {
+                    printWindow.focus();
+                    printWindow.print();
+                    resolve(true);
+                }, 500);
+            };
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
+async function generatePDF(element, order) {
+    if (!element) throw new Error('عنصر الفاتورة غير موجود');
+    showLoading('جاري إنشاء ملف PDF...');
+    
+    try {
+        const originalElement = element.cloneNode(true);
+        originalElement.style.padding = '20px';
+        originalElement.style.backgroundColor = '#ffffff';
+        
+        const tempContainer = document.createElement('div');
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.left = '-9999px';
+        tempContainer.style.top = '0';
+        tempContainer.appendChild(originalElement);
+        document.body.appendChild(tempContainer);
+        
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const canvas = await html2canvas(tempContainer, {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            useCORS: true,
+            logging: false
+        });
+        
+        document.body.removeChild(tempContainer);
+        
+        const imgData = canvas.toDataURL('image/jpeg', 1.0);
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = pdfWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        let heightLeft = imgHeight;
+        let position = 0;
+        
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+        
+        while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pdfHeight;
+        }
+        
+        const fileName = `فاتورة_${order.orderNumber}_${new Date().toISOString().slice(0, 10)}.pdf`;
+        pdf.save(fileName);
+        
+        hideLoading();
+        return true;
+    } catch (error) {
+        console.error('خطأ في PDF:', error);
+        hideLoading();
+        throw error;
+    }
+}
+
+async function generateImage(element, order) {
+    if (!element) throw new Error('عنصر الفاتورة غير موجود');
+    showLoading('جاري إنشاء الصورة...');
+    
+    try {
+        const originalElement = element.cloneNode(true);
+        originalElement.style.padding = '20px';
+        originalElement.style.backgroundColor = '#ffffff';
+        
+        const tempContainer = document.createElement('div');
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.left = '-9999px';
+        tempContainer.style.top = '0';
+        tempContainer.appendChild(originalElement);
+        document.body.appendChild(tempContainer);
+        
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const canvas = await html2canvas(tempContainer, {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            useCORS: true,
+            logging: false
+        });
+        
+        document.body.removeChild(tempContainer);
+        
+        const fileName = `فاتورة_${order.orderNumber}_${new Date().toISOString().slice(0, 10)}.png`;
+        const link = document.createElement('a');
+        link.download = fileName;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        
+        hideLoading();
+        return true;
+    } catch (error) {
+        console.error('خطأ في الصورة:', error);
+        hideLoading();
+        throw error;
+    }
+}
