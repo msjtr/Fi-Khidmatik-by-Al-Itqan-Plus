@@ -6,20 +6,8 @@
     <title>فاتورة - نظام الفواتير</title>
     <link rel="stylesheet" href="./css/design.css">
     <link rel="stylesheet" href="./css/print.css" media="print">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <style>
-        /* ضمان ظهور الفاتورة بالكامل */
-        .invoice {
-            background: white;
-        }
-        /* رسالة خطأ مؤقتة */
-        .error-message {
-            color: red;
-            padding: 20px;
-            text-align: center;
-        }
-    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <div class="invoice-container">
@@ -61,24 +49,24 @@
             { 
                 name: "منتج تجريبي", 
                 barcode: "PRD-001", 
-                description: "وصف المنتج", 
+                description: "وصف المنتج التجريبي", 
                 price: 1.00, 
                 quantity: 1 
             }
         ]
     };
 
-    // بناء صفوف المنتجات (7 أعمدة متطابقة مع template.js)
+    // بناء صفوف المنتجات
     const cartRows = order.items.map(item => `
-         <tr>
-             <td>${escapeHtml(item.name)}</td>
-             <td>${escapeHtml(item.barcode || '-')}</td>
-             <td>${escapeHtml(item.description || '-')}</td>
-             <td>${item.quantity}</td>
-             <td>${item.price.toFixed(2)}</td>
-             <td>0</td>
-             <td>${(item.price * item.quantity).toFixed(2)}</td>
-         </tr>
+        <tr>
+            <td>${escapeHtml(item.name)}</td>
+            <td>${escapeHtml(item.barcode || '-')}</td>
+            <td>${escapeHtml(item.description || '-')}</td>
+            <td>${item.quantity}</td>
+            <td>${item.price.toFixed(2)}</td>
+            <td>0</td>
+            <td>${(item.price * item.quantity).toFixed(2)}</td>
+        </tr>
     `).join('');
 
     // حساب الإجماليات
@@ -93,17 +81,6 @@
         total: total.toFixed(2) + ' ريال'
     };
 
-    // عرض الفاتورة
-    const invoiceContent = document.getElementById('invoiceContent');
-    try {
-        invoiceContent.innerHTML = buildInvoiceHTML(order, cartRows, totals);
-        document.title = `فاتورة - ${order.orderNumber}`;
-    } catch (error) {
-        console.error('خطأ في بناء الفاتورة:', error);
-        invoiceContent.innerHTML = '<div class="error-message">❌ حدث خطأ في عرض الفاتورة</div>';
-    }
-
-    // دالة مساعدة لتأمين النصوص
     function escapeHtml(str) {
         if (!str) return '';
         return String(str)
@@ -114,53 +91,46 @@
             .replace(/'/g, '&#39;');
     }
 
+    // عرض الفاتورة
+    const invoiceContent = document.getElementById('invoiceContent');
+    try {
+        invoiceContent.innerHTML = buildInvoiceHTML(order, cartRows, totals);
+        document.title = `فاتورة - ${order.orderNumber}`;
+    } catch (error) {
+        console.error('خطأ في بناء الفاتورة:', error);
+        invoiceContent.innerHTML = '<div class="error-message">❌ حدث خطأ في عرض الفاتورة</div>';
+    }
+
     // الحصول على عنصر الفاتورة
     const invoiceElement = document.querySelector('.invoice');
 
-    // دوال الطباعة مع معالجة الأخطاء
-    window.handlePrint = async () => {
-        if (!invoiceElement) {
-            alert('عذراً، عنصر الفاتورة غير موجود');
-            return;
-        }
+    // ربط الأزرار
+    document.getElementById('printBtn')?.addEventListener('click', async () => {
         try {
             await printInvoice(invoiceElement);
         } catch (error) {
             console.error('خطأ في الطباعة:', error);
             alert('حدث خطأ أثناء الطباعة');
         }
-    };
+    });
 
-    window.handlePDF = async () => {
-        if (!invoiceElement) {
-            alert('عذراً، عنصر الفاتورة غير موجود');
-            return;
-        }
+    document.getElementById('pdfBtn')?.addEventListener('click', async () => {
         try {
             await generatePDF(invoiceElement, order);
         } catch (error) {
-            console.error('خطأ في تصدير PDF:', error);
+            console.error('خطأ في PDF:', error);
             alert('حدث خطأ أثناء تصدير PDF');
         }
-    };
+    });
 
-    window.handleImage = async () => {
-        if (!invoiceElement) {
-            alert('عذراً، عنصر الفاتورة غير موجود');
-            return;
-        }
+    document.getElementById('imageBtn')?.addEventListener('click', async () => {
         try {
             await generateImage(invoiceElement, order);
         } catch (error) {
-            console.error('خطأ في تصدير الصورة:', error);
+            console.error('خطأ في الصورة:', error);
             alert('حدث خطأ أثناء تصدير الصورة');
         }
-    };
-
-    // ربط الأزرار (بديل عن onclick المباشر)
-    document.getElementById('printBtn')?.addEventListener('click', window.handlePrint);
-    document.getElementById('pdfBtn')?.addEventListener('click', window.handlePDF);
-    document.getElementById('imageBtn')?.addEventListener('click', window.handleImage);
+    });
 
     console.log('✅ تم تحميل الفاتورة بنجاح');
 </script>
