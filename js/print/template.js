@@ -36,8 +36,11 @@ export function buildInvoiceHTML(order, cartRows, totals) {
         total: totals?.total || '0 ريال'
     };
     
-    // رابط الشعار - مسار نسبي (تم التصحيح)
+    // رابط الشعار - جرب المسار النسبي أولاً
     const logoPath = '/images/logo.svg';
+    
+    // صورة احتياطية (fallback) على شكل SVG دائري بحرف "ف"
+    const fallbackLogo = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%233b82f6'/%3E%3Ctext x='50' y='70' text-anchor='middle' fill='white' font-size='40' font-weight='bold'%3Eف%3C/text%3E%3C/svg%3E";
     
     return `
         <div class="invoice-header">
@@ -49,7 +52,7 @@ export function buildInvoiceHTML(order, cartRows, totals) {
                         style="width: 50px; height: 50px; object-fit: contain;"
                         crossorigin="anonymous"
                         referrerpolicy="no-referrer"
-                        onerror="this.onerror=null; this.parentElement.innerHTML='<span style=\\'color: white; font-size: 32px; font-weight: bold;\\'>ف</span>';"
+                        onerror="this.onerror=null; this.src='${fallbackLogo}';"
                     />
                 </div>
                 <h1 class="company-name">منصة في خدمتك</h1>
