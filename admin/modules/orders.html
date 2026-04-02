@@ -1,43 +1,130 @@
-```html id="h2n3af"
+```html
 <!DOCTYPE html>
-<html lang="ar">
+<html dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>إدارة الطلبات</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الطلبات - نظام متكامل</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { transition: all 0.2s ease; }
+        .modal { transition: opacity 0.3s ease; background-color: rgba(0,0,0,0.5); }
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; display: inline-block; }
+        .status-new { background: #dbeafe; color: #1e40af; }
+        .status-processing { background: #fef3c7; color: #b45309; }
+        .status-completed { background: #d1fae5; color: #065f46; }
+        .status-review { background: #e9d5ff; color: #6b21a5; }
+        .status-refund { background: #fed7aa; color: #9a3412; }
+        .status-cancelled { background: #fee2e2; color: #b91c1c; }
 
+        .ql-editor { min-height: 120px; direction: rtl; text-align: right; }
+
+        .product-row {
+            border: 1px solid #e5e7eb;
+            margin-bottom: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            background: white;
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 0; margin: 0; }
+        }
+    </style>
 </head>
 
-<body class="bg-gray-100 p-6">
+<body class="bg-gray-50 p-6 font-sans">
 
-<div class="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow">
+<div id="toast"></div>
 
-<h2 class="text-xl font-bold mb-4">إضافة طلب</h2>
+<div class="max-w-7xl mx-auto">
 
-<input id="name" placeholder="اسم المنتج" class="border p-2 w-full mb-2">
-<input id="price" placeholder="السعر" type="number" class="border p-2 w-full mb-2">
-<input id="qty" placeholder="الكمية" type="number" class="border p-2 w-full mb-2">
+    <h1 class="text-2xl font-bold mb-4">إدارة الطلبات</h1>
 
-<button onclick="createInvoice()" class="bg-blue-600 text-white px-4 py-2 rounded">
-إنشاء فاتورة
-</button>
+    <div id="productsContainer"></div>
+
+    <button onclick="addProductRow()" class="bg-blue-600 text-white px-4 py-2 rounded">
+        إضافة منتج
+    </button>
+
+    <button onclick="saveOrder()" class="bg-green-600 text-white px-4 py-2 rounded">
+        حفظ الطلب
+    </button>
 
 </div>
 
-<script id="7gplj4">
-function createInvoice(){
-  const data = {
-    name: document.getElementById('name').value,
-    price: document.getElementById('price').value,
-    qty: document.getElementById('qty').value
-  };
+<script>
 
-  localStorage.setItem('invoiceData', JSON.stringify(data));
-
-  window.open('invoice.html', '_blank');
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
 }
+
+function addProductRow(pd = null) {
+    const container = document.getElementById('productsContainer');
+
+    const row = document.createElement('div');
+    row.className = 'product-row';
+
+    row.innerHTML = `
+        <input class="product-name" value="${pd?.name || ''}">
+        <input class="product-price" value="${pd?.price || 0}">
+        <input class="product-quantity" value="${pd?.quantity || 1}">
+        <button class="remove-product-btn">حذف</button>
+
+        <div class="product-desc-editor"></div>
+        <input type="hidden" class="product-desc-hidden">
+    `;
+
+    container.appendChild(row);
+
+    const editor = row.querySelector('.product-desc-editor');
+    const hidden = row.querySelector('.product-desc-hidden');
+
+    const quill = new Quill(editor, { theme: 'snow' });
+
+    quill.on('text-change', () => {
+        hidden.value = quill.root.innerHTML;
+    });
+
+    row.querySelector('.remove-product-btn').onclick = () => row.remove();
+
+    return row;
+}
+
+function saveOrder() {
+    const rows = document.querySelectorAll('.product-row');
+
+    const items = [];
+
+    rows.forEach(row => {
+        items.push({
+            name: row.querySelector('.product-name').value,
+            price: row.querySelector('.product-price').value,
+            quantity: row.querySelector('.product-quantity').value,
+            description: row.querySelector('.product-desc-hidden').value
+        });
+    });
+
+    const order = {
+        id: Date.now(),
+        items
+    };
+
+    console.log(order);
+    alert("تم حفظ الطلب");
+}
+
 </script>
 
 </body>
