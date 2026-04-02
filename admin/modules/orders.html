@@ -805,22 +805,70 @@ function calculateTotals() {
 
 function updateTotals() { calculateTotals(); }
 
+```javascript
 function addProductRow(pd = null) {
     const container = document.getElementById('productsContainer');
+
     const row = document.createElement('div');
     row.className = 'product-row';
-    row.innerHTML = `<div class="grid grid-cols-7 gap-2"><input type="text" class="product-name border rounded p-1 col-span-2" value="${escapeHtml(pd?.name || '')}" placeholder="اسم المنتج"><input type="text" class="product-barcode border rounded p-1 bg-gray-50" readonly value="${escapeHtml(pd?.barcode || '')}"><input type="number" class="product-price border rounded p-1" step="0.01" value="${pd?.price || 0}"><input type="number" class="product-quantity border rounded p-1" value="${pd?.quantity || 1}" min="1"><input type="text" class="product-image border rounded p-1" placeholder="رابط الصورة" value="${escapeHtml(pd?.image || '')}"><button type="button" class="remove-product-btn text-red-600"><i class="fas fa-trash"></i></button></div><div class="mt-1"><div class="product-desc-editor" style="height:80px;"></div><input type="hidden" class="product-desc-hidden" value="${escapeHtml(pd?.description || '')}"></div><input type="hidden" class="product-id" value="${pd?.productId || ''}">`;
+
+    row.innerHTML = `
+        <div class="grid grid-cols-7 gap-2">
+            <input type="text" class="product-name border rounded p-1 col-span-2" value="${pd?.name || ''}">
+            <input type="text" class="product-barcode border rounded p-1 bg-gray-50" readonly value="${pd?.barcode || ''}">
+            <input type="number" class="product-price border rounded p-1" value="${pd?.price || 0}">
+            <input type="number" class="product-quantity border rounded p-1" value="${pd?.quantity || 1}">
+            <input type="text" class="product-image border rounded p-1" value="${pd?.image || ''}">
+            <button type="button" class="remove-product-btn text-red-600"><i class="fas fa-trash"></i></button>
+        </div>
+
+        <div class="mt-1">
+            <div class="product-desc-editor" style="height:80px;"></div>
+            <input type="hidden" class="product-desc-hidden" value="${pd?.description || ''}">
+        </div>
+
+        <input type="hidden" class="product-id" value="${pd?.productId || ''}">
+    `;
+
     container.appendChild(row);
-    const editor = row.querySelector('.product-desc-editor'), hidden = row.querySelector('.product-desc-hidden');
-    const quill = new Quill(editor, { theme: 'snow', placeholder: 'وصف...', modules: { toolbar: [['bold', 'italic', 'underline'], ['link', 'image']] } });
-    if (hidden.value) quill.root.innerHTML = hidden.value;
-    quill.on('text-change', () => { hidden.value = quill.root.innerHTML; updateTotals(); });
+
+    // ✅ حل مشكلة Quill
+    if (typeof Quill !== "undefined") {
+
+        const editor = row.querySelector('.product-desc-editor');
+        const hidden = row.querySelector('.product-desc-hidden');
+
+        const quill = new Quill(editor, {
+            theme: 'snow'
+        });
+
+        if (hidden.value) {
+            quill.root.innerHTML = hidden.value;
+        }
+
+        quill.on('text-change', () => {
+            hidden.value = quill.root.innerHTML;
+            updateTotals();
+        });
+
+    } else {
+        console.warn("⚠️ Quill غير محمل");
+    }
+
     row.querySelector('.product-price').addEventListener('input', updateTotals);
     row.querySelector('.product-quantity').addEventListener('input', updateTotals);
-    row.querySelector('.remove-product-btn').onclick = () => { row.remove(); updateTotals(); };
+
+    row.querySelector('.remove-product-btn').onclick = () => {
+        row.remove();
+        updateTotals();
+    };
+
     updateTotals();
+
     return row;
 }
+```
+
 
 function openInventoryModal() {
     const modal = document.getElementById('inventoryModal');
