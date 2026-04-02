@@ -36,17 +36,15 @@ export function buildInvoiceHTML(order, cartRows, totals) {
         total: totals?.total || '0 ريال'
     };
     
-    // تجربة عدة مسارات للشعار - سيتم استخدام أول مسار يعمل
-    const logoPaths = [
-        './images/logo.svg',
-        '../images/logo.svg',
-        '../../images/logo.svg',
-        '/images/logo.svg',
-        'images/logo.svg'
-    ];
+    // مسار الشعار على Vercel - جرب أحد هذه المسارات
+    // الخيار 1: مسار نسبي
+    const logoPath = './images/logo.svg';
     
-    // استخدام المسار الأول (سيتم تحديده في onerror)
-    const logoPath = logoPaths[0];
+    // الخيار 2: مسار مطلق من جذر الموقع
+    // const logoPath = '/images/logo.svg';
+    
+    // الخيار 3: المسار الكامل للموقع
+    // const logoPath = 'https://fi-khidmatik-olive.vercel.app/images/logo.svg';
     
     return `
         <div class="invoice-header">
@@ -57,12 +55,8 @@ export function buildInvoiceHTML(order, cartRows, totals) {
                         alt="شعار منصة في خدمتك" 
                         style="width: 50px; height: 50px; object-fit: contain;"
                         crossorigin="anonymous"
-                        onerror="this.onerror=null; this.src=this.getAttribute('data-fallback');"
-                        data-fallback="${logoPaths[1]}"
-                        onerror="this.onerror=null; this.src=this.getAttribute('data-fallback2');"
-                        data-fallback2="${logoPaths[2]}"
-                        onerror="this.onerror=null; this.src=this.getAttribute('data-fallback3');"
-                        data-fallback3="${logoPaths[3]}"
+                        onerror="this.onerror=null; this.src='/images/logo.svg';"
+                        onerror="this.onerror=null; this.src='https://fi-khidmatik-olive.vercel.app/images/logo.svg';"
                         onerror="this.onerror=null; this.parentElement.innerHTML='<svg width=\\'45\\' height=\\'45\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' xmlns=\\'http://www.w3.org/2000/svg\\'><path d=\\'M3 9L12 3L21 9L12 15L3 9Z\\' stroke=\\'white\\' stroke-width=\\'2\\' fill=\\'none\\'/><path d=\\'M12 15V21\\' stroke=\\'white\\' stroke-width=\\'2\\'/><path d=\\'M7 12L5 13.5L12 18L19 13.5L17 12\\' stroke=\\'white\\' stroke-width=\\'2\\' fill=\\'none\\'/></svg>';"
                     />
                 </div>
