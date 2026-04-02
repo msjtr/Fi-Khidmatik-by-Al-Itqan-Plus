@@ -1,27 +1,64 @@
 /* css/print.css */
+/* أنماط الطباعة المحسنة - ضمان عدم قص الفاتورة */
+
 @media print {
+    /* إعدادات الصفحة الأساسية */
+    @page {
+        size: A4;
+        margin: 1.5cm;
+    }
+    
+    /* إعادة تعيين الهوامش والخلفيات */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
     body {
-        background: white;
-        padding: 0;
-        margin: 0;
+        background: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+        direction: rtl;
     }
     
-    .invoice-container {
-        box-shadow: none;
-        margin: 0;
-        padding: 0;
-    }
-    
+    /* حاوية الفاتورة */
+    .invoice-container,
     .invoice {
-        padding: 0;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+        background: white !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        overflow: visible !important;
     }
     
-    .no-print {
+    /* إخفاء عناصر الطباعة */
+    .no-print,
+    .buttons,
+    button:not(.print-button),
+    .btn-print,
+    .btn-pdf,
+    .btn-png,
+    #printBtn,
+    #pdfBtn,
+    #imageBtn,
+    .print-hide {
         display: none !important;
     }
     
-    .buttons {
-        display: none !important;
+    /* الحفاظ على الألوان والخلفيات */
+    .logo-circle {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+    
+    .logo-circle img {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
     }
     
     .products-table th {
@@ -31,18 +68,196 @@
         -webkit-print-color-adjust: exact;
     }
     
-    .from-box, .to-box {
+    .info-card,
+    .from-box,
+    .to-box,
+    .payment-badge,
+    .tax-badge,
+    .stamp-box,
+    .contact-bar,
+    .totals-box {
         print-color-adjust: exact;
         -webkit-print-color-adjust: exact;
     }
     
-    .payment-badge, .tax-badge {
-        print-color-adjust: exact;
-        -webkit-print-color-adjust: exact;
+    /* منع انكسار الصفحات داخل العناصر المهمة */
+    .info-card,
+    .from-box,
+    .to-box,
+    .stamp-box,
+    .totals-box,
+    .products-table tr,
+    .products-table td,
+    .products-table th,
+    .invoice-header,
+    .payment-info,
+    .contact-bar,
+    .footer-note {
+        page-break-inside: avoid;
+        break-inside: avoid;
     }
     
-    @page {
-        size: A4;
-        margin: 1.5cm;
+    /* منع انكسار الصفحات داخل الجدول */
+    .products-table {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+    
+    /* ضمان عدم انكسار صفوف الجدول */
+    .products-table tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+    
+    /* تنسيق الجدول */
+    .products-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin-bottom: 20px !important;
+    }
+    
+    .products-table th,
+    .products-table td {
+        border: 1px solid #ddd !important;
+        padding: 10px 8px !important;
+        text-align: center !important;
+    }
+    
+    .products-table th {
+        background: #1e3a8a !important;
+        color: white !important;
+        font-weight: bold !important;
+    }
+    
+    /* تنسيق الصور في الطباعة */
+    img {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+    
+    .logo-circle img {
+        width: 50px !important;
+        height: 50px !important;
+        object-fit: contain !important;
+    }
+    
+    /* تنسيق النصوص */
+    h1, h2, h3, h4, p, span, div {
+        color: black !important;
+    }
+    
+    h1 {
+        font-size: 24px !important;
+    }
+    
+    h2 {
+        font-size: 20px !important;
+    }
+    
+    h3 {
+        font-size: 16px !important;
+    }
+    
+    /* تنسيق الروابط */
+    a {
+        text-decoration: none !important;
+        color: black !important;
+    }
+    
+    /* إزالة الظلال والتأثيرات */
+    .shadow-sm,
+    .shadow-md,
+    .shadow-lg,
+    .shadow-xl,
+    .shadow-2xl {
+        box-shadow: none !important;
+    }
+    
+    /* إزالة التحولات */
+    .transition,
+    .hover\:shadow-lg:hover {
+        transform: none !important;
+        transition: none !important;
+    }
+    
+    /* إزالة الخلفيات الزائدة */
+    .bg-gray-50,
+    .bg-gray-100,
+    .bg-gray-200,
+    .bg-blue-50,
+    .bg-blue-100 {
+        background: white !important;
+    }
+    
+    /* تنسيق شريط التواصل */
+    .contact-bar {
+        background: #f1f5f9 !important;
+        padding: 12px 20px !important;
+        border-radius: 8px !important;
+        display: flex !important;
+        justify-content: center !important;
+        gap: 30px !important;
+        flex-wrap: wrap !important;
+        margin: 20px 0 !important;
+    }
+    
+    /* تنسيق الختم */
+    .stamp-box {
+        background: #fef9e3 !important;
+        border-right: 4px solid #f59e0b !important;
+        padding: 20px !important;
+        border-radius: 12px !important;
+        margin: 20px 0 !important;
+    }
+    
+    /* تنسيق ملخص الفاتورة */
+    .totals-box {
+        background: #f8fafc !important;
+        padding: 20px !important;
+        border-radius: 12px !important;
+        margin: 20px 0 !important;
+    }
+    
+    /* تنسيق الفوتر */
+    .footer-note {
+        text-align: center !important;
+        padding-top: 15px !important;
+        margin-top: 20px !important;
+        border-top: 1px solid #e2e8f0 !important;
+    }
+    
+    /* ضمان ظهور جميع المحتويات */
+    .invoice-content,
+    .invoice-body,
+    .invoice-details {
+        overflow: visible !important;
+        display: block !important;
+    }
+    
+    /* إصلاح مشكلة اقتصاص المحتوى */
+    .container,
+    .max-w-7xl,
+    .max-w-5xl,
+    .max-w-6xl {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* تنسيق بطاقات المعلومات */
+    .info-card {
+        background: #f8fafc !important;
+        border-radius: 12px !important;
+        padding: 15px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    /* تنسيق الشارة */
+    .badge-custom {
+        background: white !important;
+        border: 1px solid #e2e8f0 !important;
+        padding: 6px 16px !important;
+        border-radius: 25px !important;
+        font-size: 12px !important;
     }
 }
