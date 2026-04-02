@@ -1,7 +1,6 @@
-```javascript
 // js/print/print.service.js
 
-export async function printInvoice(element) {
+export async function printInvoice(element, type = "print") {
     if (!element) {
         throw new Error('عنصر الفاتورة غير موجود');
     }
@@ -39,7 +38,7 @@ export async function printInvoice(element) {
                 }
 
                 .invoice-container {
-                    width: 794px; /* 🔥 A4 */
+                    width: 794px;
                     margin: auto;
                 }
 
@@ -50,28 +49,24 @@ export async function printInvoice(element) {
                     page-break-inside: avoid;
                 }
 
-                .products-table tr {
-                    page-break-inside: auto;
-                }
-
                 .products-table {
                     width: 100%;
                     border-collapse: collapse;
                 }
 
+                .products-table tr {
+                    page-break-inside: avoid;
+                }
+
                 @media print {
                     .no-print { display: none !important; }
-
-                    body, .invoice-container {
-                        overflow: visible !important;
-                    }
                 }
             </style>
             `;
 
-            // ===== HTML =====
             let invoiceHTML = element.outerHTML;
 
+            // ===== HTML =====
             printWindow.document.write(`
                 <!DOCTYPE html>
                 <html dir="rtl">
@@ -79,16 +74,26 @@ export async function printInvoice(element) {
                     <meta charset="UTF-8">
                     ${stylesHTML}
                     ${additionalStyles}
+
+                    <!-- PDF -->
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+                    <!-- PNG -->
+                    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
                 </head>
                 <body>
                     ${invoiceHTML}
 
                     <div class="no-print" style="text-align:center;margin-top:20px;">
-                        <button onclick="window.print()">🖨️ طباعة</button>
+                        <button onclick="handlePrint()">🖨️ طباعة</button>
+                        <button onclick="downloadPDF()">📄 PDF</button>
+                        <button onclick="downloadPNG()">🖼️ صورة</button>
                         <button onclick="window.close()">❌ إغلاق</button>
                     </div>
 
                     <script>
+                        const TYPE = "${type}";
+
                         async function waitImages() {
                             const imgs = document.images;
                             const promises = [];
@@ -105,13 +110,43 @@ export async function printInvoice(element) {
                             await Promise.all(promises);
                         }
 
+                        function handlePrint() {
+                            window.focus();
+                            window.print();
+                        }
+
+                        function downloadPDF() {
+                            const element = document.body;
+                            html2pdf().from(element).save("invoice.pdf");
+                        }
+
+                        function downloadPNG() {
+                            html2canvas(document.body).then(canvas => {
+                                const link = document.createElement("a");
+                                link.download = "invoice.png";
+                                link.href = canvas.toDataURL();
+                                link.click();
+                            });
+                        }
+
                         window.onload = async () => {
                             await waitImages();
 
                             setTimeout(() => {
-                                window.focus();
-                                window.print();
-                            }, 300);
+
+                                if (TYPE === "print") {
+                                    handlePrint();
+                                }
+
+                                if (TYPE === "pdf") {
+                                    downloadPDF();
+                                }
+
+                                if (TYPE === "png") {
+                                    downloadPNG();
+                                }
+
+                            }, 400);
                         };
                     </script>
                 </body>
@@ -128,4 +163,3 @@ export async function printInvoice(element) {
         }
     });
 }
-```
