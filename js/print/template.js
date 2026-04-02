@@ -36,8 +36,8 @@ export function buildInvoiceHTML(order, cartRows, totals) {
         total: totals?.total || '0 ريال'
     };
     
-    // رابط الشعار المباشر
-    const logoPath = 'https://fi-khidmatik-olive.vercel.app/images/logo.svg';
+    // رابط الشعار - مسار نسبي (تم التصحيح)
+    const logoPath = '/images/logo.svg';
     
     return `
         <div class="invoice-header">
