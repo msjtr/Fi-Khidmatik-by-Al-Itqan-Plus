@@ -45,8 +45,6 @@
         .action-btn:hover { transform: scale(1.05); }
         .ql-toolbar.ql-snow { border-radius: 12px 12px 0 0; }
         .ql-container.ql-snow { border-radius: 0 0 12px 12px; min-height: 120px; }
-        .print-btn { background: #64748b; color: white; }
-        .print-btn:hover { background: #475569; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 p-6 font-sans">
@@ -64,14 +62,9 @@
                 <p class="text-gray-500 text-sm">إدارة الطلبات، المبيعات، والعملاء</p>
             </div>
         </div>
-        <div class="flex gap-3">
-            <button onclick="window.open('print.html', '_blank')" class="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-5 py-3 rounded-xl shadow-lg btn-icon transition-all duration-200 transform hover:scale-105">
-                <i class="fas fa-print"></i> طباعة الفواتير
-            </button>
-            <button id="newOrderBtn" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-xl shadow-lg btn-icon transition-all duration-200 transform hover:scale-105">
-                <i class="fas fa-plus-circle"></i> طلب جديد
-            </button>
-        </div>
+        <button id="newOrderBtn" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-xl shadow-lg btn-icon transition-all duration-200 transform hover:scale-105">
+            <i class="fas fa-plus-circle"></i> طلب جديد
+        </button>
     </div>
 
     <!-- فلترة -->
@@ -415,7 +408,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// دالة مساعدة
+// ========== دوال مساعدة ==========
 async function getCollection(name) {
     const snap = await getDocs(collection(db, name));
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -448,6 +441,8 @@ const getOrdersWithDetails = async () => {
 // العملاء
 const loadCustomers = () => getCollection('customers');
 const addCustomer = (data) => addDoc(collection(db, 'customers'), data);
+const updateCustomer = (id, data) => updateDoc(doc(db, 'customers', id), data);
+const deleteCustomer = (id) => deleteDoc(doc(db, 'customers', id));
 
 // ========== المتغيرات ==========
 let customers = [], products = [], orders = [], currentOrderId = null;
@@ -548,11 +543,18 @@ async function loadData() {
     await Promise.all([loadCustomersList(), loadProductsList()]);
 }
 
-// ========== دوال الطباعة - فتح ملف الطباعة ==========
-function openPrintPage(orderId) {
-    // فتح ملف الطباعة مع تمرير معرف الطلب في الرابط
-    window.open(`print.html?order=${orderId}`, '_blank');
-}
+// ========== دوال الطباعة (تم تعديل المسار إلى ../../print.html) ==========
+window.printOrder = function(orderId) {
+    window.open(`../../print.html?id=${orderId}&auto=print`, "_blank");
+};
+
+window.printOrderPDF = function(orderId) {
+    window.open(`../../print.html?id=${orderId}&auto=pdf`, "_blank");
+};
+
+window.printOrderPNG = function(orderId) {
+    window.open(`../../print.html?id=${orderId}&auto=png`, "_blank");
+};
 
 // ========== عرض الطلبات ==========
 async function renderOrders() {
@@ -643,7 +645,9 @@ async function renderOrders() {
                         <option value="مسترجع" ${order.status === 'مسترجع' ? 'selected' : ''}>↩️ مسترجع</option>
                         <option value="ملغي" ${order.status === 'ملغي' ? 'selected' : ''}>❌ ملغي</option>
                     </select>
-                    <button onclick="window.openPrintPage('${order.id}')" class="print-btn p-2 rounded-lg hover:bg-gray-100 transition" title="طباعة"><i class="fas fa-print"></i></button>
+                    <button onclick="window.printOrder('${order.id}')" class="text-gray-600 hover:text-gray-800 p-2 rounded-lg hover:bg-gray-100 transition" title="طباعة"><i class="fas fa-print"></i></button>
+                    <button onclick="window.printOrderPDF('${order.id}')" class="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50 transition" title="PDF"><i class="fas fa-file-pdf"></i></button>
+                    <button onclick="window.printOrderPNG('${order.id}')" class="text-purple-600 hover:text-purple-800 p-2 rounded-lg hover:bg-purple-50 transition" title="صورة"><i class="fas fa-image"></i></button>
                     <button onclick="window.deleteOrderHandler('${order.id}')" class="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50 transition"><i class="fas fa-trash"></i></button>
                 </div>
             </div>
@@ -1172,7 +1176,6 @@ function openModalForEdit(orderId) {
 }
 
 window.editOrder = openModalForEdit;
-window.openPrintPage = openPrintPage;
 window.changeStatus = async (id, st) => {
     try { await updateOrder(id, { status: st }); await renderOrders(); showToast(`تم تغيير الحالة`, 'success'); }
     catch (e) { showToast('خطأ', 'error'); }
