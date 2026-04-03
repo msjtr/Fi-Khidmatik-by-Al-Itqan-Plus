@@ -6,7 +6,8 @@
     <title>فاتورة إلكترونية</title>
     <link rel="icon" href="data:,">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { direction: rtl; font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; padding: 20px; }
@@ -37,8 +38,28 @@
         .btn-pdf { background: #ef4444; color: white; }
         .btn-png { background: #8b5cf6; color: white; }
         .btn-close { background: #64748b; color: white; }
-        @media print { body { background: white; padding: 0; } .action-buttons { display: none; } .invoice-wrapper { box-shadow: none; } }
-        @media (max-width: 768px) { .invoice-container { padding: 20px; } .summary-box { width: 100%; } .btn { padding: 8px 16px; } }
+        
+        @media print { 
+            body { 
+                background: white; 
+                padding: 0; 
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            } 
+            .action-buttons { 
+                display: none !important; 
+            } 
+            .invoice-wrapper { 
+                box-shadow: none; 
+            } 
+        }
+        
+        @media (max-width: 768px) { 
+            .invoice-container { padding: 20px; } 
+            .summary-box { width: 100%; } 
+            .btn { padding: 8px 16px; } 
+        }
+        
         .loading { text-align: center; padding: 50px; font-size: 18px; color: #666; }
         .error { text-align: center; padding: 50px; color: red; }
     </style>
