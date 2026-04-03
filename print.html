@@ -1,199 +1,695 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فاتورة إلكترونية</title>
+    <title>طباعة الفاتورة - نظام الفواتير</title>
     <link rel="icon" href="data:,">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { direction: rtl; font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; padding: 20px; }
-        .invoice-wrapper { max-width: 1100px; margin: 0 auto; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); overflow: hidden; }
-        .invoice-container { padding: 40px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 20px; }
-        .logo { width: 80px; height: 80px; background: linear-gradient(135deg, #1e3a8a, #3b82f6); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-        .logo img { width: 50px; }
-        .title h1 { color: #1e3a8a; font-size: 28px; }
-        .tax-card { background: #1e293b; color: white; padding: 8px 16px; border-radius: 8px; font-size: 12px; margin-bottom: 8px; }
-        .divider { border-top: 2px solid #e2e8f0; margin: 20px 0; }
-        .info { background: #f8fafc; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; flex-wrap: wrap; margin-bottom: 25px; }
-        .parties { display: flex; gap: 25px; margin-bottom: 30px; flex-wrap: wrap; }
-        .party { flex: 1; padding: 20px; border-radius: 12px; background: #f8fafc; border-right: 4px solid #f59e0b; }
-        .party.buyer { border-right-color: #0284c7; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { border: 1px solid #e2e8f0; padding: 12px; text-align: center; }
-        th { background: #1e3a8a; color: white; }
-        .summary { background: #f8fafc; padding: 20px; border-radius: 12px; margin: 20px 0; display: flex; justify-content: flex-end; }
-        .summary-box { width: 320px; }
-        .summary-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e2e8f0; }
-        .summary-row.total { font-size: 18px; font-weight: bold; border-bottom: none; }
-        .footer { text-align: center; padding-top: 20px; border-top: 2px solid #e2e8f0; }
-        .footer .thanks { font-size: 16px; color: #1e3a8a; font-weight: bold; }
-        .action-buttons { position: fixed; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; gap: 15px; z-index: 1000; }
-        .btn { padding: 12px 24px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .btn-print { background: #3b82f6; color: white; }
-        .btn-pdf { background: #ef4444; color: white; }
-        .btn-png { background: #8b5cf6; color: white; }
-        .btn-close { background: #64748b; color: white; }
-        
-        @media print { 
-            body { 
-                background: white; 
-                padding: 0; 
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            } 
-            .action-buttons { 
-                display: none !important; 
-            } 
-            .invoice-wrapper { 
-                box-shadow: none; 
-            } 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
-        @media (max-width: 768px) { 
-            .invoice-container { padding: 20px; } 
-            .summary-box { width: 100%; } 
-            .btn { padding: 8px 16px; } 
+        body {
+            font-family: 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
         }
         
-        .loading { text-align: center; padding: 50px; font-size: 18px; color: #666; }
-        .error { text-align: center; padding: 50px; color: red; }
+        .invoice-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .invoice-header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .invoice-header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .invoice-header p {
+            font-size: 14px;
+            opacity: 0.9;
+            margin: 5px 0;
+        }
+        
+        .invoice-body {
+            padding: 30px;
+        }
+        
+        .info-section {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .info-box {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .info-box h3 {
+            color: #1e3a8a;
+            font-size: 16px;
+            margin-bottom: 10px;
+            border-right: 3px solid #3b82f6;
+            padding-right: 10px;
+        }
+        
+        .info-box p {
+            font-size: 14px;
+            margin: 5px 0;
+            color: #334155;
+        }
+        
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+        }
+        
+        .items-table th {
+            background: #f1f5f9;
+            padding: 12px;
+            text-align: center;
+            font-weight: 600;
+            color: #1e293b;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .items-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .items-table tr:hover {
+            background: #f8fafc;
+        }
+        
+        .totals-section {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 14px;
+        }
+        
+        .totals-row.total {
+            border-top: 2px solid #86efac;
+            margin-top: 10px;
+            padding-top: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #166534;
+        }
+        
+        .payment-info {
+            background: #fef3c7;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .footer {
+            background: #f8fafc;
+            padding: 20px;
+            text-align: center;
+            color: #64748b;
+            font-size: 12px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #64748b;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #475569;
+            transform: translateY(-2px);
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-new { background: #dbeafe; color: #1e40af; }
+        .status-processing { background: #fef3c7; color: #b45309; }
+        .status-completed { background: #d1fae5; color: #065f46; }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .action-buttons, .no-print {
+                display: none !important;
+            }
+            .invoice-container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+            .invoice-header {
+                background: #1e3a8a;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .totals-section, .payment-info {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            text-align: center;
+            padding: 40px;
+            color: #dc2626;
+        }
+        
+        input, select {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+        
+        .search-box {
+            margin-bottom: 20px;
+        }
+        
+        .order-selector {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .order-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .order-item {
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .order-item:hover {
+            background: #f1f5f9;
+            transform: translateX(-5px);
+        }
+        
+        .order-item.selected {
+            background: #dbeafe;
+            border-color: #3b82f6;
+        }
     </style>
 </head>
 <body>
-<div id="loading" class="loading">⏳ جاري تحميل الفاتورة...</div>
-<div id="invoiceWrapper" style="display: none;"></div>
-<div class="action-buttons" id="actionButtons" style="display: none;">
-    <button class="btn btn-print" onclick="handlePrint()">🖨️ طباعة</button>
-    <button class="btn btn-pdf" onclick="handlePDF()">📄 PDF</button>
-    <button class="btn btn-png" onclick="handlePNG()">🖼️ صورة</button>
-    <button class="btn btn-close" onclick="window.close()">✖️ إغلاق</button>
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
-    authDomain: "msjt301-974bb.firebaseapp.com",
-    projectId: "msjt301-974bb",
-    storageBucket: "msjt301-974bb.firebasestorage.app"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const params = new URLSearchParams(window.location.search);
-const orderId = params.get("id");
-const autoAction = params.get("auto");
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
-}
-
-function formatDate(dateStr) {
-    if (!dateStr) return '-';
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
-    return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
-}
-
-async function loadInvoice() {
-    const loadingDiv = document.getElementById('loading');
-    const wrapperDiv = document.getElementById('invoiceWrapper');
-    
-    if (!orderId) { loadingDiv.innerHTML = '<div class="error">لا يوجد رقم طلب</div>'; return; }
-    
-    try {
-        const orderSnap = await getDoc(doc(db, "orders", orderId));
-        if (!orderSnap.exists()) { loadingDiv.innerHTML = '<div class="error">الطلب غير موجود</div>'; return; }
+    <div id="app" class="invoice-container">
+        <div class="invoice-header">
+            <h1><i class="fas fa-file-invoice"></i> فاتورة إلكترونية</h1>
+            <p>منصة في خدمتك - المملكة العربية السعودية - حائل</p>
+            <p>الرقم الضريبي: 312495447600003</p>
+        </div>
         
-        const order = { id: orderSnap.id, ...orderSnap.data() };
-        const customersSnap = await getDocs(collection(db, "customers"));
-        const customers = {};
-        customersSnap.forEach(doc => { customers[doc.id] = doc.data(); });
-        const customer = customers[order.customerId] || {};
-        
-        let rows = '', subtotal = 0;
-        order.items?.forEach((item, index) => {
-            const itemTotal = (item.price || 0) * (item.quantity || 0);
-            subtotal += itemTotal;
-            rows += `<tr><td>${index + 1}</td><td style="text-align:right;">${escapeHtml(item.name)}</td><td>${item.quantity}</td><td>${item.price.toFixed(2)}</td><td>${itemTotal.toFixed(2)}</td></tr>`;
-        });
-        
-        let discountValue = order.discount || 0;
-        if (order.discountType === 'percent' && discountValue > 0) discountValue = (subtotal * discountValue) / 100;
-        const afterDiscount = subtotal - discountValue;
-        const tax = afterDiscount * 0.15;
-        const total = afterDiscount + tax;
-        
-        const logoBase64 = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%233b82f6'/%3E%3Ctext x='50' y='70' text-anchor='middle' fill='white' font-size='40' font-weight='bold'%3Eف%3C/text%3E%3C/svg%3E";
-        
-        wrapperDiv.innerHTML = `
-        <div class="invoice-wrapper">
-            <div class="invoice-container">
-                <div class="header">
-                    <div class="logo"><img src="${logoBase64}"></div>
-                    <div class="title"><h1>فاتورة إلكترونية</h1><p>ELECTRONIC INVOICE</p></div>
-                    <div><div class="tax-card">📄 رقم شهادة العمل الحر: FL-765735204</div><div class="tax-card">🏷️ الرقم الضريبي: 312495447600003</div></div>
-                </div>
-                <div class="divider"></div>
-                <div class="info"><div><strong>رقم الفاتورة:</strong> ${order.orderNumber}</div><div><strong>التاريخ:</strong> ${formatDate(order.orderDate)}</div></div>
-                <div class="parties">
-                    <div class="party"><strong>🏢 مصدرة من</strong><br>منصة في خدمتك<br>المملكة العربية السعودية - حائل<br>حي النقرة</div>
-                    <div class="party buyer"><strong>👤 مصدرة إلى</strong><br>${escapeHtml(customer.name)}<br>${escapeHtml(customer.city)}<br>هاتف: ${escapeHtml(customer.phone)}</div>
-                </div>
-                <table><thead><tr><th>#</th><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${rows || '<tr><td colspan="5">لا توجد منتجات</td></tr>'}</tbody></table>
-                <div class="summary"><div class="summary-box">
-                    <div class="summary-row"><span>المجموع الفرعي:</span><span>${subtotal.toFixed(2)} ريال</span></div>
-                    <div class="summary-row"><span>الخصم:</span><span style="color:#ef4444;">- ${discountValue.toFixed(2)} ريال</span></div>
-                    <div class="summary-row"><span>الضريبة 15%:</span><span>${tax.toFixed(2)} ريال</span></div>
-                    <div class="summary-row total"><span>الإجمالي:</span><span style="color:#1e3a8a;">${total.toFixed(2)} ريال</span></div>
-                </div></div>
-                <div class="footer"><p>🧾 هذه الفاتورة إلكترونية صادرة من منصة في خدمتك</p><p class="thanks">شكراً لتسوقكم معنا 🤍</p></div>
+        <div id="content">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>جاري تحميل البيانات...</p>
             </div>
-        </div>`;
-        
-        loadingDiv.style.display = 'none';
-        wrapperDiv.style.display = 'block';
-        document.getElementById('actionButtons').style.display = 'flex';
-        
-        if (autoAction === 'print') setTimeout(() => window.print(), 500);
-        else if (autoAction === 'pdf') setTimeout(() => handlePDF(), 500);
-        else if (autoAction === 'png') setTimeout(() => handlePNG(), 500);
-    } catch (error) {
-        loadingDiv.innerHTML = `<div class="error">خطأ: ${error.message}</div>`;
-    }
-}
+        </div>
+    </div>
 
-window.handlePrint = () => window.print();
-window.handlePDF = async () => {
-    const element = document.querySelector('.invoice-wrapper');
-    if (element) await html2pdf().from(element).save(`فاتورة_${orderId}.pdf`);
-};
-window.handlePNG = async () => {
-    const element = document.querySelector('.invoice-wrapper');
-    if (element) {
-        const canvas = await html2canvas(element);
-        const link = document.createElement('a');
-        link.download = `فاتورة_${orderId}.png`;
-        link.href = canvas.toDataURL();
-        link.click();
-    }
-};
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-loadInvoice();
-</script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
+            authDomain: "msjt301-974bb.firebaseapp.com",
+            projectId: "msjt301-974bb",
+            storageBucket: "msjt301-974bb.firebasestorage.app",
+            messagingSenderId: "186209858482",
+            appId: "1:186209858482:web:186ca610780799ef562aab"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        let orders = [];
+        let customers = [];
+        let products = [];
+
+        async function loadData() {
+            try {
+                const ordersSnap = await getDocs(collection(db, 'orders'));
+                const customersSnap = await getDocs(collection(db, 'customers'));
+                const productsSnap = await getDocs(collection(db, 'products'));
+                
+                orders = ordersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                customers = customersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                products = productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                return true;
+            } catch (error) {
+                console.error('خطأ في تحميل البيانات:', error);
+                return false;
+            }
+        }
+
+        function getCustomerName(customerId) {
+            const customer = customers.find(c => c.id === customerId);
+            return customer ? customer.name : 'غير معروف';
+        }
+
+        function getCustomerPhone(customerId) {
+            const customer = customers.find(c => c.id === customerId);
+            return customer ? customer.phone : '';
+        }
+
+        function getCustomerCity(customerId) {
+            const customer = customers.find(c => c.id === customerId);
+            return customer ? customer.city : '';
+        }
+
+        function getProductName(productId) {
+            const product = products.find(p => p.id === productId);
+            return product ? product.name : 'منتج غير معروف';
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+        }
+
+        function formatTime(time24) {
+            if (!time24) return '';
+            let [h, m] = time24.split(':');
+            let hour = parseInt(h);
+            let ampm = hour >= 12 ? 'مساءً' : 'صباحاً';
+            hour = hour % 12 || 12;
+            return `${hour.toString().padStart(2, '0')}:${m} ${ampm}`;
+        }
+
+        function getStatusClass(status) {
+            const classes = {
+                'جديد': 'status-new',
+                'تحت التنفيذ': 'status-processing',
+                'تم التنفيذ': 'status-completed'
+            };
+            return classes[status] || 'status-new';
+        }
+
+        function getStatusIcon(status) {
+            const icons = {
+                'جديد': '🆕',
+                'تحت التنفيذ': '⚙️',
+                'تم التنفيذ': '✅',
+                'تحت المراجعة': '🔍',
+                'مسترجع': '↩️',
+                'ملغي': '❌'
+            };
+            return icons[status] || '📋';
+        }
+
+        function getShippingMethodText(method) {
+            const methods = {
+                'pickup': '🏪 استلام من المقر',
+                'delivery': '🚚 شحن منزلي',
+                'noship': '📥 لا يتطلب شحن'
+            };
+            return methods[method] || method;
+        }
+
+        function renderInvoice(order) {
+            if (!order) return '<div class="error-message"><i class="fas fa-exclamation-circle fa-3x"></i><p>الطلب غير موجود</p></div>';
+            
+            let subtotal = 0;
+            const itemsRows = [];
+            
+            const items = order.items || [];
+            items.forEach((item, index) => {
+                const itemName = item.name || getProductName(item.productId);
+                const itemPrice = item.price || 0;
+                const itemQuantity = item.quantity || 0;
+                const itemTotal = itemPrice * itemQuantity;
+                subtotal += itemTotal;
+                
+                itemsRows.push(`
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td style="text-align: right;">${escapeHtml(itemName)}</td>
+                        <td>${itemQuantity}</td>
+                        <td>${itemPrice.toFixed(2)}</td>
+                        <td>${itemTotal.toFixed(2)}</td>
+                    </tr>
+                `);
+            });
+            
+            let discountValue = order.discount || 0;
+            if (order.discountType === 'percent' && discountValue > 0) {
+                discountValue = (subtotal * discountValue) / 100;
+            }
+            
+            const afterDiscount = subtotal - discountValue;
+            const tax = afterDiscount * 0.15;
+            const total = afterDiscount + tax;
+            
+            const paymentMethodName = order.paymentMethodName || 
+                (order.paymentMethod === 'mada' ? 'مدى' :
+                order.paymentMethod === 'mastercard' ? 'ماستركارد' :
+                order.paymentMethod === 'visa' ? 'فيزا' :
+                order.paymentMethod === 'stcpay' ? 'STCPay' :
+                order.paymentMethod === 'tamara' ? 'تمارا' :
+                order.paymentMethod === 'tabby' ? 'تابي' : 'أخرى');
+            
+            return `
+                <div class="invoice-body">
+                    <div class="info-section">
+                        <div class="info-box">
+                            <h3><i class="fas fa-receipt"></i> معلومات الفاتورة</h3>
+                            <p><strong>رقم الفاتورة:</strong> ${escapeHtml(order.orderNumber || order.id)}</p>
+                            <p><strong>التاريخ:</strong> ${formatDate(order.orderDate)}</p>
+                            <p><strong>الوقت:</strong> ${formatTime(order.orderTime)}</p>
+                            <p><strong>الحالة:</strong> <span class="status-badge ${getStatusClass(order.status)}">${getStatusIcon(order.status)} ${order.status}</span></p>
+                        </div>
+                        <div class="info-box">
+                            <h3><i class="fas fa-user"></i> بيانات العميل</h3>
+                            <p><strong>الاسم:</strong> ${escapeHtml(getCustomerName(order.customerId))}</p>
+                            ${getCustomerPhone(order.customerId) ? `<p><strong>الجوال:</strong> ${getCustomerPhone(order.customerId)}</p>` : ''}
+                            ${getCustomerCity(order.customerId) ? `<p><strong>المدينة:</strong> ${getCustomerCity(order.customerId)}</p>` : ''}
+                        </div>
+                        <div class="info-box">
+                            <h3><i class="fas fa-truck"></i> معلومات الشحن</h3>
+                            <p><strong>طريقة الاستلام:</strong> ${getShippingMethodText(order.shippingMethod)}</p>
+                            ${order.shippingAddress ? `
+                                ${order.shippingAddress.city ? `<p><strong>المدينة:</strong> ${order.shippingAddress.city}</p>` : ''}
+                                ${order.shippingAddress.street ? `<p><strong>الشارع:</strong> ${order.shippingAddress.street}</p>` : ''}
+                            ` : ''}
+                            ${order.extraEmail ? `<p><strong>البريد الإلكتروني:</strong> ${order.extraEmail}</p>` : ''}
+                        </div>
+                    </div>
+                    
+                    <table class="items-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>المنتج</th>
+                                <th>الكمية</th>
+                                <th>السعر</th>
+                                <th>الإجمالي</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsRows.length ? itemsRows.join('') : '<tr><td colspan="5" style="text-align: center;">لا توجد منتجات</td></tr>'}
+                        </tbody>
+                    </table>
+                    
+                    <div class="totals-section">
+                        <div class="totals-row">
+                            <span>المجموع الفرعي:</span>
+                            <span>${subtotal.toFixed(2)} ريال</span>
+                        </div>
+                        ${discountValue > 0 ? `
+                        <div class="totals-row">
+                            <span>الخصم:</span>
+                            <span style="color: #dc2626;">- ${discountValue.toFixed(2)} ريال</span>
+                        </div>
+                        ` : ''}
+                        <div class="totals-row">
+                            <span>الضريبة 15%:</span>
+                            <span>${tax.toFixed(2)} ريال</span>
+                        </div>
+                        <div class="totals-row total">
+                            <span>الإجمالي النهائي:</span>
+                            <span style="color: #166534;">${total.toFixed(2)} ريال</span>
+                        </div>
+                    </div>
+                    
+                    <div class="payment-info">
+                        <div><i class="fas fa-credit-card"></i> <strong>طريقة الدفع:</strong> ${paymentMethodName}</div>
+                        ${order.approvalCode ? `<div><i class="fas fa-check-circle"></i> <strong>رمز الموافقة:</strong> ${order.approvalCode}</div>` : ''}
+                    </div>
+                </div>
+                
+                <div class="footer">
+                    <p>شكراً لتسوقكم معنا</p>
+                    <p>هذه الفاتورة إلكترونية ولا تحتاج توقيع</p>
+                    <p style="margin-top: 10px;">
+                        <i class="fas fa-phone"></i> 0540000000 |
+                        <i class="fas fa-envelope"></i> info@example.com |
+                        <i class="fas fa-globe"></i> www.example.com
+                    </p>
+                </div>
+            `;
+        }
+
+        function renderOrderSelector() {
+            if (orders.length === 0) {
+                return `
+                    <div class="error-message">
+                        <i class="fas fa-inbox fa-3x"></i>
+                        <p>لا توجد طلبات لعرضها</p>
+                    </div>
+                `;
+            }
+            
+            // ترتيب الطلبات من الأحدث إلى الأقدم
+            const sortedOrders = [...orders].sort((a, b) => {
+                const dateA = new Date(a.orderDate + ' ' + (a.orderTime || '00:00'));
+                const dateB = new Date(b.orderDate + ' ' + (b.orderTime || '00:00'));
+                return dateB - dateA;
+            });
+            
+            return `
+                <div class="order-selector">
+                    <div class="search-box">
+                        <input type="text" id="searchOrder" placeholder="🔍 بحث برقم الطلب أو اسم العميل..." class="w-full">
+                    </div>
+                    <div class="order-list" id="orderList">
+                        ${sortedOrders.map(order => `
+                            <div class="order-item" data-order-id="${order.id}" onclick="selectOrder('${order.id}')">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <strong>${escapeHtml(order.orderNumber || order.id.slice(0, 8))}</strong>
+                                        <span class="status-badge ${getStatusClass(order.status)}" style="margin-right: 10px;">${order.status}</span>
+                                    </div>
+                                    <div style="color: #166534; font-weight: bold;">${(order.total || 0).toFixed(2)} ريال</div>
+                                </div>
+                                <div style="font-size: 12px; color: #64748b; margin-top: 5px;">
+                                    ${formatDate(order.orderDate)} | ${getCustomerName(order.customerId)} | ${getShippingMethodText(order.shippingMethod)}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div id="invoiceDisplay"></div>
+            `;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        window.selectOrder = async function(orderId) {
+            // إزالة التحديد السابق
+            document.querySelectorAll('.order-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // تحديد العنصر الحالي
+            const selectedItem = document.querySelector(`.order-item[data-order-id="${orderId}"]`);
+            if (selectedItem) {
+                selectedItem.classList.add('selected');
+            }
+            
+            // عرض الفاتورة
+            const order = orders.find(o => o.id === orderId);
+            const invoiceDisplay = document.getElementById('invoiceDisplay');
+            if (invoiceDisplay && order) {
+                invoiceDisplay.innerHTML = renderInvoice(order);
+                // التمرير إلى الفاتورة
+                invoiceDisplay.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        };
+
+        function setupSearch() {
+            const searchInput = document.getElementById('searchOrder');
+            if (!searchInput) return;
+            
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const orderItems = document.querySelectorAll('.order-item');
+                
+                orderItems.forEach(item => {
+                    const text = item.textContent.toLowerCase();
+                    if (text.includes(searchTerm)) {
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        async function init() {
+            const content = document.getElementById('content');
+            const success = await loadData();
+            
+            if (!success) {
+                content.innerHTML = `
+                    <div class="error-message">
+                        <i class="fas fa-database fa-3x"></i>
+                        <p>حدث خطأ في الاتصال بقاعدة البيانات</p>
+                        <button onclick="location.reload()" class="btn btn-primary" style="margin-top: 20px;">
+                            <i class="fas fa-sync-alt"></i> إعادة المحاولة
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            content.innerHTML = renderOrderSelector();
+            setupSearch();
+            
+            // إذا كان هناك طلبات، حدد أول طلب
+            if (orders.length > 0) {
+                const firstOrderId = orders[0].id;
+                const firstItem = document.querySelector(`.order-item[data-order-id="${firstOrderId}"]`);
+                if (firstItem) {
+                    firstItem.classList.add('selected');
+                    const invoiceDisplay = document.getElementById('invoiceDisplay');
+                    if (invoiceDisplay) {
+                        invoiceDisplay.innerHTML = renderInvoice(orders[0]);
+                    }
+                }
+            }
+        }
+        
+        init();
+    </script>
+    
+    <div class="action-buttons no-print">
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="fas fa-print"></i> طباعة الفاتورة
+        </button>
+        <button onclick="location.reload()" class="btn btn-secondary">
+            <i class="fas fa-sync-alt"></i> تحديث
+        </button>
+    </div>
 </body>
 </html>
