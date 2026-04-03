@@ -5,19 +5,21 @@
 <title>فاتورة إلكترونية</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <style>
 body{font-family:Arial;background:#f1f5f9;margin:0}
 
 @media print{
-@page{size:A4;margin:130px 25px 120px 25px}
+@page{size:A4;margin:140px 30px 120px 30px}
 
 .print-header,.print-footer{display:flex!important}
 
 .print-header{
 position:fixed;top:0;right:0;left:0;
 background:#fff;border-bottom:2px solid #ddd;
-padding:10px 20px;z-index:999
+padding:10px 20px
 }
 
 .print-footer{
@@ -31,25 +33,20 @@ display:flex;justify-content:space-between
 }
 
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.box{border:1px solid #ddd;padding:15px}
+.box{border:1px solid #ddd;padding:15px;background:#fff}
 
 table{width:100%;border-collapse:collapse}
 th,td{border:1px solid #ccc;padding:8px;text-align:center}
 thead{display:table-header-group}
 tr{page-break-inside:avoid}
 
-.product-img{width:60px;height:60px;object-fit:contain;border:1px solid #ccc;padding:4px}
+.product-img{width:60px;height:60px;border:1px solid #ccc}
 
 .page-break{page-break-before:always}
 </style>
 </head>
 
 <body>
-
-<div id="app"></div>
-
-<script>
-document.getElementById('app').innerHTML = `
 
 <!-- HEADER -->
 <div class="print-header">
@@ -65,16 +62,15 @@ document.getElementById('app').innerHTML = `
 <div class="print-footer">
 <div>
 <b>معلومات التواصل</b><br>
-هاتف: 966534051317 | الواتس اب: 966545312021<br>
-البريد الإلكتروني: info@fi-khidmatik.com<br>
-الموقع الإلكتروني: www.khidmatik.com<br><br>
+هاتف: 966534051317 | واتس: 966545312021<br>
+info@fi-khidmatik.com | www.khidmatik.com<br><br>
 شكراً لتسوقكم معنا<br>
 هذه الفاتورة إلكترونية صادرة من منصة في خدمتك - نسخة معتمدة قانونياً
 </div>
 <div class="page-number"></div>
 </div>
 
-<div style="padding:20px">
+<div id="invoice" style="padding:20px">
 
 <h2>فاتورة إلكترونية</h2>
 
@@ -83,33 +79,32 @@ document.getElementById('app').innerHTML = `
 <b>مصدرة من:</b><br>
 منصة في خدمتك<br>
 المملكة العربية السعودية<br>
-حائل - حي النقرة - شارع سعد المشاط<br>
-رقم المبنى: 3085 الرقم الإضافي: 7718 الرمز البريدي: 55431
+حائل - حي النقرة - شارع سعد المشاط
 </div>
 
 <div class="box">
 <b>مصدرة إلى:</b><br>
-اسم العميل: __________<br>
+<span data-customer-name></span><br>
 الدولة: المملكة العربية السعودية<br>
-المدينة: __________<br>
-العنوان: __________<br>
-رقم الجوال: __________<br>
-البريد الإلكتروني: __________
+<span id="city"></span><br>
+<span id="address"></span><br>
+<span id="phone"></span><br>
+<span id="email"></span>
 </div>
 </div>
 
 <br>
 
 <div style="display:flex;justify-content:space-between">
-<div>طريقة الدفع: __________</div>
-<div>رمز الموافقة على الطلب: __________</div>
+<div>طريقة الدفع: <span id="payment"></span></div>
+<div>رمز الموافقة: <span data-order-id></span></div>
 </div>
 
 <br>
 
-<div>طريقة الاستلام: __________</div>
+<div>طريقة الاستلام: <span id="shipping"></span></div>
 
-<h3>تفاصيل المنتجات / الخدمات</h3>
+<h3>تفاصيل المنتجات</h3>
 
 <table>
 <thead>
@@ -124,61 +119,127 @@ document.getElementById('app').innerHTML = `
 </tr>
 </thead>
 
-<tbody>
-<tr>
-<td>1</td>
-<td>منتج</td>
-<td><img src="" class="product-img"></td>
-<td>123</td>
-<td>2</td>
-<td>100 ريال</td>
-<td>200 ريال</td>
-</tr>
-</tbody>
+<tbody id="items-body"></tbody>
 </table>
 
 <br>
 
-<div>
-السعر الاجمالي : ___ ريال<br>
-قيمة الخصم: ___ ريال<br>
-الضريبة 15%: ___ ريال<br>
-الاجمالي النهائي: ___ ريال
-</div>
-
 <h3>ملخص الفاتورة</h3>
-
-<div>
-المجموع الفرعي: ___ ريال<br>
-إجمالي الخصم: ___ ريال<br>
-ضريبة القيمة المضافة (15%): ___ ريال<br>
-الإجمالي النهائي شامل الضريبة: ___ ريال
-</div>
+<div id="summary"></div>
 
 <h3>تعليمات الفاتورة</h3>
-
 <p>
 تخضع هذه الفاتورة لكامل الشروط والأحكام المرفقة، ويُعد اعتمادها أو سداد أي مبلغ بموجبها إقرارًا صريحًا ونهائيًا بالموافقة على جميع بنودها دون أي تحفظ
 </p>
 
 </div>
 
-<!-- صفحة الشروط -->
 <div class="page-break"></div>
 
 <div style="padding:20px;font-size:13px;line-height:1.8">
+<h3>الشروط والأحكام والتعليمات</h3>
 
-${document.querySelector('script[type="text/plain"]')?.innerHTML || ''}
+<p>
+(ضع هنا الشروط كاملة 57 بند — نفس النص اللي كتبته بدون تعديل)
+</p>
 
 </div>
 
-`;
-</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-<!-- 🔥 الشروط محفوظة هنا بدون أي تعديل -->
-<script type="text/plain">
-<!-- تم إدراج النص كامل كما في الملف -->
-${``}
+const app = initializeApp({
+apiKey:"AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
+authDomain:"msjt301-974bb.firebaseapp.com",
+projectId:"msjt301-974bb"
+});
+
+const db = getFirestore(app);
+
+const params = new URLSearchParams(location.search);
+const orderId = params.get("id");
+const auto = params.get("auto");
+
+async function load(){
+const snap = await getDoc(doc(db,"orders",orderId));
+const o = snap.data();
+
+// بيانات العميل
+document.querySelector('[data-customer-name]').innerText = o.customerName || "";
+document.querySelector('[data-order-id]').innerText = orderId;
+document.getElementById('city').innerText = o.city || "";
+document.getElementById('address').innerText = o.address || "";
+document.getElementById('phone').innerText = o.phone || "";
+document.getElementById('email').innerText = o.email || "";
+document.getElementById('payment').innerText = o.payment || "";
+document.getElementById('shipping').innerText = o.shipping || "";
+
+// المنتجات
+let html="";
+let subtotal=0;
+
+(o.items||[]).forEach((i,x)=>{
+const total=i.price*i.quantity;
+subtotal+=total;
+
+html+=`
+<tr>
+<td>${x+1}</td>
+<td>${i.name}</td>
+<td><img src="${i.image||''}" class="product-img"></td>
+<td>${i.barcode||''}</td>
+<td>${i.quantity}</td>
+<td>${i.price}</td>
+<td>${total}</td>
+</tr>`;
+});
+
+document.getElementById('items-body').innerHTML=html;
+
+// الحسابات
+const discount=o.discount||0;
+const after=subtotal-discount;
+const tax=after*0.15;
+const total=after+tax;
+
+document.getElementById('summary').innerHTML=`
+المجموع: ${subtotal} ريال<br>
+الخصم: ${discount} ريال<br>
+الضريبة: ${tax.toFixed(2)} ريال<br>
+الإجمالي: ${total.toFixed(2)} ريال
+`;
+
+// تنفيذ تلقائي
+if(auto==="print") setTimeout(()=>print(),500);
+if(auto==="pdf") setTimeout(()=>handlePDF(),500);
+if(auto==="png") setTimeout(()=>handlePNG(),500);
+
+}
+
+load();
+
+// PDF باسم العميل
+window.handlePDF = async ()=>{
+const name=document.querySelector('[data-customer-name]').innerText.replace(/\s/g,'-');
+const file=`فاتورة_${name}_${orderId}.pdf`;
+
+await html2pdf().set({
+filename:file,
+html2canvas:{scale:2},
+jsPDF:{format:'a4'}
+}).from(document.body).save();
+};
+
+// PNG
+window.handlePNG = async ()=>{
+const canvas=await html2canvas(document.body,{scale:3});
+const link=document.createElement("a");
+link.download="invoice.png";
+link.href=canvas.toDataURL();
+link.click();
+};
+
 </script>
 
 </body>
