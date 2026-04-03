@@ -7,7 +7,6 @@
     <link rel="icon" href="data:,">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- مكتبات التحويل إلى PDF/PNG -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
@@ -21,9 +20,9 @@
             background: #e2e8f0;
             font-family: 'Segoe UI', Tahoma, 'Noto Sans Arabic', Arial, sans-serif;
             direction: rtl;
-            padding: 30px 20px;
+            padding: 20px;
         }
-        /* تنسيق الورقة A4 */
+        /* حاوية الفاتورة - حجم A4 عند الطباعة */
         .invoice-wrapper {
             max-width: 1100px;
             margin: 0 auto;
@@ -36,7 +35,7 @@
             padding: 35px 40px;
             background: white;
         }
-        /* تنسيق الطباعة */
+        /* تنسيق الطباعة المتقدم */
         @media print {
             body {
                 background: white;
@@ -50,22 +49,48 @@
                 margin: 0;
             }
             .invoice-container {
-                padding: 0.75in;
+                padding: 0.7in;
             }
             .action-buttons {
                 display: none;
             }
+            /* بدء صفحة جديدة للشروط */
             .terms-page {
                 page-break-before: always;
             }
+            /* منع كسر الصفوف داخل الجدول */
             .product-table tr, .product-table td, .product-table th {
                 page-break-inside: avoid;
             }
-            h1, h2, h3, .section-title {
-                page-break-after: avoid;
+            /* تكرار رأس الجدول في كل صفحة */
+            .product-table thead {
+                display: table-header-group;
+            }
+            /* إضافة هوامش آمنة */
+            @page {
+                size: A4;
+                margin: 0.6in;
+            }
+            /* ترقيم الصفحات */
+            @page :after {
+                content: counter(page) " / " counter(pages);
+                font-size: 10px;
+                color: #64748b;
+                text-align: center;
+                width: 100%;
+                margin-top: 20px;
+            }
+            /* منع العناصر الكبيرة من الخروج */
+            .info-section, .summary-box, .terms-box {
+                page-break-inside: avoid;
+            }
+            /* ضبط الصور */
+            img {
+                max-width: 100%;
+                page-break-inside: avoid;
             }
         }
-        /* أدوات مساعدة */
+        /* تنسيقات عامة */
         .flex-between {
             display: flex;
             justify-content: space-between;
@@ -127,6 +152,7 @@
             object-fit: cover;
             border-radius: 6px;
             border: 1px solid #cbd5e1;
+            background: #f8fafc;
         }
         .desc-text {
             font-size: 12px;
@@ -335,13 +361,20 @@
             const qty = item.quantity || 0;
             const total = price * qty;
             subtotal += total;
-            const productImage = item.image || (productsMap.get(item.productId)?.image) || '';
+            // جلب صورة المنتج: أولوية للصورة المخزنة في item.image، ثم من قاعدة بيانات المنتجات
+            let productImage = item.image || '';
+            if (!productImage && item.productId) {
+                const prod = productsMap.get(item.productId);
+                if (prod && prod.image) productImage = prod.image;
+            }
+            // صورة افتراضية إذا لم توجد
+            const imgSrc = productImage || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E';
             const description = item.description || (productsMap.get(item.productId)?.description) || '';
             itemsRows.push(`
                 <tr>
                     <td>${idx+1}</td>
                     <td style="text-align: right;">${escapeHtml(item.name)}</td>
-                    <td><img src="${productImage || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E'}" class="product-img" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E'"></td>
+                    <td><img src="${imgSrc}" class="product-img" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E'"></td>
                     <td>${escapeHtml(item.barcode || '—')}</td>
                     <td class="desc-text">${escapeHtml(description).substring(0, 80)}${description.length > 80 ? '…' : ''}</td>
                     <td>${qty}</td>
@@ -376,7 +409,7 @@
         const html = `
         <div class="invoice-wrapper">
             <div class="invoice-container">
-                <!-- رأس الصفحة -->
+                <!-- رأس الصفحة (يتكرر في الطباعة عبر thead ولكننا سنضعه بشكل عادي) -->
                 <div class="flex-between">
                     <div>
                         <img src="${logoUrl}" alt="شعار المنصة" style="height: 70px;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22%233b82f6%22/%3E%3Ctext x=%2250%22 y=%2270%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2240%22%3Eف%3C/text%3E%3C/svg%3E'">
@@ -420,7 +453,7 @@
                     ${order.extraEmail ? `<span><i class="fas fa-envelope"></i> بريد إضافي: ${order.extraEmail}</span>` : ''}
                 </div>
                 
-                <!-- جدول المنتجات مع عمود الوصف -->
+                <!-- جدول المنتجات مع رأس يتكرر عند الطباعة -->
                 <div class="section-title">تفاصيل المنتجات / الخدمات</div>
                 <table class="product-table">
                     <thead>
@@ -439,7 +472,7 @@
                     <div class="summary-row total"><span>الإجمالي النهائي شامل الضريبة:</span><span>${total.toFixed(2)} ريال</span></div>
                 </div>
                 
-                <!-- تعليمات الفاتورة (قصيرة) -->
+                <!-- تعليمات الفاتورة -->
                 <div class="terms-box">
                     <h4><i class="fas fa-info-circle"></i> تعليمات الفاتورة</h4>
                     <p>تخضع هذه الفاتورة لكامل الشروط والأحكام المرفقة، ويُعد اعتمادها أو سداد أي مبلغ بموجبها إقرارًا صريحًا ونهائيًا بالموافقة على جميع بنودها دون أي تحفظ، مع إقرار العميل بمسؤوليته عن الاطلاع عليها.</p>
@@ -452,7 +485,7 @@
                 </div>
             </div>
             
-            <!-- صفحة مستقلة للشروط والأحكام التفصيلية (page break) -->
+            <!-- صفحة مستقلة للشروط والأحكام -->
             <div class="invoice-container terms-page">
                 <div class="terms-box" style="margin-top:0;">
                     <h4><i class="fas fa-gavel"></i> الشروط والأحكام والتعليمات</h4>
