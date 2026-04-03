@@ -409,11 +409,17 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // دوال مساعدة
-async function getCollection(name) {
-    const snap = await getDocs(collection(db, name));
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-}
+window.printOrder = function(orderId) {
+    window.open(`/print.html?id=${orderId}&auto=print`, "_blank");
+};
 
+window.printOrderPDF = function(orderId) {
+    window.open(`/print.html?id=${orderId}&auto=pdf`, "_blank");
+};
+
+window.printOrderPNG = function(orderId) {
+    window.open(`/print.html?id=${orderId}&auto=png`, "_blank");
+};
 // المنتجات
 const loadProducts = () => getCollection('products');
 const addProduct = (data) => addDoc(collection(db, 'products'), data);
