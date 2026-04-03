@@ -393,7 +393,6 @@
 
 <script type="module">
 // ========== استيراد Firebase ==========
-// ========== استيراد Firebase ==========
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getFirestore, collection, addDoc, doc, getDoc, getDocs, updateDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
@@ -415,12 +414,12 @@ async function getCollection(name) {
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
-// المنتجات - تعريف مرة واحدة فقط
+// المنتجات
 const loadProducts = () => getCollection('products');
 const addProduct = (data) => addDoc(collection(db, 'products'), data);
 const updateProductStock = (id, newStock) => updateDoc(doc(db, 'products', id), { stock: newStock });
 
-// الطلبات - تعريف مرة واحدة فقط
+// الطلبات
 const loadOrders = () => getCollection('orders');
 const addOrder = (data) => addDoc(collection(db, 'orders'), data);
 const updateOrder = (id, data) => updateDoc(doc(db, 'orders', id), data);
@@ -439,7 +438,7 @@ const getOrdersWithDetails = async () => {
     }));
 };
 
-// العملاء - تعريف مرة واحدة فقط
+// العملاء
 const loadCustomers = () => getCollection('customers');
 const addCustomer = (data) => addDoc(collection(db, 'customers'), data);
 
@@ -542,8 +541,145 @@ async function loadData() {
     await Promise.all([loadCustomersList(), loadProductsList()]);
 }
 
-// ========== دوال الطباعة ==========
+// ========== دوال الطباعة المباشرة ==========
+window.printInvoice = async function(orderId) {
+    try {
+        showToast('جاري تجهيز الفاتورة...', 'success');
+        
+        const orderDoc = await getDoc(doc(db, "orders", orderId));
+        if (!orderDoc.exists()) { showToast('الطلب غير موجود', 'error'); return; }
+        const order = { id: orderDoc.id, ...orderDoc.data() };
+        
+        let customer = { name: 'غير معروف', phone: '', city: '' };
+        if (order.customerId) {
+            const customerDoc = await getDoc(doc(db, "customers", order.customerId));
+            if (customerDoc.exists()) customer = customerDoc.data();
+        }
+        
+        let subtotal = 0;
+        const itemsRows = [];
+        order.items?.forEach((item, index) => {
+            const itemTotal = (item.price || 0) * (item.quantity || 0);
+            subtotal += itemTotal;
+            itemsRows.push(`
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${index + 1}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${escapeHtml(item.name)}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${item.quantity}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${(item.price || 0).toFixed(2)}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${itemTotal.toFixed(2)}</td>
+                </tr>
+            `);
+        });
+        
+        let discountValue = order.discount || 0;
+        if (order.discountType === 'percent' && discountValue > 0) {
+            discountValue = (subtotal * discountValue) / 100;
+        }
+        const afterDiscount = subtotal - discountValue;
+        const tax = afterDiscount * 0.15;
+        const total = afterDiscount + tax;
+        
+        const invoiceHtml = `
+            <div style="max-width: 800px; margin: 0 auto; font-family: 'Segoe UI', Arial, sans-serif; direction: rtl;">
+                <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1e3a8a; padding-bottom: 15px;">
+                    <h1 style="color: #1e3a8a; margin: 0;">فاتورة إلكترونية</h1>
+                    <p style="margin: 5px 0;">منصة في خدمتك - المملكة العربية السعودية - حائل</p>
+                    <p style="margin: 5px 0; font-size: 12px;">الرقم الضريبي: 312495447600003</p>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px; background: #f8fafc; padding: 10px; border-radius: 8px;">
+                    <div><strong>رقم الفاتورة:</strong> ${order.orderNumber || 'KF-' + orderId.slice(0, 8)}</div>
+                    <div><strong>التاريخ:</strong> ${order.orderDate || new Date().toLocaleDateString('ar-SA')}</div>
+                </div>
+                
+                <div style="margin-bottom: 20px; background: #f8fafc; padding: 10px; border-radius: 8px;">
+                    <strong>بيانات العميل:</strong><br>
+                    الاسم: ${escapeHtml(customer.name || 'غير معروف')}<br>
+                    ${customer.phone ? `الهاتف: ${customer.phone}<br>` : ''}
+                    ${customer.city ? `المدينة: ${customer.city}` : ''}
+                </div>
+                
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                    <thead>
+                        <tr style="background: #1e3a8a; color: white;">
+                            <th style="border: 1px solid #ddd; padding: 10px;">#</th>
+                            <th style="border: 1px solid #ddd; padding: 10px;">المنتج</th>
+                            <th style="border: 1px solid #ddd; padding: 10px;">الكمية</th>
+                            <th style="border: 1px solid #ddd; padding: 10px;">السعر</th>
+                            <th style="border: 1px solid #ddd; padding: 10px;">الإجمالي</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${itemsRows.length ? itemsRows.join('') : '<tr><td colspan="5" style="text-align: center;">لا توجد منتجات</td></tr>'}
+                    </tbody>
+                </table>
+                
+                <div style="text-align: left; width: 300px; margin-right: auto; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; padding: 5px 0;">
+                        <span>المجموع الفرعي:</span>
+                        <span>${subtotal.toFixed(2)} ريال</span>
+                    </div>
+                    ${discountValue > 0 ? `
+                    <div style="display: flex; justify-content: space-between; padding: 5px 0; color: #ef4444;">
+                        <span>الخصم:</span>
+                        <span>- ${discountValue.toFixed(2)} ريال</span>
+                    </div>
+                    ` : ''}
+                    <div style="display: flex; justify-content: space-between; padding: 5px 0;">
+                        <span>الضريبة 15%:</span>
+                        <span>${tax.toFixed(2)} ريال</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-top: 2px solid #ddd; font-size: 18px; font-weight: bold;">
+                        <span>الإجمالي:</span>
+                        <span style="color: #1e3a8a;">${total.toFixed(2)} ريال</span>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+                    <p style="margin: 0;">شكراً لتسوقكم معنا</p>
+                    <p style="margin: 5px 0; font-size: 12px; color: #666;">هذه الفاتورة إلكترونية ولا تحتاج توقيع</p>
+                </div>
+            </div>
+        `;
+        
+        const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html dir="rtl">
+            <head>
+                <meta charset="UTF-8">
+                <title>فاتورة ${order.orderNumber || orderId}</title>
+                <style>
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; background: white; }
+                    @media print {
+                        body { padding: 0; }
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                ${invoiceHtml}
+                <div class="no-print" style="text-align: center; margin-top: 20px; padding: 10px;">
+                    <button onclick="window.print();" style="padding: 8px 20px; margin: 5px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer;">🖨️ طباعة</button>
+                    <button onclick="window.close();" style="padding: 8px 20px; margin: 5px; background: #64748b; color: white; border: none; border-radius: 8px; cursor: pointer;">✖️ إغلاق</button>
+                </div>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        
+    } catch (error) {
+        console.error(error);
+        showToast('خطأ في الطباعة: ' + error.message, 'error');
+    }
+};
 
+// ربط دوال الطباعة
+window.printOrder = window.printInvoice;
+window.printOrderPDF = window.printInvoice;
+window.printOrderPNG = window.printInvoice;
 
 // ========== عرض الطلبات ==========
 async function renderOrders() {
@@ -634,9 +770,7 @@ async function renderOrders() {
                         <option value="مسترجع" ${order.status === 'مسترجع' ? 'selected' : ''}>↩️ مسترجع</option>
                         <option value="ملغي" ${order.status === 'ملغي' ? 'selected' : ''}>❌ ملغي</option>
                     </select>
-                    <button onclick="window.printOrder('${order.id}')" class="text-gray-600 hover:text-gray-800 p-2 rounded-lg hover:bg-gray-100 transition" title="طباعة"><i class="fas fa-print"></i></button>
-                    <button onclick="window.printOrderPDF('${order.id}')" class="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50 transition" title="PDF"><i class="fas fa-file-pdf"></i></button>
-                    <button onclick="window.printOrderPNG('${order.id}')" class="text-purple-600 hover:text-purple-800 p-2 rounded-lg hover:bg-purple-50 transition" title="صورة"><i class="fas fa-image"></i></button>
+                    <button onclick="window.printInvoice('${order.id}')" class="text-gray-600 hover:text-gray-800 p-2 rounded-lg hover:bg-gray-100 transition" title="طباعة"><i class="fas fa-print"></i></button>
                     <button onclick="window.deleteOrderHandler('${order.id}')" class="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50 transition"><i class="fas fa-trash"></i></button>
                 </div>
             </div>
@@ -1241,167 +1375,6 @@ async function init() {
 }
 
 init();
-</script>
-    <!-- قسم الطباعة المخفي -->
-<div id="printInvoiceSection" style="display: none; position: fixed; top: -9999px; left: -9999px; width: 800px; background: white; padding: 20px; direction: rtl; font-family: 'Segoe UI', Arial;"></div>
-
-<script>
-// دوال طباعة تعمل مباشرة بدون ملف خارجي
-window.printOrderDirect = async function(orderId) {
-    try {
-        showToast('جاري تجهيز الفاتورة...', 'success');
-        
-        // جلب بيانات الطلب
-        const orderDoc = await getDoc(doc(db, "orders", orderId));
-        if (!orderDoc.exists()) { showToast('الطلب غير موجود', 'error'); return; }
-        const order = { id: orderDoc.id, ...orderDoc.data() };
-        
-        // جلب بيانات العميل
-        let customer = { name: 'غير معروف', phone: '', city: '' };
-        if (order.customerId) {
-            const customerDoc = await getDoc(doc(db, "customers", order.customerId));
-            if (customerDoc.exists()) customer = customerDoc.data();
-        }
-        
-        // حساب الإجماليات
-        let subtotal = 0;
-        const itemsRows = [];
-        order.items?.forEach((item, index) => {
-            const itemTotal = (item.price || 0) * (item.quantity || 0);
-            subtotal += itemTotal;
-            itemsRows.push(`
-                <tr>
-                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${index + 1}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${escapeHtml(item.name)}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${item.quantity}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${(item.price || 0).toFixed(2)}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${itemTotal.toFixed(2)}</td>
-                </tr>
-            `);
-        });
-        
-        let discountValue = order.discount || 0;
-        if (order.discountType === 'percent' && discountValue > 0) {
-            discountValue = (subtotal * discountValue) / 100;
-        }
-        const afterDiscount = subtotal - discountValue;
-        const tax = afterDiscount * 0.15;
-        const total = afterDiscount + tax;
-        
-        // إنشاء محتوى الفاتورة
-        const invoiceHtml = `
-            <div style="max-width: 800px; margin: 0 auto; font-family: 'Segoe UI', Arial, sans-serif; direction: rtl;">
-                <!-- Header -->
-                <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1e3a8a; padding-bottom: 15px;">
-                    <h1 style="color: #1e3a8a; margin: 0;">فاتورة إلكترونية</h1>
-                    <p style="margin: 5px 0;">منصة في خدمتك - المملكة العربية السعودية - حائل</p>
-                    <p style="margin: 5px 0; font-size: 12px;">الرقم الضريبي: 312495447600003</p>
-                </div>
-                
-                <!-- معلومات الفاتورة -->
-                <div style="display: flex; justify-content: space-between; margin-bottom: 20px; background: #f8fafc; padding: 10px; border-radius: 8px;">
-                    <div><strong>رقم الفاتورة:</strong> ${order.orderNumber || 'KF-' + orderId.slice(0, 8)}</div>
-                    <div><strong>التاريخ:</strong> ${order.orderDate || new Date().toLocaleDateString('ar-SA')}</div>
-                </div>
-                
-                <!-- معلومات العميل -->
-                <div style="margin-bottom: 20px; background: #f8fafc; padding: 10px; border-radius: 8px;">
-                    <strong>بيانات العميل:</strong><br>
-                    الاسم: ${escapeHtml(customer.name || 'غير معروف')}<br>
-                    ${customer.phone ? `الهاتف: ${customer.phone}<br>` : ''}
-                    ${customer.city ? `المدينة: ${customer.city}` : ''}
-                </div>
-                
-                <!-- جدول المنتجات -->
-                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-                    <thead>
-                        <tr style="background: #1e3a8a; color: white;">
-                            <th style="border: 1px solid #ddd; padding: 10px;">#</th>
-                            <th style="border: 1px solid #ddd; padding: 10px;">المنتج</th>
-                            <th style="border: 1px solid #ddd; padding: 10px;">الكمية</th>
-                            <th style="border: 1px solid #ddd; padding: 10px;">السعر</th>
-                            <th style="border: 1px solid #ddd; padding: 10px;">الإجمالي</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${itemsRows.length ? itemsRows.join('') : '<tr><td colspan="5" style="text-align: center;">لا توجد منتجات</td></tr>'}
-                    </tbody>
-                </table>
-                
-                <!-- ملخص الحساب -->
-                <div style="text-align: left; width: 300px; margin-right: auto; margin-bottom: 20px;">
-                    <div style="display: flex; justify-content: space-between; padding: 5px 0;">
-                        <span>المجموع الفرعي:</span>
-                        <span>${subtotal.toFixed(2)} ريال</span>
-                    </div>
-                    ${discountValue > 0 ? `
-                    <div style="display: flex; justify-content: space-between; padding: 5px 0; color: #ef4444;">
-                        <span>الخصم:</span>
-                        <span>- ${discountValue.toFixed(2)} ريال</span>
-                    </div>
-                    ` : ''}
-                    <div style="display: flex; justify-content: space-between; padding: 5px 0;">
-                        <span>الضريبة 15%:</span>
-                        <span>${tax.toFixed(2)} ريال</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-top: 2px solid #ddd; font-size: 18px; font-weight: bold;">
-                        <span>الإجمالي:</span>
-                        <span style="color: #1e3a8a;">${total.toFixed(2)} ريال</span>
-                    </div>
-                </div>
-                
-                <!-- Footer -->
-                <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
-                    <p style="margin: 0;">شكراً لتسوقكم معنا</p>
-                    <p style="margin: 5px 0; font-size: 12px; color: #666;">هذه الفاتورة إلكترونية ولا تحتاج توقيع</p>
-                </div>
-            </div>
-        `;
-        
-        // فتح نافذة طباعة جديدة
-        const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
-        printWindow.document.write(`
-            <!DOCTYPE html>
-            <html dir="rtl">
-            <head>
-                <meta charset="UTF-8">
-                <title>فاتورة ${order.orderNumber || orderId}</title>
-                <style>
-                    * { margin: 0; padding: 0; box-sizing: border-box; }
-                    body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; background: white; }
-                    @media print {
-                        body { padding: 0; }
-                        .no-print { display: none; }
-                    }
-                </style>
-            </head>
-            <body>
-                ${invoiceHtml}
-                <div class="no-print" style="text-align: center; margin-top: 20px; padding: 10px;">
-                    <button onclick="window.print();" style="padding: 8px 20px; margin: 5px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer;">🖨️ طباعة</button>
-                    <button onclick="window.close();" style="padding: 8px 20px; margin: 5px; background: #64748b; color: white; border: none; border-radius: 8px; cursor: pointer;">✖️ إغلاق</button>
-                </div>
-                <script>
-                    // طباعة تلقائية إذا كان auto=print في الرابط
-                    if (window.location.search.includes('auto=print')) {
-                        setTimeout(() => { window.print(); setTimeout(() => window.close(), 500); }, 500);
-                    }
-                <\/script>
-            </body>
-            </html>
-        `);
-        printWindow.document.close();
-        
-    } catch (error) {
-        console.error(error);
-        showToast('خطأ في الطباعة: ' + error.message, 'error');
-    }
-};
-
-// استبدال دوال الطباعة القديمة
-window.printOrder = window.printOrderDirect;
-window.printOrderPDF = window.printOrderDirect;
-window.printOrderPNG = window.printOrderDirect;
 </script>
 </body>
 </html>
