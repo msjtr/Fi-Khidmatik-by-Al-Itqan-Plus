@@ -393,6 +393,7 @@
 
 <script type="module">
 // ========== استيراد Firebase ==========
+// ========== استيراد Firebase ==========
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getFirestore, collection, addDoc, doc, getDoc, getDocs, updateDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
@@ -408,18 +409,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// دوال مساعدة
-// أضف هذه الدالة أولاً
+// دالة مساعدة
 async function getCollection(name) {
     const snap = await getDocs(collection(db, name));
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
-// ثم تأكد أن الدوال التالية موجودة بعدها
+// المنتجات - تعريف مرة واحدة فقط
 const loadProducts = () => getCollection('products');
 const addProduct = (data) => addDoc(collection(db, 'products'), data);
 const updateProductStock = (id, newStock) => updateDoc(doc(db, 'products', id), { stock: newStock });
 
+// الطلبات - تعريف مرة واحدة فقط
 const loadOrders = () => getCollection('orders');
 const addOrder = (data) => addDoc(collection(db, 'orders'), data);
 const updateOrder = (id, data) => updateDoc(doc(db, 'orders', id), data);
@@ -438,35 +439,10 @@ const getOrdersWithDetails = async () => {
     }));
 };
 
+// العملاء - تعريف مرة واحدة فقط
 const loadCustomers = () => getCollection('customers');
 const addCustomer = (data) => addDoc(collection(db, 'customers'), data);
-// المنتجات
-const loadProducts = () => getCollection('products');
-const addProduct = (data) => addDoc(collection(db, 'products'), data);
-const updateProductStock = (id, newStock) => updateDoc(doc(db, 'products', id), { stock: newStock });
 
-// الطلبات
-const loadOrders = () => getCollection('orders');
-const addOrder = (data) => addDoc(collection(db, 'orders'), data);
-const updateOrder = (id, data) => updateDoc(doc(db, 'orders', id), data);
-const deleteOrder = (id) => deleteDoc(doc(db, 'orders', id));
-
-const getOrdersWithDetails = async () => {
-    const orders = await getCollection('orders');
-    const customers = await getCollection('customers');
-    const products = await getCollection('products');
-    const customersMap = Object.fromEntries(customers.map(c => [c.id, c]));
-    const productsMap = Object.fromEntries(products.map(p => [p.id, p]));
-    return orders.map(order => ({
-        ...order,
-        customer: customersMap[order.customerId] || { name: 'غير معروف' },
-        items: order.items?.map(item => ({ ...item, productDetails: productsMap[item.productId] || null })) || []
-    }));
-};
-
-// العملاء
-const loadCustomers = () => getCollection('customers');
-const addCustomer = (data) => addDoc(collection(db, 'customers'), data);
 // ========== المتغيرات ==========
 let customers = [], products = [], orders = [], currentOrderId = null;
 let selectedPaymentMethod = 'mada', currentView = 'grid';
