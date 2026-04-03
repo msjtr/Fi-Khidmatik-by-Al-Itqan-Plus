@@ -139,6 +139,9 @@
         .status-new { background: #dbeafe; color: #1e40af; }
         .status-processing { background: #fef3c7; color: #b45309; }
         .status-completed { background: #d1fae5; color: #065f46; }
+        .status-review { background: #e9d5ff; color: #6b21a5; }
+        .status-refund { background: #fed7aa; color: #9a3412; }
+        .status-cancelled { background: #fee2e2; color: #b91c1c; }
         .loading { text-align: center; padding: 40px; }
         .spinner {
             border: 3px solid #f3f3f3;
@@ -173,6 +176,15 @@
                 <p>جاري تحميل بيانات الفاتورة...</p>
             </div>
         </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="fas fa-print"></i> طباعة الفاتورة
+        </button>
+        <button onclick="window.close()" class="btn btn-secondary">
+            <i class="fas fa-times"></i> إغلاق
+        </button>
     </div>
 
     <script type="module">
@@ -253,7 +265,10 @@
             const classes = {
                 'جديد': 'status-new',
                 'تحت التنفيذ': 'status-processing',
-                'تم التنفيذ': 'status-completed'
+                'تم التنفيذ': 'status-completed',
+                'تحت المراجعة': 'status-review',
+                'مسترجع': 'status-refund',
+                'ملغي': 'status-cancelled'
             };
             return classes[status] || 'status-new';
         }
@@ -369,7 +384,7 @@
                         <tbody>
                             ${itemsRows.length ? itemsRows.join('') : '<tr><td colspan="5" style="text-align: center;">لا توجد منتجات</td></tr>'}
                         </tbody>
-                    </table>
+                     </table>
                     
                     <div class="totals-section">
                         <div class="totals-row">
@@ -410,23 +425,18 @@
         }
 
         async function init() {
+            // التصحيح: استخدام 'id' بدلاً من 'order' لأن orders.html ترسل '?id=...'
             const urlParams = new URLSearchParams(window.location.search);
-            let orderId = urlParams.get('order');
+            let orderId = urlParams.get('id');
             
-            // إذا لم يوجد orderId في الرابط، حاول استقباله عبر postMessage
+            // استقبال auto parameter للطباعة التلقائية
+            const autoAction = urlParams.get('auto');
+            
             if (!orderId) {
-                window.addEventListener('message', async (event) => {
-                    if (event.data && event.data.type === 'PRINT_ORDER') {
-                        orderId = event.data.orderId;
-                        if (orderId) {
-                            await loadAndDisplay(orderId);
-                        }
-                    }
-                });
                 document.getElementById('content').innerHTML = `
                     <div class="error-message">
                         <i class="fas fa-info-circle fa-3x"></i>
-                        <p>يرجى اختيار طلب للطباعة من صفحة إدارة الطلبات</p>
+                        <p>لم يتم تحديد رقم الطلب</p>
                         <button onclick="window.close()" class="btn btn-primary" style="margin-top: 20px;">
                             <i class="fas fa-times"></i> إغلاق
                         </button>
@@ -435,16 +445,11 @@
                 return;
             }
             
-            await loadAndDisplay(orderId);
-        }
-        
-        async function loadAndDisplay(orderId) {
-            const content = document.getElementById('content');
             await loadData();
             const order = await loadOrder(orderId);
             
             if (!order) {
-                content.innerHTML = `
+                document.getElementById('content').innerHTML = `
                     <div class="error-message">
                         <i class="fas fa-exclamation-triangle fa-3x"></i>
                         <p>الطلب غير موجود أو تم حذفه</p>
@@ -456,24 +461,36 @@
                 return;
             }
             
-            content.innerHTML = renderInvoice(order);
+            document.getElementById('content').innerHTML = renderInvoice(order);
             
-            // طباعة تلقائية بعد التحميل
-            setTimeout(() => {
-                window.print();
-            }, 500);
+            // الطباعة التلقائية حسب نوع auto
+            if (autoAction === 'print') {
+                setTimeout(() => { window.print(); }, 500);
+            } else if (autoAction === 'pdf') {
+                setTimeout(() => { 
+                    if (typeof html2pdf !== 'undefined') {
+                        html2pdf().from(document.querySelector('.invoice-container')).save(`فاتورة_${order.orderNumber}.pdf`);
+                    } else {
+                        window.print();
+                    }
+                }, 500);
+            } else if (autoAction === 'png') {
+                setTimeout(() => {
+                    if (typeof html2canvas !== 'undefined') {
+                        html2canvas(document.querySelector('.invoice-container')).then(canvas => {
+                            const link = document.createElement('a');
+                            link.download = `فاتورة_${order.orderNumber}.png`;
+                            link.href = canvas.toDataURL();
+                            link.click();
+                        });
+                    } else {
+                        window.print();
+                    }
+                }, 500);
+            }
         }
         
         init();
     </script>
-    
-    <div class="action-buttons no-print">
-        <button onclick="window.print()" class="btn btn-primary">
-            <i class="fas fa-print"></i> طباعة الفاتورة
-        </button>
-        <button onclick="window.close()" class="btn btn-secondary">
-            <i class="fas fa-times"></i> إغلاق
-        </button>
-    </div>
 </body>
 </html>
