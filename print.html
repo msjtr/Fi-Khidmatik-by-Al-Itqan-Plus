@@ -2,7 +2,7 @@
 <html dir="rtl" lang="ar">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>فاتورة إلكترونية - منصة في خدمتك</title>
     <link rel="icon" href="data:,">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -10,19 +10,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* إعادة ضبط عام */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: #e2e8f0;
             font-family: 'Segoe UI', Tahoma, 'Noto Sans Arabic', Arial, sans-serif;
             direction: rtl;
             padding: 20px;
         }
-        /* حاوية الفاتورة - حجم A4 عند الطباعة */
         .invoice-wrapper {
             max-width: 1100px;
             margin: 0 auto;
@@ -35,7 +29,6 @@
             padding: 35px 40px;
             background: white;
         }
-        /* تنسيق الطباعة المتقدم */
         @media print {
             body {
                 background: white;
@@ -54,24 +47,19 @@
             .action-buttons {
                 display: none;
             }
-            /* بدء صفحة جديدة للشروط */
             .terms-page {
                 page-break-before: always;
             }
-            /* منع كسر الصفوف داخل الجدول */
             .product-table tr, .product-table td, .product-table th {
                 page-break-inside: avoid;
             }
-            /* تكرار رأس الجدول في كل صفحة */
             .product-table thead {
                 display: table-header-group;
             }
-            /* إضافة هوامش آمنة */
             @page {
                 size: A4;
                 margin: 0.6in;
             }
-            /* ترقيم الصفحات */
             @page :after {
                 content: counter(page) " / " counter(pages);
                 font-size: 10px;
@@ -80,17 +68,14 @@
                 width: 100%;
                 margin-top: 20px;
             }
-            /* منع العناصر الكبيرة من الخروج */
             .info-section, .summary-box, .terms-box {
                 page-break-inside: avoid;
             }
-            /* ضبط الصور */
             img {
                 max-width: 100%;
                 page-break-inside: avoid;
             }
         }
-        /* تنسيقات عامة */
         .flex-between {
             display: flex;
             justify-content: space-between;
@@ -220,7 +205,6 @@
             font-size: 12px;
             font-weight: 500;
         }
-        /* صفحة مستقلة للشروط */
         .terms-page {
             page-break-before: always;
             margin-top: 40px;
@@ -254,16 +238,32 @@
             .product-table th, .product-table td { padding: 6px 3px; font-size: 11px; }
             .desc-text { max-width: 120px; }
         }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .spinner {
+            border: 3px solid #e2e8f0;
+            border-top-color: #3b82f6;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
     </style>
 </head>
 <body>
-<div id="loading" class="text-center py-20"><div class="spinner-border" style="border:3px solid #e2e8f0; border-top-color:#3b82f6; width:40px; height:40px; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 15px;"></div><p>جاري تحميل الفاتورة...</p></div>
+<div id="loading" class="text-center py-20">
+    <div class="spinner"></div>
+    <p>جاري تحميل الفاتورة...</p>
+</div>
 <div id="invoiceWrapper" style="display: none;"></div>
 <div class="action-buttons" id="actionButtons" style="display: none;">
     <button class="btn btn-print" onclick="handlePrint()"><i class="fas fa-print"></i> طباعة</button>
     <button class="btn btn-pdf" onclick="handlePDF()"><i class="fas fa-file-pdf"></i> PDF</button>
     <button class="btn btn-png" onclick="handlePNG()"><i class="fas fa-image"></i> صورة</button>
-    <button class="btn btn-close" onclick="window.close()"><i class="fas fa-times"></i> إغلاق</button>
+    <button class="btn btn-close" onclick="closeInvoiceWindow()"><i class="fas fa-times"></i> إغلاق</button>
 </div>
 
 <script type="module">
@@ -285,10 +285,16 @@
     let productsMap = new Map();
 
     async function loadCustomersAndProducts() {
-        const customersSnap = await getDocs(collection(db, 'customers'));
-        customersSnap.forEach(docSnap => customersMap.set(docSnap.id, docSnap.data()));
-        const productsSnap = await getDocs(collection(db, 'products'));
-        productsSnap.forEach(docSnap => productsMap.set(docSnap.id, docSnap.data()));
+        try {
+            const [customersSnap, productsSnap] = await Promise.all([
+                getDocs(collection(db, 'customers')),
+                getDocs(collection(db, 'products'))
+            ]);
+            customersSnap.forEach(docSnap => customersMap.set(docSnap.id, docSnap.data()));
+            productsSnap.forEach(docSnap => productsMap.set(docSnap.id, docSnap.data()));
+        } catch (err) {
+            console.warn("خطأ في تحميل البيانات التكميلية:", err);
+        }
     }
 
     async function getOrder(orderId) {
@@ -324,7 +330,7 @@
         });
     }
 
-    function getStatusBadge(status) {
+    function getStatusBadgeClass(status) {
         const map = {
             'جديد': 'bg-blue-100 text-blue-800',
             'تحت التنفيذ': 'bg-yellow-100 text-yellow-800',
@@ -333,48 +339,53 @@
             'مسترجع': 'bg-orange-100 text-orange-800',
             'ملغي': 'bg-red-100 text-red-800'
         };
-        return map[status] || 'bg-gray-100';
+        return map[status] || 'bg-gray-100 text-gray-800';
+    }
+
+    function getSafeImageUrl(item, productId) {
+        if (item.image && item.image.trim() !== "") return item.image;
+        if (productId && productsMap.has(productId)) {
+            const prod = productsMap.get(productId);
+            if (prod.image && prod.image.trim() !== "") return prod.image;
+        }
+        return 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E';
     }
 
     async function renderInvoice() {
         const urlParams = new URLSearchParams(window.location.search);
         const orderId = urlParams.get('id');
         const autoAction = urlParams.get('auto');
+        
         if (!orderId) {
-            document.getElementById('loading').innerHTML = '<div class="text-center text-red-600 p-10">رقم الطلب غير موجود</div>';
+            document.getElementById('loading').innerHTML = '<div class="text-center text-red-600 p-10"><i class="fas fa-exclamation-triangle text-4xl mb-3"></i><br>رقم الطلب غير موجود</div>';
             return;
         }
+        
         await loadCustomersAndProducts();
         const order = await getOrder(orderId);
         if (!order) {
-            document.getElementById('loading').innerHTML = '<div class="text-center text-red-600 p-10">الطلب غير موجود</div>';
+            document.getElementById('loading').innerHTML = '<div class="text-center text-red-600 p-10"><i class="fas fa-times-circle text-4xl mb-3"></i><br>الطلب غير موجود أو تم حذفه</div>';
             return;
         }
+        
         const customer = customersMap.get(order.customerId) || { name: 'غير معروف', phone: '', city: '', street: '', email: '' };
         
-        // حساب المجاميع
         let subtotal = 0;
         const itemsRows = [];
         const items = order.items || [];
         items.forEach((item, idx) => {
-            const price = item.price || 0;
-            const qty = item.quantity || 0;
+            const price = parseFloat(item.price || 0);
+            const qty = parseFloat(item.quantity || 0);
             const total = price * qty;
             subtotal += total;
-            // جلب صورة المنتج: أولوية للصورة المخزنة في item.image، ثم من قاعدة بيانات المنتجات
-            let productImage = item.image || '';
-            if (!productImage && item.productId) {
-                const prod = productsMap.get(item.productId);
-                if (prod && prod.image) productImage = prod.image;
-            }
-            // صورة افتراضية إذا لم توجد
-            const imgSrc = productImage || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E';
-            const description = item.description || (productsMap.get(item.productId)?.description) || '';
+            const productId = item.productId || null;
+            const imgSrc = getSafeImageUrl(item, productId);
+            const description = item.description || (productId && productsMap.get(productId)?.description) || '';
             itemsRows.push(`
                 <tr>
                     <td>${idx+1}</td>
                     <td style="text-align: right;">${escapeHtml(item.name)}</td>
-                    <td><img src="${imgSrc}" class="product-img" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E'"></td>
+                    <td><img src="${imgSrc}" class="product-img" alt="صورة المنتج" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3E%3C/text%3E%3C/svg%3E'"></td>
                     <td>${escapeHtml(item.barcode || '—')}</td>
                     <td class="desc-text">${escapeHtml(description).substring(0, 80)}${description.length > 80 ? '…' : ''}</td>
                     <td>${qty}</td>
@@ -384,7 +395,7 @@
             `);
         });
         
-        let discountValue = order.discount || 0;
+        let discountValue = parseFloat(order.discount || 0);
         if (order.discountType === 'percent' && discountValue > 0) discountValue = (subtotal * discountValue) / 100;
         const afterDiscount = subtotal - discountValue;
         const tax = afterDiscount * 0.15;
@@ -402,28 +413,26 @@
             'pickup': '🏪 استلام من المقر',
             'delivery': '🚚 شحن منزلي',
             'noship': '📥 لا يتطلب شحن'
-        }[order.shippingMethod] || order.shippingMethod;
+        }[order.shippingMethod] || order.shippingMethod || 'غير محدد';
         
-        const logoUrl = 'images/logo.svg';
+        const logoPlaceholder = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 80%22%3E%3Crect width=%22200%22 height=%2280%22 fill=%22%233b82f6%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2224%22 font-weight=%22bold%22 dy=%22.3em%22%3Eفي خدمتك%3C/text%3E%3C/svg%3E';
         
         const html = `
         <div class="invoice-wrapper">
             <div class="invoice-container">
-                <!-- رأس الصفحة (يتكرر في الطباعة عبر thead ولكننا سنضعه بشكل عادي) -->
                 <div class="flex-between">
                     <div>
-                        <img src="${logoUrl}" alt="شعار المنصة" style="height: 70px;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22%233b82f6%22/%3E%3Ctext x=%2250%22 y=%2270%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2240%22%3Eف%3C/text%3E%3C/svg%3E'">
+                        <img src="${logoPlaceholder}" alt="شعار المنصة" style="height: 70px;" onerror="this.style.display='none'">
                         <div class="mt-2"><strong>منصة في خدمتك</strong><br><span class="text-xs">رقم شهادة العمل الحر: FL-765735204</span><br><span class="text-xs">الرقم الضريبي: 312495447600003</span></div>
                     </div>
                     <div class="text-left">
                         <h1 class="text-2xl font-bold text-blue-800">فاتورة إلكترونية</h1>
                         <p><strong>رقم الفاتورة:</strong> ${escapeHtml(order.orderNumber || order.id)}</p>
                         <p><strong>التاريخ:</strong> ${formatDate(order.orderDate)} &nbsp;|&nbsp; <strong>الوقت:</strong> ${formatTime(order.orderTime)}</p>
-                        <p><span class="badge-status ${getStatusBadge(order.status)} px-3 py-1 rounded-full text-xs">${order.status}</span></p>
+                        <p><span class="badge-status ${getStatusBadgeClass(order.status)} px-3 py-1 rounded-full text-xs">${order.status || 'جديد'}</span></p>
                     </div>
                 </div>
                 
-                <!-- عمودين المصدر والمصدر إليه -->
                 <div class="grid-2cols">
                     <div class="company-box">
                         <h3 class="font-bold text-blue-800"><i class="fas fa-building"></i> مصدرة من:</h3>
@@ -440,20 +449,17 @@
                     </div>
                 </div>
                 
-                <!-- طريقة الدفع ورمز الموافقة -->
                 <div class="info-row">
                     <span><i class="fas fa-credit-card"></i> <strong>طريقة الدفع:</strong> ${paymentMethodName}</span>
                     <span><i class="fas fa-check-circle"></i> <strong>رمز الموافقة:</strong> ${order.approvalCode || '—'}</span>
                 </div>
                 
-                <!-- طريقة الاستلام -->
                 <div class="info-row">
                     <span><i class="fas fa-truck"></i> <strong>طريقة الاستلام:</strong> ${shippingMethodText}</span>
-                    ${order.shippingAddress ? `<span><i class="fas fa-map-marker-alt"></i> عنوان الشحن: ${order.shippingAddress.city || ''} ${order.shippingAddress.street || ''}</span>` : ''}
-                    ${order.extraEmail ? `<span><i class="fas fa-envelope"></i> بريد إضافي: ${order.extraEmail}</span>` : ''}
+                    ${order.shippingAddress ? `<span><i class="fas fa-map-marker-alt"></i> عنوان الشحن: ${escapeHtml(order.shippingAddress.city || '')} ${escapeHtml(order.shippingAddress.street || '')}</span>` : ''}
+                    ${order.extraEmail ? `<span><i class="fas fa-envelope"></i> بريد إضافي: ${escapeHtml(order.extraEmail)}</span>` : ''}
                 </div>
                 
-                <!-- جدول المنتجات مع رأس يتكرر عند الطباعة -->
                 <div class="section-title">تفاصيل المنتجات / الخدمات</div>
                 <table class="product-table">
                     <thead>
@@ -464,7 +470,6 @@
                     </tbody>
                 </table>
                 
-                <!-- ملخص الفاتورة -->
                 <div class="summary-box">
                     <div class="summary-row"><span>المجموع الفرعي:</span><span>${subtotal.toFixed(2)} ريال</span></div>
                     <div class="summary-row"><span>إجمالي الخصم:</span><span style="color:#dc2626;">- ${discountValue.toFixed(2)} ريال</span></div>
@@ -472,23 +477,20 @@
                     <div class="summary-row total"><span>الإجمالي النهائي شامل الضريبة:</span><span>${total.toFixed(2)} ريال</span></div>
                 </div>
                 
-                <!-- تعليمات الفاتورة -->
                 <div class="terms-box">
                     <h4><i class="fas fa-info-circle"></i> تعليمات الفاتورة</h4>
                     <p>تخضع هذه الفاتورة لكامل الشروط والأحكام المرفقة، ويُعد اعتمادها أو سداد أي مبلغ بموجبها إقرارًا صريحًا ونهائيًا بالموافقة على جميع بنودها دون أي تحفظ، مع إقرار العميل بمسؤوليته عن الاطلاع عليها.</p>
                 </div>
                 
-                <!-- معلومات التواصل وشكر -->
                 <div class="footer-note">
                     <p><i class="fas fa-phone-alt"></i> هاتف: 966555698774 &nbsp;|&nbsp; <i class="fas fa-envelope"></i> info@fi-khidmatik.com &nbsp;|&nbsp; <i class="fas fa-globe"></i> www.khidmatik.com</p>
                     <p class="mt-2 font-bold text-blue-800">شكراً لتسوقكم معنا 🤍</p>
                 </div>
             </div>
             
-            <!-- صفحة مستقلة للشروط والأحكام -->
             <div class="invoice-container terms-page">
                 <div class="terms-box" style="margin-top:0;">
-                    <h4><i class="fas fa-gavel"></i> الشروط والأحكام والتعليمات</h4>
+                    <h4><i class="fas fa-gavel"></i> الشروط والأحكام التفصيلية</h4>
                     <p>يُعد هذا المستند (فاتورة) اتفاقًا ملزمًا قانونيًا بين الطرفين، ويعتبر اعتماد العميل أو سداد أي دفعة أو بدء التنفيذ إقرارًا صريحًا ونهائيًا بالموافقة على جميع ما ورد فيه من شروط وأحكام دون أي تحفظ.</p>
                     <ol style="margin-top: 15px;">
                         <li><strong>مدة صلاحية العرض:</strong> 3 أيام عمل فقط من تاريخ الإصدار.</li>
@@ -552,7 +554,7 @@
                     <p class="mt-3"><strong>الإقرار:</strong> أقر أنا العميل بالاطلاع على جميع الشروط والأحكام أعلاه وأوافق عليها بالكامل وأتعهد بالالتزام بها دون أي استثناء.</p>
                 </div>
                 <div class="footer-note" style="border: none; margin-top: 20px;">
-                    <p>هذه الفاتورة إلكترونية صادرة من منصة في خدمتك - نسخة معتمدة</p>
+                    <p>هذه الفاتورة إلكترونية صادرة من منصة في خدمتك - نسخة معتمدة قانونياً</p>
                 </div>
             </div>
         </div>
@@ -564,33 +566,66 @@
         wrapper.style.display = 'block';
         document.getElementById('actionButtons').style.display = 'flex';
         
-        if (autoAction === 'print') setTimeout(() => window.print(), 500);
-        else if (autoAction === 'pdf') setTimeout(() => handlePDF(), 500);
-        else if (autoAction === 'png') setTimeout(() => handlePNG(), 500);
+        if (autoAction === 'print') setTimeout(() => window.print(), 600);
+        else if (autoAction === 'pdf') setTimeout(() => handlePDF(), 600);
+        else if (autoAction === 'png') setTimeout(() => handlePNG(), 600);
     }
     
     window.handlePrint = () => window.print();
+    
     window.handlePDF = async () => {
         const element = document.querySelector('.invoice-wrapper');
         if (element) {
-            const opt = {
-                margin: [0.5, 0.5, 0.5, 0.5],
-                filename: `فاتورة_${Date.now()}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, letterRendering: true },
-                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-            };
-            await html2pdf().set(opt).from(element).save();
+            try {
+                const opt = {
+                    margin: [0.5, 0.5, 0.5, 0.5],
+                    filename: `فاتورة_${Date.now()}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, letterRendering: true, useCORS: true },
+                    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+                };
+                await html2pdf().set(opt).from(element).save();
+            } catch (err) {
+                console.error("PDF error:", err);
+                alert("حدث خطأ أثناء إنشاء PDF، يرجى المحاولة مرة أخرى.");
+            }
         }
     };
+    
     window.handlePNG = async () => {
         const element = document.querySelector('.invoice-wrapper');
         if (element) {
-            const canvas = await html2canvas(element, { scale: 3, backgroundColor: '#ffffff' });
-            const link = document.createElement('a');
-            link.download = `فاتورة_${Date.now()}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
+            try {
+                const canvas = await html2canvas(element, { scale: 3, backgroundColor: '#ffffff', useCORS: true });
+                const link = document.createElement('a');
+                link.download = `فاتورة_${Date.now()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch (err) {
+                console.error("PNG error:", err);
+                alert("حدث خطأ أثناء حفظ الصورة.");
+            }
+        }
+    };
+    
+    window.closeInvoiceWindow = () => {
+        // محاولة إغلاق النافذة الحالية (تعمل في المتصفحات العادية)
+        if (window.close) {
+            window.close();
+        }
+        // إذا لم يتم الإغلاق (مثل WebView) نحاول إرسال إشارة للتطبيق
+        try {
+            // محاولة استدعاء جافاسكريبت خاص بالتطبيق (إذا كان متاحًا)
+            if (window.AndroidBridge && typeof window.AndroidBridge.closeActivity === 'function') {
+                window.AndroidBridge.closeActivity();
+            } else if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.closeInvoice) {
+                window.webkit.messageHandlers.closeInvoice.postMessage({});
+            } else {
+                // عرض رسالة للمستخدم
+                alert("لا يمكن إغلاق هذه النافذة تلقائياً، يمكنك إغلاقها يدوياً.");
+            }
+        } catch(e) {
+            console.warn("Close fallback:", e);
         }
     };
     
