@@ -529,15 +529,15 @@ async function loadData() {
 // ==========================
 
 window.printOrder = function(orderId) {
-    window.open(`/fi-khidmatik/print.html?id=${orderId}&auto=print`, "_blank");
+    window.open(`print.html?id=${orderId}&auto=print`, "_blank");
 };
 
 window.printOrderPDF = function(orderId) {
-    window.open(`/fi-khidmatik/print.html?id=${orderId}&auto=pdf`, "_blank");
+    window.open(`print.html?id=${orderId}&auto=pdf`, "_blank");
 };
 
 window.printOrderPNG = function(orderId) {
-    window.open(`/fi-khidmatik/print.html?id=${orderId}&auto=png`, "_blank");
+    window.open(`print.html?id=${orderId}&auto=png`, "_blank");
 };
 // ========== عرض الطلبات ==========
 async function renderOrders() {
