@@ -28,7 +28,6 @@
             margin: 0 auto;
         }
 
-        /* صفحة الفاتورة - موحدة لجميع الصفحات */
         .invoice-page {
             background: white;
             border-radius: 12px;
@@ -41,12 +40,13 @@
         }
 
         .invoice-content {
-            padding: 20px 25px;
+            padding: 18px 22px;
         }
 
-        /* منع انقسام العناصر داخلياً */
+        /* منع انقسام العناصر */
         .invoice-header, .two-columns, .info-card, .info-row, 
-        .product-table, .product-table tr, .summary-box, .terms-box, .footer-static {
+        .product-table, .product-table tbody, .product-table tr, 
+        .summary-box, .terms-box, .footer-static {
             page-break-inside: avoid;
             break-inside: avoid;
         }
@@ -65,18 +65,18 @@
                 break-after: page;
             }
             .invoice-content {
-                padding: 0.4cm 0.8cm !important;
+                padding: 0.5cm 0.8cm !important;
             }
             .action-buttons {
                 display: none;
             }
             @page {
                 size: A4;
-                margin: 0.6cm 0.8cm;
+                margin: 0.7cm 0.8cm; /* هوامش كافية من جميع الجهات */
             }
         }
 
-        /* توزيع الرأس - سطر واحد */
+        /* توزيع الرأس */
         .company-badge {
             background: #f1f5f9;
             padding: 8px 12px;
@@ -365,7 +365,6 @@
         return map[status] || 'bg-gray-100 text-gray-800';
     }
 
-    // رأس موحد لكل الصفحات
     function getFixedHeader(order) {
         const logoUrl = 'images/logo.svg';
         return `
@@ -388,7 +387,6 @@
         `;
     }
 
-    // تذييل موحد لكل الصفحات
     function getFixedFooter() {
         return `
             <div class="footer-static">
@@ -403,7 +401,6 @@
         `;
     }
 
-    // معلومات العميل وطرق الدفع (موحدة لكل الصفحات)
     function getCommonSections(order, customer, paymentMethodName, shippingMethodText) {
         return `
             <div class="two-columns">
@@ -430,7 +427,6 @@
         `;
     }
 
-    // إنشاء صفحة فاتورة (مع أو بدون الملخص)
     function createInvoicePage(order, customer, itemsRows, pageNum, totalPages, commonSections, withSummary, summaryData) {
         const header = getFixedHeader(order);
         const footer = getFixedFooter();
@@ -474,8 +470,8 @@
         `;
     }
 
-    // تقسيم المنتجات إلى صفحات (كل 6 منتجات)
-    function splitProductsIntoPages(productsArray, itemsPerPage = 6) {
+    // تقسيم المنتجات إلى صفحات - 5 منتجات لكل صفحة (آمن لعدم القطع)
+    function splitProductsIntoPages(productsArray, itemsPerPage = 5) {
         const pages = [];
         if (!productsArray.length) {
             pages.push([]);
@@ -561,11 +557,10 @@
             'noship': '📥 لا يتطلب شحن'
         }[order.shippingMethod] || order.shippingMethod || 'استلام من المقر';
         
-        // الأجزاء المشتركة (المصدر، العميل، طرق الدفع) - نفسها في كل الصفحات
         const commonSections = getCommonSections(order, customer, paymentMethodName, shippingMethodText);
         
-        // تقسيم المنتجات إلى صفحات (كل 6 منتجات)
-        const productPages = splitProductsIntoPages(allItemsRows, 6);
+        // 5 منتجات لكل صفحة لمنع قطع المحتوى
+        const productPages = splitProductsIntoPages(allItemsRows, 5);
         const totalPages = productPages.length;
         
         const container = document.getElementById('invoiceContainer');
@@ -576,7 +571,7 @@
             const isLastPage = (pageIdx === productPages.length - 1);
             const pageHtml = createInvoicePage(
                 order, customer, pageItems, pageIdx + 1, totalPages, commonSections,
-                isLastPage,  // عرض الملخص فقط في الصفحة الأخيرة
+                isLastPage,
                 isLastPage ? { subtotal, discountValue, tax, total } : null
             );
             container.innerHTML += pageHtml;
@@ -599,7 +594,7 @@
             const btns = document.getElementById('actionButtons');
             if (btns) btns.style.display = 'none';
             const opt = {
-                margin: [0.2, 0.2, 0.2, 0.2],
+                margin: [0.25, 0.25, 0.25, 0.25], // هوامش داخلية صغيرة
                 filename: `فاتورة_${Date.now()}.pdf`,
                 image: { type: 'jpeg', quality: 1 },
                 html2canvas: { scale: 4, letterRendering: true, useCORS: true, dpi: 300 },
