@@ -7,6 +7,7 @@
     <link rel="icon" href="data:,">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * {
@@ -25,34 +26,44 @@
         .invoice-container {
             max-width: 1200px;
             margin: 0 auto;
+            background: #eef2f5;
+            padding: 0;
         }
 
         /* ========================= */
-        /* PAGE LAYOUT - A4 */
+        /* PAGE SETUP - A4 */
         /* ========================= */
         .page {
             width: 210mm;
+            min-height: 297mm;
             background: white;
             border-radius: 12px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.1);
             margin-bottom: 25px;
             position: relative;
             padding: 20mm 15mm 25mm 15mm;
+            box-sizing: border-box;
             page-break-after: always;
             break-after: page;
-            box-sizing: border-box;
         }
 
         /* ========================= */
-        /* PREVENT ELEMENT SPLITTING */
+        /* CONTENT BLOCK - prevents splitting */
         /* ========================= */
-        .section, .product-table, .product-table tbody, .product-table tr {
+        .section {
+            margin-bottom: 10px;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        /* Prevent table rows from splitting */
+        .product-table tr {
             page-break-inside: avoid;
             break-inside: avoid;
         }
 
         /* ========================= */
-        /* PAGE NUMBER */
+        /* PAGE NUMBER - bottom right */
         /* ========================= */
         .page-number {
             position: absolute;
@@ -314,11 +325,41 @@
             cursor: pointer;
             font-size: 14px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: opacity 0.2s;
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
         .btn-print { background: #3b82f6; color: white; }
         .btn-pdf { background: #ef4444; color: white; }
         .btn-png { background: #8b5cf6; color: white; }
         .btn-close { background: #64748b; color: white; }
+        
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .loading-spinner {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .loading-spinner i {
+            font-size: 40px;
+            color: #3b82f6;
+            margin-bottom: 10px;
+        }
         
         @media (max-width: 750px) {
             .page {
@@ -335,6 +376,9 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        .fa-spin-custom {
+            animation: spin 1s linear infinite;
+        }
     </style>
 </head>
 <body>
@@ -344,9 +388,9 @@
 </div>
 <div id="invoiceContainer" style="display: none;"></div>
 <div class="action-buttons" id="actionButtons" style="display: none;">
-    <button class="btn btn-print" onclick="handlePrint()"><i class="fas fa-print"></i> طباعة</button>
-    <button class="btn btn-pdf" onclick="handlePDF()"><i class="fas fa-file-pdf"></i> PDF</button>
-    <button class="btn btn-png" onclick="handlePNG()"><i class="fas fa-image"></i> صورة</button>
+    <button class="btn btn-print" id="printBtn"><i class="fas fa-print"></i> طباعة</button>
+    <button class="btn btn-pdf" id="pdfBtn"><i class="fas fa-file-pdf"></i> PDF</button>
+    <button class="btn btn-png" id="pngBtn"><i class="fas fa-image"></i> صورة</button>
     <button class="btn btn-close" onclick="window.close()"><i class="fas fa-times"></i> إغلاق</button>
 </div>
 
@@ -367,6 +411,9 @@
 
     let customersMap = new Map();
     let productsMap = new Map();
+    let currentOrder = null;
+    let currentCustomer = null;
+    let currentFileName = "";
 
     async function loadCustomersAndProducts() {
         const customersSnap = await getDocs(collection(db, 'customers'));
@@ -387,6 +434,11 @@
         const d = new Date(dateStr);
         if (isNaN(d.getTime())) return dateStr;
         return `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
+    }
+
+    function formatDateForFilename() {
+        const today = new Date();
+        return `${today.getFullYear()}-${(today.getMonth()+1).toString().padStart(2,'0')}-${today.getDate().toString().padStart(2,'0')}`;
     }
 
     function formatTime(time24) {
@@ -420,11 +472,6 @@
         return map[status] || 'bg-gray-100 text-gray-800';
     }
 
-    /**
-     * =========================
-     * INVOICE CONTENT GENERATORS
-     * =========================
-     */
     function getFixedHeader(order) {
         const logoUrl = 'images/logo.svg';
         return `
@@ -509,17 +556,13 @@
 
     /**
      * =========================
-     * DYNAMIC PAGE SPLITTING BASED ON TABLE HEIGHT
+     * DYNAMIC PAGE SPLITTING WITH BUFFER TOLERANCE
      * =========================
      * 
-     * This approach groups all product rows into a single table,
-     * then measures the total table height to determine pagination.
+     * Usable height: 297mm - (20mm + 25mm) = 252mm ≈ 953px
+     * BUFFER = 40px tolerance to prevent premature page breaks
      * 
-     * Page Configuration:
-     * - Paper size: A4 (297mm height)
-     * - Top padding: 20mm
-     * - Bottom safe area: 25mm
-     * - Usable content height = 297 - 20 - 25 = 252mm
+     * This ensures multiple rows per page and no content cut
      */
     
     function mmToPx(mm) {
@@ -534,8 +577,34 @@
         return mmToPx(usableMM);
     }
 
-    async function buildPages(productsRows, order, customer, paymentMethodName, shippingMethodText, subtotal, discountValue, tax, total) {
-        const usableHeight = getUsableHeightPx();
+    function showLoading() {
+        let overlay = document.getElementById('loadingOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'loadingOverlay';
+            overlay.className = 'loading-overlay';
+            overlay.innerHTML = `
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin-custom"></i>
+                    <p>جاري التحميل...</p>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+        overlay.style.display = 'flex';
+    }
+
+    function hideLoading() {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+            overlay.style.display = 'none';
+        }
+    }
+
+    async function buildPages(order, customer, paymentMethodName, shippingMethodText, productsRows, subtotal, discountValue, tax, total) {
+        const usableHeightPx = getUsableHeightPx();
+        const BUFFER = 40; // Tolerance to prevent premature page breaks
+        
         const today = new Date();
         const todayStr = `${today.getDate().toString().padStart(2,'0')}/${(today.getMonth()+1).toString().padStart(2,'0')}/${today.getFullYear()}`;
         
@@ -551,49 +620,64 @@
         measureContainer.style.background = 'white';
         document.body.appendChild(measureContainer);
         
-        // Build fixed elements HTML (header + common sections + title + table header + footer)
-        const fixedHTML = `
-            ${getFixedHeader(order)}
-            ${getCommonSections(order, customer, paymentMethodName, shippingMethodText)}
-            <div class="section-title">تفاصيل المنتجات / الخدمات</div>
+        // Get all content sections as DOM elements for accurate measurement
+        const container = document.getElementById('invoiceContainer');
+        
+        // Build all content sections
+        const headerHTML = getFixedHeader(order);
+        const commonHTML = getCommonSections(order, customer, paymentMethodName, shippingMethodText);
+        const titleHTML = `<div class="section-title">تفاصيل المنتجات / الخدمات</div>`;
+        const tableHeaderHTML = `
             <table class="product-table">
                 <thead>
                     <tr><th>#</th><th>اسم المنتج</th><th>الصورة</th><th>الباركود</th><th>الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>
                 </thead>
+                <tbody id="measure-tbody">
+                </tbody>
             </table>
-            ${getFixedFooter()}
         `;
+        const footerHTML = getFixedFooter();
+        const summaryHTML = getSummarySection(subtotal, discountValue, tax, total);
         
-        measureContainer.innerHTML = fixedHTML;
+        // Measure fixed sections (header + common + title + table header + footer)
+        measureContainer.innerHTML = headerHTML + commonHTML + titleHTML + tableHeaderHTML + footerHTML;
         await new Promise(r => setTimeout(r, 50));
         const fixedHeight = measureContainer.scrollHeight;
         
-        // Calculate height per product row
+        // Calculate available height for product rows with BUFFER tolerance
+        const availableForRows = usableHeightPx - fixedHeight - BUFFER;
+        
+        // Measure each product row height
         const rowHeights = [];
+        const rowElements = [];
+        
         for (let i = 0; i < productsRows.length; i++) {
-            measureContainer.innerHTML = `<table class="product-table"><tbody>${productsRows[i]}</tbody></table>`;
+            const testRow = document.createElement('tr');
+            testRow.innerHTML = productsRows[i];
+            measureContainer.querySelector('#measure-tbody').innerHTML = '';
+            measureContainer.querySelector('#measure-tbody').appendChild(testRow);
             await new Promise(r => setTimeout(r, 10));
-            rowHeights.push(measureContainer.scrollHeight);
+            const height = testRow.scrollHeight;
+            rowHeights.push(height);
+            rowElements.push(productsRows[i]);
         }
         
-        // Calculate available space for rows
-        const availableForRows = usableHeight - fixedHeight;
-        
-        // Group rows into pages
+        // Group rows into pages based on accumulated height
         const pageGroups = [];
         let currentGroup = [];
         let currentHeight = 0;
         
-        for (let i = 0; i < productsRows.length; i++) {
+        for (let i = 0; i < rowElements.length; i++) {
             const rowHeight = rowHeights[i];
             
+            // Check if adding this row would exceed available space
             if (currentGroup.length > 0 && currentHeight + rowHeight > availableForRows) {
                 pageGroups.push([...currentGroup]);
                 currentGroup = [];
                 currentHeight = 0;
             }
             
-            currentGroup.push(productsRows[i]);
+            currentGroup.push(rowElements[i]);
             currentHeight += rowHeight;
         }
         
@@ -601,18 +685,20 @@
             pageGroups.push(currentGroup);
         }
         
+        // Clean up measure container
+        document.body.removeChild(measureContainer);
+        
         // Build actual pages
-        const container = document.getElementById('invoiceContainer');
-        container.innerHTML = '';
+        const pagesContainer = document.getElementById('invoiceContainer');
+        pagesContainer.innerHTML = '';
         
         const totalPages = pageGroups.length;
-        const summaryHTML = getSummarySection(subtotal, discountValue, tax, total);
         
         for (let pageIdx = 0; pageIdx < pageGroups.length; pageIdx++) {
             const groupRows = pageGroups[pageIdx];
             const isLastPage = (pageIdx === totalPages - 1);
             
-            // Create page
+            // Create page element
             const page = document.createElement('div');
             page.className = 'page';
             
@@ -632,23 +718,28 @@
             titleDiv.innerHTML = `تفاصيل المنتجات / الخدمات ${totalPages > 1 ? `(صفحة ${pageIdx + 1} من ${totalPages})` : ''}`;
             page.appendChild(titleDiv);
             
-            // Build table with rows
+            // Build table
             const table = document.createElement('table');
             table.className = 'product-table';
             
-            // Add table header
+            // Add header
             const thead = document.createElement('thead');
             thead.innerHTML = `
                 <tr><th>#</th><th>اسم المنتج</th><th>الصورة</th><th>الباركود</th><th>الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>
             `;
             table.appendChild(thead);
             
-            // Add tbody with rows
+            // Add rows (without row numbers - removed)
             const tbody = document.createElement('tbody');
-            for (const row of groupRows) {
-                const rowElement = document.createElement('tr');
-                rowElement.innerHTML = row;
-                tbody.appendChild(rowElement);
+            for (const rowHtml of groupRows) {
+                const row = document.createElement('tr');
+                row.innerHTML = rowHtml;
+                // Remove the first cell (row number) if present
+                const firstCell = row.querySelector('td:first-child');
+                if (firstCell && firstCell.textContent.match(/^\d+$/)) {
+                    firstCell.remove();
+                }
+                tbody.appendChild(row);
             }
             table.appendChild(tbody);
             page.appendChild(table);
@@ -656,7 +747,7 @@
             // Add summary only on last page
             if (isLastPage) {
                 const summaryDiv = document.createElement('div');
-                summaryDiv.innerHTML = summaryHTML;
+                summaryDiv.innerHTML = getSummarySection(subtotal, discountValue, tax, total);
                 page.appendChild(summaryDiv);
             }
             
@@ -665,23 +756,22 @@
             footerDiv.innerHTML = getFixedFooter();
             page.appendChild(footerDiv);
             
-            // Add page number
+            // Add page number (bottom right)
             const pageNumberDiv = document.createElement('div');
             pageNumberDiv.className = 'page-number';
             pageNumberDiv.textContent = `${pageIdx + 1} / ${totalPages}`;
             page.appendChild(pageNumberDiv);
             
-            // Add date
+            // Add date (bottom left)
             const pageDateDiv = document.createElement('div');
             pageDateDiv.className = 'page-date';
             pageDateDiv.textContent = `تم الإنشاء: ${todayStr}`;
             page.appendChild(pageDateDiv);
             
-            container.appendChild(page);
+            pagesContainer.appendChild(page);
         }
         
-        document.body.removeChild(measureContainer);
-        return { totalPages, container };
+        return { totalPages };
     }
 
     async function renderInvoice() {
@@ -701,7 +791,14 @@
             return;
         }
         
-        const customer = customersMap.get(order.customerId) || { name: '__________', phone: '__________', city: '__________', street: '__________', email: '__________' };
+        currentOrder = order;
+        currentCustomer = customersMap.get(order.customerId) || { name: '__________', phone: '__________', city: '__________', street: '__________', email: '__________' };
+        
+        // Generate filename: [ClientName]_[OrderNumber]_[Date]
+        const clientName = (currentCustomer.name || 'client').replace(/[^a-zA-Z0-9\u0600-\u06FF]/g, '_');
+        const orderNumber = order.orderNumber || order.id;
+        const dateStr = formatDateForFilename();
+        currentFileName = `${clientName}_${orderNumber}_${dateStr}`;
         
         let subtotal = 0;
         const productsRows = [];
@@ -724,17 +821,15 @@
             const imgSrc = productImage || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E';
             const description = item.description || (productsMap.get(item.productId)?.description) || '';
             
+            // Row without number (number removed)
             const rowHtml = `
-                <tr>
-                    <td style="font-weight:600;">${idx+1}</td>
-                    <td style="text-align: right;">${escapeHtml(item.name)}</td>
-                    <td><img src="${imgSrc}" class="product-img" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E'"></td>
-                    <td>${escapeHtml(item.barcode || '—')}</td>
-                    <td class="desc-text">${escapeHtml(description).substring(0, 70)}${description.length > 70 ? '…' : ''}</td>
-                    <td>${qty}</td>
-                    <td>${price.toFixed(2)} ريال</td>
-                    <td>${total.toFixed(2)} ريال</td>
-                </tr>
+                <td style="text-align: right;">${escapeHtml(item.name)}</td>
+                <td style="width: 55px;"><img src="${imgSrc}" class="product-img" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E'"></td>
+                <td>${escapeHtml(item.barcode || '—')}</td>
+                <td class="desc-text">${escapeHtml(description).substring(0, 70)}${description.length > 70 ? '…' : ''}</td>
+                <td>${qty}</td>
+                <td>${price.toFixed(2)} ريال</td>
+                <td>${total.toFixed(2)} ريال</td>
             `;
             productsRows.push(rowHtml);
         }
@@ -759,30 +854,61 @@
             'noship': '📥 لا يتطلب شحن'
         }[order.shippingMethod] || order.shippingMethod || 'استلام من المقر';
         
-        await buildPages(productsRows, order, customer, paymentMethodName, shippingMethodText, subtotal, discountValue, tax, total);
+        await buildPages(order, currentCustomer, paymentMethodName, shippingMethodText, productsRows, subtotal, discountValue, tax, total);
         
         document.getElementById('loading').style.display = 'none';
         document.getElementById('invoiceContainer').style.display = 'block';
         document.getElementById('actionButtons').style.display = 'flex';
         
+        // Setup buttons
+        const printBtn = document.getElementById('printBtn');
+        const pdfBtn = document.getElementById('pdfBtn');
+        const pngBtn = document.getElementById('pngBtn');
+        
+        printBtn.onclick = () => window.print();
+        pdfBtn.onclick = () => exportPDF();
+        pngBtn.onclick = () => exportPNG();
+        
         if (autoAction === 'print') setTimeout(() => window.print(), 500);
-        else if (autoAction === 'pdf') setTimeout(() => handlePDF(), 500);
-        else if (autoAction === 'png') setTimeout(() => handlePNG(), 500);
+        else if (autoAction === 'pdf') setTimeout(() => exportPDF(), 500);
+        else if (autoAction === 'png') setTimeout(() => exportPNG(), 500);
     }
     
-    window.handlePrint = () => window.print();
-    
-    window.handlePDF = () => {
-        alert("سيتم فتح نافذة الطباعة. اختر 'حفظ كـ PDF' من إعدادات الطابعة للحصول على أفضل جودة.");
-        window.print();
-    };
-    
-    window.handlePNG = async () => {
+    async function exportPDF() {
         const element = document.getElementById('invoiceContainer');
-        if (element) {
-            const btns = document.getElementById('actionButtons');
-            if (btns) btns.style.display = 'none';
-            
+        if (!element) return;
+        
+        const btn = document.getElementById('pdfBtn');
+        btn.disabled = true;
+        showLoading();
+        
+        try {
+            const opt = {
+                margin: [0, 0, 0, 0],
+                filename: `${currentFileName}.pdf`,
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: { scale: 3, letterRendering: true, useCORS: true, dpi: 300 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            await html2pdf().set(opt).from(element).save();
+        } catch (error) {
+            console.error('PDF export error:', error);
+            alert('حدث خطأ أثناء تصدير PDF');
+        } finally {
+            btn.disabled = false;
+            hideLoading();
+        }
+    }
+    
+    async function exportPNG() {
+        const element = document.getElementById('invoiceContainer');
+        if (!element) return;
+        
+        const btn = document.getElementById('pngBtn');
+        btn.disabled = true;
+        showLoading();
+        
+        try {
             const canvas = await html2canvas(element, { 
                 scale: 3, 
                 backgroundColor: '#ffffff', 
@@ -791,13 +917,17 @@
             });
             
             const link = document.createElement('a');
-            link.download = `فاتورة_${Date.now()}.png`;
+            link.download = `${currentFileName}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
-            
-            if (btns) btns.style.display = 'flex';
+        } catch (error) {
+            console.error('PNG export error:', error);
+            alert('حدث خطأ أثناء تصدير الصورة');
+        } finally {
+            btn.disabled = false;
+            hideLoading();
         }
-    };
+    }
     
     renderInvoice();
 </script>
