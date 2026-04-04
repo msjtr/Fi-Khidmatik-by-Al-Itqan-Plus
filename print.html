@@ -7,8 +7,8 @@
     <link rel="icon" href="data:,">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -34,7 +34,6 @@
             border-radius: 16px;
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
             position: relative;
-            /* منع الانقسام تماماً */
             page-break-inside: avoid;
             break-inside: avoid;
             overflow: visible;
@@ -69,10 +68,10 @@
             }
             @page {
                 size: A4;
-                margin: 1.2cm 1cm;
+                margin: 1cm;
             }
-            /* إخفاء أي فواصل صفحات */
-            .page-break {
+            /* منع أي فواصل صفحات */
+            .page-break, .break-after {
                 display: none;
             }
         }
@@ -248,7 +247,6 @@
         .btn-png { background: #8b5cf6; color: white; }
         .btn-close { background: #64748b; color: white; }
         
-        /* تحسين للشاشات الصغيرة */
         @media (max-width: 750px) {
             .invoice-content { padding: 18px; }
             .two-columns { grid-template-columns: 1fr; gap: 12px; }
@@ -258,7 +256,6 @@
             to { transform: rotate(360deg); }
         }
         
-        /* منع انقسام أي عنصر */
         .no-break {
             page-break-inside: avoid;
             break-inside: avoid;
@@ -384,7 +381,6 @@
         `;
     }
 
-    // إنشاء صفحة واحدة تحتوي على جميع المنتجات + الملخص في النهاية
     function createSingleInvoicePage(order, customer, allItemsRows, subtotal, discountValue, tax, total, paymentMethodName, shippingMethodText) {
         const header = getFixedHeader(order);
         const footer = getFixedFooter();
@@ -441,7 +437,7 @@
         `;
         
         return `
-            <div class="invoice-single-page">
+            <div class="invoice-single-page" id="invoiceToCapture">
                 <div class="invoice-content">
                     ${header}
                     ${twoCols}
@@ -526,7 +522,6 @@
             'noship': '📥 لا يتطلب شحن'
         }[order.shippingMethod] || order.shippingMethod || 'استلام من المقر';
         
-        // إنشاء صفحة واحدة تحتوي على جميع المنتجات والملخص في النهاية
         const container = document.getElementById('invoiceContainer');
         container.innerHTML = createSingleInvoicePage(order, customer, allItemsRows, subtotal, discountValue, tax, total, paymentMethodName, shippingMethodText);
         
@@ -543,19 +538,48 @@
     
     window.handlePDF = async () => {
         const element = document.getElementById('invoiceContainer');
-        if (element) {
-            const btns = document.getElementById('actionButtons');
-            if (btns) btns.style.display = 'none';
-            const opt = {
-                margin: [0.3, 0.3, 0.3, 0.3],
-                filename: `فاتورة_${Date.now()}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, letterRendering: true, useCORS: true },
-                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-            };
-            await html2pdf().set(opt).from(element).save();
-            if (btns) btns.style.display = 'flex';
+        if (!element) return;
+        
+        const btns = document.getElementById('actionButtons');
+        if (btns) btns.style.display = 'none';
+        
+        try {
+            // استخدام html2canvas لالتقاط العنصر كصورة
+            const canvas = await html2canvas(element, {
+                scale: 3,
+                backgroundColor: '#ffffff',
+                logging: false,
+                useCORS: true,
+                allowTaint: false
+            });
+            
+            const imgData = canvas.toDataURL('image/jpeg', 1.0);
+            const { jsPDF } = window.jspdf;
+            
+            // حساب أبعاد الصفحة
+            const imgWidth = 210; // عرض A4 بالميلمتر
+            const pageHeight = 297;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            
+            // إنشاء PDF بصفحة واحدة فقط
+            const pdf = new jsPDF({
+                unit: 'mm',
+                format: 'a4',
+                orientation: imgHeight > pageHeight ? 'portrait' : 'portrait'
+            });
+            
+            // إضافة الصورة كاملة في صفحة واحدة
+            pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight, undefined, 'FAST');
+            
+            // حفظ PDF (صفحة واحدة فقط)
+            pdf.save(`فاتورة_${Date.now()}.pdf`);
+            
+        } catch (error) {
+            console.error('خطأ في إنشاء PDF:', error);
+            alert('حدث خطأ أثناء إنشاء PDF، يرجى المحاولة مرة أخرى');
         }
+        
+        if (btns) btns.style.display = 'flex';
     };
     
     window.handlePNG = async () => {
@@ -563,7 +587,7 @@
         if (element) {
             const btns = document.getElementById('actionButtons');
             if (btns) btns.style.display = 'none';
-            const canvas = await html2canvas(element, { scale: 3, backgroundColor: '#ffffff' });
+            const canvas = await html2canvas(element, { scale: 3, backgroundColor: '#ffffff', useCORS: true });
             const link = document.createElement('a');
             link.download = `فاتورة_${Date.now()}.png`;
             link.href = canvas.toDataURL('image/png');
