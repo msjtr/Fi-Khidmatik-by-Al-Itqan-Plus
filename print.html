@@ -21,17 +21,21 @@
             box-shadow: 0 8px 20px rgba(0,0,0,0.1);
             margin-bottom: 25px;
             position: relative;
-            page-break-after: always;
-            break-after: page;
             display: flex;
             flex-direction: column;
+        }
+        
+        /* منع انقسام الصفحات في الطباعة */
+        .page:not(:last-child) {
+            page-break-after: always;
+            break-after: page;
         }
         
         .page-content-wrapper {
             flex: 1;
             display: flex;
             flex-direction: column;
-            padding-top: 12mm;
+            padding-top: 20mm;
             padding-left: 15mm;
             padding-right: 15mm;
             position: relative;
@@ -43,20 +47,20 @@
         
         .page-number {
             position: absolute;
-            bottom: 8mm;
-            left: 15mm;
-            font-size: 10px;
+            bottom: 10mm;
+            right: 15mm;
+            font-size: 11px;
             color: #1e293b;
             font-weight: 600;
             background: transparent;
             direction: ltr;
-            text-align: left;
+            text-align: right;
         }
         
         @media print {
             body { background: white; padding: 0; margin: 0; }
-            .page { box-shadow: none; margin: 0; page-break-after: always; min-height: 297mm; }
-            .page-content-wrapper { padding-top: 12mm; padding-left: 15mm; padding-right: 15mm; }
+            .page { box-shadow: none; margin: 0; min-height: 297mm; }
+            .page-content-wrapper { padding-top: 20mm; padding-left: 15mm; padding-right: 15mm; }
             .action-buttons { display: none; }
             @page { size: A4; margin: 0; }
         }
@@ -195,10 +199,11 @@
             margin: 0 auto;
         }
         .desc-text {
-            font-size: 10px;
-            word-wrap: break-word;
-            word-break: break-word;
             white-space: normal;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
+            font-size: 10px;
             line-height: 1.4;
             text-align: right;
         }
@@ -362,12 +367,13 @@
     let productsMap = new Map();
     let currentFileName = "";
     
-    // الهوامش الدقيقة
-    const MM_TO_PX = 3.779527559;
-    const TOP_MARGIN_PX = 12 * MM_TO_PX;      // 12mm
-    const BOTTOM_MARGIN_PX = 25 * MM_TO_PX;    // 25mm
-    const PAGE_HEIGHT_PX = 297 * MM_TO_PX;     // 297mm
+    // الثوابت المطلوبة
+    const MM_TO_PX = 3.78;
+    const TOP_MARGIN_PX = 20 * MM_TO_PX;
+    const BOTTOM_MARGIN_PX = 25 * MM_TO_PX;
+    const PAGE_HEIGHT_PX = 297 * MM_TO_PX;
     const MAX_CONTENT_HEIGHT_PX = PAGE_HEIGHT_PX - TOP_MARGIN_PX - BOTTOM_MARGIN_PX;
+    const BUFFER_PX = 50;
     
     async function loadCustomersAndProducts() {
         const customersSnap = await getDocs(collection(db, 'customers'));
@@ -453,20 +459,55 @@
     function createProductRow(item, productImage, description, price, qty, itemTotal) {
         const tr = document.createElement('tr');
         const imgSrc = productImage && productImage.trim() !== '' ? productImage : '';
+        
+        // معالجة الوصف: تحويل الأسطر الجديدة إلى <br>
+        let processedDescription = description || '';
+        if (processedDescription) {
+            processedDescription = processedDescription.replace(/\n/g, "<br>");
+        }
+        
         const imgHtml = imgSrc ? 
-            `<img src="${imgSrc}" class="product-img" crossorigin="anonymous" loading="eager" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E'">` :
+            `<img src="${imgSrc}" class="product-img" loading="eager" onerror="this.style.display='none'">` :
             `<div class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center mx-auto"><i class="fas fa-box text-gray-400 text-xl"></i></div>`;
         
         tr.innerHTML = `
             <td style="text-align: right; font-weight: 500;">${escapeHtml(item.name)}</td>
             <td>${imgHtml}</td>
             <td>${escapeHtml(item.barcode || '—')}</td>
-            <td class="desc-text">${description || ''}</td>
+            <td class="desc-text">${processedDescription}</td>
             <td>${qty}</td>
             <td>${price.toFixed(2)} ريال</td>
             <td>${itemTotal.toFixed(2)} ريال</td>
         `;
         return tr;
+    }
+    
+    // دالة تقسيم الصفحات كما طلبت
+    function splitIntoPages(rows, rowHeights, maxHeight) {
+        const pages = [];
+        let currentPage = [];
+        let currentHeight = 0;
+
+        for (let i = 0; i < rows.length; i++) {
+            const nextHeight = rowHeights[i];
+
+            if (currentHeight + nextHeight > maxHeight - BUFFER_PX) {
+                if (currentPage.length > 0) {
+                    pages.push(currentPage);
+                }
+                currentPage = [];
+                currentHeight = 0;
+            }
+
+            currentPage.push(i);
+            currentHeight += nextHeight;
+        }
+
+        if (currentPage.length) {
+            pages.push(currentPage);
+        }
+
+        return pages;
     }
     
     async function renderInvoice() {
@@ -524,11 +565,11 @@
                 }
             }
             if (!productImage && item.image) productImage = item.image;
-            if (description && typeof description === 'string') description = escapeHtml(description).replace(/\n/g, '<br>');
+            if (description && typeof description === 'string') description = escapeHtml(description);
             productRowsData.push({ item, productImage, description: description || '', price, qty, itemTotal });
         }
         
-        // المسار الصحيح للشعار: images/logo.svg (نسبة إلى موقع print.html)
+        // قوالب HTML الثابتة
         const logoPath = 'images/logo.svg';
         
         const headerHTML = `
@@ -589,9 +630,6 @@
         const footerHeight = await measureHeight(footerDiv);
         const summaryHeight = await measureHeight(summaryDiv);
         
-        const availableForRowsNormal = MAX_CONTENT_HEIGHT_PX - (headerHeight + footerHeight);
-        const availableForRowsLast = MAX_CONTENT_HEIGHT_PX - (headerHeight + footerHeight + summaryHeight);
-        
         // إنشاء وقياس الصفوف
         const rowElements = [];
         const rowHeights = [];
@@ -602,38 +640,11 @@
             rowHeights.push(height);
         }
         
-        // توزيع الصفوف على الصفحات
-        const pageGroups = [];
-        let currentGroup = [];
-        let currentGroupHeight = 0;
+        // حساب أقصى ارتفاع متاح للصفوف
+        const maxRowsHeight = MAX_CONTENT_HEIGHT_PX - headerHeight - footerHeight;
         
-        for (let i = 0; i < rowHeights.length; i++) {
-            const isLastItem = (i === rowHeights.length - 1);
-            const availableSpace = isLastItem ? availableForRowsLast : availableForRowsNormal;
-            
-            if (currentGroupHeight + rowHeights[i] <= availableSpace + 0.5) {
-                currentGroup.push(i);
-                currentGroupHeight += rowHeights[i];
-            } else {
-                if (currentGroup.length > 0) {
-                    pageGroups.push([...currentGroup]);
-                    currentGroup = [];
-                    currentGroupHeight = 0;
-                }
-                if (rowHeights[i] <= availableSpace + 0.5) {
-                    currentGroup.push(i);
-                    currentGroupHeight = rowHeights[i];
-                } else {
-                    currentGroup.push(i);
-                    pageGroups.push([...currentGroup]);
-                    currentGroup = [];
-                    currentGroupHeight = 0;
-                }
-            }
-        }
-        if (currentGroup.length > 0) {
-            pageGroups.push([...currentGroup]);
-        }
+        // تقسيم الصفوف باستخدام الدالة المطلوبة
+        const pageGroups = splitIntoPages(rowElements, rowHeights, maxRowsHeight);
         
         // بناء الصفحات
         const container = document.getElementById('invoiceContainer');
@@ -674,10 +685,17 @@
             table.appendChild(tbody);
             inner.appendChild(table);
             
+            // إضافة الملخص فقط للصفحة الأخيرة مع مراعاة المساحة
             if (isLastPage) {
-                const summaryClone = document.createElement('div');
-                summaryClone.innerHTML = summaryHTML;
-                inner.appendChild(summaryClone);
+                // التحقق من أن الملخص سيتسع في الصفحة الأخيرة
+                const currentRowsHeight = rowIndices.reduce((sum, idx) => sum + rowHeights[idx], 0);
+                const totalLastPageHeight = headerHeight + footerHeight + summaryHeight + currentRowsHeight;
+                
+                if (totalLastPageHeight <= MAX_CONTENT_HEIGHT_PX) {
+                    const summaryClone = document.createElement('div');
+                    summaryClone.innerHTML = summaryHTML;
+                    inner.appendChild(summaryClone);
+                }
             }
             
             const footerClone = document.createElement('div');
