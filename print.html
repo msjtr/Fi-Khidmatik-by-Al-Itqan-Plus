@@ -531,12 +531,6 @@
         return footer;
     }
 
-    function createSummaryAndTerms(summaryHTML) {
-        const div = document.createElement('div');
-        div.innerHTML = summaryHTML;
-        return div;
-    }
-
     function createProductRowElement(serialNumber, item, productImage, description, price, qty, itemTotal) {
         const row = document.createElement('tr');
         const imgSrc = productImage || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E';
@@ -551,21 +545,6 @@
             <td>${itemTotal.toFixed(2)} ريال</td>
         `;
         return row;
-    }
-
-    // Helper to measure height of an element
-    async function getElementHeight(element) {
-        const clone = element.cloneNode(true);
-        clone.style.position = 'absolute';
-        clone.style.visibility = 'hidden';
-        clone.style.top = '-9999px';
-        clone.style.left = '-9999px';
-        clone.style.width = '210mm';
-        document.body.appendChild(clone);
-        await new Promise(r => setTimeout(r, 20));
-        const height = clone.scrollHeight;
-        document.body.removeChild(clone);
-        return height;
     }
 
     async function renderInvoice() {
@@ -638,7 +617,7 @@
             </div>
         `;
         
-        // Prepare product rows data
+        // Prepare product rows data with images and descriptions
         const productRowsData = [];
         let globalSerial = 1;
         for (const item of items) {
@@ -647,20 +626,28 @@
             const itemTotal = price * qty;
             
             let productImage = '';
+            let description = item.description || '';
             if (item.productId) {
                 const prod = productsMap.get(item.productId);
-                if (prod && prod.image) productImage = prod.image;
+                if (prod) {
+                    if (prod.image) productImage = prod.image;
+                    if (!description && prod.description) description = prod.description;
+                }
             }
             if (!productImage && item.image) productImage = item.image;
-            const description = item.description || (productsMap.get(item.productId)?.description) || '';
             
             productRowsData.push({
                 serial: globalSerial++,
-                item, productImage, description, price, qty, itemTotal
+                item,
+                productImage,
+                description: description || '',
+                price,
+                qty,
+                itemTotal
             });
         }
         
-        // Create hidden container for measuring
+        // Smart page break calculation using dynamic row height measurement
         const measureContainer = document.createElement('div');
         measureContainer.style.position = 'absolute';
         measureContainer.style.visibility = 'hidden';
@@ -669,24 +656,20 @@
         measureContainer.style.width = '210mm';
         document.body.appendChild(measureContainer);
         
-        // Measure fixed content height (without product rows)
+        // Measure fixed content height (header, customer, info rows, title)
         const tempContent = createBasePageContent(order, customer, paymentMethodName, shippingMethodText, 1, 1, todayStr);
         const tempFooter = createFooter();
-        const tempSummary = createSummaryAndTerms(summaryHTML);
-        
         measureContainer.appendChild(tempContent);
         measureContainer.appendChild(tempFooter);
-        
         await new Promise(r => setTimeout(r, 30));
         const fixedHeight = tempContent.scrollHeight + tempFooter.scrollHeight;
         
-        // Available height for products (A4 height - top margin - bottom margin - fixed content)
         const A4_HEIGHT_PX = 297 * 3.78; // ~1122px
         const TOP_MARGIN_PX = 18 * 3.78; // ~68px
         const BOTTOM_MARGIN_PX = 25 * 3.78; // ~94px
-        const AVAILABLE_HEIGHT = A4_HEIGHT_PX - TOP_MARGIN_PX - BOTTOM_MARGIN_PX - fixedHeight - 50; // 50px buffer
+        const AVAILABLE_HEIGHT = A4_HEIGHT_PX - TOP_MARGIN_PX - BOTTOM_MARGIN_PX - fixedHeight - 40; // buffer
         
-        // Measure each product row height
+        // Measure each product row individually
         const rowHeights = [];
         const tempTable = document.createElement('table');
         tempTable.className = 'product-table';
@@ -704,27 +687,22 @@
         
         document.body.removeChild(measureContainer);
         
-        // Distribute rows into pages
+        // Distribute rows into pages based on measured heights
         const pages = [];
         let currentPageRows = [];
         let currentHeight = 0;
         
         for (let i = 0; i < productRowsData.length; i++) {
             const rowHeight = rowHeights[i];
-            
             if (currentPageRows.length > 0 && currentHeight + rowHeight > AVAILABLE_HEIGHT) {
                 pages.push([...currentPageRows]);
                 currentPageRows = [];
                 currentHeight = 0;
             }
-            
             currentPageRows.push(i);
             currentHeight += rowHeight;
         }
-        
-        if (currentPageRows.length > 0) {
-            pages.push(currentPageRows);
-        }
+        if (currentPageRows.length > 0) pages.push(currentPageRows);
         
         // Build actual pages
         const container = document.getElementById('invoiceContainer');
@@ -735,11 +713,10 @@
             const pageRowIndices = pages[pageIdx];
             const isLastPage = (pageIdx === totalPages - 1);
             
-            // Create page
             const page = document.createElement('div');
             page.className = 'page';
             
-            // Add content wrapper
+            // Add content wrapper (header & info)
             const contentWrapper = createBasePageContent(order, customer, paymentMethodName, shippingMethodText, pageIdx + 1, totalPages, todayStr);
             page.appendChild(contentWrapper);
             
@@ -752,7 +729,6 @@
             `;
             table.appendChild(thead);
             const tbody = document.createElement('tbody');
-            
             for (const idx of pageRowIndices) {
                 const rd = productRowsData[idx];
                 tbody.appendChild(createProductRowElement(rd.serial, rd.item, rd.productImage, rd.description, rd.price, rd.qty, rd.itemTotal));
@@ -770,7 +746,7 @@
             // Add footer
             page.appendChild(createFooter());
             
-            // Add page number and date
+            // Add page number and creation date
             const pageNumberDiv = document.createElement('div');
             pageNumberDiv.className = 'page-number';
             pageNumberDiv.textContent = `${pageIdx + 1} / ${totalPages}`;
@@ -792,6 +768,7 @@
         document.getElementById('pdfBtn').onclick = () => exportPDF();
         document.getElementById('pngBtn').onclick = () => exportPNG();
         
+        // Auto-execute action if requested via URL parameter
         if (autoAction === 'print') { setTimeout(() => { window.print(); setTimeout(() => window.close(), 1500); }, 500); }
         else if (autoAction === 'pdf') setTimeout(() => exportPDF(), 500);
         else if (autoAction === 'png') setTimeout(() => exportPNG(), 500);
@@ -813,6 +790,7 @@
             };
             await html2pdf().set(opt).from(element).save();
         } catch (error) {
+            console.error(error);
             alert('حدث خطأ أثناء تصدير PDF');
         } finally {
             btn.disabled = false;
@@ -833,6 +811,7 @@
             link.href = canvas.toDataURL('image/png');
             link.click();
         } catch (error) {
+            console.error(error);
             alert('حدث خطأ أثناء تصدير الصورة');
         } finally {
             btn.disabled = false;
