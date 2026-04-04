@@ -404,10 +404,10 @@ import {
     updateDoc,
     deleteDoc,
     setDoc,
-    query,      // إضافة
-    where,      // إضافة
-    orderBy,    // إضافة
-    limit       // إضافة
+    query,
+    where,
+    orderBy,
+    limit
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -422,7 +422,66 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ========== دوال مساعدة ==========
+// ========== دوال Firebase الأساسية ==========
+async function loadOrders() {
+    const ordersCol = collection(db, "orders");
+    const ordersSnapshot = await getDocs(ordersCol);
+    const ordersList = [];
+    ordersSnapshot.forEach((doc) => {
+        ordersList.push({ id: doc.id, ...doc.data() });
+    });
+    return ordersList;
+}
+
+async function loadCustomers() {
+    const customersCol = collection(db, "customers");
+    const customersSnapshot = await getDocs(customersCol);
+    const customersList = [];
+    customersSnapshot.forEach((doc) => {
+        customersList.push({ id: doc.id, ...doc.data() });
+    });
+    return customersList;
+}
+
+async function loadProducts() {
+    const productsCol = collection(db, "products");
+    const productsSnapshot = await getDocs(productsCol);
+    const productsList = [];
+    productsSnapshot.forEach((doc) => {
+        productsList.push({ id: doc.id, ...doc.data() });
+    });
+    return productsList;
+}
+
+async function addOrder(orderData) {
+    const ordersCol = collection(db, "orders");
+    return await addDoc(ordersCol, orderData);
+}
+
+async function updateOrder(orderId, orderData) {
+    const orderRef = doc(db, "orders", orderId);
+    return await updateDoc(orderRef, orderData);
+}
+
+async function deleteOrder(orderId) {
+    const orderRef = doc(db, "orders", orderId);
+    return await deleteDoc(orderRef);
+}
+
+async function addCustomer(customerData) {
+    const customersCol = collection(db, "customers");
+    return await addDoc(customersCol, customerData);
+}
+
+async function addProduct(productData) {
+    const productsCol = collection(db, "products");
+    return await addDoc(productsCol, productData);
+}
+
+async function updateProductStock(productId, newStock) {
+    const productRef = doc(db, "products", productId);
+    return await updateDoc(productRef, { stock: newStock });
+}
 
 // ========== المتغيرات ==========
 let customers = [], products = [], orders = [], currentOrderId = null;
@@ -523,11 +582,7 @@ async function loadData() {
     await Promise.all([loadCustomersList(), loadProductsList()]);
 }
 
-// ========== دوال الطباعة (تم تعديل المسار إلى ../../print.html) ==========
-// ==========================
-// PRINT SYSTEM (FIXED)
-// ==========================
-
+// ========== دوال الطباعة ==========
 window.printOrder = function(orderId) {
     window.open(`print.html?id=${orderId}&auto=print`, "_blank");
 };
@@ -539,16 +594,16 @@ window.printOrderPDF = function(orderId) {
 window.printOrderPNG = function(orderId) {
     window.open(`print.html?id=${orderId}&auto=png`, "_blank");
 };
+
 // ========== عرض الطلبات ==========
 async function renderOrders() {
     const ordersContainer = document.getElementById('ordersContainer');
     ordersContainer.innerHTML = '<div class="loading-spinner"></div>';
     
     try {
-
-if (!orders.length) {
-    orders = await loadOrders();
-}
+        if (!orders.length) {
+            orders = await loadOrders();
+        }
         
         if (!orders || orders.length === 0) {
             ordersContainer.innerHTML = '<div class="text-center py-16 bg-white rounded-2xl shadow-md"><i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i><p class="text-gray-500">لا توجد طلبات حالياً</p></div>';
@@ -556,32 +611,16 @@ if (!orders.length) {
         }
         
         let filtered = orders.filter(o => {
-
-    if (currentFilters.status && o.status !== currentFilters.status) {
-        return false;
-    }
-
-    if (currentFilters.customer) {
-        const customer = customers.find(c => c.id === o.customerId);
-        if (!customer?.name?.toLowerCase().includes(currentFilters.customer.toLowerCase())) {
-            return false;
-        }
-    }
-
-    if (currentFilters.shippingMethod && o.shippingMethod !== currentFilters.shippingMethod) {
-        return false;
-    }
-
-    if (currentFilters.dateFrom && o.orderDate < currentFilters.dateFrom) {
-        return false;
-    }
-
-    if (currentFilters.dateTo && o.orderDate > currentFilters.dateTo) {
-        return false;
-    }
-
-    return true;
-});
+            if (currentFilters.status && o.status !== currentFilters.status) return false;
+            if (currentFilters.customer) {
+                const customer = customers.find(c => c.id === o.customerId);
+                if (!customer?.name?.toLowerCase().includes(currentFilters.customer.toLowerCase())) return false;
+            }
+            if (currentFilters.shippingMethod && o.shippingMethod !== currentFilters.shippingMethod) return false;
+            if (currentFilters.dateFrom && o.orderDate < currentFilters.dateFrom) return false;
+            if (currentFilters.dateTo && o.orderDate > currentFilters.dateTo) return false;
+            return true;
+        });
         
         if (filtered.length === 0) {
             ordersContainer.innerHTML = '<div class="text-center py-16 bg-white rounded-2xl shadow-md"><i class="fas fa-search text-6xl text-gray-300 mb-4"></i><p class="text-gray-500">لا توجد طلبات مطابقة</p></div>';
