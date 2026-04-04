@@ -7,7 +7,6 @@
     <link rel="icon" href="data:,">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- تحميل المكتبات بشكل ثابت -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
@@ -29,6 +28,7 @@
             margin: 0 auto;
         }
 
+        /* صفحة A4 مع padding داخلي */
         .invoice-page {
             background: white;
             border-radius: 12px;
@@ -38,20 +38,14 @@
             break-after: page;
             page-break-inside: avoid;
             break-inside: avoid;
+            /* أبعاد صفحة A4 للطباعة */
+            height: 297mm;
+            /* هوامش داخلية: علوي 20mm، سفلي 25mm (آمن)، يمين ويسار 15mm */
+            padding: 20mm 15mm 25mm 15mm;
+            position: relative;
         }
 
-        .invoice-content {
-            padding: 18px 22px;
-        }
-
-        /* منع انقسام العناصر */
-        .invoice-header, .two-columns, .info-card, .info-row, 
-        .product-table, .product-table tbody, .product-table tr, 
-        .summary-box, .terms-box, .footer-static {
-            page-break-inside: avoid;
-            break-inside: avoid;
-        }
-
+        /* إعدادات الطباعة - إلغاء الهوامش الخارجية */
         @media print {
             body {
                 background: white;
@@ -64,17 +58,24 @@
                 margin: 0;
                 page-break-after: always;
                 break-after: page;
-            }
-            .invoice-content {
-                padding: 0.5cm 0.8cm !important;
+                height: 297mm;
+                padding: 20mm 15mm 25mm 15mm !important;
             }
             .action-buttons {
                 display: none;
             }
             @page {
                 size: A4;
-                margin: 0.8cm 0.8cm;
+                margin: 0; /* إلغاء الهوامش الخارجية */
             }
+        }
+
+        /* منع انقسام العناصر داخلياً */
+        .invoice-header, .two-columns, .info-card, .info-row, 
+        .product-table, .product-table tbody, .product-table tr, 
+        .summary-box, .terms-box, .footer-static {
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
 
         /* توزيع الرأس في سطر واحد */
@@ -273,7 +274,9 @@
         .btn-png { background: #8b5cf6; color: white; }
         .btn-close { background: #64748b; color: white; }
         @media (max-width: 750px) {
-            .invoice-content { padding: 12px; }
+            .invoice-page {
+                padding: 15mm 10mm 20mm 10mm;
+            }
             .two-columns { grid-template-columns: 1fr; gap: 10px; }
             .product-table th, .product-table td { font-size: 9px; padding: 3px; }
             .product-img { width: 30px; height: 30px; }
@@ -460,18 +463,17 @@
 
         return `
             <div class="invoice-page">
-                <div class="invoice-content">
-                    ${header}
-                    ${commonSections}
-                    ${tableSection}
-                    ${summaryAndThanks}
-                    ${footer}
-                </div>
+                ${header}
+                ${commonSections}
+                ${tableSection}
+                ${summaryAndThanks}
+                ${footer}
             </div>
         `;
     }
 
-    // تقسيم تلقائي بناءً على عدد الصفوف المحدد (هنا 4 صفوف كحد أقصى لكل صفحة)
+    // تقسيم تلقائي بناءً على عدد الصفوف المحدد (4 صفوف كحد أقصى لكل صفحة)
+    // هذا يضمن عدم تجاوز الهامش السفلي الآمن (25mm)
     function splitProductsIntoPages(productsArray, itemsPerPage = 4) {
         const pages = [];
         if (!productsArray.length) {
@@ -534,7 +536,7 @@
                     <td>${qty}</td>
                     <td>${price.toFixed(2)} ريال</td>
                     <td>${total.toFixed(2)} ريال</td>
-                </table>
+                </tr>
             `);
         }
         
@@ -560,7 +562,7 @@
         
         const commonSections = getCommonSections(order, customer, paymentMethodName, shippingMethodText);
         
-        // عدد المنتجات في الصفحة الواحدة: 4 (تلقائي، قابل للتعديل)
+        // 4 منتجات لكل صفحة - يضمن عدم تجاوز الهامش الآمن (25mm)
         const ITEMS_PER_PAGE = 4;
         const productPages = splitProductsIntoPages(allItemsRows, ITEMS_PER_PAGE);
         const totalPages = productPages.length;
@@ -596,11 +598,11 @@
             const btns = document.getElementById('actionButtons');
             if (btns) btns.style.display = 'none';
             const opt = {
-                margin: [0.25, 0.25, 0.25, 0.25],
+                margin: [0, 0, 0, 0], // إلغاء الهوامش الإضافية لأن الصفحة تحدد هوامشها بنفسها
                 filename: `فاتورة_${Date.now()}.pdf`,
                 image: { type: 'jpeg', quality: 1 },
                 html2canvas: { scale: 4, letterRendering: true, useCORS: true, dpi: 300 },
-                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
             await html2pdf().set(opt).from(element).save();
             if (btns) btns.style.display = 'flex';
