@@ -28,14 +28,13 @@
             margin: 0 auto;
         }
 
-        /* كل صفحة فاتورة منفصلة */
-        .invoice-page {
+        /* صفحة واحدة فقط - منع أي انقسام */
+        .invoice-single-page {
             background: white;
             border-radius: 16px;
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
             position: relative;
-            /* منع أي انقسام داخلي */
+            /* منع الانقسام تماماً */
             page-break-inside: avoid;
             break-inside: avoid;
             overflow: visible;
@@ -47,19 +46,17 @@
             break-inside: avoid;
         }
 
-        /* إعدادات الطباعة - هوامش مضبوطة بدقة */
+        /* إعدادات الطباعة - صفحة واحدة فقط */
         @media print {
             body {
                 background: white;
                 padding: 0;
                 margin: 0;
             }
-            .invoice-page {
+            .invoice-single-page {
                 box-shadow: none;
                 border-radius: 0;
                 margin: 0;
-                page-break-after: always;
-                break-after: page;
                 page-break-inside: avoid;
                 break-inside: avoid;
                 border: none;
@@ -73,6 +70,10 @@
             @page {
                 size: A4;
                 margin: 1.2cm 1cm;
+            }
+            /* إخفاء أي فواصل صفحات */
+            .page-break {
+                display: none;
             }
         }
 
@@ -246,12 +247,21 @@
         .btn-pdf { background: #ef4444; color: white; }
         .btn-png { background: #8b5cf6; color: white; }
         .btn-close { background: #64748b; color: white; }
+        
+        /* تحسين للشاشات الصغيرة */
         @media (max-width: 750px) {
             .invoice-content { padding: 18px; }
             .two-columns { grid-template-columns: 1fr; gap: 12px; }
         }
+        
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+        
+        /* منع انقسام أي عنصر */
+        .no-break {
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
     </style>
 </head>
@@ -374,10 +384,11 @@
         `;
     }
 
-    // إنشاء صفحة فاتورة كاملة (سواء كانت أخيرة أم لا) - لكن الملخص فقط في الصفحة الأخيرة
-    function createInvoicePage(order, customer, itemsRows, pageNum, totalPages, isLastPage, subtotal, discountValue, tax, total, paymentMethodName, shippingMethodText) {
+    // إنشاء صفحة واحدة تحتوي على جميع المنتجات + الملخص في النهاية
+    function createSingleInvoicePage(order, customer, allItemsRows, subtotal, discountValue, tax, total, paymentMethodName, shippingMethodText) {
         const header = getFixedHeader(order);
         const footer = getFixedFooter();
+        
         const twoCols = `
             <div class="two-columns">
                 <div class="info-card">
@@ -394,6 +405,7 @@
                 </div>
             </div>
         `;
+        
         const infoRows = `
             <div class="info-row">
                 <span><i class="fas fa-credit-card"></i> <strong>طريقة الدفع:</strong> ${paymentMethodName}</span>
@@ -403,35 +415,33 @@
                 <span><i class="fas fa-truck"></i> <strong>طريقة الاستلام:</strong> ${shippingMethodText}</span>
             </div>
         `;
+        
         const tableSection = `
-            <div class="section-title">تفاصيل المنتجات / الخدمات <span class="text-sm text-gray-500">(صفحة ${pageNum} من ${totalPages})</span></div>
+            <div class="section-title">تفاصيل المنتجات / الخدمات</div>
             <table class="product-table">
                 <thead><tr><th>#</th><th>اسم المنتج</th><th>الصورة</th><th>الباركود</th><th>الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr></thead>
-                <tbody>${itemsRows.join('')}</tbody>
+                <tbody>${allItemsRows.join('')}</tbody>
             </table>
         `;
         
-        let summaryAndTerms = '';
-        if (isLastPage) {
-            summaryAndTerms = `
-                <div class="summary-box">
-                    <div class="summary-row"><span>المجموع الفرعي:</span><span>${subtotal.toFixed(2)} ريال</span></div>
-                    <div class="summary-row"><span>إجمالي الخصم:</span><span style="color:#dc2626;">- ${discountValue.toFixed(2)} ريال</span></div>
-                    <div class="summary-row"><span>ضريبة القيمة المضافة (15%):</span><span>${tax.toFixed(2)} ريال</span></div>
-                    <div class="summary-row total"><span>الإجمالي النهائي شامل الضريبة:</span><span>${total.toFixed(2)} ريال</span></div>
-                </div>
-                <div class="terms-box">
-                    <h4><i class="fas fa-info-circle"></i> تعليمات الفاتورة</h4>
-                    <p>تخضع هذه الفاتورة لكامل الشروط والأحكام المرفقة، ويُعد اعتمادها أو سداد أي مبلغ بموجبها إقرارًا صريحًا ونهائيًا بالموافقة على جميع بنودها دون أي تحفظ، مع إقرار العميل بمسؤوليته عن الاطلاع عليها</p>
-                </div>
-                <div class="text-center mt-3 py-2 bg-blue-50 rounded-xl">
-                    <p class="font-bold text-blue-800"><i class="fas fa-heart"></i> شكراً لتسوقكم معنا</p>
-                </div>
-            `;
-        }
+        const summaryAndTerms = `
+            <div class="summary-box">
+                <div class="summary-row"><span>المجموع الفرعي:</span><span>${subtotal.toFixed(2)} ريال</span></div>
+                <div class="summary-row"><span>إجمالي الخصم:</span><span style="color:#dc2626;">- ${discountValue.toFixed(2)} ريال</span></div>
+                <div class="summary-row"><span>ضريبة القيمة المضافة (15%):</span><span>${tax.toFixed(2)} ريال</span></div>
+                <div class="summary-row total"><span>الإجمالي النهائي شامل الضريبة:</span><span>${total.toFixed(2)} ريال</span></div>
+            </div>
+            <div class="terms-box">
+                <h4><i class="fas fa-info-circle"></i> تعليمات الفاتورة</h4>
+                <p>تخضع هذه الفاتورة لكامل الشروط والأحكام المرفقة، ويُعد اعتمادها أو سداد أي مبلغ بموجبها إقرارًا صريحًا ونهائيًا بالموافقة على جميع بنودها دون أي تحفظ، مع إقرار العميل بمسؤوليته عن الاطلاع عليها</p>
+            </div>
+            <div class="text-center mt-3 py-2 bg-blue-50 rounded-xl">
+                <p class="font-bold text-blue-800"><i class="fas fa-heart"></i> شكراً لتسوقكم معنا</p>
+            </div>
+        `;
         
         return `
-            <div class="invoice-page">
+            <div class="invoice-single-page">
                 <div class="invoice-content">
                     ${header}
                     ${twoCols}
@@ -442,19 +452,6 @@
                 </div>
             </div>
         `;
-    }
-
-    // تقسيم المنتجات إلى صفحات - عدد آمن = 3 منتجات لكل صفحة (لضمان عدم الانقسام)
-    function splitProductsIntoPages(productsArray, itemsPerPage = 3) {
-        const pages = [];
-        if (!productsArray.length) {
-            pages.push([]);
-            return pages;
-        }
-        for (let i = 0; i < productsArray.length; i += itemsPerPage) {
-            pages.push(productsArray.slice(i, i + itemsPerPage));
-        }
-        return pages;
     }
 
     async function renderInvoice() {
@@ -484,8 +481,8 @@
             const item = items[idx];
             const price = item.price || 0;
             const qty = item.quantity || 0;
-            const total = price * qty;
-            subtotal += total;
+            const totalItem = price * qty;
+            subtotal += totalItem;
             
             let productImage = item.image || '';
             if (!productImage && item.productId) {
@@ -504,7 +501,7 @@
                     <td class="desc-text">${escapeHtml(description).substring(0, 60)}${description.length > 60 ? '…' : ''}</td>
                     <td>${qty}</td>
                     <td>${price.toFixed(2)} ريال</td>
-                    <td>${total.toFixed(2)} ريال</td>
+                    <td>${totalItem.toFixed(2)} ريال</td>
                 </tr>
             `);
         }
@@ -529,19 +526,9 @@
             'noship': '📥 لا يتطلب شحن'
         }[order.shippingMethod] || order.shippingMethod || 'استلام من المقر';
         
-        // تقسيم المنتجات إلى صفحات (3 منتجات لكل صفحة - آمن تماماً)
-        const productPages = splitProductsIntoPages(allItemsRows, 3);
-        const totalPages = productPages.length;
-        
+        // إنشاء صفحة واحدة تحتوي على جميع المنتجات والملخص في النهاية
         const container = document.getElementById('invoiceContainer');
-        container.innerHTML = '';
-        
-        for (let pageIdx = 0; pageIdx < productPages.length; pageIdx++) {
-            const pageItems = productPages[pageIdx];
-            const isLastPage = (pageIdx === productPages.length - 1);
-            const pageHtml = createInvoicePage(order, customer, pageItems, pageIdx + 1, totalPages, isLastPage, subtotal, discountValue, tax, total, paymentMethodName, shippingMethodText);
-            container.innerHTML += pageHtml;
-        }
+        container.innerHTML = createSingleInvoicePage(order, customer, allItemsRows, subtotal, discountValue, tax, total, paymentMethodName, shippingMethodText);
         
         document.getElementById('loading').style.display = 'none';
         container.style.display = 'block';
@@ -557,7 +544,6 @@
     window.handlePDF = async () => {
         const element = document.getElementById('invoiceContainer');
         if (element) {
-            // إخفاء الأزرار مؤقتاً للحصول على PDF نظيف
             const btns = document.getElementById('actionButtons');
             if (btns) btns.style.display = 'none';
             const opt = {
