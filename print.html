@@ -7,6 +7,7 @@
     <link rel="icon" href="data:,">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * {
@@ -19,48 +20,44 @@
             background: #eef2f5;
             font-family: 'Cairo', 'Segoe UI', 'Tahoma', 'Noto Sans Arabic', sans-serif;
             direction: rtl;
-            padding: 0;
-            margin: 0;
+            padding: 20px;
         }
 
         .invoice-container {
             max-width: 1200px;
             margin: 0 auto;
-            background: #eef2f5;
-            padding: 20px;
         }
 
-        /* Each page independent - A4 size */
+        /* كل صفحة مستقلة - مقاس A4 */
         .page {
             background: white;
             border-radius: 12px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.1);
             margin-bottom: 25px;
             position: relative;
-            padding: 20mm 15mm 25mm 15mm;
-            /* Remove fixed height to prevent empty pages */
-            min-height: 297mm;
+            /* أبعاد صفحة A4 */
+            height: 297mm;
+            /* هوامش داخلية: علوي 20mm، سفلي 30mm (منطقة آمنة)، يمين ويسار 15mm */
+            padding: 20mm 15mm 30mm 15mm;
+            /* منع انقسام الصفحة */
             page-break-after: always;
             break-after: page;
-        }
-
-        /* Prevent element splitting */
-        .invoice-header, 
-        .two-columns, 
-        .info-card, 
-        .info-row, 
-        .product-table tr, 
-        .summary-box, 
-        .terms-box, 
-        .footer-static {
             page-break-inside: avoid;
             break-inside: avoid;
         }
 
-        /* Page footer with numbering */
+        /* منع تقطيع العناصر */
+        .section, .invoice-header, .two-columns, .info-card, .info-row, 
+        .product-table, .product-table tbody, .product-table tr, 
+        .summary-box, .terms-box, .footer-static {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        /* تذييل الصفحة مع رقم الصفحة */
         .page-footer {
             position: absolute;
-            bottom: 8mm;
+            bottom: 10mm;
             right: 15mm;
             left: 15mm;
             display: flex;
@@ -70,24 +67,18 @@
             color: #94a3b8;
             border-top: 1px solid #e2e8f0;
             padding-top: 5mm;
+            margin-top: 5mm;
         }
-        
         .page-number {
             font-weight: 600;
         }
-        
         .page-date {
             font-size: 9px;
         }
 
-        /* Print settings - optimized */
+        /* إعدادات الطباعة */
         @media print {
             body {
-                background: white;
-                padding: 0;
-                margin: 0;
-            }
-            .invoice-container {
                 background: white;
                 padding: 0;
                 margin: 0;
@@ -96,22 +87,21 @@
                 box-shadow: none;
                 border-radius: 0;
                 margin: 0;
-                padding: 20mm 15mm 25mm 15mm !important;
-                min-height: 0;
+                height: 297mm;
+                padding: 20mm 15mm 30mm 15mm !important;
                 page-break-after: always;
                 break-after: page;
-                page-break-inside: avoid;
             }
             .action-buttons {
                 display: none;
             }
             @page {
                 size: A4;
-                margin: 0;
+                margin: 0; /* إلغاء الهوامش الخارجية */
             }
         }
 
-        /* Header styles */
+        /* توزيع الرأس في سطر واحد */
         .company-badge {
             background: #f1f5f9;
             padding: 8px 12px;
@@ -150,7 +140,7 @@
             margin-bottom: 6px;
         }
         .logo-img {
-            height: 75px;
+            height: 60px;
             width: auto;
         }
         .invoice-title h1 {
@@ -218,18 +208,18 @@
         .product-table th {
             background: #1e3a5f;
             color: white;
-            padding: 8px 5px;
+            padding: 6px 4px;
             border: 1px solid #2d4a6e;
         }
         .product-table td {
             border: 1px solid #cbd5e1;
-            padding: 6px 5px;
+            padding: 5px 4px;
             vertical-align: middle;
             text-align: center;
         }
         .product-img {
-            width: 45px;
-            height: 45px;
+            width: 40px;
+            height: 40px;
             object-fit: cover;
             border-radius: 6px;
             display: block;
@@ -270,41 +260,19 @@
             border-right: 4px solid #eab308;
             font-size: 11px;
         }
-        
-        /* Unified footer styling */
         .footer-static {
             margin-top: 15px;
-            padding-top: 10px;
-            border-top: 2px solid #1e3a5f;
+            padding-top: 8px;
+            border-top: 1px solid #e2e8f0;
             text-align: center;
+            font-size: 10px;
         }
         .contact-links {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 15px;
             background: #f8fafc;
-            padding: 8px 15px;
-            border-radius: 40px;
-            margin-bottom: 8px;
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 25px;
         }
-        .contact-links span {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 11px;
-            color: #334155;
-        }
-        .contact-links i {
-            color: #1e3a5f;
-            width: 16px;
-        }
-        .footer-copyright {
-            font-size: 10px;
-            color: #94a3b8;
-            margin-top: 5px;
-        }
-        
         .action-buttons {
             position: fixed;
             bottom: 20px;
@@ -328,17 +296,13 @@
         .btn-pdf { background: #ef4444; color: white; }
         .btn-png { background: #8b5cf6; color: white; }
         .btn-close { background: #64748b; color: white; }
-        
         @media (max-width: 750px) {
             .page {
-                padding: 15mm 10mm 20mm 10mm;
+                padding: 15mm 10mm 25mm 10mm;
             }
             .two-columns { grid-template-columns: 1fr; gap: 10px; }
             .product-table th, .product-table td { font-size: 9px; padding: 3px; }
-            .product-img { width: 35px; height: 35px; }
-            .logo-img { height: 55px; }
-            .contact-links { gap: 8px; }
-            .contact-links span { font-size: 9px; }
+            .product-img { width: 30px; height: 30px; }
         }
         @keyframes spin {
             to { transform: rotate(360deg); }
@@ -454,14 +418,12 @@
         return `
             <div class="footer-static">
                 <div class="contact-links">
-                    <span><i class="fas fa-phone-alt"></i> هاتف: 966534051317</span>
-                    <span><i class="fab fa-whatsapp"></i> واتساب: 966545312021</span>
-                    <span><i class="fas fa-envelope"></i> info@fi-khidmatik.com</span>
-                    <span><i class="fas fa-globe"></i> www.khidmatik.com</span>
+                    <i class="fas fa-phone-alt"></i> هاتف: 966534051317 &nbsp;|&nbsp;
+                    <i class="fab fa-whatsapp"></i> واتساب: 966545312021 &nbsp;|&nbsp;
+                    <i class="fas fa-envelope"></i> info@fi-khidmatik.com &nbsp;|&nbsp;
+                    <i class="fas fa-globe"></i> www.khidmatik.com
                 </div>
-                <div class="footer-copyright">
-                    هذه الفاتورة إلكترونية - نسخة معتمدة قانونياً
-                </div>
+                <p class="text-xs text-gray-400 mt-1">هذه الفاتورة إلكترونية - نسخة معتمدة قانونياً</p>
             </div>
         `;
     }
@@ -492,11 +454,11 @@
         `;
     }
 
-    function generatePageHTML(order, customer, itemsRows, pageNum, totalPages, commonSections, withSummary, summaryData) {
+    function createPage(order, customer, itemsRows, pageNum, totalPages, commonSections, withSummary, summaryData) {
         const header = getFixedHeader(order);
         const footer = getFixedFooter();
         const tableSection = `
-            <div class="section-title">تفاصيل المنتجات / الخدمات</div>
+            <div class="section-title">تفاصيل المنتجات / الخدمات <span class="text-sm text-gray-500">(صفحة ${pageNum} من ${totalPages})</span></div>
             <table class="product-table">
                 <thead><tr><th>#</th><th>اسم المنتج</th><th>الصورة</th><th>الباركود</th><th>الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr></thead>
                 <tbody>${itemsRows.join('')}</tbody>
@@ -522,6 +484,7 @@
             `;
         }
 
+        // تاريخ اليوم لأسفل الصفحة
         const today = new Date();
         const todayStr = `${today.getDate().toString().padStart(2,'0')}/${(today.getMonth()+1).toString().padStart(2,'0')}/${today.getFullYear()}`;
 
@@ -540,23 +503,16 @@
         `;
     }
 
-    /**
-     * Calculate optimal rows per page based on content
-     * Uses a safe estimate of 5 rows per page to ensure content stays within margins
-     */
-    function splitProductsIntoPages(productsArray) {
+    // تقسيم المنتجات إلى صفحات - 4 منتجات كحد أقصى لكل صفحة
+    // هذا يضمن عدم تجاوز الهامش الآمن (آخر 25-30mm من الصفحة)
+    function splitProductsIntoPages(productsArray, itemsPerPage = 4) {
         const pages = [];
         if (!productsArray.length) {
             pages.push([]);
             return pages;
         }
-        
-        // Safe estimate: 5 rows per page prevents reaching bottom margin
-        // This ensures no content is cut off and no empty pages
-        const SAFE_ROWS_PER_PAGE = 5;
-        
-        for (let i = 0; i < productsArray.length; i += SAFE_ROWS_PER_PAGE) {
-            pages.push(productsArray.slice(i, i + SAFE_ROWS_PER_PAGE));
+        for (let i = 0; i < productsArray.length; i += itemsPerPage) {
+            pages.push(productsArray.slice(i, i + itemsPerPage));
         }
         return pages;
     }
@@ -637,8 +593,9 @@
         
         const commonSections = getCommonSections(order, customer, paymentMethodName, shippingMethodText);
         
-        // Split into pages using safe row count (5 rows per page max)
-        const productPages = splitProductsIntoPages(allItemsRows);
+        // 4 منتجات لكل صفحة - يضمن عدم تجاوز الهامش الآمن (آخر 25-30mm)
+        const ITEMS_PER_PAGE = 4;
+        const productPages = splitProductsIntoPages(allItemsRows, ITEMS_PER_PAGE);
         const totalPages = productPages.length;
         
         const container = document.getElementById('invoiceContainer');
@@ -647,7 +604,7 @@
         for (let pageIdx = 0; pageIdx < productPages.length; pageIdx++) {
             const pageItems = productPages[pageIdx];
             const isLastPage = (pageIdx === productPages.length - 1);
-            const pageHtml = generatePageHTML(
+            const pageHtml = createPage(
                 order, customer, pageItems, pageIdx + 1, totalPages, commonSections,
                 isLastPage,
                 isLastPage ? { subtotal, discountValue, tax, total } : null
@@ -666,11 +623,21 @@
     
     window.handlePrint = () => window.print();
     
-    // PDF generation using window.print (user chooses "Save as PDF")
-    window.handlePDF = () => {
-        // Simple message to guide user
-        alert("سيتم فتح نافذة الطباعة. اختر 'حفظ كـ PDF' من إعدادات الطابعة للحصول على أفضل جودة.");
-        window.print();
+    window.handlePDF = async () => {
+        const element = document.getElementById('invoiceContainer');
+        if (element) {
+            const btns = document.getElementById('actionButtons');
+            if (btns) btns.style.display = 'none';
+            const opt = {
+                margin: [0, 0, 0, 0],
+                filename: `فاتورة_${Date.now()}.pdf`,
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: { scale: 4, letterRendering: true, useCORS: true, dpi: 300 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            await html2pdf().set(opt).from(element).save();
+            if (btns) btns.style.display = 'flex';
+        }
     };
     
     window.handlePNG = async () => {
@@ -678,33 +645,11 @@
         if (element) {
             const btns = document.getElementById('actionButtons');
             if (btns) btns.style.display = 'none';
-            
-            // Temporarily remove page breaks for better PNG capture
-            const pages = document.querySelectorAll('.page');
-            pages.forEach(page => {
-                page.style.pageBreakAfter = 'auto';
-                page.style.breakAfter = 'auto';
-            });
-            
-            const canvas = await html2canvas(element, { 
-                scale: 3, 
-                backgroundColor: '#ffffff', 
-                useCORS: true,
-                logging: false,
-                windowWidth: element.scrollWidth
-            });
-            
-            // Restore page breaks
-            pages.forEach(page => {
-                page.style.pageBreakAfter = '';
-                page.style.breakAfter = '';
-            });
-            
+            const canvas = await html2canvas(element, { scale: 4, backgroundColor: '#ffffff', useCORS: true, dpi: 300 });
             const link = document.createElement('a');
             link.download = `فاتورة_${Date.now()}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
-            
             if (btns) btns.style.display = 'flex';
         }
     };
