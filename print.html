@@ -37,13 +37,19 @@
             position: relative;
         }
         
-        .page-inner-content { flex: 1; }
-        /* الهامش السفلي 25mm - سيتم التحكم فيه بدقة عبر spacer */
-        .bottom-margin-spacer { height: 25mm; width: 100%; flex-shrink: 0; }
+        .page-inner-content { 
+            flex: 1; 
+        }
+        /* الهامش السفلي الثابت 25mm */
+        .bottom-margin-spacer { 
+            height: 25mm; 
+            width: 100%; 
+            flex-shrink: 0; 
+        }
         
         .page-number {
             position: absolute;
-            bottom: 10mm;
+            bottom: 8mm;
             left: 15mm;
             font-size: 10px;
             color: #1e293b;
@@ -63,11 +69,9 @@
             @page { size: A4; margin: 0; }
         }
         
-        /* تنسيق الجدول الاحترافي */
+        /* إزالة الهوامش الإضافية التي قد تسبب فراغات */
         .logo-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 12px; border-bottom: 2px solid #1e3a5f; padding-bottom: 8px; }
         .logo-area img { max-height: 65px; width: auto; object-fit: contain; }
-        .logo-icon { width: 60px; height: 60px; background: linear-gradient(135deg, #1e3a5f, #3b82f6); border-radius: 14px; display: flex; align-items: center; justify-content: center; }
-        .logo-icon i { font-size: 32px; color: white; }
         .invoice-title h1 { font-size: 22px; font-weight: 800; color: #1e3a5f; margin: 0; }
         .invoice-title p { font-size: 11px; margin: 3px 0; }
         .badge-status { display: inline-block; padding: 2px 10px; border-radius: 30px; font-size: 10px; font-weight: 600; }
@@ -151,11 +155,12 @@
     let productsMap = new Map();
     let currentFileName = "";
     
-    // ثوابت القياس الدقيقة
-    const MM_TO_PX = 3.78;
-    const MAX_USABLE_HEIGHT_MM = 252;  // 297mm - (20mm علوي + 25mm سفلي)
-    const MAX_USABLE_HEIGHT_PX = MAX_USABLE_HEIGHT_MM * MM_TO_PX; // ≈ 952.56px
-    const SAFETY_BUFFER_PX = 2; // تقليل الاحتياطي لاستغلال المساحة بشكل أفضل
+    // ثوابت دقيقة جداً (1mm = 3.779527559px)
+    const MM_TO_PX = 3.779527559;
+    const TOP_MARGIN_MM = 20;
+    const BOTTOM_MARGIN_MM = 25;
+    const MAX_USABLE_HEIGHT_MM = 297 - TOP_MARGIN_MM - BOTTOM_MARGIN_MM; // 252mm
+    const MAX_USABLE_HEIGHT_PX = MAX_USABLE_HEIGHT_MM * MM_TO_PX; // 952.44px
     
     async function loadCustomersAndProducts() {
         const customersSnap = await getDocs(collection(db, 'customers'));
@@ -221,8 +226,7 @@
         document.body.appendChild(container);
         const targetElem = elementCreator();
         container.appendChild(targetElem);
-        // ضمان اكتمال التصيير
-        await new Promise(r => requestAnimationFrame(() => setTimeout(r, 50)));
+        await new Promise(r => requestAnimationFrame(() => setTimeout(r, 80)));
         const height = targetElem.getBoundingClientRect().height;
         document.body.removeChild(container);
         return height;
@@ -303,7 +307,7 @@
         const headerHTML = `
             <div class="logo-header">
                 <div class="logo-area">
-                    <img src="/fi-khidmatik/images/logo.svg" alt="منصة في خدمتك" style="max-height:65px; width:auto;" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'logo-icon\\'><i class=\\'fas fa-handshake fa-2x\\'></i></div>';">
+                    <img src="/fi-khidmatik/images/logo.svg" alt="منصة في خدمتك" style="max-height:65px; width:auto;" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\"logo-icon\"><i class=\"fas fa-handshake fa-2x\"></i></div>';">
                 </div>
                 <div class="invoice-title text-left">
                     <h1>فاتورة إلكترونية</h1>
@@ -371,10 +375,10 @@
             rowHeights.push(height);
         }
         
-        // خوارزمية تقسيم محسنة لاستغلال المساحة بالكامل
-        const pages = [];
+        // خوارزمية تقسيم صارمة باستخدام الارتفاع الفعلي
+        const pages = []; // مصفوفة من مصفوفات indices الصفوف
         let currentPageRows = [];
-        let currentHeight = headerHeight + footerStaticHeight; // بدون ملخص
+        let currentHeight = headerHeight + footerStaticHeight;
         
         for (let i = 0; i < rowHeights.length; i++) {
             const rowH = rowHeights[i];
@@ -383,13 +387,13 @@
             
             if (isLastRow) {
                 // الصفحة الأخيرة يجب أن تتسع للملخص
-                if (newHeight + summaryHeight <= MAX_USABLE_HEIGHT_PX + SAFETY_BUFFER_PX) {
+                if (newHeight + summaryHeight <= MAX_USABLE_HEIGHT_PX) {
                     currentPageRows.push(i);
                     pages.push([...currentPageRows]);
                     currentPageRows = [];
                     currentHeight = headerHeight + footerStaticHeight;
                 } else {
-                    // لا يتسع الصف الحالي مع الملخص -> نغلق الصفحة الحالية ونبدأ صفحة جديدة
+                    // لا يتسع -> نغلق الصفحة الحالية (إن وجدت) ونبدأ صفحة جديدة
                     if (currentPageRows.length > 0) {
                         pages.push([...currentPageRows]);
                         currentPageRows = [];
@@ -402,7 +406,7 @@
                         currentPageRows = [];
                         currentHeight = headerHeight + footerStaticHeight;
                     } else {
-                        // حالة نادرة: صف كبير جداً
+                        // حالة نادرة: صف طويل جداً نضغطه
                         currentPageRows.push(i);
                         pages.push([...currentPageRows]);
                         currentPageRows = [];
@@ -410,20 +414,18 @@
                     }
                 }
             } else {
-                if (newHeight <= MAX_USABLE_HEIGHT_PX + SAFETY_BUFFER_PX) {
+                if (newHeight <= MAX_USABLE_HEIGHT_PX) {
                     currentPageRows.push(i);
                     currentHeight = newHeight;
                 } else {
-                    if (currentPageRows.length === 0) {
-                        currentPageRows.push(i);
+                    // لا يتسع، نغلق الصفحة الحالية ونبدأ صفحة جديدة بهذا الصف
+                    if (currentPageRows.length > 0) {
                         pages.push([...currentPageRows]);
                         currentPageRows = [];
                         currentHeight = headerHeight + footerStaticHeight;
-                    } else {
-                        pages.push([...currentPageRows]);
-                        currentPageRows = [i];
-                        currentHeight = headerHeight + footerStaticHeight + rowH;
                     }
+                    currentPageRows.push(i);
+                    currentHeight = headerHeight + footerStaticHeight + rowH;
                 }
             }
         }
@@ -432,10 +434,10 @@
             pages.push([...currentPageRows]);
         }
         
-        // إزالة أي صفحات فارغة (لن تحدث)
+        // إزالة أي صفحات فارغة (لن تحدث، لكن للأمان)
         const finalPages = pages.filter(pageRows => pageRows.length > 0);
         
-        // بناء الصفحات
+        // بناء الصفحات النهائية
         const container = document.getElementById('invoiceContainer');
         container.innerHTML = '';
         
@@ -513,11 +515,23 @@
         btn.disabled = true;
         showLoading();
         try {
-            const opt = { margin: [0, 0, 0, 0], filename: `${currentFileName}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 3, useCORS: true, logging: false, dpi: 300 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true } };
+            const opt = { 
+                margin: [0, 0, 0, 0], 
+                filename: `${currentFileName}.pdf`, 
+                image: { type: 'jpeg', quality: 0.98 }, 
+                html2canvas: { scale: 3, useCORS: true, logging: false, dpi: 300 }, 
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true } 
+            };
             await html2pdf().set(opt).from(element).save();
-        } catch (error) { console.error(error); alert('حدث خطأ أثناء تصدير PDF'); } 
-        finally { btn.disabled = false; hideLoading(); }
+        } catch (error) { 
+            console.error(error); 
+            alert('حدث خطأ أثناء تصدير PDF'); 
+        } finally { 
+            btn.disabled = false; 
+            hideLoading(); 
+        }
     }
+    
     async function exportPNG() {
         const element = document.getElementById('invoiceContainer');
         if (!element) return;
@@ -530,8 +544,13 @@
             link.download = `${currentFileName}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
-        } catch (error) { console.error(error); alert('حدث خطأ أثناء تصدير الصورة'); } 
-        finally { btn.disabled = false; hideLoading(); }
+        } catch (error) { 
+            console.error(error); 
+            alert('حدث خطأ أثناء تصدير الصورة'); 
+        } finally { 
+            btn.disabled = false; 
+            hideLoading(); 
+        }
     }
     
     renderInvoice();
