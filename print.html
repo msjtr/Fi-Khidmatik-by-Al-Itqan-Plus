@@ -430,6 +430,140 @@
         if (overlay) overlay.style.display = 'none';
     }
 
+    // Convert mm to pixels (1mm = 3.779527559px)
+    function mmToPx(mm) {
+        return mm * 3.779527559;
+    }
+
+    // Calculate usable height: A4 height - top padding - bottom safe area
+    function getUsableHeightPx() {
+        const pageHeightMM = 297;
+        const topPaddingMM = 20;
+        const bottomSafeMM = 25;
+        const usableMM = pageHeightMM - topPaddingMM - bottomSafeMM;
+        return mmToPx(usableMM);
+    }
+
+    // Create a complete page with all fixed elements (without product rows)
+    function createBasePageElement(order, customer, paymentMethodName, shippingMethodText, pageNum, totalPages, todayStr) {
+        const page = document.createElement('div');
+        page.className = 'page';
+        
+        // Header
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'invoice-header';
+        headerDiv.innerHTML = `
+            <div class="logo-area">
+                <div><img src="images/logo.svg" class="logo-img" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22%233b82f6%22/%3E%3Ctext x=%2250%22 y=%2270%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2240%22%3Eف%3C/text%3E%3C/svg%3E'"></div>
+                <div class="invoice-title text-left">
+                    <h1>فاتورة إلكترونية</h1>
+                    <p><strong>رقم الفاتورة:</strong> ${escapeHtml(order.orderNumber || order.id)}</p>
+                    <p><strong>التاريخ:</strong> ${formatDate(order.orderDate)} | <strong>الوقت:</strong> ${formatTime(order.orderTime)}</p>
+                    <p><span class="badge-status ${getStatusClass(order.status)}">${order.status || 'جديد'}</span></p>
+                </div>
+            </div>
+            <div class="company-badge">
+                <span><i class="fas fa-briefcase"></i> <strong>منصة في خدمتك</strong></span>
+                <span><i class="fas fa-id-card"></i> رقم شهادة العمل الحر: FL-765735204</span>
+                <span><i class="fas fa-chart-line"></i> الرقم الضريبي: 312495447600003</span>
+            </div>
+        `;
+        page.appendChild(headerDiv);
+        
+        // Two columns
+        const columnsDiv = document.createElement('div');
+        columnsDiv.className = 'two-columns';
+        columnsDiv.innerHTML = `
+            <div class="info-card">
+                <h3><i class="fas fa-building ml-2"></i> مصدرة من</h3>
+                <p>منصة في خدمتك<br>المملكة العربية السعودية<br>حائل - حي النقرة - شارع سعد المشاط<br>رقم المبنى: 3085 | الرمز البريدي: 55431</p>
+            </div>
+            <div class="info-card">
+                <h3><i class="fas fa-user ml-2"></i> مصدرة إلى</h3>
+                <p><strong>العميل:</strong> ${escapeHtml(customer.name || '__________')}<br>
+                <strong>المدينة:</strong> ${escapeHtml(customer.city || '__________')}<br>
+                <strong>العنوان:</strong> ${escapeHtml(customer.street || '__________')}<br>
+                <strong>الجوال:</strong> ${escapeHtml(customer.phone || '__________')}<br>
+                <strong>البريد:</strong> ${escapeHtml(customer.email || '__________')}</p>
+            </div>
+        `;
+        page.appendChild(columnsDiv);
+        
+        // Payment and shipping rows
+        const infoRow1 = document.createElement('div');
+        infoRow1.className = 'info-row';
+        infoRow1.innerHTML = `
+            <span><i class="fas fa-credit-card"></i> <strong>طريقة الدفع:</strong> ${paymentMethodName}</span>
+            <span><i class="fas fa-check-circle"></i> <strong>رمز الموافقة:</strong> ${order.approvalCode || 'APV-' + Math.floor(Math.random()*10000)}</span>
+        `;
+        page.appendChild(infoRow1);
+        
+        const infoRow2 = document.createElement('div');
+        infoRow2.className = 'info-row';
+        infoRow2.innerHTML = `<span><i class="fas fa-truck"></i> <strong>طريقة الاستلام:</strong> ${shippingMethodText}</span>`;
+        page.appendChild(infoRow2);
+        
+        // Section title
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'section-title';
+        titleDiv.innerHTML = `تفاصيل المنتجات / الخدمات ${totalPages > 1 ? `(صفحة ${pageNum} من ${totalPages})` : ''}`;
+        page.appendChild(titleDiv);
+        
+        return page;
+    }
+
+    // Add footer and page numbering to a page
+    function finalizePage(page, pageNum, totalPages, todayStr, includeSummary = false, summaryHTML = '') {
+        // Add summary if needed
+        if (includeSummary && summaryHTML) {
+            const summaryDiv = document.createElement('div');
+            summaryDiv.innerHTML = summaryHTML;
+            page.appendChild(summaryDiv);
+        }
+        
+        // Footer
+        const footerDiv = document.createElement('div');
+        footerDiv.className = 'footer-static';
+        footerDiv.innerHTML = `
+            <div class="contact-links">
+                <span><i class="fas fa-phone-alt"></i> هاتف: 966534051317</span>
+                <span><i class="fab fa-whatsapp"></i> واتساب: 966545312021</span>
+                <span><i class="fas fa-envelope"></i> info@fi-khidmatik.com</span>
+                <span><i class="fas fa-globe"></i> www.khidmatik.com</span>
+            </div>
+            <div class="footer-copyright">هذه الفاتورة إلكترونية - نسخة معتمدة قانونياً</div>
+        `;
+        page.appendChild(footerDiv);
+        
+        // Page number and date
+        const pageNumberDiv = document.createElement('div');
+        pageNumberDiv.className = 'page-number';
+        pageNumberDiv.textContent = `${pageNum} / ${totalPages}`;
+        page.appendChild(pageNumberDiv);
+        
+        const pageDateDiv = document.createElement('div');
+        pageDateDiv.className = 'page-date';
+        pageDateDiv.textContent = `تم الإنشاء: ${todayStr}`;
+        page.appendChild(pageDateDiv);
+        
+        return page;
+    }
+
+    // Create a product row element
+    function createProductRow(item, productImage, description, price, qty, itemTotal) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td style="text-align: right;">${escapeHtml(item.name)}</td>
+            <td style="width: 55px;"><img src="${productImage}" class="product-img" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E'"></td>
+            <td>${escapeHtml(item.barcode || '—')}</td>
+            <td class="desc-text">${escapeHtml(description).substring(0, 70)}${description.length > 70 ? '…' : ''}</td>
+            <td>${qty}</td>
+            <td>${price.toFixed(2)} ريال</td>
+            <td>${itemTotal.toFixed(2)} ريال</td>
+        `;
+        return row;
+    }
+
     async function renderInvoice() {
         const urlParams = new URLSearchParams(window.location.search);
         const orderId = urlParams.get('id');
@@ -455,6 +589,7 @@
         const today = new Date();
         const dateStr = `${today.getFullYear()}-${(today.getMonth()+1).toString().padStart(2,'0')}-${today.getDate().toString().padStart(2,'0')}`;
         currentFileName = `${clientName}_${orderNumber}_${dateStr}`;
+        const todayStr = `${today.getDate().toString().padStart(2,'0')}/${(today.getMonth()+1).toString().padStart(2,'0')}/${today.getFullYear()}`;
         
         // Calculate totals
         let subtotal = 0;
@@ -485,149 +620,151 @@
             'noship': '📥 لا يتطلب شحن'
         }[order.shippingMethod] || 'استلام من المقر';
         
-        // Build all pages using simple fixed rows per page (5 rows per page is safe)
-        // This avoids complex height calculations that were causing issues
-        const ROWS_PER_PAGE = 5;
-        const totalPages = Math.ceil(items.length / ROWS_PER_PAGE);
+        const summaryHTML = `
+            <div class="summary-box">
+                <div class="summary-row"><span>المجموع الفرعي:</span><span>${subtotal.toFixed(2)} ريال</span></div>
+                <div class="summary-row"><span>إجمالي الخصم:</span><span style="color:#dc2626;">- ${discountValue.toFixed(2)} ريال</span></div>
+                <div class="summary-row"><span>ضريبة القيمة المضافة (15%):</span><span>${tax.toFixed(2)} ريال</span></div>
+                <div class="summary-row total"><span>الإجمالي النهائي شامل الضريبة:</span><span>${total.toFixed(2)} ريال</span></div>
+            </div>
+            <div class="terms-box">
+                <h4><i class="fas fa-info-circle"></i> تعليمات الفاتورة</h4>
+                <p>تخضع هذه الفاتورة لكامل الشروط والأحكام المرفقة، ويُعد اعتمادها أو سداد أي مبلغ بموجبها إقرارًا صريحًا ونهائيًا بالموافقة على جميع بنودها دون أي تحفظ، مع إقرار العميل بمسؤوليته عن الاطلاع عليها</p>
+            </div>
+            <div class="text-center mt-3 py-2 bg-blue-50 rounded-xl">
+                <p class="font-bold text-blue-800"><i class="fas fa-heart"></i> شكراً لتسوقكم معنا</p>
+            </div>
+        `;
         
+        // Prepare product rows with their heights
+        const productRows = [];
+        for (const item of items) {
+            const price = item.price || 0;
+            const qty = item.quantity || 0;
+            const itemTotal = price * qty;
+            
+            let productImage = '';
+            if (item.productId) {
+                const prod = productsMap.get(item.productId);
+                if (prod && prod.image) productImage = prod.image;
+            }
+            if (!productImage && item.image) productImage = item.image;
+            const imgSrc = productImage || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E';
+            const description = item.description || (productsMap.get(item.productId)?.description) || '';
+            
+            productRows.push({
+                element: createProductRow(item, imgSrc, description, price, qty, itemTotal),
+                item: item
+            });
+        }
+        
+        // ============================================================
+        // DYNAMIC PAGINATION BASED ON ACTUAL RENDERED HEIGHT
+        // ============================================================
+        
+        // Create hidden container for measuring
+        const measureContainer = document.createElement('div');
+        measureContainer.style.position = 'absolute';
+        measureContainer.style.visibility = 'hidden';
+        measureContainer.style.top = '-9999px';
+        measureContainer.style.left = '-9999px';
+        measureContainer.style.width = '210mm';
+        measureContainer.style.padding = '20mm 15mm 25mm 15mm';
+        measureContainer.style.boxSizing = 'border-box';
+        measureContainer.style.background = 'white';
+        document.body.appendChild(measureContainer);
+        
+        // Create a temporary page to measure fixed elements height
+        const tempPage = createBasePageElement(order, customer, paymentMethodName, shippingMethodText, 1, 1, todayStr);
+        measureContainer.appendChild(tempPage);
+        await new Promise(r => setTimeout(r, 50));
+        
+        // Get the table body to add rows
+        const tempTbody = document.createElement('tbody');
+        const tempTable = document.createElement('table');
+        tempTable.className = 'product-table';
+        tempTable.appendChild(document.createElement('thead'));
+        tempTable.appendChild(tempTbody);
+        tempPage.appendChild(tempTable);
+        
+        await new Promise(r => setTimeout(r, 30));
+        
+        // Measure fixed elements height (without any product rows)
+        const fixedHeight = tempPage.scrollHeight;
+        
+        // Calculate usable height for product rows with BUFFER (40px tolerance)
+        const usableHeight = getUsableHeightPx();
+        const BUFFER = 40;
+        const availableForRows = usableHeight - fixedHeight - BUFFER;
+        
+        // Measure each product row height
+        const rowHeights = [];
+        for (let i = 0; i < productRows.length; i++) {
+            tempTbody.innerHTML = '';
+            tempTbody.appendChild(productRows[i].element.cloneNode(true));
+            await new Promise(r => setTimeout(r, 10));
+            rowHeights.push(productRows[i].element.scrollHeight);
+        }
+        
+        // Clean up measure container
+        document.body.removeChild(measureContainer);
+        
+        // Distribute rows into pages based on accumulated height
+        const pageGroups = [];
+        let currentGroup = [];
+        let currentHeight = 0;
+        
+        for (let i = 0; i < productRows.length; i++) {
+            const rowHeight = rowHeights[i];
+            
+            // If adding this row exceeds available space, start a new page
+            if (currentGroup.length > 0 && currentHeight + rowHeight > availableForRows) {
+                pageGroups.push([...currentGroup]);
+                currentGroup = [];
+                currentHeight = 0;
+            }
+            
+            currentGroup.push(productRows[i]);
+            currentHeight += rowHeight;
+        }
+        
+        if (currentGroup.length > 0) {
+            pageGroups.push(currentGroup);
+        }
+        
+        // Build actual pages
         const container = document.getElementById('invoiceContainer');
         container.innerHTML = '';
+        const totalPages = pageGroups.length;
         
-        const todayStr = `${today.getDate().toString().padStart(2,'0')}/${(today.getMonth()+1).toString().padStart(2,'0')}/${today.getFullYear()}`;
-        
-        for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-            const startIdx = (pageNum - 1) * ROWS_PER_PAGE;
-            const endIdx = Math.min(startIdx + ROWS_PER_PAGE, items.length);
-            const pageItems = items.slice(startIdx, endIdx);
-            const isLastPage = (pageNum === totalPages);
+        for (let pageIdx = 0; pageIdx < pageGroups.length; pageIdx++) {
+            const group = pageGroups[pageIdx];
+            const isLastPage = (pageIdx === totalPages - 1);
             
-            // Create page
-            const page = document.createElement('div');
-            page.className = 'page';
+            // Create base page
+            const page = createBasePageElement(order, customer, paymentMethodName, shippingMethodText, pageIdx + 1, totalPages, todayStr);
             
-            // Header
-            page.innerHTML += `
-                <div class="invoice-header">
-                    <div class="logo-area">
-                        <div><img src="images/logo.svg" class="logo-img" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22%233b82f6%22/%3E%3Ctext x=%2250%22 y=%2270%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2240%22%3Eف%3C/text%3E%3C/svg%3E'"></div>
-                        <div class="invoice-title text-left">
-                            <h1>فاتورة إلكترونية</h1>
-                            <p><strong>رقم الفاتورة:</strong> ${escapeHtml(order.orderNumber || order.id)}</p>
-                            <p><strong>التاريخ:</strong> ${formatDate(order.orderDate)} | <strong>الوقت:</strong> ${formatTime(order.orderTime)}</p>
-                            <p><span class="badge-status ${getStatusClass(order.status)}">${order.status || 'جديد'}</span></p>
-                        </div>
-                    </div>
-                    <div class="company-badge">
-                        <span><i class="fas fa-briefcase"></i> <strong>منصة في خدمتك</strong></span>
-                        <span><i class="fas fa-id-card"></i> رقم شهادة العمل الحر: FL-765735204</span>
-                        <span><i class="fas fa-chart-line"></i> الرقم الضريبي: 312495447600003</span>
-                    </div>
-                </div>
+            // Create table and add rows
+            const table = document.createElement('table');
+            table.className = 'product-table';
+            
+            // Table header
+            const thead = document.createElement('thead');
+            thead.innerHTML = `
+                <tr><th>اسم المنتج</th><th>الصورة</th><th>الباركود</th><th>الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>
             `;
+            table.appendChild(thead);
             
-            // Two columns
-            page.innerHTML += `
-                <div class="two-columns">
-                    <div class="info-card">
-                        <h3><i class="fas fa-building ml-2"></i> مصدرة من</h3>
-                        <p>منصة في خدمتك<br>المملكة العربية السعودية<br>حائل - حي النقرة - شارع سعد المشاط<br>رقم المبنى: 3085 | الرمز البريدي: 55431</p>
-                    </div>
-                    <div class="info-card">
-                        <h3><i class="fas fa-user ml-2"></i> مصدرة إلى</h3>
-                        <p><strong>العميل:</strong> ${escapeHtml(customer.name || '__________')}<br>
-                        <strong>المدينة:</strong> ${escapeHtml(customer.city || '__________')}<br>
-                        <strong>العنوان:</strong> ${escapeHtml(customer.street || '__________')}<br>
-                        <strong>الجوال:</strong> ${escapeHtml(customer.phone || '__________')}<br>
-                        <strong>البريد:</strong> ${escapeHtml(customer.email || '__________')}</p>
-                    </div>
-                </div>
-            `;
-            
-            // Payment and shipping rows
-            page.innerHTML += `
-                <div class="info-row">
-                    <span><i class="fas fa-credit-card"></i> <strong>طريقة الدفع:</strong> ${paymentMethodName}</span>
-                    <span><i class="fas fa-check-circle"></i> <strong>رمز الموافقة:</strong> ${order.approvalCode || 'APV-' + Math.floor(Math.random()*10000)}</span>
-                </div>
-                <div class="info-row">
-                    <span><i class="fas fa-truck"></i> <strong>طريقة الاستلام:</strong> ${shippingMethodText}</span>
-                </div>
-            `;
-            
-            // Section title
-            page.innerHTML += `<div class="section-title">تفاصيل المنتجات / الخدمات ${totalPages > 1 ? `(صفحة ${pageNum} من ${totalPages})` : ''}</div>`;
-            
-            // Products table
-            let tableHtml = `<table class="product-table"><thead><tr><th>اسم المنتج</th><th>الصورة</th><th>الباركود</th><th>الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr></thead><tbody>`;
-            
-            for (let idx = 0; idx < pageItems.length; idx++) {
-                const item = pageItems[idx];
-                const price = item.price || 0;
-                const qty = item.quantity || 0;
-                const itemTotal = price * qty;
-                
-                let productImage = '';
-                if (item.productId) {
-                    const prod = productsMap.get(item.productId);
-                    if (prod && prod.image) productImage = prod.image;
-                }
-                if (!productImage && item.image) productImage = item.image;
-                const imgSrc = productImage || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E';
-                const description = item.description || (productsMap.get(item.productId)?.description) || '';
-                
-                tableHtml += `
-                    <tr>
-                        <td style="text-align: right;">${escapeHtml(item.name)}</td>
-                        <td><img src="${imgSrc}" class="product-img" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E'"></td>
-                        <td>${escapeHtml(item.barcode || '—')}</td>
-                        <td class="desc-text">${escapeHtml(description).substring(0, 70)}${description.length > 70 ? '…' : ''}</td>
-                        <td>${qty}</td>
-                        <td>${price.toFixed(2)} ريال</td>
-                        <td>${itemTotal.toFixed(2)} ريال</td>
-                    </tr>
-                `;
+            // Table body with rows
+            const tbody = document.createElement('tbody');
+            for (const row of group) {
+                tbody.appendChild(row.element.cloneNode(true));
             }
+            table.appendChild(tbody);
+            page.appendChild(table);
             
-            tableHtml += `</tbody></table>`;
-            page.innerHTML += tableHtml;
-            
-            // Summary only on last page
-            if (isLastPage) {
-                page.innerHTML += `
-                    <div class="summary-box">
-                        <div class="summary-row"><span>المجموع الفرعي:</span><span>${subtotal.toFixed(2)} ريال</span></div>
-                        <div class="summary-row"><span>إجمالي الخصم:</span><span style="color:#dc2626;">- ${discountValue.toFixed(2)} ريال</span></div>
-                        <div class="summary-row"><span>ضريبة القيمة المضافة (15%):</span><span>${tax.toFixed(2)} ريال</span></div>
-                        <div class="summary-row total"><span>الإجمالي النهائي شامل الضريبة:</span><span>${total.toFixed(2)} ريال</span></div>
-                    </div>
-                    <div class="terms-box">
-                        <h4><i class="fas fa-info-circle"></i> تعليمات الفاتورة</h4>
-                        <p>تخضع هذه الفاتورة لكامل الشروط والأحكام المرفقة، ويُعد اعتمادها أو سداد أي مبلغ بموجبها إقرارًا صريحًا ونهائيًا بالموافقة على جميع بنودها دون أي تحفظ، مع إقرار العميل بمسؤوليته عن الاطلاع عليها</p>
-                    </div>
-                    <div class="text-center mt-3 py-2 bg-blue-50 rounded-xl">
-                        <p class="font-bold text-blue-800"><i class="fas fa-heart"></i> شكراً لتسوقكم معنا</p>
-                    </div>
-                `;
-            }
-            
-            // Footer
-            page.innerHTML += `
-                <div class="footer-static">
-                    <div class="contact-links">
-                        <span><i class="fas fa-phone-alt"></i> هاتف: 966534051317</span>
-                        <span><i class="fab fa-whatsapp"></i> واتساب: 966545312021</span>
-                        <span><i class="fas fa-envelope"></i> info@fi-khidmatik.com</span>
-                        <span><i class="fas fa-globe"></i> www.khidmatik.com</span>
-                    </div>
-                    <div class="footer-copyright">هذه الفاتورة إلكترونية - نسخة معتمدة قانونياً</div>
-                </div>
-            `;
-            
-            // Page number and date
-            page.innerHTML += `
-                <div class="page-number">${pageNum} / ${totalPages}</div>
-                <div class="page-date">تم الإنشاء: ${todayStr}</div>
-            `;
+            // Finalize page
+            finalizePage(page, pageIdx + 1, totalPages, todayStr, isLastPage, summaryHTML);
             
             container.appendChild(page);
         }
