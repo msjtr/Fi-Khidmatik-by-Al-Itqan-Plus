@@ -10,24 +10,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: #eef2f5;
-            font-family: 'Cairo', 'Segoe UI', 'Tahoma', sans-serif;
-            direction: rtl;
-            padding: 20px;
-        }
-
-        .invoice-container {
-            max-width: 210mm;
-            margin: 0 auto;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #eef2f5; font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif; direction: rtl; padding: 20px; }
+        .invoice-container { max-width: 210mm; margin: 0 auto; }
+        
         .page {
             width: 210mm;
             min-height: 297mm;
@@ -40,7 +26,7 @@
             display: flex;
             flex-direction: column;
         }
-
+        
         .page-content-wrapper {
             flex: 1;
             display: flex;
@@ -50,17 +36,9 @@
             padding-right: 15mm;
             position: relative;
         }
-
-        .page-inner-content {
-            flex: 1;
-        }
-
-        .bottom-margin-spacer {
-            height: 25mm;
-            width: 100%;
-            flex-shrink: 0;
-        }
-
+        
+        .page-inner-content { flex: 1; }
+        .bottom-margin-spacer { height: 25mm; width: 100%; flex-shrink: 0; }
         .page-number {
             position: absolute;
             bottom: 8mm;
@@ -73,174 +51,37 @@
             padding: 2px 8px;
             border-radius: 20px;
         }
-
+        
         @media print {
-            body {
-                background: white;
-                padding: 0;
-                margin: 0;
-            }
-            .page {
-                box-shadow: none;
-                border-radius: 0;
-                margin: 0;
-                page-break-after: always;
-                min-height: 297mm;
-            }
-            .page-content-wrapper {
-                padding-top: 20mm;
-                padding-left: 15mm;
-                padding-right: 15mm;
-            }
-            .action-buttons {
-                display: none;
-            }
-            @page {
-                size: A4;
-                margin: 0;
-            }
-        }
-
-        .logo-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 12px;
-            border-bottom: 2px solid #1e3a5f;
-            padding-bottom: 8px;
-        }
-        .logo-area img {
-            max-height: 65px;
-            width: auto;
-            object-fit: contain;
-        }
-        .logo-icon {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #1e3a5f, #3b82f6);
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .logo-icon i {
-            font-size: 32px;
-            color: white;
-        }
-        .invoice-title h1 {
-            font-size: 22px;
-            font-weight: 800;
-            color: #1e3a5f;
-            margin: 0;
-        }
-        .invoice-title p {
-            font-size: 11px;
-            margin: 3px 0;
-        }
-        .badge-status {
-            display: inline-block;
-            padding: 2px 10px;
-            border-radius: 30px;
-            font-size: 10px;
-            font-weight: 600;
-        }
-        .company-badge {
-            background: #f1f5f9;
-            padding: 6px 12px;
-            border-radius: 10px;
-            font-size: 10px;
-            display: flex;
-            justify-content: space-between;
-            margin-top: 8px;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .two-columns {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin: 12px 0;
-        }
-        .info-card {
-            background: #f8fafc;
-            border-radius: 12px;
-            padding: 8px 12px;
-            border: 1px solid #e2e8f0;
-        }
-        .info-card h3 {
-            font-size: 13px;
-            margin-bottom: 6px;
-            border-right: 3px solid #3b82f6;
-            padding-right: 8px;
-        }
-        .info-card p {
-            font-size: 11px;
-            line-height: 1.45;
-        }
-        .info-row {
-            background: #f1f5f9;
-            padding: 6px 12px;
-            border-radius: 10px;
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin: 8px 0;
-            font-size: 11px;
-        }
-        .section-title {
-            font-size: 14px;
-            font-weight: 700;
-            margin: 14px 0 10px 0;
-            border-right: 4px solid #3b82f6;
-            padding-right: 10px;
+            body { background: white; padding: 0; margin: 0; }
+            .page { box-shadow: none; border-radius: 0; margin: 0; page-break-after: always; min-height: 297mm; }
+            .page-content-wrapper { padding-top: 20mm; padding-left: 15mm; padding-right: 15mm; }
+            .action-buttons { display: none; }
+            @page { size: A4; margin: 0; }
         }
         
-        .product-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 10px;
-            margin: 8px 0;
-            table-layout: fixed;
-        }
-        .product-table th {
-            background: #1e3a5f;
-            color: white;
-            padding: 10px 6px;
-            border: 1px solid #2d4a6e;
-            font-weight: 600;
-            text-align: center;
-        }
-        .product-table td {
-            border: 1px solid #cbd5e1;
-            padding: 8px 6px;
-            vertical-align: middle;
-            text-align: center;
-        }
-        .product-table td:first-child {
-            text-align: right;
-        }
-        .product-table td:nth-child(4) {
-            text-align: right;
-        }
-        .product-img {
-            width: 45px;
-            height: 45px;
-            object-fit: cover;
-            border-radius: 8px;
-            display: block;
-            margin: 0 auto;
-        }
-        .desc-text {
-            font-size: 10px;
-            word-wrap: break-word;
-            word-break: break-word;
-            white-space: normal;
-            line-height: 1.4;
-            text-align: right;
-        }
+        .logo-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 12px; border-bottom: 2px solid #1e3a5f; padding-bottom: 8px; }
+        .logo-area img { max-height: 65px; width: auto; object-fit: contain; }
+        .logo-icon { width: 60px; height: 60px; background: linear-gradient(135deg, #1e3a5f, #3b82f6); border-radius: 14px; display: flex; align-items: center; justify-content: center; }
+        .logo-icon i { font-size: 32px; color: white; }
+        .invoice-title h1 { font-size: 22px; font-weight: 800; color: #1e3a5f; margin: 0; }
+        .invoice-title p { font-size: 11px; margin: 3px 0; }
+        .badge-status { display: inline-block; padding: 2px 10px; border-radius: 30px; font-size: 10px; font-weight: 600; }
+        .company-badge { background: #f1f5f9; padding: 6px 12px; border-radius: 10px; font-size: 10px; display: flex; justify-content: space-between; margin-top: 8px; gap: 10px; flex-wrap: wrap; }
+        .two-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 12px 0; }
+        .info-card { background: #f8fafc; border-radius: 12px; padding: 8px 12px; border: 1px solid #e2e8f0; }
+        .info-card h3 { font-size: 13px; margin-bottom: 6px; border-right: 3px solid #3b82f6; padding-right: 8px; }
+        .info-card p { font-size: 11px; line-height: 1.45; }
+        .info-row { background: #f1f5f9; padding: 6px 12px; border-radius: 10px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin: 8px 0; font-size: 11px; }
+        .section-title { font-size: 14px; font-weight: 700; margin: 14px 0 10px 0; border-right: 4px solid #3b82f6; padding-right: 10px; }
+        
+        .product-table { width: 100%; border-collapse: collapse; font-size: 10px; margin: 8px 0; table-layout: fixed; }
+        .product-table th { background: #1e3a5f; color: white; padding: 10px 6px; border: 1px solid #2d4a6e; font-weight: 600; text-align: center; }
+        .product-table td { border: 1px solid #cbd5e1; padding: 8px 6px; vertical-align: middle; text-align: center; }
+        .product-table td:first-child { text-align: right; }
+        .product-table td:nth-child(4) { text-align: right; }
+        .product-img { width: 45px; height: 45px; object-fit: cover; border-radius: 8px; display: block; margin: 0 auto; }
+        .desc-text { font-size: 10px; word-wrap: break-word; word-break: break-word; white-space: normal; line-height: 1.4; text-align: right; }
         
         .product-table th:nth-child(1) { width: 20%; }
         .product-table th:nth-child(2) { width: 12%; }
@@ -250,107 +91,25 @@
         .product-table th:nth-child(6) { width: 12%; }
         .product-table th:nth-child(7) { width: 12%; }
         
-        .summary-box {
-            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-            border-radius: 14px;
-            padding: 12px 18px;
-            margin: 15px 0 12px 0;
-        }
-        .summary-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-            border-bottom: 1px dashed #cbd5e1;
-            font-size: 12px;
-        }
-        .summary-row.total {
-            font-size: 16px;
-            font-weight: 800;
-            color: #166534;
-            border-top: 2px solid #86efac;
-            padding-top: 8px;
-            margin-top: 5px;
-            border-bottom: none;
-        }
-        .terms-box {
-            background: #fefce8;
-            border-radius: 10px;
-            padding: 8px 14px;
-            margin: 12px 0;
-            border-right: 4px solid #eab308;
-            font-size: 10px;
-        }
-        .footer-static {
-            margin-top: 12px;
-            padding-top: 8px;
-            border-top: 2px solid #1e3a5f;
-            text-align: center;
-        }
-        .contact-links {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 15px;
-            background: #f8fafc;
-            padding: 6px 15px;
-            border-radius: 40px;
-        }
-        .contact-links span {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 9px;
-            color: #334155;
-        }
-        .footer-copyright {
-            font-size: 9px;
-            color: #94a3b8;
-            margin-top: 6px;
-        }
+        .summary-box { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-radius: 14px; padding: 12px 18px; margin: 15px 0 12px 0; }
+        .summary-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #cbd5e1; font-size: 12px; }
+        .summary-row.total { font-size: 16px; font-weight: 800; color: #166534; border-top: 2px solid #86efac; padding-top: 8px; margin-top: 5px; border-bottom: none; }
+        .terms-box { background: #fefce8; border-radius: 10px; padding: 8px 14px; margin: 12px 0; border-right: 4px solid #eab308; font-size: 10px; }
+        .footer-static { margin-top: 12px; padding-top: 8px; border-top: 2px solid #1e3a5f; text-align: center; }
+        .contact-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; background: #f8fafc; padding: 6px 15px; border-radius: 40px; }
+        .contact-links span { display: inline-flex; align-items: center; gap: 5px; font-size: 9px; color: #334155; }
+        .footer-copyright { font-size: 9px; color: #94a3b8; margin-top: 6px; }
         
-        .action-buttons {
-            position: fixed;
-            bottom: 20px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            z-index: 1000;
-        }
-        .btn {
-            padding: 8px 22px;
-            border-radius: 40px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 14px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
+        .action-buttons { position: fixed; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; gap: 15px; z-index: 1000; }
+        .btn { padding: 8px 22px; border-radius: 40px; border: none; font-weight: 600; cursor: pointer; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .btn-print { background: #3b82f6; color: white; }
         .btn-pdf { background: #ef4444; color: white; }
         .btn-png { background: #8b5cf6; color: white; }
         .btn-close { background: #64748b; color: white; }
         
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.6);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-        .loading-spinner {
-            background: white;
-            padding: 25px 35px;
-            border-radius: 16px;
-            text-align: center;
-        }
+        .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; }
+        .loading-spinner { background: white; padding: 25px 35px; border-radius: 16px; text-align: center; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .fa-spin { animation: spin 1s linear infinite; }
     </style>
@@ -456,6 +215,22 @@
         if (overlay) overlay.style.display = 'none';
     }
 
+    // دالة لإنشاء صف منتج (بدون ترقيم)
+    function createProductRow(item, productImage, description, price, qty, itemTotal) {
+        const row = document.createElement('tr');
+        const imgSrc = productImage && productImage.trim() !== '' ? productImage : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E';
+        row.innerHTML = `
+            <td style="text-align: right; font-weight: 500;">${escapeHtml(item.name)}</td>
+            <td><img src="${imgSrc}" class="product-img" crossorigin="anonymous" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E'"></td>
+            <td>${escapeHtml(item.barcode || '—')}</td>
+            <td class="desc-text">${description || ''}</td>
+            <td>${qty}</td>
+            <td>${price.toFixed(2)} ريال</td>
+            <td>${itemTotal.toFixed(2)} ريال</td>
+        `;
+        return row;
+    }
+
     async function renderInvoice() {
         const urlParams = new URLSearchParams(window.location.search);
         const orderId = urlParams.get('id');
@@ -479,6 +254,7 @@
         const today = new Date();
         const dateStr = `${today.getFullYear()}-${(today.getMonth()+1).toString().padStart(2,'0')}-${today.getDate().toString().padStart(2,'0')}`;
         currentFileName = `${clientName}_${orderNumber}_${dateStr}`;
+        const todayStr = `${today.getDate().toString().padStart(2,'0')}/${(today.getMonth()+1).toString().padStart(2,'0')}/${today.getFullYear()}`;
         
         let subtotal = 0;
         const items = order.items || [];
@@ -527,131 +303,8 @@
             productRowsData.push({ item, productImage, description: description || '', price, qty, itemTotal });
         }
         
-        // إنشاء صفحة اختبار لقياس المساحة المتاحة بدقة
-        const testPage = document.createElement('div');
-        testPage.className = 'page';
-        testPage.style.position = 'absolute';
-        testPage.style.visibility = 'hidden';
-        testPage.style.top = '-9999px';
-        testPage.style.left = '-9999px';
-        document.body.appendChild(testPage);
-        
-        const testWrapper = document.createElement('div');
-        testWrapper.className = 'page-content-wrapper';
-        testPage.appendChild(testWrapper);
-        
-        const testInner = document.createElement('div');
-        testInner.className = 'page-inner-content';
-        testWrapper.appendChild(testInner);
-        
-        // إضافة رأس تجريبي
-        const testHeader = document.createElement('div');
-        testHeader.innerHTML = `
-            <div class="logo-header">
-                <div class="logo-area"><img src="/fi-khidmatik/images/logo.svg" style="max-height:65px;" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'logo-icon\\'><i class=\\'fas fa-handshake fa-2x\\'></i></div>';"></div>
-                <div class="invoice-title"><h1>فاتورة إلكترونية</h1><p><strong>رقم الفاتورة:</strong> TEST</p></div>
-            </div>
-            <div class="company-badge"><span>منصة في خدمتك</span></div>
-            <div class="two-columns"><div class="info-card"><h3>مصدرة من</h3><p>منصة في خدمتك</p></div><div class="info-card"><h3>مصدرة إلى</h3><p>عميل تجريبي</p></div></div>
-            <div class="info-row"><span>طريقة الدفع: تجريبي</span></div>
-            <div class="section-title">تفاصيل المنتجات</div>
-        `;
-        testInner.appendChild(testHeader);
-        
-        // إضافة جدول تجريبي بصف واحد لقياس ارتفاع الرأس + رأس الجدول
-        const testTable = document.createElement('table');
-        testTable.className = 'product-table';
-        testTable.innerHTML = '<thead><tr><th>اسم المنتج</th><th>الصورة</th><th>الباركود</th><th>الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr></thead><tbody><tr><td>تجريبي</td><td></td><td></td><td></td><td>1</td><td>0</td><td>0</td></tr></tbody>';
-        testInner.appendChild(testTable);
-        
-        // إضافة تذييل تجريبي
-        const testFooter = document.createElement('div');
-        testFooter.className = 'footer-static';
-        testFooter.innerHTML = '<div class="contact-links"><span>تجريبي</span></div>';
-        testInner.appendChild(testFooter);
-        
-        const testSpacer = document.createElement('div');
-        testSpacer.className = 'bottom-margin-spacer';
-        testWrapper.appendChild(testSpacer);
-        
-        // قياس ارتفاع الأجزاء الثابتة
-        await new Promise(r => setTimeout(r, 100));
-        const fixedHeight = testHeader.offsetHeight + testTable.offsetHeight + testFooter.offsetHeight;
-        
-        // المساحة المتاحة للصفوف = 252mm - الارتفاع الثابت
-        const MAX_HEIGHT_PX = 252 * 3.78;
-        let availableForRows = MAX_HEIGHT_PX - fixedHeight - 30; // 30px buffer
-        
-        document.body.removeChild(testPage);
-        
-        // إنشاء صفوف حقيقية وقياس ارتفاع كل صف
-        const rowsWithHeights = [];
-        const tempContainer = document.createElement('div');
-        tempContainer.style.position = 'absolute';
-        tempContainer.style.visibility = 'hidden';
-        tempContainer.style.top = '-9999px';
-        tempContainer.style.width = '180mm';
-        document.body.appendChild(tempContainer);
-        
-        const tempTable2 = document.createElement('table');
-        tempTable2.className = 'product-table';
-        const tempTbody = document.createElement('tbody');
-        tempTable2.appendChild(tempTbody);
-        tempContainer.appendChild(tempTable2);
-        
-        for (const data of productRowsData) {
-            tempTbody.innerHTML = '';
-            const row = document.createElement('tr');
-            const imgSrc = data.productImage || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E';
-            row.innerHTML = `
-                <td style="text-align: right;">${escapeHtml(data.item.name)}</td>
-                <td><img src="${imgSrc}" class="product-img" crossorigin="anonymous" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E'"></td>
-                <td>${escapeHtml(data.item.barcode || '—')}</td>
-                <td class="desc-text">${data.description}</td>
-                <td>${data.qty}</td>
-                <td>${data.price.toFixed(2)} ريال</td>
-                <td>${data.itemTotal.toFixed(2)} ريال</td>
-            `;
-            tempTbody.appendChild(row);
-            await new Promise(r => setTimeout(r, 10));
-            const height = row.offsetHeight;
-            rowsWithHeights.push({ data, height, element: row.cloneNode(true) });
-        }
-        
-        document.body.removeChild(tempContainer);
-        
-        // التقسيم الديناميكي بناءً على الارتفاع الحقيقي
-        const pages = [];
-        let currentPage = [];
-        let currentHeight = 0;
-        
-        // التأكد من أن availableForRows قيمة منطقية (على الأقل 100px)
-        if (availableForRows < 100) availableForRows = 500;
-        
-        for (const row of rowsWithHeights) {
-            // إذا كانت إضافة هذا الصف ستتجاوز المساحة المتاحة ولدينا صفوف في الصفحة الحالية
-            if (currentPage.length > 0 && currentHeight + row.height > availableForRows) {
-                pages.push([...currentPage]);
-                currentPage = [];
-                currentHeight = 0;
-            }
-            currentPage.push(row);
-            currentHeight += row.height;
-        }
-        if (currentPage.length > 0) pages.push(currentPage);
-        
-        // في حالة عدم وجود أي صفحات (لا توجد منتجات)
-        if (pages.length === 0 && rowsWithHeights.length === 0) {
-            pages.push([]);
-        }
-        
-        // بناء الصفحات النهائية
-        const container = document.getElementById('invoiceContainer');
-        container.innerHTML = '';
-        
-        // إنشاء رأس ثابت للاستنساخ
-        const headerTemplate = document.createElement('div');
-        headerTemplate.innerHTML = `
+        // ========== إنشاء قالب الرأس والتذييل والملخص ==========
+        const headerHTML = `
             <div class="logo-header">
                 <div class="logo-area">
                     <img src="/fi-khidmatik/images/logo.svg" alt="شعار منصة في خدمتك" style="max-height:65px; width:auto;" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'logo-icon\\'><i class=\\'fas fa-handshake fa-2x\\'></i></div>';">
@@ -692,20 +345,19 @@
             <div class="section-title" id="sectionTitle">تفاصيل المنتجات / الخدمات</div>
         `;
         
-        const footerTemplate = document.createElement('div');
-        footerTemplate.className = 'footer-static';
-        footerTemplate.innerHTML = `
-            <div class="contact-links">
-                <span><i class="fas fa-phone-alt"></i> هاتف: 966534051317</span>
-                <span><i class="fab fa-whatsapp"></i> واتساب: 966545312021</span>
-                <span><i class="fas fa-envelope"></i> info@fi-khidmatik.com</span>
-                <span><i class="fas fa-globe"></i> www.khidmatik.com</span>
+        const footerHTML = `
+            <div class="footer-static">
+                <div class="contact-links">
+                    <span><i class="fas fa-phone-alt"></i> هاتف: 966534051317</span>
+                    <span><i class="fab fa-whatsapp"></i> واتساب: 966545312021</span>
+                    <span><i class="fas fa-envelope"></i> info@fi-khidmatik.com</span>
+                    <span><i class="fas fa-globe"></i> www.khidmatik.com</span>
+                </div>
+                <div class="footer-copyright">هذه الفاتورة إلكترونية - نسخة معتمدة قانونياً</div>
             </div>
-            <div class="footer-copyright">هذه الفاتورة إلكترونية - نسخة معتمدة قانونياً</div>
         `;
         
-        const summaryTemplate = document.createElement('div');
-        summaryTemplate.innerHTML = `
+        const summaryHTML = `
             <div class="summary-box">
                 <div class="summary-row"><span>المجموع الفرعي:</span><span>${subtotal.toFixed(2)} ريال</span></div>
                 <div class="summary-row"><span>إجمالي الخصم:</span><span style="color:#dc2626;">- ${discountValue.toFixed(2)} ريال</span></div>
@@ -721,10 +373,125 @@
             </div>
         `;
         
-        // بناء كل صفحة
-        for (let i = 0; i < pages.length; i++) {
-            const pageRows = pages[i];
-            const isLastPage = (i === pages.length - 1);
+        // ========== إنشاء صفحة اختبار لقياس الارتفاعات بدقة ==========
+        const testPage = document.createElement('div');
+        testPage.className = 'page';
+        testPage.style.position = 'absolute';
+        testPage.style.visibility = 'hidden';
+        testPage.style.top = '-9999px';
+        testPage.style.left = '-9999px';
+        document.body.appendChild(testPage);
+        
+        const testWrapper = document.createElement('div');
+        testWrapper.className = 'page-content-wrapper';
+        testPage.appendChild(testWrapper);
+        
+        const testInner = document.createElement('div');
+        testInner.className = 'page-inner-content';
+        testWrapper.appendChild(testInner);
+        
+        // إضافة الرأس
+        const testHeader = document.createElement('div');
+        testHeader.innerHTML = headerHTML;
+        testInner.appendChild(testHeader);
+        
+        // إضافة رأس الجدول
+        const testTable = document.createElement('table');
+        testTable.className = 'product-table';
+        const testThead = document.createElement('thead');
+        testThead.innerHTML = `<tr><th>اسم المنتج</th><th>الصورة</th><th>الباركود</th><th>الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>`;
+        testTable.appendChild(testThead);
+        const testTbody = document.createElement('tbody');
+        // إضافة صف تجريبي واحد
+        const testRow = document.createElement('tr');
+        testRow.innerHTML = `<td style="text-align: right;">تجريبي</td><td></td><td></td><td></td><td>1</td><td>0</td><td>0</td>`;
+        testTbody.appendChild(testRow);
+        testTable.appendChild(testTbody);
+        testInner.appendChild(testTable);
+        
+        // إضافة التذييل
+        const testFooter = document.createElement('div');
+        testFooter.innerHTML = footerHTML;
+        testInner.appendChild(testFooter);
+        
+        const testSpacer = document.createElement('div');
+        testSpacer.className = 'bottom-margin-spacer';
+        testWrapper.appendChild(testSpacer);
+        
+        await new Promise(r => setTimeout(r, 100));
+        
+        // قياس ارتفاع الأجزاء الثابتة (الرأس + رأس الجدول + التذييل + الهامش)
+        const headerHeight = testHeader.offsetHeight;
+        const tableHeaderHeight = testThead.offsetHeight;
+        const footerHeight = testFooter.offsetHeight;
+        const fixedHeight = headerHeight + tableHeaderHeight + footerHeight + 30; // 30px buffer
+        
+        document.body.removeChild(testPage);
+        
+        // المساحة المتاحة للصفوف = 252mm - الارتفاع الثابت
+        const MAX_HEIGHT_PX = 252 * 3.78; // 952.56px
+        let availableForRows = MAX_HEIGHT_PX - fixedHeight;
+        
+        if (availableForRows < 100) availableForRows = 500;
+        
+        // ========== التقسيم الديناميكي باستخدام الطريقة التكرارية ==========
+        // سنقوم بإضافة الصفوف واحدة تلو الأخرى إلى صفحة مؤقتة حتى تصل إلى الحد الأقصى
+        
+        const pageGroups = [];
+        let currentGroup = [];
+        let currentHeight = 0;
+        
+        for (const data of productRowsData) {
+            // إنشاء الصف
+            const row = createProductRow(data.item, data.productImage, data.description, data.price, data.qty, data.itemTotal);
+            
+            // قياس ارتفاع الصف عن طريق إضافته مؤقتًا إلى DOM
+            const tempMeasure = document.createElement('div');
+            tempMeasure.style.position = 'absolute';
+            tempMeasure.style.visibility = 'hidden';
+            tempMeasure.style.top = '-9999px';
+            tempMeasure.style.width = '180mm';
+            document.body.appendChild(tempMeasure);
+            
+            const tempTableMeasure = document.createElement('table');
+            tempTableMeasure.className = 'product-table';
+            const tempTbodyMeasure = document.createElement('tbody');
+            tempTableMeasure.appendChild(tempTbodyMeasure);
+            tempTbodyMeasure.appendChild(row.cloneNode(true));
+            tempMeasure.appendChild(tempTableMeasure);
+            
+            await new Promise(r => setTimeout(r, 5));
+            const rowHeight = row.offsetHeight;
+            document.body.removeChild(tempMeasure);
+            
+            // التحقق من إمكانية إضافة الصف إلى الصفحة الحالية
+            if (currentGroup.length > 0 && currentHeight + rowHeight > availableForRows) {
+                // حفظ الصفحة الحالية وبدء صفحة جديدة
+                pageGroups.push([...currentGroup]);
+                currentGroup = [];
+                currentHeight = 0;
+            }
+            
+            currentGroup.push({ data, row: row.cloneNode(true), height: rowHeight });
+            currentHeight += rowHeight;
+        }
+        
+        if (currentGroup.length > 0) {
+            pageGroups.push(currentGroup);
+        }
+        
+        // إذا لم تكن هناك منتجات، نضيف صفحة فارغة على الأقل
+        if (pageGroups.length === 0) {
+            pageGroups.push([]);
+        }
+        
+        // ========== بناء الصفحات النهائية ==========
+        const container = document.getElementById('invoiceContainer');
+        container.innerHTML = '';
+        
+        for (let i = 0; i < pageGroups.length; i++) {
+            const group = pageGroups[i];
+            const isLastPage = (i === pageGroups.length - 1);
             
             const page = document.createElement('div');
             page.className = 'page';
@@ -735,33 +502,39 @@
             const inner = document.createElement('div');
             inner.className = 'page-inner-content';
             
-            // نسخ الرأس وتحديث عنوان الصفحة إذا كان هناك أكثر من صفحة
-            const headerClone = headerTemplate.cloneNode(true);
-            if (pages.length > 1) {
+            // إضافة الرأس
+            const headerClone = document.createElement('div');
+            headerClone.innerHTML = headerHTML;
+            if (pageGroups.length > 1) {
                 const titleSpan = headerClone.querySelector('#sectionTitle');
-                if (titleSpan) titleSpan.innerHTML = `تفاصيل المنتجات / الخدمات (صفحة ${i+1} من ${pages.length})`;
+                if (titleSpan) titleSpan.innerHTML = `تفاصيل المنتجات / الخدمات (صفحة ${i+1} من ${pageGroups.length})`;
             }
             inner.appendChild(headerClone);
             
-            // إنشاء الجدول للصفحة الحالية
+            // إنشاء الجدول
             const table = document.createElement('table');
             table.className = 'product-table';
             const thead = document.createElement('thead');
             thead.innerHTML = `<tr><th>اسم المنتج</th><th>الصورة</th><th>الباركود</th><th>الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>`;
             table.appendChild(thead);
             const tbody = document.createElement('tbody');
-            for (const row of pageRows) {
-                tbody.appendChild(row.element.cloneNode(true));
+            for (const item of group) {
+                tbody.appendChild(item.row.cloneNode(true));
             }
             table.appendChild(tbody);
             inner.appendChild(table);
             
             // إضافة الملخص فقط في الصفحة الأخيرة
             if (isLastPage) {
-                inner.appendChild(summaryTemplate.cloneNode(true));
+                const summaryClone = document.createElement('div');
+                summaryClone.innerHTML = summaryHTML;
+                inner.appendChild(summaryClone);
             }
             
-            inner.appendChild(footerTemplate.cloneNode(true));
+            // إضافة التذييل
+            const footerClone = document.createElement('div');
+            footerClone.innerHTML = footerHTML;
+            inner.appendChild(footerClone);
             
             wrapper.appendChild(inner);
             
@@ -773,7 +546,7 @@
             
             const pageNum = document.createElement('div');
             pageNum.className = 'page-number';
-            pageNum.textContent = `صفحة ${i+1} / ${pages.length}`;
+            pageNum.textContent = `صفحة ${i+1} / ${pageGroups.length}`;
             page.appendChild(pageNum);
             
             container.appendChild(page);
