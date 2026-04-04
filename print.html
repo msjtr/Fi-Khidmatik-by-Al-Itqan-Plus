@@ -254,7 +254,6 @@
         const today = new Date();
         const dateStr = `${today.getFullYear()}-${(today.getMonth()+1).toString().padStart(2,'0')}-${today.getDate().toString().padStart(2,'0')}`;
         currentFileName = `${clientName}_${orderNumber}_${dateStr}`;
-        const todayStr = `${today.getDate().toString().padStart(2,'0')}/${(today.getMonth()+1).toString().padStart(2,'0')}/${today.getFullYear()}`;
         
         let subtotal = 0;
         const items = order.items || [];
@@ -373,116 +372,108 @@
             </div>
         `;
         
-        // ========== إنشاء صفحة اختبار لقياس الارتفاعات بدقة ==========
-        const testPage = document.createElement('div');
-        testPage.className = 'page';
-        testPage.style.position = 'absolute';
-        testPage.style.visibility = 'hidden';
-        testPage.style.top = '-9999px';
-        testPage.style.left = '-9999px';
-        document.body.appendChild(testPage);
-        
-        const testWrapper = document.createElement('div');
-        testWrapper.className = 'page-content-wrapper';
-        testPage.appendChild(testWrapper);
-        
-        const testInner = document.createElement('div');
-        testInner.className = 'page-inner-content';
-        testWrapper.appendChild(testInner);
-        
-        // إضافة الرأس
-        const testHeader = document.createElement('div');
-        testHeader.innerHTML = headerHTML;
-        testInner.appendChild(testHeader);
-        
-        // إضافة رأس الجدول
-        const testTable = document.createElement('table');
-        testTable.className = 'product-table';
-        const testThead = document.createElement('thead');
-        testThead.innerHTML = `<tr><th>اسم المنتج</th><th>الصورة</th><th>الباركود</th><th>الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>`;
-        testTable.appendChild(testThead);
-        const testTbody = document.createElement('tbody');
-        // إضافة صف تجريبي واحد
-        const testRow = document.createElement('tr');
-        testRow.innerHTML = `<td style="text-align: right;">تجريبي</td><td></td><td></td><td></td><td>1</td><td>0</td><td>0</td>`;
-        testTbody.appendChild(testRow);
-        testTable.appendChild(testTbody);
-        testInner.appendChild(testTable);
-        
-        // إضافة التذييل
-        const testFooter = document.createElement('div');
-        testFooter.innerHTML = footerHTML;
-        testInner.appendChild(testFooter);
-        
-        const testSpacer = document.createElement('div');
-        testSpacer.className = 'bottom-margin-spacer';
-        testWrapper.appendChild(testSpacer);
-        
-        await new Promise(r => setTimeout(r, 100));
-        
-        // قياس ارتفاع الأجزاء الثابتة (الرأس + رأس الجدول + التذييل + الهامش)
-        const headerHeight = testHeader.offsetHeight;
-        const tableHeaderHeight = testThead.offsetHeight;
-        const footerHeight = testFooter.offsetHeight;
-        const fixedHeight = headerHeight + tableHeaderHeight + footerHeight + 30; // 30px buffer
-        
-        document.body.removeChild(testPage);
-        
-        // المساحة المتاحة للصفوف = 252mm - الارتفاع الثابت
+        // ========== طريقة التقسيم: إنشاء صفحة كاملة وقياسها ==========
         const MAX_HEIGHT_PX = 252 * 3.78; // 952.56px
-        let availableForRows = MAX_HEIGHT_PX - fixedHeight;
         
-        if (availableForRows < 100) availableForRows = 500;
-        
-        // ========== التقسيم الديناميكي باستخدام الطريقة التكرارية ==========
-        // سنقوم بإضافة الصفوف واحدة تلو الأخرى إلى صفحة مؤقتة حتى تصل إلى الحد الأقصى
-        
-        const pageGroups = [];
-        let currentGroup = [];
-        let currentHeight = 0;
-        
-        for (const data of productRowsData) {
-            // إنشاء الصف
-            const row = createProductRow(data.item, data.productImage, data.description, data.price, data.qty, data.itemTotal);
+        // دالة لإنشاء صفحة اختبار مع مجموعة معينة من الصفوف وقياس ارتفاعها
+        async function getPageHeight(rowIndices, includeSummary = false) {
+            const testContainer = document.createElement('div');
+            testContainer.style.position = 'absolute';
+            testContainer.style.visibility = 'hidden';
+            testContainer.style.top = '-9999px';
+            testContainer.style.left = '-9999px';
+            testContainer.style.width = '210mm';
+            document.body.appendChild(testContainer);
             
-            // قياس ارتفاع الصف عن طريق إضافته مؤقتًا إلى DOM
-            const tempMeasure = document.createElement('div');
-            tempMeasure.style.position = 'absolute';
-            tempMeasure.style.visibility = 'hidden';
-            tempMeasure.style.top = '-9999px';
-            tempMeasure.style.width = '180mm';
-            document.body.appendChild(tempMeasure);
+            const testPage = document.createElement('div');
+            testPage.className = 'page';
+            testContainer.appendChild(testPage);
             
-            const tempTableMeasure = document.createElement('table');
-            tempTableMeasure.className = 'product-table';
-            const tempTbodyMeasure = document.createElement('tbody');
-            tempTableMeasure.appendChild(tempTbodyMeasure);
-            tempTbodyMeasure.appendChild(row.cloneNode(true));
-            tempMeasure.appendChild(tempTableMeasure);
+            const wrapper = document.createElement('div');
+            wrapper.className = 'page-content-wrapper';
+            testPage.appendChild(wrapper);
             
-            await new Promise(r => setTimeout(r, 5));
-            const rowHeight = row.offsetHeight;
-            document.body.removeChild(tempMeasure);
+            const inner = document.createElement('div');
+            inner.className = 'page-inner-content';
+            wrapper.appendChild(inner);
             
-            // التحقق من إمكانية إضافة الصف إلى الصفحة الحالية
-            if (currentGroup.length > 0 && currentHeight + rowHeight > availableForRows) {
-                // حفظ الصفحة الحالية وبدء صفحة جديدة
-                pageGroups.push([...currentGroup]);
-                currentGroup = [];
-                currentHeight = 0;
+            // إضافة الرأس
+            const headerDiv = document.createElement('div');
+            headerDiv.innerHTML = headerHTML;
+            inner.appendChild(headerDiv);
+            
+            // إضافة الجدول
+            const table = document.createElement('table');
+            table.className = 'product-table';
+            const thead = document.createElement('thead');
+            thead.innerHTML = `<tr><th>اسم المنتج</th><th>الصورة</th><th>الباركود</th><th>الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>`;
+            table.appendChild(thead);
+            const tbody = document.createElement('tbody');
+            for (const idx of rowIndices) {
+                const data = productRowsData[idx];
+                tbody.appendChild(createProductRow(data.item, data.productImage, data.description, data.price, data.qty, data.itemTotal));
+            }
+            table.appendChild(tbody);
+            inner.appendChild(table);
+            
+            // إضافة الملخص إذا لزم الأمر
+            if (includeSummary) {
+                const summaryDiv = document.createElement('div');
+                summaryDiv.innerHTML = summaryHTML;
+                inner.appendChild(summaryDiv);
             }
             
-            currentGroup.push({ data, row: row.cloneNode(true), height: rowHeight });
-            currentHeight += rowHeight;
+            // إضافة التذييل
+            const footerDiv = document.createElement('div');
+            footerDiv.innerHTML = footerHTML;
+            inner.appendChild(footerDiv);
+            
+            const spacer = document.createElement('div');
+            spacer.className = 'bottom-margin-spacer';
+            wrapper.appendChild(spacer);
+            
+            await new Promise(r => setTimeout(r, 50));
+            const height = testPage.scrollHeight;
+            document.body.removeChild(testContainer);
+            return height;
         }
         
-        if (currentGroup.length > 0) {
-            pageGroups.push(currentGroup);
-        }
+        // ========== التقسيم الديناميكي ==========
+        const pageGroups = [];
+        let currentStart = 0;
         
-        // إذا لم تكن هناك منتجات، نضيف صفحة فارغة على الأقل
-        if (pageGroups.length === 0) {
-            pageGroups.push([]);
+        while (currentStart < productRowsData.length) {
+            // نبحث عن أكبر عدد من الصفوف يمكن وضعها في صفحة واحدة
+            let low = 1;
+            let high = productRowsData.length - currentStart;
+            let bestCount = 1;
+            
+            // بحث ثنائي لإيجاد العدد الأمثل للصفوف
+            while (low <= high) {
+                const mid = Math.floor((low + high) / 2);
+                const testIndices = [];
+                for (let i = 0; i < mid; i++) {
+                    testIndices.push(currentStart + i);
+                }
+                // نختبر مع إضافة الملخص فقط إذا كانت هذه ستكون الصفحة الأخيرة
+                const willBeLastPage = (currentStart + mid >= productRowsData.length);
+                const pageHeight = await getPageHeight(testIndices, willBeLastPage);
+                
+                if (pageHeight <= MAX_HEIGHT_PX + 50) { // +50 buffer
+                    bestCount = mid;
+                    low = mid + 1;
+                } else {
+                    high = mid - 1;
+                }
+            }
+            
+            // جمع الصفوف للصفحة الحالية
+            const groupIndices = [];
+            for (let i = 0; i < bestCount; i++) {
+                groupIndices.push(currentStart + i);
+            }
+            pageGroups.push(groupIndices);
+            currentStart += bestCount;
         }
         
         // ========== بناء الصفحات النهائية ==========
@@ -490,7 +481,7 @@
         container.innerHTML = '';
         
         for (let i = 0; i < pageGroups.length; i++) {
-            const group = pageGroups[i];
+            const groupIndices = pageGroups[i];
             const isLastPage = (i === pageGroups.length - 1);
             
             const page = document.createElement('div');
@@ -511,15 +502,16 @@
             }
             inner.appendChild(headerClone);
             
-            // إنشاء الجدول
+            // إضافة الجدول
             const table = document.createElement('table');
             table.className = 'product-table';
             const thead = document.createElement('thead');
             thead.innerHTML = `<tr><th>اسم المنتج</th><th>الصورة</th><th>الباركود</th><th>الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>`;
             table.appendChild(thead);
             const tbody = document.createElement('tbody');
-            for (const item of group) {
-                tbody.appendChild(item.row.cloneNode(true));
+            for (const idx of groupIndices) {
+                const data = productRowsData[idx];
+                tbody.appendChild(createProductRow(data.item, data.productImage, data.description, data.price, data.qty, data.itemTotal));
             }
             table.appendChild(tbody);
             inner.appendChild(table);
