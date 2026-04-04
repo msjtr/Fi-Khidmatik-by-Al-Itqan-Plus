@@ -71,12 +71,12 @@
             border-bottom: 2px solid #1e3a5f;
             padding-bottom: 8px;
         }
-        .logo-area {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .logo-area img {
+            max-height: 65px;
+            width: auto;
+            object-fit: contain;
         }
-        .logo-icon {
+        .logo-fallback {
             width: 60px;
             height: 60px;
             background: linear-gradient(135deg, #1e3a5f, #3b82f6);
@@ -85,7 +85,7 @@
             align-items: center;
             justify-content: center;
         }
-        .logo-icon i {
+        .logo-fallback i {
             font-size: 32px;
             color: white;
         }
@@ -528,13 +528,13 @@
             productRowsData.push({ item, productImage, description: description || '', price, qty, itemTotal });
         }
         
-        // قوالب HTML الثابتة - استخدام أيقونة بديلة للشعار لتجنب 404
+        // المسار الصحيح للشعار: images/logo.svg (نسبة إلى موقع print.html)
+        const logoPath = 'images/logo.svg';
+        
         const headerHTML = `
             <div class="logo-header">
                 <div class="logo-area">
-                    <div class="logo-icon">
-                        <i class="fas fa-handshake"></i>
-                    </div>
+                    <img src="${logoPath}" alt="منصة في خدمتك" style="max-height:65px; width:auto;" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'logo-fallback\\'><i class=\\'fas fa-handshake\\'></i></div>';">
                 </div>
                 <div class="invoice-title text-left">
                     <h1>فاتورة إلكترونية</h1>
@@ -611,7 +611,7 @@
             const isLastItem = (i === rowHeights.length - 1);
             const availableSpace = isLastItem ? availableForRowsLast : availableForRowsNormal;
             
-            if (currentGroupHeight + rowHeights[i] <= availableSpace) {
+            if (currentGroupHeight + rowHeights[i] <= availableSpace + 0.5) {
                 currentGroup.push(i);
                 currentGroupHeight += rowHeights[i];
             } else {
@@ -620,12 +620,10 @@
                     currentGroup = [];
                     currentGroupHeight = 0;
                 }
-                // نحاول وضع الصف في صفحة جديدة
-                if (rowHeights[i] <= availableSpace) {
+                if (rowHeights[i] <= availableSpace + 0.5) {
                     currentGroup.push(i);
                     currentGroupHeight = rowHeights[i];
                 } else {
-                    // صف طويل جداً - نضغطه بالقوة
                     currentGroup.push(i);
                     pageGroups.push([...currentGroup]);
                     currentGroup = [];
@@ -654,7 +652,6 @@
             const inner = document.createElement('div');
             inner.className = 'page-inner-content';
             
-            // الرأس
             const headerClone = document.createElement('div');
             headerClone.innerHTML = headerHTML;
             if (pageGroups.length > 1) {
@@ -665,7 +662,6 @@
             }
             inner.appendChild(headerClone);
             
-            // الجدول
             const table = document.createElement('table');
             table.className = 'product-table';
             const thead = document.createElement('thead');
@@ -678,28 +674,24 @@
             table.appendChild(tbody);
             inner.appendChild(table);
             
-            // الملخص فقط للصفحة الأخيرة
             if (isLastPage) {
                 const summaryClone = document.createElement('div');
                 summaryClone.innerHTML = summaryHTML;
                 inner.appendChild(summaryClone);
             }
             
-            // التذييل
             const footerClone = document.createElement('div');
             footerClone.innerHTML = footerHTML;
             inner.appendChild(footerClone);
             
             wrapper.appendChild(inner);
             
-            // المسافة السفلية
             const spacer = document.createElement('div');
             spacer.className = 'bottom-spacer';
             wrapper.appendChild(spacer);
             
             pageDiv.appendChild(wrapper);
             
-            // رقم الصفحة
             const pageNumber = document.createElement('div');
             pageNumber.className = 'page-number';
             pageNumber.textContent = `صفحة ${p+1} / ${pageGroups.length}`;
