@@ -28,38 +28,69 @@
             margin: 0 auto;
         }
 
-        /* صفحة A4 مع padding داخلي */
-        .invoice-page {
+        /* كل صفحة مستقلة - مقاس A4 */
+        .page {
             background: white;
             border-radius: 12px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.1);
             margin-bottom: 25px;
+            position: relative;
+            /* أبعاد صفحة A4 */
+            height: 297mm;
+            /* هوامش داخلية: علوي 20mm، سفلي 30mm (منطقة آمنة)، يمين ويسار 15mm */
+            padding: 20mm 15mm 30mm 15mm;
+            /* منع انقسام الصفحة */
             page-break-after: always;
             break-after: page;
             page-break-inside: avoid;
             break-inside: avoid;
-            /* أبعاد صفحة A4 للطباعة */
-            height: 297mm;
-            /* هوامش داخلية: علوي 20mm، سفلي 25mm (آمن)، يمين ويسار 15mm */
-            padding: 20mm 15mm 25mm 15mm;
-            position: relative;
         }
 
-        /* إعدادات الطباعة - إلغاء الهوامش الخارجية */
+        /* منع تقطيع العناصر */
+        .section, .invoice-header, .two-columns, .info-card, .info-row, 
+        .product-table, .product-table tbody, .product-table tr, 
+        .summary-box, .terms-box, .footer-static {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        /* تذييل الصفحة مع رقم الصفحة */
+        .page-footer {
+            position: absolute;
+            bottom: 10mm;
+            right: 15mm;
+            left: 15mm;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 5mm;
+            margin-top: 5mm;
+        }
+        .page-number {
+            font-weight: 600;
+        }
+        .page-date {
+            font-size: 9px;
+        }
+
+        /* إعدادات الطباعة */
         @media print {
             body {
                 background: white;
                 padding: 0;
                 margin: 0;
             }
-            .invoice-page {
+            .page {
                 box-shadow: none;
                 border-radius: 0;
                 margin: 0;
+                height: 297mm;
+                padding: 20mm 15mm 30mm 15mm !important;
                 page-break-after: always;
                 break-after: page;
-                height: 297mm;
-                padding: 20mm 15mm 25mm 15mm !important;
             }
             .action-buttons {
                 display: none;
@@ -68,14 +99,6 @@
                 size: A4;
                 margin: 0; /* إلغاء الهوامش الخارجية */
             }
-        }
-
-        /* منع انقسام العناصر داخلياً */
-        .invoice-header, .two-columns, .info-card, .info-row, 
-        .product-table, .product-table tbody, .product-table tr, 
-        .summary-box, .terms-box, .footer-static {
-            page-break-inside: avoid;
-            break-inside: avoid;
         }
 
         /* توزيع الرأس في سطر واحد */
@@ -274,8 +297,8 @@
         .btn-png { background: #8b5cf6; color: white; }
         .btn-close { background: #64748b; color: white; }
         @media (max-width: 750px) {
-            .invoice-page {
-                padding: 15mm 10mm 20mm 10mm;
+            .page {
+                padding: 15mm 10mm 25mm 10mm;
             }
             .two-columns { grid-template-columns: 1fr; gap: 10px; }
             .product-table th, .product-table td { font-size: 9px; padding: 3px; }
@@ -431,7 +454,7 @@
         `;
     }
 
-    function createInvoicePage(order, customer, itemsRows, pageNum, totalPages, commonSections, withSummary, summaryData) {
+    function createPage(order, customer, itemsRows, pageNum, totalPages, commonSections, withSummary, summaryData) {
         const header = getFixedHeader(order);
         const footer = getFixedFooter();
         const tableSection = `
@@ -461,19 +484,27 @@
             `;
         }
 
+        // تاريخ اليوم لأسفل الصفحة
+        const today = new Date();
+        const todayStr = `${today.getDate().toString().padStart(2,'0')}/${(today.getMonth()+1).toString().padStart(2,'0')}/${today.getFullYear()}`;
+
         return `
-            <div class="invoice-page">
+            <div class="page">
                 ${header}
                 ${commonSections}
                 ${tableSection}
                 ${summaryAndThanks}
                 ${footer}
+                <div class="page-footer">
+                    <span class="page-date">تم الإنشاء: ${todayStr}</span>
+                    <span class="page-number">صفحة ${pageNum} من ${totalPages}</span>
+                </div>
             </div>
         `;
     }
 
-    // تقسيم تلقائي بناءً على عدد الصفوف المحدد (4 صفوف كحد أقصى لكل صفحة)
-    // هذا يضمن عدم تجاوز الهامش السفلي الآمن (25mm)
+    // تقسيم المنتجات إلى صفحات - 4 منتجات كحد أقصى لكل صفحة
+    // هذا يضمن عدم تجاوز الهامش الآمن (آخر 25-30mm من الصفحة)
     function splitProductsIntoPages(productsArray, itemsPerPage = 4) {
         const pages = [];
         if (!productsArray.length) {
@@ -562,7 +593,7 @@
         
         const commonSections = getCommonSections(order, customer, paymentMethodName, shippingMethodText);
         
-        // 4 منتجات لكل صفحة - يضمن عدم تجاوز الهامش الآمن (25mm)
+        // 4 منتجات لكل صفحة - يضمن عدم تجاوز الهامش الآمن (آخر 25-30mm)
         const ITEMS_PER_PAGE = 4;
         const productPages = splitProductsIntoPages(allItemsRows, ITEMS_PER_PAGE);
         const totalPages = productPages.length;
@@ -573,7 +604,7 @@
         for (let pageIdx = 0; pageIdx < productPages.length; pageIdx++) {
             const pageItems = productPages[pageIdx];
             const isLastPage = (pageIdx === productPages.length - 1);
-            const pageHtml = createInvoicePage(
+            const pageHtml = createPage(
                 order, customer, pageItems, pageIdx + 1, totalPages, commonSections,
                 isLastPage,
                 isLastPage ? { subtotal, discountValue, tax, total } : null
@@ -598,7 +629,7 @@
             const btns = document.getElementById('actionButtons');
             if (btns) btns.style.display = 'none';
             const opt = {
-                margin: [0, 0, 0, 0], // إلغاء الهوامش الإضافية لأن الصفحة تحدد هوامشها بنفسها
+                margin: [0, 0, 0, 0],
                 filename: `فاتورة_${Date.now()}.pdf`,
                 image: { type: 'jpeg', quality: 1 },
                 html2canvas: { scale: 4, letterRendering: true, useCORS: true, dpi: 300 },
