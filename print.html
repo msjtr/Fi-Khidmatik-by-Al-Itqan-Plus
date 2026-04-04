@@ -14,7 +14,6 @@
         body { background: #eef2f5; font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif; direction: rtl; padding: 20px; }
         .invoice-container { max-width: 210mm; margin: 0 auto; }
         
-        /* صفحة A4 مثالية */
         .page {
             width: 210mm;
             min-height: 297mm;
@@ -28,7 +27,6 @@
             flex-direction: column;
         }
         
-        /* الحاوية الداخلية: الهوامش الثابتة 20mm أعلى، 25mm أسفل، 15mm يمين/يسار */
         .page-content-wrapper {
             flex: 1;
             display: flex;
@@ -40,22 +38,21 @@
         }
         
         .page-inner-content { flex: 1; }
-        
-        /* مسافة سفلية مضمونة 25mm (لا يمكن لأي محتوى تجاوزها) */
+        /* spacer يضمن عدم تجاوز المحتوى للهامش السفلي 25mm */
         .bottom-margin-spacer { height: 25mm; width: 100%; flex-shrink: 0; }
         
-        /* رقم الصفحة في الأسفل يسار (داخل الـ 25mm السفلية) */
         .page-number {
             position: absolute;
-            bottom: 8mm;
+            bottom: 10mm;
             left: 15mm;
             font-size: 10px;
-            color: #475569;
+            color: #1e293b;
             font-weight: 600;
-            z-index: 10;
-            background: white;
+            background: transparent;
             padding: 2px 8px;
             border-radius: 20px;
+            direction: ltr;
+            text-align: left;
         }
         
         @media print {
@@ -66,7 +63,7 @@
             @page { size: A4; margin: 0; }
         }
         
-        /* تنسيقات الفاتورة الاحترافية */
+        /* تنسيق الجدول الاحترافي */
         .logo-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 12px; border-bottom: 2px solid #1e3a5f; padding-bottom: 8px; }
         .logo-area img { max-height: 65px; width: auto; object-fit: contain; }
         .logo-icon { width: 60px; height: 60px; background: linear-gradient(135deg, #1e3a5f, #3b82f6); border-radius: 14px; display: flex; align-items: center; justify-content: center; }
@@ -82,44 +79,36 @@
         .info-row { background: #f1f5f9; padding: 6px 12px; border-radius: 10px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin: 8px 0; font-size: 11px; }
         .section-title { font-size: 14px; font-weight: 700; margin: 14px 0 10px 0; border-right: 4px solid #3b82f6; padding-right: 10px; }
         
-        /* الجدول بعرض كامل مع دعم النص العربي والوصف متعدد الأسطر */
+        /* الجدول الأساسي */
         .product-table { width: 100%; border-collapse: collapse; font-size: 10px; margin: 8px 0; table-layout: fixed; }
         .product-table th { background: #1e3a5f; color: white; padding: 10px 6px; border: 1px solid #2d4a6e; font-weight: 600; text-align: center; }
         .product-table td { border: 1px solid #cbd5e1; padding: 8px 6px; vertical-align: middle; text-align: center; }
         .product-table td:first-child { text-align: right; font-weight: 500; }
         .product-table td:nth-child(4) { text-align: right; } /* عمود الوصف */
         .product-img { width: 45px; height: 45px; object-fit: cover; border-radius: 8px; display: block; margin: 0 auto; }
-        .desc-text { 
-            font-size: 10px; 
-            word-wrap: break-word; 
-            word-break: break-word; 
-            white-space: normal; 
-            line-height: 1.4; 
-            text-align: right;
-            max-width: 100%;
-            overflow-wrap: break-word;
-        }
+        .desc-text { font-size: 10px; word-wrap: break-word; word-break: break-word; white-space: normal; line-height: 1.4; text-align: right; }
         
-        /* نسب الأعمدة - بدون عمود ترقيم */
-        .product-table th:nth-child(1) { width: 22%; }  /* اسم المنتج */
+        /* عرض الأعمدة الثابتة مع دعم الوصف */
+        .product-table th:nth-child(1) { width: 20%; }  /* الاسم */
         .product-table th:nth-child(2) { width: 12%; }  /* الصورة */
         .product-table th:nth-child(3) { width: 10%; }  /* الباركود */
-        .product-table th:nth-child(4) { width: 26%; }  /* الوصف */
+        .product-table th:nth-child(4) { width: 28%; }  /* الوصف (قابل للالتفاف) */
         .product-table th:nth-child(5) { width: 8%; }   /* الكمية */
-        .product-table th:nth-child(6) { width: 10%; }  /* السعر */
-        .product-table th:nth-child(7) { width: 12%; }  /* الإجمالي */
+        .product-table th:nth-child(6) { width: 11%; }  /* سعر الوحدة */
+        .product-table th:nth-child(7) { width: 11%; }  /* الإجمالي */
         
         .summary-box { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-radius: 14px; padding: 12px 18px; margin: 15px 0 12px 0; }
         .summary-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #cbd5e1; font-size: 12px; }
         .summary-row.total { font-size: 16px; font-weight: 800; color: #166534; border-top: 2px solid #86efac; padding-top: 8px; margin-top: 5px; border-bottom: none; }
         .terms-box { background: #fefce8; border-radius: 10px; padding: 8px 14px; margin: 12px 0; border-right: 4px solid #eab308; font-size: 10px; }
-        .footer-static { margin-top: 12px; padding-top: 8px; border-top: 2px solid #1e3a5f; text-align: center; }
+        .footer-static { margin-top: 8px; padding-top: 8px; border-top: 2px solid #1e3a5f; text-align: center; }
         .contact-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; background: #f8fafc; padding: 6px 15px; border-radius: 40px; }
         .contact-links span { display: inline-flex; align-items: center; gap: 5px; font-size: 9px; color: #334155; }
         .footer-copyright { font-size: 9px; color: #94a3b8; margin-top: 6px; }
+        .thanks-block { text-align: center; margin: 12px 0 5px 0; padding: 8px; background: #eff6ff; border-radius: 20px; }
         
         .action-buttons { position: fixed; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; gap: 15px; z-index: 1000; }
-        .btn { padding: 8px 22px; border-radius: 40px; border: none; font-weight: 600; cursor: pointer; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .btn { padding: 8px 22px; border-radius: 40px; border: none; font-weight: 600; cursor: pointer; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: 0.2s; }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .btn-print { background: #3b82f6; color: white; }
         .btn-pdf { background: #ef4444; color: white; }
@@ -130,25 +119,18 @@
         .loading-spinner { background: white; padding: 25px 35px; border-radius: 16px; text-align: center; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .fa-spin { animation: spin 1s linear infinite; }
-        
-        /* تحسين الطباعة وضمان عدم تجاوز */
-        @media print {
-            .page { break-inside: avoid; page-break-after: always; }
-            .product-table td, .product-table th { page-break-inside: avoid; }
-            .desc-text { overflow: visible; }
-        }
     </style>
 </head>
 <body>
 <div id="loading" class="text-center py-20">
     <div style="border:3px solid #e2e8f0; border-top-color:#3b82f6; width:45px; height:45px; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 15px;"></div>
-    <p class="text-gray-600">جاري تجهيز الفاتورة...</p>
+    <p class="text-gray-600">جاري تحميل الفاتورة الذكية...</p>
 </div>
 <div id="invoiceContainer" style="display: none;"></div>
 <div class="action-buttons" id="actionButtons" style="display: none;">
     <button class="btn btn-print" id="printBtn"><i class="fas fa-print"></i> طباعة</button>
-    <button class="btn btn-pdf" id="pdfBtn"><i class="fas fa-file-pdf"></i> PDF</button>
-    <button class="btn btn-png" id="pngBtn"><i class="fas fa-image"></i> صورة</button>
+    <button class="btn btn-pdf" id="pdfBtn"><i class="fas fa-file-pdf"></i> PDF (300 DPI)</button>
+    <button class="btn btn-png" id="pngBtn"><i class="fas fa-image"></i> صورة PNG</button>
     <button class="btn btn-close" onclick="window.close()"><i class="fas fa-times"></i> إغلاق</button>
 </div>
 
@@ -170,7 +152,13 @@
     let customersMap = new Map();
     let productsMap = new Map();
     let currentFileName = "";
-
+    
+    // ثوابت القياس الدقيقة
+    const MM_TO_PX = 3.78;
+    const MAX_USABLE_HEIGHT_MM = 252;  // 297mm - (20mm علوي + 25mm سفلي)
+    const MAX_USABLE_HEIGHT_PX = MAX_USABLE_HEIGHT_MM * MM_TO_PX; // ≈ 952.56px
+    const SAFETY_BUFFER_PX = 8; // احتياطي بسيط
+    
     async function loadCustomersAndProducts() {
         const customersSnap = await getDocs(collection(db, 'customers'));
         customersSnap.forEach(docSnap => customersMap.set(docSnap.id, docSnap.data()));
@@ -191,7 +179,6 @@
         if (isNaN(d.getTime())) return dateStr;
         return `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
     }
-
     function formatTime(time24) {
         if (!time24) return '';
         let [h, m] = time24.split(':');
@@ -200,7 +187,6 @@
         hour = hour % 12 || 12;
         return `${hour.toString().padStart(2,'0')}:${m} ${ampm}`;
     }
-
     function escapeHtml(str) {
         if (!str) return '';
         return String(str).replace(/[&<>]/g, function(m) {
@@ -210,7 +196,6 @@
             return m;
         });
     }
-
     function getStatusClass(status) {
         const map = {
             'جديد': 'bg-blue-100 text-blue-800',
@@ -222,240 +207,52 @@
         };
         return map[status] || 'bg-gray-100 text-gray-800';
     }
-
-    function showLoading() {
-        let overlay = document.getElementById('loadingOverlay');
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.id = 'loadingOverlay';
-            overlay.className = 'loading-overlay';
-            overlay.innerHTML = `<div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">جاري إنشاء الفاتورة...</p></div>`;
-            document.body.appendChild(overlay);
-        }
-        overlay.style.display = 'flex';
+    
+    function showLoading() { let overlay = document.getElementById('loadingOverlay'); if (!overlay) { overlay = document.createElement('div'); overlay.id = 'loadingOverlay'; overlay.className = 'loading-overlay'; overlay.innerHTML = `<div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">جاري إنشاء الفاتورة المعتمدة...</p></div>`; document.body.appendChild(overlay); } overlay.style.display = 'flex'; }
+    function hideLoading() { const overlay = document.getElementById('loadingOverlay'); if (overlay) overlay.style.display = 'none'; }
+    
+    // قياس أي عنصر HTML بدقة (نسخ مؤقت)
+    async function measureElementHeight(elementCreator) {
+        const container = document.createElement('div');
+        container.style.position = 'absolute';
+        container.style.visibility = 'hidden';
+        container.style.top = '-9999px';
+        container.style.right = '0';
+        container.style.width = '210mm';
+        container.style.direction = 'rtl';
+        document.body.appendChild(container);
+        const targetElem = elementCreator();
+        container.appendChild(targetElem);
+        await new Promise(r => requestAnimationFrame(() => setTimeout(r, 20)));
+        const height = targetElem.getBoundingClientRect().height;
+        document.body.removeChild(container);
+        return height;
     }
-
-    function hideLoading() {
-        const overlay = document.getElementById('loadingOverlay');
-        if (overlay) overlay.style.display = 'none';
-    }
-
-    // إنشاء صف المنتج مع عمود وصف ديناميكي (بدون ترقيم)
-    function createProductRowElement(item, productImage, description, price, qty, itemTotal) {
-        const row = document.createElement('tr');
+    
+    // إنشاء صف المنتج كعنصر DOM لقياسه أو إلحاقه
+    function createProductRowDOM(item, productImage, description, price, qty, itemTotal) {
+        const tr = document.createElement('tr');
         const imgSrc = productImage && productImage.trim() !== '' ? productImage : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E';
-        row.innerHTML = `
+        tr.innerHTML = `
             <td style="text-align: right; font-weight: 500;">${escapeHtml(item.name)}</td>
-            <td><img src="${imgSrc}" class="product-img" crossorigin="anonymous" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E'"></td>
+            <td><img src="${imgSrc}" class="product-img" crossorigin="anonymous" loading="eager" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E'"></td>
             <td>${escapeHtml(item.barcode || '—')}</td>
             <td class="desc-text">${description || ''}</td>
             <td>${qty}</td>
             <td>${price.toFixed(2)} ريال</td>
             <td>${itemTotal.toFixed(2)} ريال</td>
         `;
-        return row;
+        return tr;
     }
-
-    // دالة قياس ارتفاع العنصر بدقة عبر إضافة مؤقتة إلى DOM
-    async function measureElementHeight(elementCreator) {
-        const tempContainer = document.createElement('div');
-        tempContainer.style.position = 'absolute';
-        tempContainer.style.visibility = 'hidden';
-        tempContainer.style.top = '-9999px';
-        tempContainer.style.right = '0';
-        tempContainer.style.width = '210mm';
-        document.body.appendChild(tempContainer);
-        
-        const tempPage = document.createElement('div');
-        tempPage.className = 'page';
-        tempContainer.appendChild(tempPage);
-        
-        const wrapper = document.createElement('div');
-        wrapper.className = 'page-content-wrapper';
-        tempPage.appendChild(wrapper);
-        
-        const inner = document.createElement('div');
-        inner.className = 'page-inner-content';
-        wrapper.appendChild(inner);
-        
-        const element = elementCreator(inner);
-        inner.appendChild(element);
-        
-        await new Promise(r => requestAnimationFrame(() => setTimeout(r, 30)));
-        const height = element.getBoundingClientRect().height;
-        document.body.removeChild(tempContainer);
-        return height;
-    }
-
-    // قياس ارتفاع مجموعة الصفوف + الأجزاء الثابتة الاختيارية (الملخص)
-    async function measureRowsHeight(rowCreators, includeSummary = false, summaryCreator = null) {
-        const tempContainer = document.createElement('div');
-        tempContainer.style.position = 'absolute';
-        tempContainer.style.visibility = 'hidden';
-        tempContainer.style.top = '-9999px';
-        tempContainer.style.width = '210mm';
-        document.body.appendChild(tempContainer);
-        
-        const tempPage = document.createElement('div');
-        tempPage.className = 'page';
-        tempContainer.appendChild(tempPage);
-        
-        const wrapper = document.createElement('div');
-        wrapper.className = 'page-content-wrapper';
-        tempPage.appendChild(wrapper);
-        
-        const inner = document.createElement('div');
-        inner.className = 'page-inner-content';
-        wrapper.appendChild(inner);
-        
-        // إضافة رأس ثابت (نفس الهيكل لكن بدون محتوى متغير للقياس)
-        const dummyHeader = document.createElement('div');
-        dummyHeader.innerHTML = getStaticHeaderHTML(); // محتوى الرأس الثابت
-        inner.appendChild(dummyHeader);
-        
-        const table = document.createElement('table');
-        table.className = 'product-table';
-        const thead = document.createElement('thead');
-        thead.innerHTML = `<tr><th>اسم المنتج</th><th>الصورة</th><th>الباركود</th><th>الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>`;
-        table.appendChild(thead);
-        const tbody = document.createElement('tbody');
-        for (const creator of rowCreators) {
-            tbody.appendChild(creator());
-        }
-        table.appendChild(tbody);
-        inner.appendChild(table);
-        
-        if (includeSummary && summaryCreator) {
-            const summaryDiv = summaryCreator();
-            inner.appendChild(summaryDiv);
-        }
-        
-        // تذييل ثابت للقياس
-        const footerDiv = document.createElement('div');
-        footerDiv.innerHTML = getStaticFooterHTML();
-        inner.appendChild(footerDiv);
-        
-        const spacer = document.createElement('div');
-        spacer.className = 'bottom-margin-spacer';
-        wrapper.appendChild(spacer);
-        
-        await new Promise(r => requestAnimationFrame(() => setTimeout(r, 40)));
-        const totalHeight = tempPage.scrollHeight;
-        document.body.removeChild(tempContainer);
-        return totalHeight;
-    }
-
-    function getStaticHeaderHTML() {
-        return `
-            <div class="logo-header">
-                <div class="logo-area">
-                    <img src="/fi-khidmatik/images/logo.svg" alt="شعار منصة في خدمتك" style="max-height:65px; width:auto;" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'logo-icon\\'><i class=\\'fas fa-handshake fa-2x\\'></i></div>';">
-                </div>
-                <div class="invoice-title text-left">
-                    <h1>فاتورة إلكترونية</h1>
-                    <p><strong>رقم الفاتورة:</strong> <span id="tempOrderNum"></span></p>
-                    <p><strong>التاريخ:</strong> <span id="tempDate"></span> | <strong>الوقت:</strong> <span id="tempTime"></span></p>
-                    <p><span class="badge-status bg-gray-100 text-gray-800">جديد</span></p>
-                </div>
-            </div>
-            <div class="company-badge">
-                <span><i class="fas fa-briefcase"></i> <strong>منصة في خدمتك</strong></span>
-                <span><i class="fas fa-id-card"></i> رقم شهادة العمل الحر: FL-765735204</span>
-                <span><i class="fas fa-chart-line"></i> الرقم الضريبي: 312495447600003</span>
-            </div>
-            <div class="two-columns">
-                <div class="info-card"><h3><i class="fas fa-building ml-2"></i> مصدرة من</h3><p>منصة في خدمتك<br>المملكة العربية السعودية<br>حائل - حي النقرة - شارع سعد المشاط<br>رقم المبنى: 3085 | الرمز البريدي: 55431</p></div>
-                <div class="info-card"><h3><i class="fas fa-user ml-2"></i> مصدرة إلى</h3><p><strong>العميل:</strong> ___________<br><strong>المدينة:</strong> ___________<br><strong>العنوان:</strong> ___________<br><strong>الجوال:</strong> ___________<br><strong>البريد:</strong> ___________</p></div>
-            </div>
-            <div class="info-row"><span><i class="fas fa-credit-card"></i> <strong>طريقة الدفع:</strong> —</span><span><i class="fas fa-check-circle"></i> <strong>رمز الموافقة:</strong> —</span></div>
-            <div class="info-row"><span><i class="fas fa-truck"></i> <strong>طريقة الاستلام:</strong> —</span></div>
-            <div class="section-title">تفاصيل المنتجات / الخدمات</div>
-        `;
-    }
-
-    function getStaticFooterHTML() {
-        return `
-            <div class="footer-static">
-                <div class="contact-links">
-                    <span><i class="fas fa-phone-alt"></i> هاتف: 966534051317</span>
-                    <span><i class="fab fa-whatsapp"></i> واتساب: 966545312021</span>
-                    <span><i class="fas fa-envelope"></i> info@fi-khidmatik.com</span>
-                    <span><i class="fas fa-globe"></i> www.khidmatik.com</span>
-                </div>
-                <div class="footer-copyright">هذه الفاتورة إلكترونية - نسخة معتمدة قانونياً</div>
-            </div>
-        `;
-    }
-
-    // التقسيم الذكي بالارتفاع (252mm = 952px تقريبًا)
-    const MAX_USABLE_PX = 252 * 3.78; // ≈ 952.56px
-    const BUFFER_PX = 50; // 50px buffer للحفاظ على المسافة من التذييل
     
-    async function paginateRows(rowCreators, summaryCreator, includeSummaryOnLastPage) {
-        const pages = [];
-        let currentPageRows = [];
-        let currentHeight = 0;
-        
-        for (let i = 0; i < rowCreators.length; i++) {
-            const singleRowCreator = rowCreators[i];
-            // قياس ارتفاع الصف الواحد
-            const rowHeight = await measureElementHeight((parent) => {
-                const tbl = document.createElement('table');
-                tbl.className = 'product-table';
-                const tbody = document.createElement('tbody');
-                tbody.appendChild(singleRowCreator());
-                tbl.appendChild(tbody);
-                return tbl;
-            });
-            
-            if (currentPageRows.length === 0) {
-                // أول صف في الصفحة: نضيفه ونقيس الارتفاع الكلي للصفحة مع الرأس والتذييل
-                const testRows = [singleRowCreator];
-                const isLastCandidate = (i === rowCreators.length - 1);
-                const totalWithRows = await measureRowsHeight(testRows, isLastCandidate && includeSummaryOnLastPage, summaryCreator);
-                if (totalWithRows <= MAX_USABLE_PX + BUFFER_PX) {
-                    currentPageRows.push(singleRowCreator);
-                    currentHeight = totalWithRows;
-                } else {
-                    // لوحده لا يتسع (مستحيل عمليًا) لكن حماية: نضيفه بصفحة مستقلة
-                    currentPageRows.push(singleRowCreator);
-                    pages.push({ rows: [...currentPageRows], includeSummary: isLastCandidate && includeSummaryOnLastPage });
-                    currentPageRows = [];
-                    currentHeight = 0;
-                }
-            } else {
-                // نحاول إضافة الصف الحالي
-                const testRows = [...currentPageRows, singleRowCreator];
-                const isLastPage = (i === rowCreators.length - 1);
-                const totalWithRows = await measureRowsHeight(testRows, isLastPage && includeSummaryOnLastPage, summaryCreator);
-                if (totalWithRows <= MAX_USABLE_PX + BUFFER_PX) {
-                    currentPageRows.push(singleRowCreator);
-                    currentHeight = totalWithRows;
-                } else {
-                    // لا يتسع: نغلق الصفحة الحالية ونبدأ صفحة جديدة بهذا الصف
-                    pages.push({ rows: [...currentPageRows], includeSummary: false });
-                    currentPageRows = [singleRowCreator];
-                    const singleRowTotal = await measureRowsHeight([singleRowCreator], false, summaryCreator);
-                    currentHeight = singleRowTotal;
-                }
-            }
-        }
-        if (currentPageRows.length > 0) {
-            pages.push({ rows: [...currentPageRows], includeSummary: includeSummaryOnLastPage });
-        }
-        return pages;
-    }
-
     async function renderInvoice() {
         const urlParams = new URLSearchParams(window.location.search);
         const orderId = urlParams.get('id');
         const autoAction = urlParams.get('auto');
-        
         if (!orderId) {
             document.getElementById('loading').innerHTML = '<div class="text-center text-red-600 p-10">رقم الطلب غير موجود</div>';
             return;
         }
-        
         await loadCustomersAndProducts();
         const order = await getOrder(orderId);
         if (!order) {
@@ -477,18 +274,16 @@
             const qty = item.quantity || 0;
             subtotal += price * qty;
         }
-        
         let discountValue = order.discount || 0;
         if (order.discountType === 'percent' && discountValue > 0) discountValue = (subtotal * discountValue) / 100;
         const afterDiscount = subtotal - discountValue;
         const tax = afterDiscount * 0.15;
         const total = afterDiscount + tax;
-        
         const paymentMethodName = order.paymentMethodName || (order.paymentMethod === 'mada' ? 'مدى' : order.paymentMethod === 'mastercard' ? 'ماستركارد' : order.paymentMethod === 'visa' ? 'فيزا' : order.paymentMethod === 'stcpay' ? 'STCPay' : order.paymentMethod === 'tamara' ? 'تمارا' : order.paymentMethod === 'tabby' ? 'تابي' : 'أخرى');
         const shippingMethodText = { 'pickup': '🏪 استلام من المقر', 'delivery': '🚚 شحن منزلي', 'noship': '📥 لا يتطلب شحن' }[order.shippingMethod] || 'استلام من المقر';
         
-        // تجهيز مصنعي الصفوف
-        const rowCreators = [];
+        // تجهيز بيانات المنتجات مع الصورة والوصف
+        const productRowsData = [];
         for (const item of items) {
             const price = item.price || 0;
             const qty = item.quantity || 0;
@@ -503,107 +298,214 @@
                 }
             }
             if (!productImage && item.image) productImage = item.image;
-            if (description && typeof description === 'string') {
-                description = escapeHtml(description).replace(/\n/g, '<br>');
-            }
-            const finalDesc = description || '';
-            rowCreators.push(() => createProductRowElement(item, productImage, finalDesc, price, qty, itemTotal));
+            if (description && typeof description === 'string') description = escapeHtml(description).replace(/\n/g, '<br>');
+            productRowsData.push({ item, productImage, description: description || '', price, qty, itemTotal });
         }
         
-        // مصنع الملخص
-        const summaryCreator = () => {
-            const div = document.createElement('div');
-            div.innerHTML = `
-                <div class="summary-box">
-                    <div class="summary-row"><span>المجموع الفرعي:</span><span>${subtotal.toFixed(2)} ريال</span></div>
-                    <div class="summary-row"><span>إجمالي الخصم:</span><span style="color:#dc2626;">- ${discountValue.toFixed(2)} ريال</span></div>
-                    <div class="summary-row"><span>ضريبة القيمة المضافة (15%):</span><span>${tax.toFixed(2)} ريال</span></div>
-                    <div class="summary-row total"><span>الإجمالي النهائي شامل الضريبة:</span><span>${total.toFixed(2)} ريال</span></div>
+        // ----- قوالب HTML ثابتة -----
+        const headerHTML = `
+            <div class="logo-header">
+                <div class="logo-area">
+                    <img src="/fi-khidmatik/images/logo.svg" alt="منصة في خدمتك" style="max-height:65px; width:auto;" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'logo-icon\\'><i class=\\'fas fa-handshake fa-2x\\'></i></div>';">
                 </div>
-                <div class="terms-box">
-                    <h4><i class="fas fa-info-circle"></i> تعليمات الفاتورة</h4>
-                    <p>تخضع هذه الفاتورة لكامل الشروط والأحكام المرفقة، ويُعد اعتمادها أو سداد أي مبلغ بموجبها إقرارًا صريحًا ونهائيًا بالموافقة على جميع بنودها دون أي تحفظ، مع إقرار العميل بمسؤوليته عن الاطلاع عليها</p>
+                <div class="invoice-title text-left">
+                    <h1>فاتورة إلكترونية</h1>
+                    <p><strong>رقم الفاتورة:</strong> ${escapeHtml(order.orderNumber || order.id)}</p>
+                    <p><strong>التاريخ:</strong> ${formatDate(order.orderDate)} | <strong>الوقت:</strong> ${formatTime(order.orderTime)}</p>
+                    <p><span class="badge-status ${getStatusClass(order.status)}">${order.status || 'جديد'}</span></p>
                 </div>
-                <div class="text-center mt-2 py-2 bg-blue-50 rounded-xl">
-                    <p class="font-bold text-blue-800"><i class="fas fa-heart"></i> شكراً لتسوقكم معنا</p>
-                </div>
-            `;
-            return div;
-        };
+            </div>
+            <div class="company-badge">
+                <span><i class="fas fa-briefcase"></i> <strong>منصة في خدمتك</strong></span>
+                <span><i class="fas fa-id-card"></i> رقم شهادة العمل الحر: FL-765735204</span>
+                <span><i class="fas fa-chart-line"></i> الرقم الضريبي: 312495447600003</span>
+            </div>
+            <div class="two-columns">
+                <div class="info-card"><h3><i class="fas fa-building ml-2"></i> مصدرة من</h3><p>منصة في خدمتك<br>المملكة العربية السعودية<br>حائل - حي النقرة - شارع سعد المشاط<br>رقم المبنى: 3085 | الرمز البريدي: 55431</p></div>
+                <div class="info-card"><h3><i class="fas fa-user ml-2"></i> مصدرة إلى</h3><p><strong>العميل:</strong> ${escapeHtml(customer.name || '__________')}<br><strong>المدينة:</strong> ${escapeHtml(customer.city || '__________')}<br><strong>العنوان:</strong> ${escapeHtml(customer.street || '__________')}<br><strong>الجوال:</strong> ${escapeHtml(customer.phone || '__________')}<br><strong>البريد:</strong> ${escapeHtml(customer.email || '__________')}</p></div>
+            </div>
+            <div class="info-row"><span><i class="fas fa-credit-card"></i> <strong>طريقة الدفع:</strong> ${paymentMethodName}</span><span><i class="fas fa-check-circle"></i> <strong>رمز الموافقة:</strong> ${order.approvalCode || 'APV-' + Math.floor(Math.random()*10000)}</span></div>
+            <div class="info-row"><span><i class="fas fa-truck"></i> <strong>طريقة الاستلام:</strong> ${shippingMethodText}</span></div>
+            <div class="section-title">تفاصيل المنتجات / الخدمات</div>
+        `;
         
-        const pagesData = await paginateRows(rowCreators, summaryCreator, true);
+        const footerStaticHTML = `
+            <div class="footer-static">
+                <div class="contact-links">
+                    <span><i class="fas fa-phone-alt"></i> هاتف: 966534051317</span>
+                    <span><i class="fab fa-whatsapp"></i> واتساب: 966545312021</span>
+                    <span><i class="fas fa-envelope"></i> info@fi-khidmatik.com</span>
+                    <span><i class="fas fa-globe"></i> www.khidmatik.com</span>
+                </div>
+                <div class="footer-copyright">هذه الفاتورة إلكترونية - نسخة معتمدة قانونياً</div>
+            </div>
+        `;
+        
+        const summaryHTML = `
+            <div class="summary-box">
+                <div class="summary-row"><span>المجموع الفرعي:</span><span>${subtotal.toFixed(2)} ريال</span></div>
+                <div class="summary-row"><span>إجمالي الخصم:</span><span style="color:#dc2626;">- ${discountValue.toFixed(2)} ريال</span></div>
+                <div class="summary-row"><span>ضريبة القيمة المضافة (15%):</span><span>${tax.toFixed(2)} ريال</span></div>
+                <div class="summary-row total"><span>الإجمالي النهائي شامل الضريبة:</span><span>${total.toFixed(2)} ريال</span></div>
+            </div>
+            <div class="terms-box"><h4><i class="fas fa-info-circle"></i> تعليمات الفاتورة</h4><p>تخضع هذه الفاتورة لكامل الشروط والأحكام المرفقة، ويُعد اعتمادها أو سداد أي مبلغ بموجبها إقرارًا صريحًا ونهائيًا بالموافقة على جميع بنودها دون أي تحفظ، مع إقرار العميل بمسؤوليته عن الاطلاع عليها</p></div>
+            <div class="thanks-block"><p class="font-bold text-blue-800"><i class="fas fa-heart"></i> شكراً لتسوقكم معنا</p></div>
+        `;
+        
+        // قياس ارتفاعات المكونات الثابتة
+        const headerHeight = await measureElementHeight(() => { const div = document.createElement('div'); div.innerHTML = headerHTML; return div; });
+        const footerStaticHeight = await measureElementHeight(() => { const div = document.createElement('div'); div.innerHTML = footerStaticHTML; return div; });
+        const summaryHeight = await measureElementHeight(() => { const div = document.createElement('div'); div.innerHTML = summaryHTML; return div; });
+        
+        // قياس كل صف منتج على حدة
+        const rowHeights = [];
+        for (const data of productRowsData) {
+            const rowElement = createProductRowDOM(data.item, data.productImage, data.description, data.price, data.qty, data.itemTotal);
+            const height = await measureElementHeight(() => {
+                const wrapper = document.createElement('div');
+                const table = document.createElement('table');
+                table.className = 'product-table';
+                const tbody = document.createElement('tbody');
+                tbody.appendChild(rowElement.cloneNode(true));
+                table.appendChild(tbody);
+                wrapper.appendChild(table);
+                return wrapper;
+            });
+            rowHeights.push(height);
+        }
+        
+        // ---------- خوارزمية التقسيم الديناميكي بناءً على الارتفاع الفعلي ----------
+        const pagesRowsIndices = []; // قائمة كل صفحة تحتوي على مصفوفة indices الصفوف
+        let currentPageRows = [];
+        let currentHeightUsed = headerHeight + footerStaticHeight;
+        let remainingRows = [...Array(productRowsData.length).keys()];
+        let idx = 0;
+        
+        while (idx < productRowsData.length) {
+            const rowH = rowHeights[idx];
+            // هل هذه هي الصفحة الأخيرة المحتملة؟ (لا نعرف بعد، لكن سنحاول)
+            const willBeLastPage = (idx === productRowsData.length - 1 && currentPageRows.length === 0) || (idx + 1 === productRowsData.length && currentPageRows.length >= 0);
+            // بالنسبة للصفحة الأخيرة يجب مراعاة الـ summaryHeight
+            let availableForRows = MAX_USABLE_HEIGHT_PX - (headerHeight + footerStaticHeight);
+            if (willBeLastPage && currentPageRows.length === 0 && (idx === productRowsData.length - 1)) {
+                availableForRows = MAX_USABLE_HEIGHT_PX - (headerHeight + footerStaticHeight + summaryHeight);
+            } else if (willBeLastPage && (idx + 1 === productRowsData.length)) {
+                // في حالة إضافة الصف الحالي ثم سيكون هذه الصفحة الأخيرة
+                const tempHeightAfterAdd = currentHeightUsed + rowH;
+                if (tempHeightAfterAdd + summaryHeight <= MAX_USABLE_HEIGHT_PX) {
+                    availableForRows = MAX_USABLE_HEIGHT_PX - (headerHeight + footerStaticHeight + summaryHeight);
+                } else {
+                    availableForRows = MAX_USABLE_HEIGHT_PX - (headerHeight + footerStaticHeight);
+                }
+            }
+            
+            if (currentHeightUsed + rowH <= availableForRows + SAFETY_BUFFER_PX) {
+                currentPageRows.push(idx);
+                currentHeightUsed += rowH;
+                idx++;
+            } else {
+                // إنهاء الصفحة الحالية وحفظها
+                if (currentPageRows.length === 0) {
+                    // عنصر واحد لا يتناسب حتى بمفرده (حالة نادرة) نضغطه بالقوة
+                    currentPageRows.push(idx);
+                    currentHeightUsed = headerHeight + footerStaticHeight + rowH;
+                    idx++;
+                }
+                pagesRowsIndices.push([...currentPageRows]);
+                currentPageRows = [];
+                currentHeightUsed = headerHeight + footerStaticHeight;
+            }
+        }
+        if (currentPageRows.length > 0) pagesRowsIndices.push([...currentPageRows]);
+        
+        // معالجة الصفحة الأخيرة للتأكد من احتوائها على الملخص دون تجاوز
+        if (pagesRowsIndices.length > 0) {
+            let lastPageIdx = pagesRowsIndices.length - 1;
+            let lastPageRows = pagesRowsIndices[lastPageIdx];
+            let lastPageRowsHeight = lastPageRows.reduce((sum, rIdx) => sum + rowHeights[rIdx], 0);
+            let totalLastPageHeight = headerHeight + footerStaticHeight + lastPageRowsHeight + summaryHeight;
+            if (totalLastPageHeight > MAX_USABLE_HEIGHT_PX) {
+                // نحتاج نقل بعض الصفوف إلى صفحة جديدة قبل الأخيرة
+                while (totalLastPageHeight > MAX_USABLE_HEIGHT_PX && lastPageRows.length > 1) {
+                    const movedRow = lastPageRows.pop();
+                    const newPrevPageRows = pagesRowsIndices[lastPageIdx - 1] || [];
+                    if (pagesRowsIndices[lastPageIdx - 1]) {
+                        pagesRowsIndices[lastPageIdx - 1].push(movedRow);
+                    } else {
+                        // إنشاء صفحة جديدة قبل الأخيرة
+                        pagesRowsIndices.splice(lastPageIdx, 0, [movedRow]);
+                        lastPageIdx++;
+                    }
+                    lastPageRowsHeight = lastPageRows.reduce((sum, rIdx) => sum + rowHeights[rIdx], 0);
+                    totalLastPageHeight = headerHeight + footerStaticHeight + lastPageRowsHeight + summaryHeight;
+                }
+                // إعادة ترتيب إذا أصبحت الصفحة الأخيرة فارغة
+                if (lastPageRows.length === 0) {
+                    pagesRowsIndices.pop();
+                }
+            }
+        }
         
         // بناء الصفحات النهائية
         const container = document.getElementById('invoiceContainer');
         container.innerHTML = '';
         
-        for (let idx = 0; idx < pagesData.length; idx++) {
-            const pageInfo = pagesData[idx];
-            const page = document.createElement('div');
-            page.className = 'page';
+        for (let p = 0; p < pagesRowsIndices.length; p++) {
+            const rowIndices = pagesRowsIndices[p];
+            const isLastPage = (p === pagesRowsIndices.length - 1);
+            const pageDiv = document.createElement('div');
+            pageDiv.className = 'page';
             const wrapper = document.createElement('div');
             wrapper.className = 'page-content-wrapper';
             const inner = document.createElement('div');
             inner.className = 'page-inner-content';
             
-            // رأس ديناميكي بالبيانات الحقيقية
-            const headerHTML = `
-                <div class="logo-header">
-                    <div class="logo-area">
-                        <img src="/fi-khidmatik/images/logo.svg" alt="شعار منصة في خدمتك" style="max-height:65px; width:auto;" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'logo-icon\\'><i class=\\'fas fa-handshake fa-2x\\'></i></div>';">
-                    </div>
-                    <div class="invoice-title text-left">
-                        <h1>فاتورة إلكترونية</h1>
-                        <p><strong>رقم الفاتورة:</strong> ${escapeHtml(order.orderNumber || order.id)}</p>
-                        <p><strong>التاريخ:</strong> ${formatDate(order.orderDate)} | <strong>الوقت:</strong> ${formatTime(order.orderTime)}</p>
-                        <p><span class="badge-status ${getStatusClass(order.status)}">${order.status || 'جديد'}</span></p>
-                    </div>
-                </div>
-                <div class="company-badge">
-                    <span><i class="fas fa-briefcase"></i> <strong>منصة في خدمتك</strong></span>
-                    <span><i class="fas fa-id-card"></i> رقم شهادة العمل الحر: FL-765735204</span>
-                    <span><i class="fas fa-chart-line"></i> الرقم الضريبي: 312495447600003</span>
-                </div>
-                <div class="two-columns">
-                    <div class="info-card"><h3><i class="fas fa-building ml-2"></i> مصدرة من</h3><p>منصة في خدمتك<br>المملكة العربية السعودية<br>حائل - حي النقرة - شارع سعد المشاط<br>رقم المبنى: 3085 | الرمز البريدي: 55431</p></div>
-                    <div class="info-card"><h3><i class="fas fa-user ml-2"></i> مصدرة إلى</h3><p><strong>العميل:</strong> ${escapeHtml(customer.name || '__________')}<br><strong>المدينة:</strong> ${escapeHtml(customer.city || '__________')}<br><strong>العنوان:</strong> ${escapeHtml(customer.street || '__________')}<br><strong>الجوال:</strong> ${escapeHtml(customer.phone || '__________')}<br><strong>البريد:</strong> ${escapeHtml(customer.email || '__________')}</p></div>
-                </div>
-                <div class="info-row"><span><i class="fas fa-credit-card"></i> <strong>طريقة الدفع:</strong> ${paymentMethodName}</span><span><i class="fas fa-check-circle"></i> <strong>رمز الموافقة:</strong> ${order.approvalCode || 'APV-' + Math.floor(Math.random()*10000)}</span></div>
-                <div class="info-row"><span><i class="fas fa-truck"></i> <strong>طريقة الاستلام:</strong> ${shippingMethodText}</span></div>
-                <div class="section-title">تفاصيل المنتجات / الخدمات ${pagesData.length > 1 ? `(صفحة ${idx+1} من ${pagesData.length})` : ''}</div>
-            `;
-            inner.innerHTML = headerHTML;
+            // رأس الصفحة
+            const headerClone = document.createElement('div');
+            headerClone.innerHTML = headerHTML;
+            if (pagesRowsIndices.length > 1) {
+                const titleSpan = headerClone.querySelector('.section-title');
+                if (titleSpan) titleSpan.innerHTML = `تفاصيل المنتجات / الخدمات (صفحة ${p+1} من ${pagesRowsIndices.length})`;
+            }
+            inner.appendChild(headerClone);
             
+            // الجدول
             const table = document.createElement('table');
             table.className = 'product-table';
             const thead = document.createElement('thead');
             thead.innerHTML = `<tr><th>اسم المنتج</th><th>الصورة</th><th>الباركود</th><th>الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>`;
             table.appendChild(thead);
             const tbody = document.createElement('tbody');
-            for (const rowCreator of pageInfo.rows) {
-                tbody.appendChild(rowCreator());
+            for (const rIdx of rowIndices) {
+                const data = productRowsData[rIdx];
+                tbody.appendChild(createProductRowDOM(data.item, data.productImage, data.description, data.price, data.qty, data.itemTotal));
             }
             table.appendChild(tbody);
             inner.appendChild(table);
             
-            if (pageInfo.includeSummary) {
-                inner.appendChild(summaryCreator());
+            // الملخص وآخر الصفحة
+            if (isLastPage) {
+                const summaryClone = document.createElement('div');
+                summaryClone.innerHTML = summaryHTML;
+                inner.appendChild(summaryClone);
             }
             
-            const footerDiv = document.createElement('div');
-            footerDiv.innerHTML = getStaticFooterHTML();
-            inner.appendChild(footerDiv);
+            // التذييل الثابت
+            const footerClone = document.createElement('div');
+            footerClone.innerHTML = footerStaticHTML;
+            inner.appendChild(footerClone);
             
             wrapper.appendChild(inner);
             const spacer = document.createElement('div');
             spacer.className = 'bottom-margin-spacer';
             wrapper.appendChild(spacer);
-            page.appendChild(wrapper);
-            const pageNumDiv = document.createElement('div');
-            pageNumDiv.className = 'page-number';
-            pageNumDiv.textContent = `صفحة ${idx+1} / ${pagesData.length}`;
-            page.appendChild(pageNumDiv);
-            container.appendChild(page);
+            pageDiv.appendChild(wrapper);
+            
+            const pageNumSpan = document.createElement('div');
+            pageNumSpan.className = 'page-number';
+            pageNumSpan.textContent = `صفحة ${p+1} / ${pagesRowsIndices.length}`;
+            pageDiv.appendChild(pageNumSpan);
+            container.appendChild(pageDiv);
         }
         
         document.getElementById('loading').style.display = 'none';
@@ -628,9 +530,9 @@
         try {
             const opt = { margin: [0, 0, 0, 0], filename: `${currentFileName}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 3, useCORS: true, logging: false, dpi: 300 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true } };
             await html2pdf().set(opt).from(element).save();
-        } catch (error) { console.error(error); alert('خطأ في PDF'); } finally { btn.disabled = false; hideLoading(); }
+        } catch (error) { console.error(error); alert('خطأ في PDF'); } 
+        finally { btn.disabled = false; hideLoading(); }
     }
-    
     async function exportPNG() {
         const element = document.getElementById('invoiceContainer');
         if (!element) return;
@@ -643,7 +545,8 @@
             link.download = `${currentFileName}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
-        } catch (error) { console.error(error); alert('خطأ في الصورة'); } finally { btn.disabled = false; hideLoading(); }
+        } catch (error) { console.error(error); alert('خطأ في الصورة'); } 
+        finally { btn.disabled = false; hideLoading(); }
     }
     
     renderInvoice();
