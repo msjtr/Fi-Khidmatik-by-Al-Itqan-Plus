@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>فاتورة إلكترونية - منصة في خدمتك | نظام فواتير متقدم</title>
+    <title>فاتورة إلكترونية - منصة في خدمتك | نظام فواتير احترافي</title>
     <link rel="icon" href="data:,">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -18,7 +18,7 @@
 
         body {
             background: #eef2f5;
-            font-family: 'Cairo', 'Segoe UI', sans-serif;
+            font-family: 'Cairo', 'Segoe UI', 'Tahoma', sans-serif;
             direction: rtl;
             padding: 20px;
         }
@@ -42,7 +42,7 @@
             flex-direction: column;
         }
 
-        /* Main content wrapper - top margin 20mm, bottom margin handled by spacer */
+        /* Main content wrapper - top margin 20mm */
         .page-content-wrapper {
             flex: 1;
             display: flex;
@@ -58,7 +58,7 @@
             flex: 1;
         }
 
-        /* Bottom spacer ensures exactly 25mm bottom margin */
+        /* Bottom spacer ensures exactly 25mm bottom margin - CRITICAL */
         .bottom-margin-spacer {
             height: 25mm;
             width: 100%;
@@ -69,26 +69,15 @@
         .page-number {
             position: absolute;
             bottom: 8mm;
-            right: 15mm;
+            left: 15mm;
             font-size: 10px;
             color: #475569;
             font-weight: 600;
             z-index: 10;
             background: white;
-            padding: 2px 6px;
-            border-radius: 12px;
-        }
-        
-        .page-date {
-            position: absolute;
-            bottom: 8mm;
-            left: 15mm;
-            font-size: 9px;
-            color: #94a3b8;
-            z-index: 10;
-            background: white;
-            padding: 2px 6px;
-            border-radius: 12px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-family: 'Cairo', monospace;
         }
 
         @media print {
@@ -118,7 +107,7 @@
             }
         }
 
-        /* Professional Invoice Styles */
+        /* Professional Invoice Styles - RTL Optimized */
         .logo-header {
             display: flex;
             justify-content: space-between;
@@ -142,6 +131,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+        .logo-icon i {
+            font-size: 32px;
+            color: white;
         }
         .invoice-title h1 {
             font-size: 22px;
@@ -211,6 +204,8 @@
             border-right: 4px solid #3b82f6;
             padding-right: 10px;
         }
+        
+        /* Full width table - no numbering column */
         .product-table {
             width: 100%;
             border-collapse: collapse;
@@ -221,35 +216,52 @@
         .product-table th {
             background: #1e3a5f;
             color: white;
-            padding: 8px 5px;
+            padding: 10px 6px;
             border: 1px solid #2d4a6e;
             font-weight: 600;
+            text-align: center;
         }
         .product-table td {
             border: 1px solid #cbd5e1;
-            padding: 8px 5px;
+            padding: 8px 6px;
             vertical-align: middle;
             text-align: center;
         }
         .product-table td:first-child {
             text-align: center;
-            font-weight: 600;
+        }
+        /* RTL text alignment for description */
+        .product-table td:nth-child(4) {
+            text-align: right;
         }
         .product-img {
-            width: 42px;
-            height: 42px;
+            width: 45px;
+            height: 45px;
             object-fit: cover;
             border-radius: 8px;
             display: block;
             margin: 0 auto;
         }
+        /* Description column with auto-wrap */
         .desc-text {
-            font-size: 9px;
+            font-size: 10px;
+            word-wrap: break-word;
             word-break: break-word;
-            max-width: 140px;
-            text-align: right;
+            white-space: normal;
             line-height: 1.4;
+            text-align: right;
+            max-width: 180px;
         }
+        
+        /* Column widths - no numbering column */
+        .product-table th:nth-child(1) { width: 20%; }  /* Product name */
+        .product-table th:nth-child(2) { width: 12%; }  /* Image */
+        .product-table th:nth-child(3) { width: 10%; }  /* Barcode */
+        .product-table th:nth-child(4) { width: 28%; }  /* Description */
+        .product-table th:nth-child(5) { width: 8%; }   /* Quantity */
+        .product-table th:nth-child(6) { width: 12%; }  /* Unit price */
+        .product-table th:nth-child(7) { width: 12%; }  /* Total */
+        
         .summary-box {
             background: linear-gradient(135deg, #f0fdf4, #dcfce7);
             border-radius: 14px;
@@ -326,8 +338,10 @@
             cursor: pointer;
             font-size: 14px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: transform 0.1s;
         }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn:active { transform: scale(0.97); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         .btn-print { background: #3b82f6; color: white; }
         .btn-pdf { background: #ef4444; color: white; }
         .btn-png { background: #8b5cf6; color: white; }
@@ -339,7 +353,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -347,25 +361,17 @@
         }
         .loading-spinner {
             background: white;
-            padding: 20px 30px;
-            border-radius: 12px;
+            padding: 25px 35px;
+            border-radius: 16px;
             text-align: center;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        
-        /* Table column widths - full width responsive */
-        .product-table th:nth-child(1) { width: 5%; }
-        .product-table th:nth-child(2) { width: 18%; }
-        .product-table th:nth-child(3) { width: 10%; }
-        .product-table th:nth-child(4) { width: 10%; }
-        .product-table th:nth-child(5) { width: 20%; }
-        .product-table th:nth-child(6) { width: 8%; }
-        .product-table th:nth-child(7) { width: 12%; }
-        .product-table th:nth-child(8) { width: 12%; }
+        .fa-spin { animation: spin 1s linear infinite; }
         
         @media (max-width: 750px) {
             .product-table th, .product-table td { font-size: 8px; padding: 4px 2px; }
-            .product-img { width: 30px; height: 30px; }
+            .product-img { width: 32px; height: 32px; }
+            .desc-text { font-size: 8px; }
         }
     </style>
 </head>
@@ -410,6 +416,7 @@
     // Convert mm to pixels (1mm = 3.779527px)
     const MM_TO_PX = 3.779527;
     const USABLE_HEIGHT_PX = USABLE_HEIGHT_MM * MM_TO_PX; // ~952px
+    const BUFFER_PX = 50; // ~13mm buffer to prevent footer touching
     
     async function loadCustomersAndProducts() {
         const customersSnap = await getDocs(collection(db, 'customers'));
@@ -480,13 +487,14 @@
         if (overlay) overlay.style.display = 'none';
     }
 
-    // Create header section with dynamic logo support
+    // Create header section with logo from correct path
     function createHeaderSection(order, customer, paymentMethodName, shippingMethodText) {
         const headerDiv = document.createElement('div');
         headerDiv.className = 'header-section';
+        // Logo path: /fi-khidmatik/images/logo.svg
         headerDiv.innerHTML = `
             <div class="logo-header">
-                <div class="logo-area" id="logo-container-${Date.now()}">
+                <div class="logo-area" id="logo-container">
                     <img src="/fi-khidmatik/images/logo.svg" alt="شعار منصة في خدمتك" style="max-height:65px; width:auto;" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'logo-icon\\'><i class=\\'fas fa-handshake fa-2x\\'></i></div>';">
                 </div>
                 <div class="invoice-title text-left">
@@ -564,13 +572,12 @@
         return div;
     }
 
-    // Create product row with innerHTML support for description rendering
-    function createProductRowElement(serialNumber, item, productImage, description, price, qty, itemTotal) {
+    // Create product row WITHOUT numbering column
+    function createProductRowElement(item, productImage, description, price, qty, itemTotal) {
         const row = document.createElement('tr');
         const imgSrc = productImage && productImage.trim() !== '' ? productImage : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E';
         row.innerHTML = `
-            <td class="text-center font-bold">${serialNumber}</td>
-            <td style="text-align: right;">${escapeHtml(item.name)}</td>
+            <td style="text-align: right; font-weight: 500;">${escapeHtml(item.name)}</td>
             <td><img src="${imgSrc}" class="product-img" crossorigin="anonymous" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E'"></td>
             <td>${escapeHtml(item.barcode || '—')}</td>
             <td class="desc-text">${description || ''}</td>
@@ -581,7 +588,7 @@
         return row;
     }
 
-    // Measure element height accurately
+    // Measure element height accurately using getBoundingClientRect
     async function measureElementHeight(element, widthMm = 180) {
         const clone = element.cloneNode(true);
         clone.style.position = 'absolute';
@@ -590,8 +597,8 @@
         clone.style.left = '-9999px';
         clone.style.width = `${widthMm}mm`;
         document.body.appendChild(clone);
-        await new Promise(r => setTimeout(r, 30));
-        const height = clone.scrollHeight;
+        await new Promise(r => setTimeout(r, 40));
+        const height = clone.getBoundingClientRect().height;
         document.body.removeChild(clone);
         return height;
     }
@@ -646,9 +653,8 @@
             'noship': '📥 لا يتطلب شحن'
         }[order.shippingMethod] || 'استلام من المقر';
         
-        // Prepare product rows with dynamic images and HTML description support
+        // Prepare product rows with images and HTML description support
         const productRowsData = [];
-        let serial = 1;
         for (const item of items) {
             const price = item.price || 0;
             const qty = item.quantity || 0;
@@ -663,16 +669,11 @@
                 }
             }
             if (!productImage && item.image) productImage = item.image;
-            // Support HTML in description
+            // Support HTML in description - use innerHTML properly
             if (description && typeof description === 'string') {
-                description = description.replace(/[&<>]/g, function(m) {
-                    if (m === '&') return '&amp;';
-                    if (m === '<') return '&lt;';
-                    if (m === '>') return '&gt;';
-                    return m;
-                }).replace(/\n/g, '<br>');
+                description = escapeHtml(description).replace(/\n/g, '<br>');
             }
-            productRowsData.push({ serial: serial++, item, productImage, description: description || '', price, qty, itemTotal });
+            productRowsData.push({ item, productImage, description: description || '', price, qty, itemTotal });
         }
         
         // Build static sections for measurement
@@ -684,12 +685,12 @@
         const headerHeight = await measureElementHeight(headerElement);
         const footerHeight = await measureElementHeight(footerElement);
         const summaryHeight = await measureElementHeight(summaryElement);
-        const tableHeaderHeight = 42; // px
+        const tableHeaderHeight = 48; // px for thead
         
-        // Available height for product rows (use 252mm exact limit)
-        let availableForRows = USABLE_HEIGHT_PX - headerHeight - footerHeight - summaryHeight - tableHeaderHeight - 10;
+        // Available height for product rows with buffer
+        let availableForRows = USABLE_HEIGHT_PX - headerHeight - footerHeight - summaryHeight - tableHeaderHeight - BUFFER_PX;
         
-        // Measure each product row dynamically
+        // Measure each product row dynamically using real rendering
         const rowHeights = [];
         const measureContainer = document.createElement('div');
         measureContainer.style.position = 'absolute';
@@ -706,14 +707,15 @@
         
         for (const rowData of productRowsData) {
             tempTbody.innerHTML = '';
-            const row = createProductRowElement(rowData.serial, rowData.item, rowData.productImage, rowData.description, rowData.price, rowData.qty, rowData.itemTotal);
+            const row = createProductRowElement(rowData.item, rowData.productImage, rowData.description, rowData.price, rowData.qty, rowData.itemTotal);
             tempTbody.appendChild(row);
-            await new Promise(r => setTimeout(r, 10));
-            rowHeights.push(row.scrollHeight);
+            await new Promise(r => setTimeout(r, 15));
+            const height = row.getBoundingClientRect().height;
+            rowHeights.push(height);
         }
         document.body.removeChild(measureContainer);
         
-        // Height-based pagination - no splitting, fill pages optimally
+        // Height-based pagination - NO SPLITTING, fill pages optimally
         const pages = [];
         let currentPageRows = [];
         let currentHeight = 0;
@@ -731,7 +733,7 @@
         }
         if (currentPageRows.length > 0) pages.push(currentPageRows);
         
-        // Ensure at least one page exists even if no products
+        // Ensure at least one page exists
         if (pages.length === 0) pages.push([]);
         
         // Build final pages
@@ -760,16 +762,16 @@
             }
             innerContent.appendChild(headerClone);
             
-            // Build product table for this page
+            // Build product table without numbering column
             const table = document.createElement('table');
             table.className = 'product-table';
             const thead = document.createElement('thead');
-            thead.innerHTML = `<tr><th>#</th><th>اسم المنتج</th><th>الصورة</th><th>الباركود</th><th>الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>`;
+            thead.innerHTML = `<tr><th>اسم المنتج</th><th>الصورة</th><th>الباركود</th><th>الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>`;
             table.appendChild(thead);
             const tbody = document.createElement('tbody');
             for (const idx of pageRowIndices) {
                 const rd = productRowsData[idx];
-                tbody.appendChild(createProductRowElement(rd.serial, rd.item, rd.productImage, rd.description, rd.price, rd.qty, rd.itemTotal));
+                tbody.appendChild(createProductRowElement(rd.item, rd.productImage, rd.description, rd.price, rd.qty, rd.itemTotal));
             }
             table.appendChild(tbody);
             innerContent.appendChild(table);
@@ -791,16 +793,11 @@
             
             page.appendChild(contentWrapper);
             
-            // Page numbering (X / total)
+            // Page numbering (Page X / Y) at bottom-right
             const pageNumDiv = document.createElement('div');
             pageNumDiv.className = 'page-number';
-            pageNumDiv.textContent = `${pageIdx+1} / ${totalPages}`;
+            pageNumDiv.textContent = `صفحة ${pageIdx+1} / ${totalPages}`;
             page.appendChild(pageNumDiv);
-            
-            const pageDateDiv = document.createElement('div');
-            pageDateDiv.className = 'page-date';
-            pageDateDiv.textContent = `تم الإنشاء: ${todayStr}`;
-            page.appendChild(pageDateDiv);
             
             container.appendChild(page);
         }
@@ -809,11 +806,11 @@
         document.getElementById('invoiceContainer').style.display = 'block';
         document.getElementById('actionButtons').style.display = 'flex';
         
-        document.getElementById('printBtn').onclick = () => { window.print(); setTimeout(() => window.close(), 1500); };
+        document.getElementById('printBtn').onclick = () => { window.print(); };
         document.getElementById('pdfBtn').onclick = () => exportPDF();
         document.getElementById('pngBtn').onclick = () => exportPNG();
         
-        if (autoAction === 'print') { setTimeout(() => { window.print(); setTimeout(() => window.close(), 1500); }, 500); }
+        if (autoAction === 'print') { setTimeout(() => window.print(), 500); }
         else if (autoAction === 'pdf') setTimeout(() => exportPDF(), 500);
         else if (autoAction === 'png') setTimeout(() => exportPNG(), 500);
     }
@@ -829,11 +826,12 @@
                 margin: [0, 0, 0, 0],
                 filename: `${currentFileName}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, logging: false },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                html2canvas: { scale: 3, useCORS: true, logging: false, dpi: 300 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
             };
             await html2pdf().set(opt).from(element).save();
         } catch (error) {
+            console.error(error);
             alert('حدث خطأ أثناء تصدير PDF');
         } finally {
             btn.disabled = false;
@@ -848,12 +846,13 @@
         btn.disabled = true;
         showLoading();
         try {
-            const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+            const canvas = await html2canvas(element, { scale: 3, backgroundColor: '#ffffff', useCORS: true, logging: false });
             const link = document.createElement('a');
             link.download = `${currentFileName}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
         } catch (error) {
+            console.error(error);
             alert('حدث خطأ أثناء تصدير الصورة');
         } finally {
             btn.disabled = false;
