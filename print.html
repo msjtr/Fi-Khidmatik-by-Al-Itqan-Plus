@@ -42,37 +42,41 @@
             flex-direction: column;
         }
 
-        /* Main content wrapper - respects top margin 20mm, bottom margin handled by flex spacing */
+        /* Main content wrapper - top margin 20mm, bottom margin handled by spacer */
         .page-content-wrapper {
             flex: 1;
             display: flex;
             flex-direction: column;
-            padding-top: 20mm;   /* Top margin: 20mm */
-            padding-left: 15mm;  /* Right margin (RTL so left is right) */
-            padding-right: 15mm; /* Left margin */
+            padding-top: 20mm;
+            padding-left: 15mm;
+            padding-right: 15mm;
             position: relative;
         }
 
-        /* Inner content - bottom margin 25mm is enforced by spacer */
+        /* Inner content grows naturally */
         .page-inner-content {
             flex: 1;
         }
 
-        /* Bottom spacer to enforce 25mm bottom margin */
+        /* Bottom spacer ensures exactly 25mm bottom margin */
         .bottom-margin-spacer {
             height: 25mm;
             width: 100%;
+            flex-shrink: 0;
         }
 
-        /* Page number - positioned within bottom margin */
+        /* Page number positioned within bottom margin area */
         .page-number {
             position: absolute;
             bottom: 8mm;
             right: 15mm;
             font-size: 10px;
-            color: #64748b;
-            font-weight: 500;
+            color: #475569;
+            font-weight: 600;
             z-index: 10;
+            background: white;
+            padding: 2px 6px;
+            border-radius: 12px;
         }
         
         .page-date {
@@ -82,6 +86,9 @@
             font-size: 9px;
             color: #94a3b8;
             z-index: 10;
+            background: white;
+            padding: 2px 6px;
+            border-radius: 12px;
         }
 
         @media print {
@@ -126,6 +133,15 @@
             max-height: 65px;
             width: auto;
             object-fit: contain;
+        }
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #1e3a5f, #3b82f6);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .invoice-title h1 {
             font-size: 22px;
@@ -211,7 +227,7 @@
         }
         .product-table td {
             border: 1px solid #cbd5e1;
-            padding: 6px 5px;
+            padding: 8px 5px;
             vertical-align: middle;
             text-align: center;
         }
@@ -220,8 +236,8 @@
             font-weight: 600;
         }
         .product-img {
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
             object-fit: cover;
             border-radius: 8px;
             display: block;
@@ -230,8 +246,9 @@
         .desc-text {
             font-size: 9px;
             word-break: break-word;
-            max-width: 130px;
+            max-width: 140px;
             text-align: right;
+            line-height: 1.4;
         }
         .summary-box {
             background: linear-gradient(135deg, #f0fdf4, #dcfce7);
@@ -336,7 +353,7 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        /* Responsive table columns */
+        /* Table column widths - full width responsive */
         .product-table th:nth-child(1) { width: 5%; }
         .product-table th:nth-child(2) { width: 18%; }
         .product-table th:nth-child(3) { width: 10%; }
@@ -388,9 +405,9 @@
     const A4_HEIGHT_MM = 297;
     const TOP_MARGIN_MM = 20;
     const BOTTOM_MARGIN_MM = 25;
-    const USABLE_HEIGHT_MM = A4_HEIGHT_MM - TOP_MARGIN_MM - BOTTOM_MARGIN_MM; // 252mm
+    const USABLE_HEIGHT_MM = A4_HEIGHT_MM - TOP_MARGIN_MM - BOTTOM_MARGIN_MM; // 252mm exact
     
-    // Convert mm to pixels (1mm = 3.779527px for precise rendering)
+    // Convert mm to pixels (1mm = 3.779527px)
     const MM_TO_PX = 3.779527;
     const USABLE_HEIGHT_PX = USABLE_HEIGHT_MM * MM_TO_PX; // ~952px
     
@@ -463,14 +480,14 @@
         if (overlay) overlay.style.display = 'none';
     }
 
-    // Create header section (static for all pages)
-    function createHeaderSection(order, customer, paymentMethodName, shippingMethodText, todayStr) {
+    // Create header section with dynamic logo support
+    function createHeaderSection(order, customer, paymentMethodName, shippingMethodText) {
         const headerDiv = document.createElement('div');
         headerDiv.className = 'header-section';
         headerDiv.innerHTML = `
             <div class="logo-header">
-                <div class="logo-area">
-                    <img src="/fi-khidmatik/images/logo.svg" alt="شعار منصة في خدمتك" class="max-h-16 w-auto" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'logo-icon\\'><i class=\\'fas fa-handshake fa-2x\\'></i></div>';">
+                <div class="logo-area" id="logo-container-${Date.now()}">
+                    <img src="/fi-khidmatik/images/logo.svg" alt="شعار منصة في خدمتك" style="max-height:65px; width:auto;" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'logo-icon\\'><i class=\\'fas fa-handshake fa-2x\\'></i></div>';">
                 </div>
                 <div class="invoice-title text-left">
                     <h1>فاتورة إلكترونية</h1>
@@ -547,16 +564,16 @@
         return div;
     }
 
-    // Create product row as DOM element for height measurement
+    // Create product row with innerHTML support for description rendering
     function createProductRowElement(serialNumber, item, productImage, description, price, qty, itemTotal) {
         const row = document.createElement('tr');
         const imgSrc = productImage && productImage.trim() !== '' ? productImage : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E';
         row.innerHTML = `
             <td class="text-center font-bold">${serialNumber}</td>
             <td style="text-align: right;">${escapeHtml(item.name)}</td>
-            <td><img src="${imgSrc}" class="product-img" crossorigin="anonymous" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E'"></td>
+            <td><img src="${imgSrc}" class="product-img" crossorigin="anonymous" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23e2e8f0%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22%3Eصورة%3C/text%3E%3C/svg%3E'"></td>
             <td>${escapeHtml(item.barcode || '—')}</td>
-            <td class="desc-text">${escapeHtml(description).substring(0, 65)}${description.length > 65 ? '…' : ''}</td>
+            <td class="desc-text">${description || ''}</td>
             <td>${qty}</td>
             <td>${price.toFixed(2)} ريال</td>
             <td>${itemTotal.toFixed(2)} ريال</td>
@@ -564,14 +581,14 @@
         return row;
     }
 
-    // Measure height of any element in pixels
-    async function measureElementHeight(element) {
+    // Measure element height accurately
+    async function measureElementHeight(element, widthMm = 180) {
         const clone = element.cloneNode(true);
         clone.style.position = 'absolute';
         clone.style.visibility = 'hidden';
         clone.style.top = '-9999px';
         clone.style.left = '-9999px';
-        clone.style.width = '180mm'; // content width (210mm - 30mm margins)
+        clone.style.width = `${widthMm}mm`;
         document.body.appendChild(clone);
         await new Promise(r => setTimeout(r, 30));
         const height = clone.scrollHeight;
@@ -629,7 +646,7 @@
             'noship': '📥 لا يتطلب شحن'
         }[order.shippingMethod] || 'استلام من المقر';
         
-        // Prepare product rows data
+        // Prepare product rows with dynamic images and HTML description support
         const productRowsData = [];
         let serial = 1;
         for (const item of items) {
@@ -646,25 +663,33 @@
                 }
             }
             if (!productImage && item.image) productImage = item.image;
+            // Support HTML in description
+            if (description && typeof description === 'string') {
+                description = description.replace(/[&<>]/g, function(m) {
+                    if (m === '&') return '&amp;';
+                    if (m === '<') return '&lt;';
+                    if (m === '>') return '&gt;';
+                    return m;
+                }).replace(/\n/g, '<br>');
+            }
             productRowsData.push({ serial: serial++, item, productImage, description: description || '', price, qty, itemTotal });
         }
         
-        // Build static header & footer & summary
-        const headerElement = createHeaderSection(order, customer, paymentMethodName, shippingMethodText, todayStr);
+        // Build static sections for measurement
+        const headerElement = createHeaderSection(order, customer, paymentMethodName, shippingMethodText);
         const footerElement = createFooterSection();
         const summaryElement = createSummaryAndTerms(subtotal, discountValue, tax, total);
         
-        // Measure fixed parts height (header + footer + summary)
+        // Measure fixed parts
         const headerHeight = await measureElementHeight(headerElement);
         const footerHeight = await measureElementHeight(footerElement);
         const summaryHeight = await measureElementHeight(summaryElement);
-        const tableHeaderHeight = 40; // Approx table header height in px
+        const tableHeaderHeight = 42; // px
         
-        // Available height for product rows = USABLE_HEIGHT_PX - header - footer - summary - tableHeader - buffer
-        const BUFFER_PX = 15;
-        let availableForRows = USABLE_HEIGHT_PX - headerHeight - footerHeight - summaryHeight - tableHeaderHeight - BUFFER_PX;
+        // Available height for product rows (use 252mm exact limit)
+        let availableForRows = USABLE_HEIGHT_PX - headerHeight - footerHeight - summaryHeight - tableHeaderHeight - 10;
         
-        // Measure each product row height dynamically
+        // Measure each product row dynamically
         const rowHeights = [];
         const measureContainer = document.createElement('div');
         measureContainer.style.position = 'absolute';
@@ -683,18 +708,19 @@
             tempTbody.innerHTML = '';
             const row = createProductRowElement(rowData.serial, rowData.item, rowData.productImage, rowData.description, rowData.price, rowData.qty, rowData.itemTotal);
             tempTbody.appendChild(row);
-            await new Promise(r => setTimeout(r, 15));
+            await new Promise(r => setTimeout(r, 10));
             rowHeights.push(row.scrollHeight);
         }
         document.body.removeChild(measureContainer);
         
-        // Paginate rows based on accumulated height - NO SPLITTING
+        // Height-based pagination - no splitting, fill pages optimally
         const pages = [];
         let currentPageRows = [];
         let currentHeight = 0;
         
         for (let i = 0; i < productRowsData.length; i++) {
             const rowH = rowHeights[i];
+            // If adding this row exceeds available space AND current page has at least one row, start new page
             if (currentPageRows.length > 0 && currentHeight + rowH > availableForRows) {
                 pages.push([...currentPageRows]);
                 currentPageRows = [];
@@ -704,6 +730,9 @@
             currentHeight += rowH;
         }
         if (currentPageRows.length > 0) pages.push(currentPageRows);
+        
+        // Ensure at least one page exists even if no products
+        if (pages.length === 0) pages.push([]);
         
         // Build final pages
         const container = document.getElementById('invoiceContainer');
@@ -723,7 +752,7 @@
             const innerContent = document.createElement('div');
             innerContent.className = 'page-inner-content';
             
-            // Clone header for this page
+            // Clone header and update page number in title if multi-page
             const headerClone = headerElement.cloneNode(true);
             if (totalPages > 1) {
                 const titleDiv = headerClone.querySelector('.section-title');
@@ -731,7 +760,7 @@
             }
             innerContent.appendChild(headerClone);
             
-            // Build product table
+            // Build product table for this page
             const table = document.createElement('table');
             table.className = 'product-table';
             const thead = document.createElement('thead');
@@ -745,7 +774,7 @@
             table.appendChild(tbody);
             innerContent.appendChild(table);
             
-            // Add summary only on last page
+            // Add summary and terms ONLY on last page
             if (isLastPage) {
                 innerContent.appendChild(summaryElement.cloneNode(true));
             }
@@ -755,14 +784,14 @@
             
             contentWrapper.appendChild(innerContent);
             
-            // Bottom margin spacer
+            // Bottom margin spacer (exactly 25mm)
             const spacer = document.createElement('div');
             spacer.className = 'bottom-margin-spacer';
             contentWrapper.appendChild(spacer);
             
             page.appendChild(contentWrapper);
             
-            // Page numbering
+            // Page numbering (X / total)
             const pageNumDiv = document.createElement('div');
             pageNumDiv.className = 'page-number';
             pageNumDiv.textContent = `${pageIdx+1} / ${totalPages}`;
