@@ -393,56 +393,17 @@
 
 <script type="module">
 // ========== استيراد Firebase ==========
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, getDoc, getDocs, updateDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
-    authDomain: "msjt301-974bb.firebaseapp.com",
-    projectId: "msjt301-974bb",
-    storageBucket: "msjt301-974bb.firebasestorage.app",
-    messagingSenderId: "186209858482",
-    appId: "1:186209858482:web:186ca610780799ef562aab"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
+    import { 
+  loadOrders, 
+  loadCustomers, 
+  loadProducts,
+  addOrder,
+  updateOrder,
+  addCustomer,
+  addProduct,
+  updateProductStock
+} from "/fi-khidmatik/js/firebase.js";
 // ========== دوال مساعدة ==========
-async function getCollection(name) {
-    const snap = await getDocs(collection(db, name));
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-}
-
-// المنتجات
-const loadProducts = () => getCollection('products');
-const addProduct = (data) => addDoc(collection(db, 'products'), data);
-const updateProductStock = (id, newStock) => updateDoc(doc(db, 'products', id), { stock: newStock });
-
-// الطلبات
-const loadOrders = () => getCollection('orders');
-const addOrder = (data) => addDoc(collection(db, 'orders'), data);
-const updateOrder = (id, data) => updateDoc(doc(db, 'orders', id), data);
-const deleteOrder = (id) => deleteDoc(doc(db, 'orders', id));
-
-const getOrdersWithDetails = async () => {
-    const orders = await getCollection('orders');
-    const customers = await getCollection('customers');
-    const products = await getCollection('products');
-    const customersMap = Object.fromEntries(customers.map(c => [c.id, c]));
-    const productsMap = Object.fromEntries(products.map(p => [p.id, p]));
-    return orders.map(order => ({
-        ...order,
-        customer: customersMap[order.customerId] || { name: 'غير معروف' },
-        items: order.items?.map(item => ({ ...item, productDetails: productsMap[item.productId] || null })) || []
-    }));
-};
-
-// العملاء
-const loadCustomers = () => getCollection('customers');
-const addCustomer = (data) => addDoc(collection(db, 'customers'), data);
-const updateCustomer = (id, data) => updateDoc(doc(db, 'customers', id), data);
-const deleteCustomer = (id) => deleteDoc(doc(db, 'customers', id));
 
 // ========== المتغيرات ==========
 let customers = [], products = [], orders = [], currentOrderId = null;
@@ -544,25 +505,31 @@ async function loadData() {
 }
 
 // ========== دوال الطباعة (تم تعديل المسار إلى ../../print.html) ==========
+// ==========================
+// PRINT SYSTEM (FIXED)
+// ==========================
+
 window.printOrder = function(orderId) {
-    window.open(`../../print.html?id=${orderId}&auto=print`, "_blank");
+    window.open(`/fi-khidmatik/print.html?id=${orderId}&auto=print`, "_blank");
 };
 
 window.printOrderPDF = function(orderId) {
-    window.open(`../../print.html?id=${orderId}&auto=pdf`, "_blank");
+    window.open(`/fi-khidmatik/print.html?id=${orderId}&auto=pdf`, "_blank");
 };
 
 window.printOrderPNG = function(orderId) {
-    window.open(`../../print.html?id=${orderId}&auto=png`, "_blank");
+    window.open(`/fi-khidmatik/print.html?id=${orderId}&auto=png`, "_blank");
 };
-
 // ========== عرض الطلبات ==========
 async function renderOrders() {
     const ordersContainer = document.getElementById('ordersContainer');
     ordersContainer.innerHTML = '<div class="loading-spinner"></div>';
     
     try {
-        orders = await getOrdersWithDetails();
+
+if (!orders.length) {
+    orders = await loadOrders();
+}
         
         if (!orders || orders.length === 0) {
             ordersContainer.innerHTML = '<div class="text-center py-16 bg-white rounded-2xl shadow-md"><i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i><p class="text-gray-500">لا توجد طلبات حالياً</p></div>';
@@ -570,13 +537,32 @@ async function renderOrders() {
         }
         
         let filtered = orders.filter(o => {
-            if (currentFilters.status && o.status !== currentFilters.status) return false;
-            if (currentFilters.customer && !o.customer?.name?.toLowerCase().includes(currentFilters.customer.toLowerCase())) return false;
-            if (currentFilters.shippingMethod && o.shippingMethod !== currentFilters.shippingMethod) return false;
-            if (currentFilters.dateFrom && o.orderDate < currentFilters.dateFrom) return false;
-            if (currentFilters.dateTo && o.orderDate > currentFilters.dateTo) return false;
-            return true;
-        });
+
+    if (currentFilters.status && o.status !== currentFilters.status) {
+        return false;
+    }
+
+    if (currentFilters.customer) {
+        const customer = customers.find(c => c.id === o.customerId);
+        if (!customer?.name?.toLowerCase().includes(currentFilters.customer.toLowerCase())) {
+            return false;
+        }
+    }
+
+    if (currentFilters.shippingMethod && o.shippingMethod !== currentFilters.shippingMethod) {
+        return false;
+    }
+
+    if (currentFilters.dateFrom && o.orderDate < currentFilters.dateFrom) {
+        return false;
+    }
+
+    if (currentFilters.dateTo && o.orderDate > currentFilters.dateTo) {
+        return false;
+    }
+
+    return true;
+});
         
         if (filtered.length === 0) {
             ordersContainer.innerHTML = '<div class="text-center py-16 bg-white rounded-2xl shadow-md"><i class="fas fa-search text-6xl text-gray-300 mb-4"></i><p class="text-gray-500">لا توجد طلبات مطابقة</p></div>';
@@ -620,7 +606,7 @@ async function renderOrders() {
                 
                 <div class="p-4">
                     <div class="grid grid-cols-2 gap-3 mb-3">
-                        <div class="flex items-center gap-2 text-sm"><i class="fas fa-user text-gray-400 w-5"></i><span>${escapeHtml(order.customer?.name || 'غير معروف')}</span></div>
+                        <div class="flex items-center gap-2 text-sm"><i class="fas fa-user text-gray-400 w-5"></i><span>${escapeHtml((customers.find(c => c.id === order.customerId)?.name) || 'غير معروف')}</span></div>
                         <div class="flex items-center gap-2 text-sm"><i class="fas fa-credit-card text-gray-400 w-5"></i><span>${order.paymentMethodName || order.paymentMethod || 'غير محدد'}</span></div>
                         <div class="flex items-center gap-2 text-sm">${getShippingIcon(order.shippingMethod)}</div>
                         <div class="flex items-center gap-2 text-sm"><i class="fas fa-money-bill-wave text-green-600 w-5"></i><span class="font-bold text-green-600">${(order.total || 0).toFixed(2)} ريال</span></div>
