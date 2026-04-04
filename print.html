@@ -7,6 +7,7 @@
     <link rel="icon" href="data:,">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- تحميل المكتبات بشكل ثابت -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
@@ -72,11 +73,11 @@
             }
             @page {
                 size: A4;
-                margin: 0.8cm 0.8cm; /* هوامش أكبر لمنع القطع */
+                margin: 0.8cm 0.8cm;
             }
         }
 
-        /* توزيع الرأس */
+        /* توزيع الرأس في سطر واحد */
         .company-badge {
             background: #f1f5f9;
             padding: 8px 12px;
@@ -431,7 +432,7 @@
         const header = getFixedHeader(order);
         const footer = getFixedFooter();
         const tableSection = `
-            <div class="section-title">تفاصيل المنتجات / الخ services <span class="text-sm text-gray-500">(صفحة ${pageNum} من ${totalPages})</span></div>
+            <div class="section-title">تفاصيل المنتجات / الخدمات <span class="text-sm text-gray-500">(صفحة ${pageNum} من ${totalPages})</span></div>
             <table class="product-table">
                 <thead><tr><th>#</th><th>اسم المنتج</th><th>الصورة</th><th>الباركود</th><th>الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr></thead>
                 <tbody>${itemsRows.join('')}</tbody>
@@ -470,7 +471,7 @@
         `;
     }
 
-    // تقسيم المنتجات إلى صفحات - 4 منتجات لكل صفحة (آمن تماماً)
+    // تقسيم تلقائي بناءً على عدد الصفوف المحدد (هنا 4 صفوف كحد أقصى لكل صفحة)
     function splitProductsIntoPages(productsArray, itemsPerPage = 4) {
         const pages = [];
         if (!productsArray.length) {
@@ -533,7 +534,7 @@
                     <td>${qty}</td>
                     <td>${price.toFixed(2)} ريال</td>
                     <td>${total.toFixed(2)} ريال</td>
-                </tr>
+                </table>
             `);
         }
         
@@ -559,8 +560,9 @@
         
         const commonSections = getCommonSections(order, customer, paymentMethodName, shippingMethodText);
         
-        // 4 منتجات لكل صفحة - آمن جداً لمنع القطع
-        const productPages = splitProductsIntoPages(allItemsRows, 4);
+        // عدد المنتجات في الصفحة الواحدة: 4 (تلقائي، قابل للتعديل)
+        const ITEMS_PER_PAGE = 4;
+        const productPages = splitProductsIntoPages(allItemsRows, ITEMS_PER_PAGE);
         const totalPages = productPages.length;
         
         const container = document.getElementById('invoiceContainer');
@@ -594,7 +596,7 @@
             const btns = document.getElementById('actionButtons');
             if (btns) btns.style.display = 'none';
             const opt = {
-                margin: [0.3, 0.3, 0.3, 0.3], // هوامش متساوية
+                margin: [0.25, 0.25, 0.25, 0.25],
                 filename: `فاتورة_${Date.now()}.pdf`,
                 image: { type: 'jpeg', quality: 1 },
                 html2canvas: { scale: 4, letterRendering: true, useCORS: true, dpi: 300 },
