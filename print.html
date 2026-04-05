@@ -23,7 +23,6 @@
             padding: 10px;
         }
 
-        /* حجم الصفحة A4 */
         .page {
             width: 210mm;
             min-height: 297mm;
@@ -37,9 +36,9 @@
 
         .page-content {
             padding: 8mm 10mm;
-            height: 100%;
             display: flex;
             flex-direction: column;
+            height: 100%;
         }
 
         .page-inner {
@@ -50,7 +49,7 @@
             text-align: center;
             font-size: 9px;
             color: #94a3b8;
-            margin-top: 5px;
+            margin-top: 8px;
             padding-top: 5px;
             border-top: 1px solid #e2e8f0;
         }
@@ -75,7 +74,6 @@
             }
         }
 
-        /* Header */
         .logo-header {
             display: flex;
             justify-content: space-between;
@@ -133,7 +131,6 @@
             margin-bottom: 8px;
         }
 
-        /* Info Cards */
         .two-columns {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -181,7 +178,6 @@
             padding-right: 8px;
         }
 
-        /* Table */
         .product-table {
             width: 100%;
             border-collapse: collapse;
@@ -195,14 +191,12 @@
             padding: 5px 3px;
             border: 1px solid #2d4a6e;
             text-align: center;
-            font-size: 9px;
         }
 
         .product-table td {
             border: 1px solid #cbd5e1;
             padding: 4px 3px;
             text-align: center;
-            font-size: 9px;
         }
 
         .product-table td:first-child {
@@ -249,7 +243,6 @@
             line-height: 1.2;
         }
 
-        /* Summary */
         .summary-box {
             background: #f0fdf4;
             padding: 6px 10px;
@@ -291,7 +284,6 @@
             font-size: 10px;
         }
 
-        /* Footer */
         .footer-static {
             margin-top: 8px;
             text-align: center;
@@ -322,7 +314,6 @@
             margin-top: 3px;
         }
 
-        /* Buttons */
         .action-buttons {
             position: fixed;
             bottom: 20px;
@@ -464,23 +455,8 @@
         if (overlay) overlay.style.display = 'none'; 
     }
     
-    // حساب ارتفاع الصف التقريبي
-    function estimateRowHeight() {
-        return 10; // ارتفاع تقريبي للصف بالبكسل
-    }
-    
-    // حساب عدد الصفوف التي تتسع لكل صفحة
-    function calculateRowsPerPage() {
-        // ارتفاع الصفحة A4 بالبكسل (297mm = ~1123px)
-        const pageHeight = 1123;
-        // المساحة المستخدمة للرأس والتذييل (تقريباً 350px)
-        const usedSpace = 380;
-        const availableHeight = pageHeight - usedSpace;
-        const rowHeight = estimateRowHeight();
-        let rowsPerPage = Math.floor(availableHeight / rowHeight);
-        // الحد الأدنى 5 والحد الأقصى 15
-        return Math.min(15, Math.max(5, rowsPerPage));
-    }
+    // عدد ثابت من المنتجات لكل صفحة (لحل مشكلة الانكسار)
+    const ROWS_PER_PAGE = 10;
     
     function createProductRowHTML(item, productImage, description, price, qty, itemTotal) {
         const imgSrc = productImage && productImage.trim() !== '' ? productImage : '';
@@ -542,7 +518,7 @@
             const paymentMethodName = order.paymentMethodName || (order.paymentMethod === 'mada' ? 'مدى' : order.paymentMethod === 'mastercard' ? 'ماستركارد' : order.paymentMethod === 'visa' ? 'فيزا' : order.paymentMethod === 'stcpay' ? 'STCPay' : order.paymentMethod === 'tamara' ? 'تمارا' : order.paymentMethod === 'tabby' ? 'تابي' : 'أخرى');
             const shippingMethodText = { 'pickup': '🏪 استلام من المقر', 'delivery': '🚚 شحن منزلي', 'noship': '📥 لا يتطلب شحن' }[order.shippingMethod] || 'استلام من المقر';
             
-            // تجهيز بيانات المنتجات
+            // تجهيز بيانات المنتجات مع الصور
             const productRowsData = [];
             for (const item of items) {
                 const price = item.price || 0;
@@ -561,11 +537,9 @@
                 productRowsData.push({ item, productImage, description: description || '', price, qty, itemTotal });
             }
             
-            // حساب عدد الصفوف لكل صفحة ديناميكياً
-            const rowsPerPage = calculateRowsPerPage();
-            const totalPages = Math.ceil(productRowsData.length / rowsPerPage);
+            // حساب عدد الصفحات باستخدام عدد ثابت
+            const totalPages = Math.ceil(productRowsData.length / ROWS_PER_PAGE);
             
-            // قالب الرأس
             const getHeaderHTML = (pageNum, totalPages) => `
                 <div class="logo-header">
                     <div class="logo-fallback"><i class="fas fa-handshake"></i></div>
@@ -615,8 +589,8 @@
             container.innerHTML = '';
             
             for (let page = 0; page < totalPages; page++) {
-                const start = page * rowsPerPage;
-                const end = Math.min(start + rowsPerPage, productRowsData.length);
+                const start = page * ROWS_PER_PAGE;
+                const end = Math.min(start + ROWS_PER_PAGE, productRowsData.length);
                 const pageProducts = productRowsData.slice(start, end);
                 const isLastPage = (page === totalPages - 1);
                 
@@ -625,26 +599,26 @@
                     tableRows += createProductRowHTML(data.item, data.productImage, data.description, data.price, data.qty, data.itemTotal);
                 }
                 
-                // إذا كانت الصفحة الأخيرة والملخص قد لا يتسع، نقلل عدد المنتجات
-                let finalTableRows = tableRows;
-                let finalIsLastPage = isLastPage;
-                
-                if (isLastPage && productRowsData.length > rowsPerPage) {
-                    // نتحقق من أن الملخص سيتسع، وإلا ننقله لصفحة منفصلة
-                    const hasSummary = true;
-                    finalTableRows = tableRows;
-                }
-                
                 container.innerHTML += `
                     <div class="page">
                         <div class="page-content">
                             <div class="page-inner">
                                 ${getHeaderHTML(page + 1, totalPages)}
                                 <table class="product-table">
-                                    <thead><tr><th>المنتج</th><th>الصورة</th><th>الباركود</th><th>الوصف</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead>
-                                    <tbody>${finalTableRows}</tbody>
+                                    <thead>
+                                        <tr>
+                                            <th>المنتج</th>
+                                            <th>الصورة</th>
+                                            <th>الباركود</th>
+                                            <th>الوصف</th>
+                                            <th>الكمية</th>
+                                            <th>السعر</th>
+                                            <th>الإجمالي</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>${tableRows}</tbody>
                                 </table>
-                                ${finalIsLastPage ? getSummaryHTML() : ''}
+                                ${isLastPage ? getSummaryHTML() : ''}
                                 ${getFooterHTML()}
                             </div>
                             <div class="page-number">صفحة ${page + 1} / ${totalPages}</div>
