@@ -1,3 +1,4 @@
+// ================= Firebase Core =================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import {
     getFirestore,
@@ -15,6 +16,7 @@ import {
     limit
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
+// ================= Config =================
 const firebaseConfig = {
     apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
     authDomain: "msjt301-974bb.firebaseapp.com",
@@ -27,84 +29,151 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// تخزين مؤقت للبيانات
+// ================= Cache =================
 export let customersMap = new Map();
 export let productsMap = new Map();
 
-// دوال مساعدة متقدمة
+// ================= Helper =================
+const nowISO = () => new Date().toISOString();
+
+// ================= Advanced Collection =================
 export async function getCollection(name, conditions = [], sortBy = null, limitCount = null) {
     try {
-        let q = collection(db, name);
-        if (conditions.length > 0) {
+        let ref = collection(db, name);
+        let q = ref;
+
+        if (conditions.length) {
             conditions.forEach(cond => {
                 q = query(q, where(cond.field, cond.operator, cond.value));
             });
         }
+
         if (sortBy) {
             q = query(q, orderBy(sortBy.field, sortBy.direction || 'asc'));
         }
+
         if (limitCount) {
             q = query(q, limit(limitCount));
         }
+
         const snap = await getDocs(q);
         return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
     } catch (error) {
-        console.error(`خطأ في جلب مجموعة ${name}:`, error);
-        throw error;
+        console.error(`❌ خطأ في ${name}:`, error);
+        return [];
     }
 }
 
+// ================= Single Document =================
 export async function getDocument(collectionName, docId) {
     try {
-        const docRef = doc(db, collectionName, docId);
-        const docSnap = await getDoc(docRef);
-        return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
+        const ref = doc(db, collectionName, docId);
+        const snap = await getDoc(ref);
+        return snap.exists() ? { id: snap.id, ...snap.data() } : null;
     } catch (error) {
-        console.error(`خطأ في جلب المستند ${collectionName}/${docId}:`, error);
-        throw error;
+        console.error(`❌ خطأ في المستند ${collectionName}:`, error);
+        return null;
     }
 }
 
-export async function loadCustomersAndProducts() {
-    const customersSnap = await getDocs(collection(db, 'customers'));
-    customersSnap.forEach(docSnap => customersMap.set(docSnap.id, docSnap.data()));
-    const productsSnap = await getDocs(collection(db, 'products'));
-    productsSnap.forEach(docSnap => productsMap.set(docSnap.id, docSnap.data()));
+// ================= Load Cache =================
+export async function loadCustomersAndProducts(forceReload = false) {
+
+    if (!forceReload && customersMap.size && productsMap.size) {
+        return;
+    }
+
+    customersMap.clear();
+    productsMap.clear();
+
+    const [customersSnap, productsSnap] = await Promise.all([
+        getDocs(collection(db, 'customers')),
+        getDocs(collection(db, 'products'))
+    ]);
+
+    customersSnap.forEach(d => customersMap.set(d.id, d.data()));
+    productsSnap.forEach(d => productsMap.set(d.id, d.data()));
 }
 
-export async function getOrder(orderId) {
-    const orderRef = doc(db, 'orders', orderId);
-    const orderSnap = await getDoc(orderRef);
-    if (!orderSnap.exists()) return null;
-    return { id: orderSnap.id, ...orderSnap.data() };
+// ================= Order (🔥 أهم تعديل) =================
+export async function getOrderFull(orderId) {
+
+    try {
+        const order = await getDocument('orders', orderId);
+        if (!order) return null;
+
+        await loadCustomersAndProducts();
+
+        const customer = customersMap.get(order.customerId) || {};
+
+        const items = (order.items || []).map(item => {
+            const product = productsMap.get(item.productId) || {};
+
+            return {
+                ...item,
+                productName: product.name || 'غير معروف',
+                description: product.description || '',
+                image: product.image || '',
+                price: item.price || product.price || 0
+            };
+        });
+
+        return {
+            ...order,
+            customer,
+            items
+        };
+
+    } catch (err) {
+        console.error("❌ خطأ في جلب الطلب الكامل:", err);
+        return null;
+    }
 }
 
+// ================= Totals Helper =================
+export function calculateTotals(items = [], discount = 0) {
+
+    let subtotal = 0;
+
+    items.forEach(i => {
+        subtotal += (i.price || 0) * (i.quantity || 0);
+    });
+
+    const vat = subtotal * 0.15;
+    const total = subtotal + vat - discount;
+
+    return {
+        subtotal,
+        vat,
+        discount,
+        total
+    };
+}
+
+// ================= Products =================
 export const loadProducts = () => getCollection('products');
 export const loadCustomers = () => getCollection('customers', [], { field: 'name', direction: 'asc' });
 export const loadOrders = () => getCollection('orders', [], { field: 'orderDate', direction: 'desc' });
 
-export const addProduct = (data) => {
-    const productData = { ...data, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-    return addDoc(collection(db, 'products'), productData);
-};
+// ================= CRUD =================
+export const addProduct = (data) =>
+    addDoc(collection(db, 'products'), { ...data, createdAt: nowISO(), updatedAt: nowISO() });
 
-export const updateProduct = (id, data) => {
-    const updateData = { ...data, updatedAt: new Date().toISOString() };
-    return updateDoc(doc(db, 'products', id), updateData);
-};
+export const updateProduct = (id, data) =>
+    updateDoc(doc(db, 'products', id), { ...data, updatedAt: nowISO() });
 
-export const deleteProduct = (id) => deleteDoc(doc(db, 'products', id));
+export const deleteProduct = (id) =>
+    deleteDoc(doc(db, 'products', id));
 
-export const addOrder = (data) => {
-    const orderData = { ...data, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-    return addDoc(collection(db, 'orders'), orderData);
-};
+export const addOrder = (data) =>
+    addDoc(collection(db, 'orders'), { ...data, createdAt: nowISO(), updatedAt: nowISO() });
 
-export const updateOrder = (id, data) => {
-    const updateData = { ...data, updatedAt: new Date().toISOString() };
-    return updateDoc(doc(db, 'orders', id), updateData);
-};
+export const updateOrder = (id, data) =>
+    updateDoc(doc(db, 'orders', id), { ...data, updatedAt: nowISO() });
 
-export const deleteOrder = (id) => deleteDoc(doc(db, 'orders', id));
+export const deleteOrder = (id) =>
+    deleteDoc(doc(db, 'orders', id));
 
+// ================= Export =================
 export { db };
