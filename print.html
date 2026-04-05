@@ -22,13 +22,13 @@
             direction: rtl;
         }
 
-        /* ===== صفحة A4 مع هوامش مضبوطة ===== */
+        /* ===== صفحة A4 ===== */
         .page {
             width: 210mm;
             min-height: 297mm;
             background: white;
             margin: 0 auto 20px auto;
-            padding: 15mm 12mm 20mm 12mm;  /* هامش سفلي 20mm */
+            padding: 15mm 12mm 25mm 12mm;  /* هامش سفلي أكبر */
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             position: relative;
             page-break-after: always;
@@ -69,7 +69,7 @@
             .page {
                 box-shadow: none;
                 margin: 0;
-                padding: 15mm 12mm 20mm 12mm;
+                padding: 15mm 12mm 25mm 12mm;
                 page-break-after: always;
             }
             .action-buttons {
@@ -93,44 +93,25 @@
             margin-bottom: 15px;
         }
 
-        /* الشعار - استخدم أيقونة افتراضية بدلاً من مسار خارجي */
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        /* الشعار */
+        .logo-area img {
+            max-height: 70px;
+            width: auto;
         }
 
-        .logo-icon {
-            width: 65px;
-            height: 65px;
+        .logo-fallback {
+            width: 70px;
+            height: 70px;
             background: linear-gradient(135deg, #1e3a5f, #2d6a4f);
             border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .logo-icon i {
+        .logo-fallback i {
             font-size: 32px;
             color: white;
-        }
-
-        .logo-text h2 {
-            font-size: 16px;
-            font-weight: 800;
-            color: #1e3a5f;
-            margin: 0;
-        }
-
-        .logo-text p {
-            font-size: 11px;
-            color: #64748b;
-            margin: 0;
-        }
-
-        .invoice-title {
-            text-align: left;
         }
 
         .invoice-title h1 {
@@ -219,29 +200,29 @@
             color: #1e293b;
         }
 
-        /* ===== الجدول ===== */
+        /* ===== الجدول - 5 أعمدة (تم حذف عمود الإجمالي) ===== */
         .product-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
+            font-size: 15px;  /* تكبير خط الجدول */
             margin: 15px 0;
         }
 
         .product-table th {
             background: #1e3a5f;
             color: white;
-            padding: 12px 8px;
+            padding: 14px 8px;
             border: 1px solid #2d4a6e;
             text-align: center;
             font-weight: 700;
-            font-size: 13px;
+            font-size: 15px;
         }
 
         .product-table td {
             border: 1px solid #cbd5e1;
-            padding: 10px 6px;
+            padding: 12px 6px;
             text-align: center;
-            font-size: 13px;
+            font-size: 14px;
             color: #1e293b;
         }
 
@@ -250,30 +231,29 @@
             font-weight: 600;
         }
 
-        /* عرض الأعمدة */
-        .product-table th:nth-child(1) { width: 20%; }
-        .product-table th:nth-child(2) { width: 28%; }
-        .product-table th:nth-child(3) { width: 12%; }
-        .product-table th:nth-child(4) { width: 10%; }
-        .product-table th:nth-child(5) { width: 15%; }
-        .product-table th:nth-child(6) { width: 15%; }
+        /* عرض الأعمدة - 5 أعمدة (حذف عمود الإجمالي) */
+        .product-table th:nth-child(1) { width: 25%; }
+        .product-table th:nth-child(2) { width: 35%; }
+        .product-table th:nth-child(3) { width: 15%; }
+        .product-table th:nth-child(4) { width: 12%; }
+        .product-table th:nth-child(5) { width: 13%; }
 
-        /* صور المنتجات */
+        /* تكبير صور المنتجات */
         .product-img {
-            width: 45px;
-            height: 45px;
+            width: 60px;
+            height: 60px;
             object-fit: cover;
-            border-radius: 8px;
+            border-radius: 10px;
             display: block;
             margin: 0 auto;
             border: 1px solid #e2e8f0;
         }
 
         .product-img-fallback {
-            width: 45px;
-            height: 45px;
+            width: 60px;
+            height: 60px;
             background: #f1f5f9;
-            border-radius: 8px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -282,14 +262,14 @@
         }
 
         .product-img-fallback i {
-            font-size: 22px;
+            font-size: 28px;
             color: #94a3b8;
         }
 
         .desc-text {
             text-align: right;
             word-break: break-word;
-            font-size: 12px;
+            font-size: 13px;
             line-height: 1.4;
             color: #475569;
         }
@@ -350,7 +330,7 @@
             color: #1e40af;
         }
 
-        /* ===== التذييل - ألوان محسنة ===== */
+        /* ===== التذييل ===== */
         .footer-static {
             margin-top: 20px;
             text-align: center;
@@ -474,7 +454,7 @@
     let customersMap = new Map();
     let productsMap = new Map();
     let currentFileName = "";
-    const PRODUCTS_PER_PAGE = 6;
+    const PRODUCTS_PER_PAGE = 5;  // تقليل عدد المنتجات لكل صفحة لمنع الانكسار
     
     async function loadCustomersAndProducts() {
         try {
@@ -538,16 +518,13 @@
     }
     
     function getHeaderHTML(pageNum, totalPages, order, customer, paymentMethodName, shippingMethodText) {
+        // مسار الشعار
+        const logoPath = '/images/logo.svg';
+        
         return `
             <div class="logo-header">
                 <div class="logo-area">
-                    <div class="logo-icon">
-                        <i class="fas fa-handshake"></i>
-                    </div>
-                    <div class="logo-text">
-                        <h2>منصة في خدمتك</h2>
-                        <p>www.khidmatik.com</p>
-                    </div>
+                    <img src="${logoPath}" alt="شعار منصة في خدمتك" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'logo-fallback\'><i class=\'fas fa-handshake\'></i></div>';">
                 </div>
                 <div class="invoice-title">
                     <h1>فاتورة إلكترونية</h1>
@@ -673,12 +650,11 @@
                 'noship': '📥 لا يتطلب شحن' 
             }[order.shippingMethod] || 'استلام من المقر';
             
-            // تجهيز صفوف المنتجات
+            // تجهيز صفوف المنتجات (5 أعمدة: المنتج، الوصف، الصورة، الكمية، السعر)
             let allProductsHTML = '';
             for (const item of items) {
                 const price = item.price || 0;
                 const qty = item.quantity || 0;
-                const itemTotal = price * qty;
                 let productImage = '';
                 let description = item.description || '';
                 
@@ -706,13 +682,12 @@
                         <td class="desc-text">${description || '—'}</td>
                         <td>${imgHtml}</td>
                         <td>${qty}</td>
-                        <td>${price.toFixed(2)} ريال</td>
-                        <td>${itemTotal.toFixed(2)} ريال</td>
-                    </tr>
+                        <td>${price.toFixed(2)} ريال</tr
+                        <td>
                 `;
             }
             
-            // تقسيم المنتجات
+            // تقسيم المنتجات (5 منتجات لكل صفحة)
             const rows = allProductsHTML.match(/<tr[\s\S]*?<\/tr>/g) || [];
             const productsArray = [];
             for (let i = 0; i < rows.length; i += PRODUCTS_PER_PAGE) {
@@ -737,7 +712,6 @@
                                     <th>الصورة</th>
                                     <th>الكمية</th>
                                     <th>سعر الوحدة</th>
-                                    <th>الإجمالي</th>
                                 </tr>
                             </thead>
                             <tbody>
