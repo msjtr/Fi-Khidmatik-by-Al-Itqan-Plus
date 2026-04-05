@@ -52,26 +52,14 @@
             flex: 1;
         }
 
-        /* ===== التذييل ===== */
-        .footer {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            left: 0;
-            height: 25mm;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 0 15mm;
-        }
-
         /* ===== ترقيم الصفحة ===== */
         .page-number {
             font-size: 11px;
             color: #94a3b8;
             text-align: center;
+            padding: 10px 0;
+            border-top: 1px solid #e2e8f0;
             margin-top: 10px;
-            margin-bottom: 10px;
         }
 
         /* ===== منع كسر العناصر ===== */
@@ -482,7 +470,7 @@
     import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
     // ========================================
-    // تكرار التحقق من وجود Firebase (لمنع أخطاء التهيئة المتعددة)
+    // تهيئة Firebase
     // ========================================
     const firebaseConfig = {
         apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
@@ -493,7 +481,6 @@
         appId: "1:186209858482:web:186ca610780799ef562aab"
     };
     
-    // تهيئة Firebase مرة واحدة فقط
     let app;
     let db;
     try {
@@ -510,9 +497,9 @@
     let currentFileName = "";
 
     // ========================================
-    // إعدادات الصفحة - A4 (بالملليمترات)
+    // إعدادات الصفحة - A4
     // ========================================
-    const MM_TO_PX = 3.78;
+    const MM_TO_PX = 3.779527559;
     const PAGE_WIDTH_MM = 210;
     const PAGE_HEIGHT_MM = 297;
     const TOP_MARGIN_MM = 20;
@@ -520,31 +507,30 @@
     const LEFT_MARGIN_MM = 15;
     const RIGHT_MARGIN_MM = 15;
     
-    // المساحة المتاحة للمحتوى الداخلي (بالبكسل)
-    const CONTENT_WIDTH_PX = (PAGE_WIDTH_MM - LEFT_MARGIN_MM - RIGHT_MARGIN_MM) * MM_TO_PX;
-    const AVAILABLE_HEIGHT_PX = (PAGE_HEIGHT_MM - TOP_MARGIN_MM - BOTTOM_MARGIN_MM) * MM_TO_PX;
-    const SAFETY_BUFFER_PX = 30; // مساحة أمان إضافية
+    const PAGE_HEIGHT_PX = PAGE_HEIGHT_MM * MM_TO_PX;
+    const TOP_MARGIN_PX = TOP_MARGIN_MM * MM_TO_PX;
+    const BOTTOM_MARGIN_PX = BOTTOM_MARGIN_MM * MM_TO_PX;
+    const AVAILABLE_HEIGHT_PX = PAGE_HEIGHT_PX - TOP_MARGIN_PX - BOTTOM_MARGIN_PX;
+    const SAFETY_BUFFER_PX = 50;
 
     // ========================================
-    // دالة قياس ارتفاع العنصر بشكل دقيق
+    // دالة قياس ارتفاع العنصر
     // ========================================
     async function getElementHeight(element) {
         return new Promise((resolve) => {
-            // استخدام requestAnimationFrame لضمان اكتمال التصيير
             requestAnimationFrame(() => {
                 const container = document.createElement('div');
                 container.style.position = 'absolute';
                 container.style.visibility = 'hidden';
                 container.style.top = '-9999px';
                 container.style.left = '-9999px';
-                container.style.width = `${CONTENT_WIDTH_PX}px`; // استخدام عرض دقيق
+                container.style.width = `${PAGE_WIDTH_MM - LEFT_MARGIN_MM - RIGHT_MARGIN_MM}mm`;
                 container.style.direction = 'rtl';
                 document.body.appendChild(container);
                 
                 const clone = element.cloneNode(true);
                 container.appendChild(clone);
                 
-                // استخدام setTimeout لضمان حساب الأبعاد
                 setTimeout(() => {
                     const height = clone.offsetHeight;
                     document.body.removeChild(container);
@@ -609,8 +595,6 @@
             if (m === '<') return '&lt;';
             if (m === '>') return '&gt;';
             return m;
-        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-            return c;
         });
     }
     
@@ -685,7 +669,6 @@
     }
     
     function getSummaryHTML(subtotal, discountValue, tax, total) {
-        // التأكد من أن القيم أرقام
         subtotal = Number(subtotal) || 0;
         discountValue = Number(discountValue) || 0;
         tax = Number(tax) || 0;
@@ -709,7 +692,7 @@
     }
 
     // ========================================
-    // دالة إنشاء عنصر صف المنتج (DOM Element)
+    // دالة إنشاء صف المنتج
     // ========================================
     function createProductRowElement(item) {
         const tr = document.createElement('tr');
@@ -731,7 +714,17 @@
             productImage = item.image;
         }
         
-        // إنشاء خلية الصورة
+        // خلية المنتج
+        const nameTd = document.createElement('td');
+        nameTd.style.textAlign = 'right';
+        nameTd.textContent = escapeHtml(item.name);
+        
+        // خلية الوصف
+        const descTd = document.createElement('td');
+        descTd.className = 'desc-text';
+        descTd.textContent = description || '—';
+        
+        // خلية الصورة
         const imgTd = document.createElement('td');
         imgTd.style.textAlign = 'center';
         if (productImage) {
@@ -755,19 +748,12 @@
             imgTd.appendChild(fallbackDiv);
         }
         
-        // إنشاء بقية الخلايا
-        const nameTd = document.createElement('td');
-        nameTd.style.textAlign = 'right';
-        nameTd.textContent = escapeHtml(item.name);
-        
-        const descTd = document.createElement('td');
-        descTd.className = 'desc-text';
-        descTd.textContent = description || '—';
-        
+        // خلية الكمية
         const qtyTd = document.createElement('td');
         qtyTd.style.textAlign = 'center';
         qtyTd.textContent = qty;
         
+        // خلية السعر
         const priceTd = document.createElement('td');
         priceTd.style.textAlign = 'center';
         priceTd.textContent = `${price.toFixed(2)} ريال`;
@@ -782,7 +768,7 @@
     }
 
     // ========================================
-    // دالة حساب ارتفاع الرأس والتذييل الثابتة
+    // دالة حساب ارتفاع الرأس والتذييل
     // ========================================
     async function calculateFixedHeights(headerHTML, footerHTML) {
         const tempHeader = document.createElement('div');
@@ -800,14 +786,15 @@
     // دالة تقسيم الصفوف على الصفحات
     // ========================================
     async function splitRowsIntoPages(rows, headerHeight, footerHeight) {
+        if (!rows || rows.length === 0) return [[]];
+        
         const pages = [];
         let currentPageRows = [];
         let currentHeight = 0;
         const availableForRows = AVAILABLE_HEIGHT_PX - headerHeight - footerHeight - SAFETY_BUFFER_PX;
         
         if (availableForRows <= 0) {
-            console.warn("Not enough space for rows, adjusting...");
-            // إذا لم تكن هناك مساحة كافية، نضغط على الهامش
+            console.warn("المساحة المتاحة للصفوف غير كافية");
             return [rows];
         }
         
@@ -893,7 +880,7 @@
                 'noship': '📥 لا يتطلب شحن' 
             }[order.shippingMethod] || 'استلام من المقر';
             
-            // إنشاء صفوف المنتجات كـ DOM elements
+            // إنشاء صفوف المنتجات
             const productRows = [];
             for (const item of items) {
                 productRows.push(createProductRowElement(item));
@@ -950,20 +937,19 @@
                 
                 const tbody = document.createElement('tbody');
                 for (const row of pageRows) {
-                    // استنساخ الصف لإضافة نسخة جديدة لكل صفحة
                     tbody.appendChild(row.cloneNode(true));
                 }
                 table.appendChild(tbody);
                 innerDiv.appendChild(table);
                 
-                // إضافة الملخص والتذييل فقط للصفحة الأخيرة
+                // إضافة الملخص للصفحة الأخيرة فقط
                 if (isLastPage) {
                     const summaryDiv = document.createElement('div');
                     summaryDiv.innerHTML = summaryHTML;
                     innerDiv.appendChild(summaryDiv);
                 }
                 
-                // إضافة التذييل (يظهر في كل الصفحات حسب الطلب، لكن عادةً في الأخيرة أو كلها)
+                // إضافة التذييل
                 const footerDiv = document.createElement('div');
                 footerDiv.innerHTML = footerHTML;
                 innerDiv.appendChild(footerDiv);
@@ -980,7 +966,7 @@
                 container.appendChild(pageDiv);
             }
             
-            // إخفاء التحميل وإظهار المحتوى والأزرار
+            // إخفاء التحميل وإظهار المحتوى
             document.getElementById('loading').style.display = 'none';
             document.getElementById('pages').style.display = 'block';
             document.getElementById('actionButtons').style.display = 'flex';
@@ -990,7 +976,7 @@
             document.getElementById('pdfBtn').onclick = () => exportPDF();
             document.getElementById('pngBtn').onclick = () => exportPNG();
             
-            // تنفيذ الإجراء التلقائي إذا وجد
+            // تنفيذ الإجراء التلقائي
             if (autoAction === 'print') setTimeout(() => window.print(), 1000);
             else if (autoAction === 'pdf') setTimeout(() => exportPDF(), 1000);
             else if (autoAction === 'png') setTimeout(() => exportPNG(), 1000);
@@ -1055,7 +1041,7 @@
         }
     }
     
-    // بدء تشغيل التطبيق
+    // بدء التشغيل
     renderInvoice();
 </script>
 </body>
