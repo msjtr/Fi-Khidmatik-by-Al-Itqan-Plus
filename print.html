@@ -45,19 +45,6 @@
             position: relative;
         }
 
-        /* منع كسر العناصر */
-        .product-table tr {
-            page-break-inside: avoid;
-            break-inside: avoid;
-        }
-
-        .summary-box, .terms-box, .info-card, .info-row,
-        .logo-header, .company-badge, .two-columns, .section-title,
-        .footer-static {
-            page-break-inside: avoid;
-            break-inside: avoid;
-        }
-
         @media print {
             body {
                 background: white;
@@ -338,9 +325,6 @@
             padding: 8px 0;
             border-top: 1px solid #e2e8f0;
             margin-top: 5px;
-            position: relative;
-            bottom: 0;
-            width: 100%;
         }
 
         .action-buttons {
@@ -391,7 +375,7 @@
 
 <div id="loading" style="text-align:center; padding:60px">
     <div class="loading-spinner"></div>
-    <p style="color:#64748b; font-size:14px">جاري تحميل الفاتورة...</p>
+    <p style="color:#64748b; font-size:14px">جاري إنشاء الفاتورة...</p>
 </div>
 <div id="invoiceContainer" style="display:none"></div>
 
@@ -421,13 +405,18 @@
     let productsMap = new Map();
     let currentFileName = "";
 
-    // أبعاد صفحة A4 بالميليمتر
-    const PAGE_HEIGHT_MM = 297;
+    // ========================================
+    // إعدادات الصفحة الثابتة
+    // ========================================
     const TOP_MARGIN_MM = 20;
     const BOTTOM_MARGIN_MM = 25;
+    const PAGE_HEIGHT_MM = 297;
     const CONTENT_HEIGHT_MM = PAGE_HEIGHT_MM - TOP_MARGIN_MM - BOTTOM_MARGIN_MM; // 252mm
     const MM_TO_PX = 3.78;
-    const MAX_CONTENT_HEIGHT_PX = CONTENT_HEIGHT_MM * MM_TO_PX; // ~952px
+    const MAX_HEIGHT_PX = CONTENT_HEIGHT_MM * MM_TO_PX; // 952px
+    
+    // Buffer أمان (10mm تقريباً)
+    const SAFETY_BUFFER_PX = 38;
 
     function formatDate(dateStr) {
         if (!dateStr) return '';
@@ -480,7 +469,9 @@
         return { id: orderSnap.id, ...orderSnap.data() };
     }
 
-    // دالة لقياس ارتفاع عنصر HTML
+    // ========================================
+    // دالة قياس ارتفاع أي عنصر HTML
+    // ========================================
     async function measureHeight(htmlContent) {
         return new Promise((resolve) => {
             const div = document.createElement('div');
@@ -488,18 +479,24 @@
             div.style.top = '-9999px';
             div.style.left = '-9999px';
             div.style.width = '210mm';
+            div.style.backgroundColor = '#fff';
             div.innerHTML = `<div class="page-content" style="padding:20mm 15mm 25mm 15mm">${htmlContent}</div>`;
             document.body.appendChild(div);
             
-            setTimeout(() => {
-                const height = div.querySelector('.page-content')?.offsetHeight || 0;
-                document.body.removeChild(div);
-                resolve(height);
-            }, 100);
+            // استخدام requestAnimationFrame للتأكد من اكتمال التصيير
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    const height = div.querySelector('.page-content')?.offsetHeight || 0;
+                    document.body.removeChild(div);
+                    resolve(height);
+                }, 50);
+            });
         });
     }
 
-    // بناء أجزاء الفاتورة
+    // ========================================
+    // إنشاء أجزاء الفاتورة الثابتة
+    // ========================================
     function getHeaderHTML(order, customer, paymentMethodName, shippingMethodText) {
         return `
             <div class="logo-header">
@@ -571,8 +568,10 @@
         `;
     }
 
-    // دالة لإنشاء صف منتج
-    function getProductRowHTML(item) {
+    // ========================================
+    // إنشاء صف منتج واحد (HTML)
+    // ========================================
+    function createProductRow(item) {
         const price = Number(item.price) || 0;
         const qty = Number(item.quantity) || 0;
         let productImage = '';
@@ -601,6 +600,9 @@
         `;
     }
 
+    // ========================================
+    // النظام التلقائي لإنشاء الصفحات
+    // ========================================
     async function renderInvoice() {
         const urlParams = new URLSearchParams(window.location.search);
         const orderId = urlParams.get('id');
@@ -630,6 +632,7 @@
             const dateStr = `${today.getFullYear()}-${(today.getMonth()+1).toString().padStart(2,'0')}-${today.getDate().toString().padStart(2,'0')}`;
             currentFileName = `فاتورة_${clientName}_${orderNumber}_${dateStr}`;
             
+            // حساب الإجماليات
             let subtotal = 0;
             const items = order.items || [];
             for (const item of items) {
@@ -658,7 +661,9 @@
                 'noship': '📥 لا يتطلب شحن' 
             }[order.shippingMethod] || 'استلام من المقر';
             
-            // قياس ارتفاع الرأس والتذييل والملخص
+            // ========================================
+            // قياس الأجزاء الثابتة
+            // ========================================
             const headerHTML = getHeaderHTML(order, customer, paymentMethodName, shippingMethodText);
             const footerHTML = getFooterHTML();
             const summaryHTML = getSummaryHTML(subtotal, discountValue, tax, total);
@@ -667,45 +672,63 @@
             const footerHeight = await measureHeight(footerHTML);
             const summaryHeight = await measureHeight(summaryHTML);
             
-            // حساب المساحة المتاحة للصفوف
-            const SAFETY_BUFFER = 40;
-            const availableForRows = MAX_CONTENT_HEIGHT_PX - headerHeight - footerHeight - SAFETY_BUFFER;
+            // المساحة المتاحة للصفوف في الصفحة العادية
+            const availableForRowsNormal = MAX_HEIGHT_PX - headerHeight - footerHeight - SAFETY_BUFFER_PX;
+            // المساحة المتاحة للصفوف في الصفحة الأخيرة (مع الملخص)
+            const availableForRowsLast = MAX_HEIGHT_PX - headerHeight - footerHeight - summaryHeight - SAFETY_BUFFER_PX;
             
-            console.log('=== قياسات الصفحة ===');
-            console.log('ارتفاع الرأس:', headerHeight, 'px');
-            console.log('ارتفاع التذييل:', footerHeight, 'px');
-            console.log('ارتفاع الملخص:', summaryHeight, 'px');
-            console.log('أقصى ارتفاع للمحتوى:', MAX_CONTENT_HEIGHT_PX, 'px');
-            console.log('المساحة المتاحة للصفوف:', availableForRows, 'px');
+            console.log('📐 قياسات الصفحة:');
+            console.log('  - أقصى ارتفاع للمحتوى:', MAX_HEIGHT_PX, 'px');
+            console.log('  - ارتفاع الرأس:', headerHeight, 'px');
+            console.log('  - ارتفاع التذييل:', footerHeight, 'px');
+            console.log('  - ارتفاع الملخص:', summaryHeight, 'px');
+            console.log('  - مساحة الصفوف (صفحة عادية):', availableForRowsNormal, 'px');
+            console.log('  - مساحة الصفوف (آخر صفحة):', availableForRowsLast, 'px');
             
-            // إنشاء صفوف المنتجات مع قياس كل صف
+            // ========================================
+            // إنشاء جميع صفوف المنتجات مع قياس كل صف
+            // ========================================
             const productRows = [];
             for (let i = 0; i < items.length; i++) {
-                const rowHTML = getProductRowHTML(items[i]);
-                const tableHTML = `<table class="product-table"><thead><tr><th>المنتج</th><th>الوصف</th><th>الصورة</th><th>الكمية</th><th>السعر</th></tr></thead><tbody>${rowHTML}</tbody></table>`;
-                const rowHeight = await measureHeight(tableHTML);
+                const rowHTML = createProductRow(items[i]);
+                const fullRowHTML = `<table class="product-table"><thead><tr><th>المنتج</th><th>الوصف</th><th>الصورة</th><th>الكمية</th><th>السعر</th></tr></thead><tbody>${rowHTML}</tbody></table>`;
+                const rowHeight = await measureHeight(fullRowHTML);
                 productRows.push({
                     html: rowHTML,
                     height: rowHeight,
                     name: items[i].name
                 });
-                console.log(`الصف ${i+1} (${items[i].name}): ${rowHeight} px`);
+                console.log(`  - صف ${i+1}: ${items[i].name} - الارتفاع: ${rowHeight}px`);
             }
             
-            // تقسيم الصفوف على الصفحات
+            // ========================================
+            // التقسيم التلقائي - نضيف الصفوف حتى نصل للحد الأقصى
+            // ========================================
             const pages = [];
             let currentPageRows = [];
             let currentHeight = 0;
+            let isFirstPage = true;
             
             for (let i = 0; i < productRows.length; i++) {
                 const row = productRows[i];
+                // تحديد المساحة المتاحة حسب是否为 الصفحة الأخيرة
+                const availableSpace = (pages.length === 0 && currentPageRows.length === 0 && i === productRows.length - 1) 
+                    ? availableForRowsLast 
+                    : (isFirstPage && currentPageRows.length === 0 && i === productRows.length - 1)
+                        ? availableForRowsLast
+                        : availableForRowsNormal;
                 
-                // إذا كان إضافة هذا الصف سيتجاوز المساحة المتاحة
-                if (currentHeight + row.height > availableForRows && currentPageRows.length > 0) {
+                // إذا كان إضافة الصف سيتجاوز المساحة
+                if (currentHeight + row.height > availableSpace && currentPageRows.length > 0) {
                     // حفظ الصفحة الحالية
-                    pages.push({ rows: [...currentPageRows], height: currentHeight });
+                    pages.push({
+                        rows: [...currentPageRows],
+                        rowCount: currentPageRows.length,
+                        height: currentHeight
+                    });
                     currentPageRows = [];
                     currentHeight = 0;
+                    isFirstPage = false;
                 }
                 
                 currentPageRows.push(row.html);
@@ -714,16 +737,23 @@
             
             // إضافة آخر صفحة
             if (currentPageRows.length > 0) {
-                pages.push({ rows: [...currentPageRows], height: currentHeight });
+                pages.push({
+                    rows: [...currentPageRows],
+                    rowCount: currentPageRows.length,
+                    height: currentHeight,
+                    isLast: true
+                });
             }
             
-            console.log('=== نتائج التقسيم ===');
-            console.log('عدد الصفحات:', pages.length);
+            console.log('📄 نتائج التقسيم:');
+            console.log('  - عدد الصفحات:', pages.length);
             pages.forEach((page, idx) => {
-                console.log(`الصفحة ${idx+1}: ${page.rows.length} صف, الارتفاع الكلي: ${page.height} px`);
+                console.log(`  - الصفحة ${idx+1}: ${page.rowCount} صف, الارتفاع الكلي: ${page.height}px`);
             });
             
-            // بناء الصفحات النهائية
+            // ========================================
+            // بناء HTML النهائي
+            // ========================================
             const container = document.getElementById('invoiceContainer');
             container.innerHTML = '';
             
@@ -759,10 +789,12 @@
                 container.innerHTML += pageHtml;
             }
             
+            // إخفاء التحميل وإظهار المحتوى
             document.getElementById('loading').style.display = 'none';
             document.getElementById('invoiceContainer').style.display = 'block';
             document.getElementById('actionButtons').style.display = 'flex';
             
+            // إعداد الأزرار
             document.getElementById('printBtn').onclick = () => window.print();
             document.getElementById('pdfBtn').onclick = () => exportPDF();
             document.getElementById('pngBtn').onclick = () => exportPNG();
@@ -777,6 +809,9 @@
         }
     }
     
+    // ========================================
+    // دوال التصدير
+    // ========================================
     async function exportPDF() {
         const element = document.getElementById('invoiceContainer');
         if (!element) return;
