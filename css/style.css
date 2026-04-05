@@ -1,12 +1,3 @@
-/* invoice.css - تنسيق الفاتورة الاحترافي (نسخة موحدة ومُحسّنة للـ PDF والطباعة) */
-
-/* ============================================
-   تنسيقات عامة
-   ============================================ */
-#invoiceToPrint {
-    width: 794px; /* A4 ثابت */
-    margin: auto;
-}
 * {
     margin: 0;
     padding: 0;
@@ -14,563 +5,441 @@
 }
 
 body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 40px 20px;
-    min-height: 100vh;
-    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    background: #e2e8f0;
+    font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+    direction: rtl;
+    padding: 20px;
 }
 
-/* حاوية الفاتورة الخارجية */
 .invoice-container {
-    max-width: 1100px;
+    max-width: 210mm;
     margin: 0 auto;
 }
 
-/* تنسيق الفاتورة الأساسي */
-.invoice {
+/* أنماط الصفحة */
+.page {
+    width: 210mm;
+    min-height: 297mm;
     background: white;
-    border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-    overflow: visible;
-}
-
-/* المحتوى الداخلي */
-.invoice-content {
-    padding: 30px;
-    width: 100%;
-}
-
-/* الهوامش العلوية */
-.top-margin {
-    background: #1e293b;
-    color: #e2e8f0;
-    padding: 12px 25px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    margin-bottom: 25px;
+    position: relative;
     display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    border-radius: 12px;
-    margin-bottom: 25px;
+    flex-direction: column;
 }
 
-/* الشعار */
-.logo-center {
-    text-align: center;
-    margin-bottom: 25px;
+.page:not(:last-child) {
+    page-break-after: always;
+    break-after: page;
 }
-.logo-center img {
-    max-width: 100px;
-    height: auto;
+
+.page-content-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding-top: 20mm;
+    padding-left: 15mm;
+    padding-right: 15mm;
+    position: relative;
+    background: white;
+}
+
+.page-inner-content {
+    flex: 1;
+}
+
+.bottom-spacer {
+    height: 30mm;
+    width: 100%;
+    flex-shrink: 0;
+}
+
+.page-number {
+    position: absolute;
+    bottom: 10mm;
+    right: 15mm;
+    font-size: 11px;
+    color: #1e293b;
+    font-weight: 600;
+    background: transparent;
+    direction: ltr;
+    text-align: right;
+}
+
+/* أنماط الطباعة */
+@media print {
+    body {
+        background: white;
+        padding: 0;
+        margin: 0;
+    }
+    .page {
+        box-shadow: none;
+        margin: 0;
+        min-height: 297mm;
+    }
+    .page-content-wrapper {
+        padding-top: 20mm;
+        padding-left: 15mm;
+        padding-right: 15mm;
+    }
+    .action-buttons {
+        display: none;
+    }
+    @page {
+        size: A4;
+        margin: 0;
+    }
 }
 
 /* رأس الفاتورة */
-.invoice-header {
+.logo-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 15px;
-    margin-bottom: 25px;
-    border-bottom: 2px solid #e2e8f0;
-}
-.invoice-number {
-    font-size: 18px;
-    font-weight: bold;
-    color: #1e3a8a;
-}
-.invoice-number span {
-    background: #e0e7ff;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 14px;
-    margin-right: 8px;
-}
-.invoice-date {
-    font-size: 14px;
-    color: #475569;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 12px;
+    border-bottom: 2px solid #1e3a5f;
+    padding-bottom: 8px;
 }
 
-/* معلومات المصدر والمستلم */
-.invoice-parties {
-    display: flex;
-    gap: 25px;
-    margin-bottom: 25px;
+.logo-area img {
+    max-height: 65px;
+    width: auto;
+    object-fit: contain;
 }
-.invoice-from, .invoice-to {
-    flex: 1;
-    padding: 18px;
-    border-radius: 12px;
-}
-.invoice-from {
-    background: #fef9e3;
-    border-right: 4px solid #f59e0b;
-}
-.invoice-to {
-    background: #e0f2fe;
-    border-right: 4px solid #0284c7;
-}
-.invoice-from h3, .invoice-to h3 {
-    font-size: 16px;
-    margin-bottom: 12px;
+
+.logo-fallback {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #1e3a5f, #3b82f6);
+    border-radius: 14px;
     display: flex;
     align-items: center;
-    gap: 6px;
-}
-.invoice-from p, .invoice-to p {
-    font-size: 13px;
-    line-height: 1.7;
-    color: #334155;
+    justify-content: center;
 }
 
-/* الدفع والشحن */
-.payment-shipping {
+.logo-fallback i {
+    font-size: 32px;
+    color: white;
+}
+
+.invoice-title h1 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #1e3a5f;
+    margin: 0;
+}
+
+.invoice-title p {
+    font-size: 11px;
+    margin: 3px 0;
+}
+
+.badge-status {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 30px;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.company-badge {
     background: #f1f5f9;
-    padding: 12px 20px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 10px;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* بطاقات المعلومات */
+.two-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin: 12px 0;
+}
+
+.info-card {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.info-card h3 {
+    font-size: 13px;
+    margin-bottom: 6px;
+    border-right: 3px solid #3b82f6;
+    padding-right: 8px;
+}
+
+.info-card p {
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+.info-row {
+    background: #f1f5f9;
+    padding: 6px 12px;
     border-radius: 10px;
     display: flex;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 25px;
+    gap: 8px;
+    margin: 8px 0;
+    font-size: 11px;
 }
-.payment-shipping span {
-    background: white;
-    padding: 6px 15px;
-    border-radius: 25px;
-    font-size: 13px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+
+.section-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 14px 0 10px 0;
+    border-right: 4px solid #3b82f6;
+    padding-right: 10px;
 }
 
 /* جدول المنتجات */
-.products-table {
+.product-table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 25px;
-}
-.products-table th {
-    background: #1e3a8a;
-    color: white;
-    padding: 12px 8px;
-    font-size: 14px;
-    border: 1px solid #2e4a9a;
-}
-.products-table td {
-    padding: 10px 8px;
-    text-align: center;
-    border: 1px solid #e2e8f0;
-    font-size: 13px;
-    background: white;
+    font-size: 10px;
+    margin: 8px 0;
+    table-layout: fixed;
 }
 
-/* ملخص الحساب */
-.totals-wrapper {
-    background: #f8fafc;
-    padding: 20px;
-    border-radius: 12px;
+.product-table th {
+    background: #1e3a5f;
+    color: white;
+    padding: 10px 6px;
+    border: 1px solid #2d4a6e;
+    font-weight: 600;
+    text-align: center;
+}
+
+.product-table td {
+    border: 1px solid #cbd5e1;
+    padding: 8px 6px;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.product-table td:first-child {
+    text-align: right;
+    font-weight: 500;
+}
+
+.product-table td:nth-child(4) {
+    text-align: right;
+}
+
+.product-img {
+    width: 45px;
+    height: 45px;
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+    margin: 0 auto;
+}
+
+.product-img-fallback {
+    width: 40px;
+    height: 40px;
+    background: #f1f5f9;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.product-img-fallback i {
+    font-size: 20px;
+    color: #94a3b8;
+}
+
+.desc-text {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    font-size: 10px;
+    line-height: 1.4;
+    text-align: right;
+}
+
+.product-table th:nth-child(1) { width: 20%; }
+.product-table th:nth-child(2) { width: 12%; }
+.product-table th:nth-child(3) { width: 10%; }
+.product-table th:nth-child(4) { width: 28%; }
+.product-table th:nth-child(5) { width: 8%; }
+.product-table th:nth-child(6) { width: 11%; }
+.product-table th:nth-child(7) { width: 11%; }
+
+/* ملخص الفاتورة */
+.summary-box {
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    border-radius: 14px;
+    padding: 12px 18px;
+    margin: 15px 0 12px 0;
+}
+
+.summary-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    margin-bottom: 25px;
-}
-.totals-labels p, .totals-values p {
-    margin: 6px 0;
-}
-.totals-labels {
-    text-align: right;
-    font-weight: 600;
-}
-.totals-values {
-    text-align: left;
-    font-weight: 600;
-    color: #059669;
-}
-.grand-total {
-    text-align: center;
-    padding: 0 20px;
-    border-right: 1px solid #cbd5e1;
-    border-left: 1px solid #cbd5e1;
-}
-.grand-total h2 {
-    font-size: 20px;
-    color: #1e3a8a;
-    margin: 0;
+    padding: 5px 0;
+    border-bottom: 1px dashed #cbd5e1;
+    font-size: 12px;
 }
 
-/* شريط الاتصال */
-.contact-bar {
-    background: #f1f5f9;
-    padding: 12px;
+.summary-row.total {
+    font-size: 16px;
+    font-weight: 800;
+    color: #166534;
+    border-top: 2px solid #86efac;
+    padding-top: 8px;
+    margin-top: 5px;
+    border-bottom: none;
+}
+
+.terms-box {
+    background: #fefce8;
     border-radius: 10px;
+    padding: 8px 14px;
+    margin: 12px 0;
+    border-right: 4px solid #eab308;
+    font-size: 10px;
+}
+
+/* تذييل الفاتورة */
+.footer-static {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 2px solid #1e3a5f;
+    text-align: center;
+}
+
+.contact-links {
     display: flex;
     justify-content: center;
-    gap: 30px;
     flex-wrap: wrap;
-    margin-bottom: 15px;
-    font-size: 13px;
+    gap: 15px;
+    background: #f8fafc;
+    padding: 6px 15px;
+    border-radius: 40px;
 }
 
-/* تذييل */
-.thanks {
+.contact-links span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 9px;
+    color: #334155;
+}
+
+.footer-copyright {
+    font-size: 9px;
+    color: #94a3b8;
+    margin-top: 6px;
+}
+
+.thanks-block {
     text-align: center;
-    padding-top: 15px;
-    font-size: 14px;
-    color: #475569;
-    border-top: 1px solid #e2e8f0;
+    margin: 12px 0 5px 0;
+    padding: 8px;
+    background: #eff6ff;
+    border-radius: 20px;
 }
 
 /* أزرار التحكم */
-.buttons {
-    text-align: center;
-    margin-top: 30px;
+.action-buttons {
+    position: fixed;
+    bottom: 20px;
+    left: 0;
+    right: 0;
     display: flex;
     justify-content: center;
     gap: 15px;
+    z-index: 1000;
 }
-button {
-    padding: 12px 28px;
-    border: none;
+
+.btn {
+    padding: 8px 22px;
     border-radius: 40px;
+    border: none;
+    font-weight: 600;
     cursor: pointer;
     font-size: 14px;
-    font-weight: bold;
-    transition: all 0.2s;
-}
-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-}
-.btn-pdf { background: #dc2626; color: white; }
-.btn-print { background: #2563eb; color: white; }
-.btn-new { background: #f59e0b; color: white; }
-
-/* حالة فارغة */
-.empty-state {
-    text-align: center;
-    padding: 60px;
-    background: white;
-    border-radius: 20px;
-    font-size: 18px;
-    color: #666;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-/* ============================================
-   استجابة للجوال
-   ============================================ */
-@media (max-width: 768px) {
-    body {
-        padding: 20px 10px;
-    }
-    
-    .invoice-content {
-        padding: 15px;
-    }
-    
-    .invoice-parties {
-        flex-direction: column;
-        gap: 15px;
-    }
-    
-    .invoice-header {
-        flex-direction: column;
-        text-align: center;
-        gap: 10px;
-    }
-    
-    .invoice-number {
-        text-align: center;
-    }
-    
-    .totals-wrapper {
-        flex-direction: column;
-        text-align: center;
-        gap: 12px;
-    }
-    
-    .grand-total {
-        border: none;
-        padding: 10px 0;
-        border-top: 1px solid #e2e8f0;
-        border-bottom: 1px solid #e2e8f0;
-    }
-    
-    .products-table th, 
-    .products-table td {
-        padding: 6px 3px;
-        font-size: 11px;
-    }
-    
-    .payment-shipping {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .contact-bar {
-        gap: 12px;
-        font-size: 11px;
-    }
-    
-    .top-margin {
-        font-size: 10px;
-        flex-wrap: wrap;
-        gap: 5px;
-        text-align: center;
-    }
-    
-    button {
-        padding: 8px 20px;
-        font-size: 12px;
-    }
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
-/* ============================================
-   تنسيق الطباعة والـ PDF - نسخة موحدة
-   ============================================ */
-@media print {
-    /* إعادة تعيين كل شيء للطباعة */
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-    
-    body {
-        background: white !important;
-        padding: 0 !important;
-        margin: 0 !important;
-    }
-    
-    /* إخفاء الأزرار */
-    .buttons, button, .btn-pdf, .btn-print, .btn-new {
-        display: none !important;
-    }
-    
-    /* إعادة تعيين حاوية الفاتورة */
-    .invoice-container {
-        max-width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-    
-    /* تنسيق الفاتورة للطباعة */
-    .invoice {
-        box-shadow: none !important;
-        border-radius: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        background: white !important;
-        overflow: visible !important;
-    }
-    
-    /* المحتوى الداخلي */
-    .invoice-content {
-        padding: 0.3cm !important;
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    
-    /* منع كسر الصفحات في جميع العناصر المهمة */
-    .invoice-parties,
-    .payment-shipping,
-    .totals-wrapper,
-    .contact-bar,
-    .thanks,
-    .products-table tr,
-    .invoice-from,
-    .invoice-to,
-    .top-margin {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-    }
-    
-    /* تثبيت عرض الجدول */
-    .products-table {
-        width: 100% !important;
-        table-layout: fixed !important;
-        page-break-inside: auto !important;
-    }
-    
-    /* تحسين عرض الخلايا ومنع الانضغاط */
-    .products-table td,
-    .products-table th {
-        white-space: normal !important;
-        word-break: break-word !important;
-        overflow-wrap: break-word !important;
-        padding: 8px 4px !important;
-        font-size: 11px !important;
-        border: 1px solid #ccc !important;
-    }
-    
-    /* تحديد عرض الأعمدة بدقة */
-    .products-table th:nth-child(1) { width: 18%; } /* اسم المنتج */
-    .products-table th:nth-child(2) { width: 10%; } /* الكود */
-    .products-table th:nth-child(3) { width: 22%; } /* الوصف */
-    .products-table th:nth-child(4) { width: 8%; }  /* الكمية */
-    .products-table th:nth-child(5) { width: 12%; } /* السعر */
-    .products-table th:nth-child(6) { width: 12%; } /* الخصم */
-    .products-table th:nth-child(7) { width: 18%; } /* الإجمالي */
-    
-    /* الحفاظ على الألوان الخلفية في الطباعة */
-    .top-margin,
-    .invoice-from,
-    .invoice-to,
-    .payment-shipping span,
-    .contact-bar,
-    .products-table th {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
-    
-    /* تنسيق الهوامش العلوية */
-    .top-margin {
-        background: #f1f5f9 !important;
-        color: #333 !important;
-        margin-bottom: 12px !important;
-        padding: 6px 12px !important;
-    }
-    
-    /* تقليل حجم الخط للعناصر الطويلة */
-    .invoice-from p, 
-    .invoice-to p {
-        font-size: 11px !important;
-        line-height: 1.4 !important;
-    }
-    
-    /* تحسين عرض الإجمالي */
-    .grand-total h2 {
-        font-size: 16px !important;
-    }
+.btn-print {
+    background: #3b82f6;
+    color: white;
 }
 
-img {
-    max-width: 100%;
-    height: auto;
+.btn-pdf {
+    background: #ef4444;
+    color: white;
 }
 
-@page {
-    size: A4;
-    margin: 0;
+.btn-png {
+    background: #8b5cf6;
+    color: white;
 }
 
-html, body {
-    height: auto !important;
+.btn-close {
+    background: #64748b;
+    color: white;
 }
 
-
-* {
-    font-family: 'Tahoma', 'Segoe UI', system-ui, sans-serif;
-}
-body {
-    background: #f1f5f9;
-}
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 10px;
-}
-.modal-backdrop {
+/* تحميل التطبيق */
+.loading-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0,0,0,0.5);
-    backdrop-filter: blur(2px);
-    z-index: 50;
+    background: rgba(0,0,0,0.6);
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
+    z-index: 2000;
 }
-.modal-content {
-    background: white;
-    border-radius: 1rem;
-    max-width: 90vw;
-    max-height: 90vh;
-    overflow-y: auto;
-    padding: 1.5rem;
-    width: 800px;
-}
-.card-hover {
-    transition: all 0.2s ease;
-}
-.card-hover:hover {
-    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-    transform: translateY(-2px);
-}
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-th, td {
-    padding: 12px 8px;
-    text-align: right;
-    border-bottom: 1px solid #e2e8f0;
-}
-.badge-status {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 700;
-}
-.badge-paid {
-    background: #dcfce7;
-    color: #166534;
-}
-.badge-unpaid {
-    background: #fee2e2;
-    color: #991b1b;
-}
-.badge-refunded {
-    background: #ffedd5;
-    color: #9a3412;
-}
-.badge-cancelled {
-    background: #f3f4f6;
-    color: #374151;
-}
-.image-preview {
-    position: relative;
-    display: inline-block;
-    margin: 5px;
-}
-.image-preview img {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-}
-.remove-image {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    background: red;
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    text-align: center;
-    font-size: 12px;
-    cursor: pointer;
-}
+
 .loading-spinner {
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #3b82f6;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
-    margin: 20px auto;
+    background: white;
+    padding: 25px 35px;
+    border-radius: 16px;
+    text-align: center;
 }
+
+.loading-spinner-simple {
+    border: 3px solid #e2e8f0;
+    border-top-color: #3b82f6;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+}
+
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.fa-spin {
+    animation: spin 1s linear infinite;
 }
