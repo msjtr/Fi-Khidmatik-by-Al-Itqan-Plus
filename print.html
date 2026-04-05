@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
@@ -108,15 +107,17 @@
     
     function createProductRow(item, productImage, description, price, qty, itemTotal) {
         const tr = document.createElement('tr');
-        const imgSrc = productImage && productImage.trim() !== '' ? productImage : '';
+        // تأكد من أن productImage هو رابط صحيح
+        let imgSrc = (productImage && productImage.trim() !== '') ? productImage : '';
         
         let processedDescription = description || '';
         if (processedDescription) {
             processedDescription = processedDescription.replace(/\n/g, "<br>");
         }
         
+        // إضافة مستمع لحدث الخطأ لتسجيل المشكلة
         const imgHtml = imgSrc ? 
-            `<img src="${imgSrc}" class="product-img" loading="eager" onerror="this.style.display='none'">` :
+            `<img src="${imgSrc}" class="product-img" loading="eager" onerror="console.error('فشل تحميل الصورة:', this.src); this.style.display='none'; this.parentElement.innerHTML='<div class=\'product-img-fallback\'><i class=\'fas fa-box\'></i></div>';">` :
             `<div class="product-img-fallback"><i class="fas fa-box"></i></div>`;
         
         tr.innerHTML = `
@@ -168,13 +169,16 @@
             return;
         }
         
-        // تحميل العملاء والمنتجات من Firebase (إذا لم تكن محملة مسبقاً)
+        // تحميل العملاء والمنتجات من Firebase
         await loadCustomersAndProducts();
         const order = await getOrder(orderId);
         if (!order) {
             document.getElementById('loading').innerHTML = '<div class="text-center text-red-600 p-10">الطلب غير موجود</div>';
             return;
         }
+        
+        // طباعة بيانات الطلب للمساعدة في التصحيح
+        console.log('بيانات الطلب:', order);
         
         const customer = customersMap.get(order.customerId) || { name: '__________', phone: '__________', city: '__________', street: '__________', email: '__________' };
         const clientName = (customer.name || 'client').replace(/[^a-zA-Z0-9\u0600-\u06FF]/g, '_');
@@ -203,18 +207,43 @@
             const price = item.price || 0;
             const qty = item.quantity || 0;
             const itemTotal = price * qty;
+            
+            // ** التعديل المهم: الأولوية للصورة المخزنة مباشرة في الطلب **
             let productImage = '';
             let description = item.description || '';
-            if (item.productId) {
+            
+            // 1. أولاً: استخدام الصورة المخزنة مباشرة في عنصر الطلب (item.image)
+            if (item.image && item.image.trim() !== '') {
+                productImage = item.image;
+                console.log('تم العثور على صورة في الطلب:', productImage);
+            }
+            // 2. ثانياً: إذا لم توجد صورة في الطلب، حاول جلبها من المنتجات المخزنة
+            else if (item.productId) {
                 const prod = productsMap.get(item.productId);
                 if (prod) {
-                    if (prod.image) productImage = prod.image;
+                    if (prod.image) {
+                        productImage = prod.image;
+                        console.log('تم العثور على صورة من المخزون:', productImage);
+                    }
                     if (!description && prod.description) description = prod.description;
                 }
             }
-            if (!productImage && item.image) productImage = item.image;
-            if (description && typeof description === 'string') description = escapeHtml(description);
-            productRowsData.push({ item, productImage, description: description || '', price, qty, itemTotal });
+            
+            // معالجة الوصف
+            if (description && typeof description === 'string') {
+                description = escapeHtml(description);
+            }
+            
+            console.log(`المنتج: ${item.name}, الصورة: ${productImage || 'لا توجد صورة'}`);
+            
+            productRowsData.push({ 
+                item, 
+                productImage, 
+                description: description || '', 
+                price, 
+                qty, 
+                itemTotal 
+            });
         }
         
         // شعار من images/logo.svg
