@@ -9,10 +9,10 @@ import {
     updateDoc,
     deleteDoc,
     setDoc,
-    query,      // إضافة
-    where,      // إضافة
-    orderBy,    // إضافة
-    limit       // إضافة
+    query,
+    where,
+    orderBy,
+    limit
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -26,6 +26,10 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+// ========== تخزين مؤقت للبيانات (للفاتورة) ==========
+export let customersMap = new Map();
+export let productsMap = new Map();
 
 // ========== دوال مساعدة متقدمة ==========
 export async function getCollection(name, conditions = [], sortBy = null, limitCount = null) {
@@ -67,6 +71,21 @@ export async function getDocument(collectionName, docId) {
         console.error(`خطأ في جلب المستند ${collectionName}/${docId}:`, error);
         throw error;
     }
+}
+
+// ========== دوال مخصصة للفاتورة ==========
+export async function loadCustomersAndProducts() {
+    const customersSnap = await getDocs(collection(db, 'customers'));
+    customersSnap.forEach(docSnap => customersMap.set(docSnap.id, docSnap.data()));
+    const productsSnap = await getDocs(collection(db, 'products'));
+    productsSnap.forEach(docSnap => productsMap.set(docSnap.id, docSnap.data()));
+}
+
+export async function getOrder(orderId) {
+    const orderRef = doc(db, 'orders', orderId);
+    const orderSnap = await getDoc(orderRef);
+    if (!orderSnap.exists()) return null;
+    return { id: orderSnap.id, ...orderSnap.data() };
 }
 
 // ========== المنتجات ==========
@@ -148,15 +167,15 @@ export const getOrdersWithDetails = async () => {
             loadProducts()
         ]);
         
-        const customersMap = Object.fromEntries(customers.map(c => [c.id, c]));
-        const productsMap = Object.fromEntries(products.map(p => [p.id, p]));
+        const customersMapObj = Object.fromEntries(customers.map(c => [c.id, c]));
+        const productsMapObj = Object.fromEntries(products.map(p => [p.id, p]));
         
         return orders.map(order => ({
             ...order,
-            customer: customersMap[order.customerId] || { name: 'غير معروف', id: 'unknown' },
+            customer: customersMapObj[order.customerId] || { name: 'غير معروف', id: 'unknown' },
             items: order.items?.map(item => ({ 
                 ...item, 
-                productDetails: productsMap[item.productId] || null 
+                productDetails: productsMapObj[item.productId] || null 
             })) || []
         }));
     } catch (error) {
@@ -272,4 +291,5 @@ export const restoreBackup = async (collectionName, backupData) => {
     await Promise.all(addPromises);
 };
 
+// تصدير db للاستخدام المباشر
 export { db };
