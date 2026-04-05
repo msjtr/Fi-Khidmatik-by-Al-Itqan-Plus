@@ -31,17 +31,60 @@
         .page {
             width: 210mm;
             min-height: 297mm;
-            background: white;
-            margin: 0 auto 20px auto;
-            padding: 15mm 12mm 20mm 12mm;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             position: relative;
+            background: #fff;
+            margin: 0 auto 20px auto;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             page-break-after: always;
             break-after: page;
         }
 
-        /* منع انقسام العناصر */
-        .no-break {
+        /* ===== الهوامش ===== */
+        .page-content {
+            flex: 1;
+            padding: 20mm 15mm 25mm 15mm;
+        }
+
+        /* ===== المحتوى الداخلي ===== */
+        .page-inner {
+            flex: 1;
+        }
+
+        /* ===== التذييل ===== */
+        .footer {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            left: 0;
+            height: 25mm;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 15mm;
+        }
+
+        /* ===== ترقيم الصفحة ===== */
+        .page-number {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        /* ===== منع كسر العناصر ===== */
+        .section,
+        table,
+        tr,
+        thead,
+        tbody,
+        .product-table tr,
+        .summary-box,
+        .terms-box,
+        .info-card,
+        .info-row,
+        .logo-header,
+        .company-badge,
+        .two-columns {
             page-break-inside: avoid;
             break-inside: avoid;
         }
@@ -327,17 +370,8 @@
             margin-top: 6px;
         }
 
-        .page-number {
-            text-align: center;
-            font-size: 11px;
-            color: #94a3b8;
-            margin-top: 15px;
-            padding-top: 8px;
-            border-top: 1px solid #e2e8f0;
-        }
-
         /* ========================================
-           BUTTONS (تظهر فقط على الشاشة)
+           BUTTONS
            ======================================== */
         .action-buttons {
             position: fixed;
@@ -384,7 +418,7 @@
         }
 
         /* ========================================
-           PRINT STYLES - إخفاء كل شيء عند الطباعة
+           PRINT STYLES
            ======================================== */
         @media print {
             body {
@@ -396,18 +430,12 @@
             .page {
                 box-shadow: none;
                 margin: 0;
-                padding: 15mm 12mm 20mm 12mm;
                 page-break-after: always;
             }
             
-            /* إخفاء الأزرار وجميع العناصر التفاعلية */
             .action-buttons,
             .btn,
-            button,
-            .no-print,
-            .fa-print,
-            .fa-file-pdf,
-            .fa-image {
+            button {
                 display: none !important;
             }
             
@@ -451,8 +479,51 @@
     let customersMap = new Map();
     let productsMap = new Map();
     let currentFileName = "";
-    const MAX_PRODUCTS_PER_PAGE = 8;
 
+    // ========================================
+    // إعدادات الصفحة - A4
+    // ========================================
+    const MM_TO_PX = 3.78;
+    const PAGE_HEIGHT = 297 * MM_TO_PX;
+    const TOP_MARGIN_MM = 20;
+    const BOTTOM_MARGIN_MM = 25;
+    const LEFT_MARGIN_MM = 15;
+    const RIGHT_MARGIN_MM = 15;
+    const TOP_MARGIN_PX = TOP_MARGIN_MM * MM_TO_PX;
+    const BOTTOM_MARGIN_PX = BOTTOM_MARGIN_MM * MM_TO_PX;
+    const LEFT_MARGIN_PX = LEFT_MARGIN_MM * MM_TO_PX;
+    const RIGHT_MARGIN_PX = RIGHT_MARGIN_MM * MM_TO_PX;
+    const AVAILABLE_HEIGHT = PAGE_HEIGHT - TOP_MARGIN_PX - BOTTOM_MARGIN_PX;
+    const SAFETY_BUFFER = 30;
+
+    // ========================================
+    // دالة قياس ارتفاع العنصر
+    // ========================================
+    async function getElementHeight(element) {
+        return new Promise((resolve) => {
+            const container = document.createElement('div');
+            container.style.position = 'absolute';
+            container.style.visibility = 'hidden';
+            container.style.top = '-9999px';
+            container.style.left = '-9999px';
+            container.style.width = `${210 - LEFT_MARGIN_MM - RIGHT_MARGIN_MM}mm`;
+            container.style.direction = 'rtl';
+            document.body.appendChild(container);
+            
+            const clone = element.cloneNode(true);
+            container.appendChild(clone);
+            
+            setTimeout(() => {
+                const height = clone.offsetHeight;
+                document.body.removeChild(container);
+                resolve(height);
+            }, 50);
+        });
+    }
+
+    // ========================================
+    // دوال Firebase
+    // ========================================
     async function loadCustomersAndProducts() {
         const customersSnap = await getDocs(collection(db, 'customers'));
         customersSnap.forEach(docSnap => customersMap.set(docSnap.id, docSnap.data()));
@@ -467,6 +538,9 @@
         return { id: orderSnap.id, ...orderSnap.data() };
     }
 
+    // ========================================
+    // دوال مساعدة
+    // ========================================
     function formatDate(dateStr) {
         if (!dateStr) return '';
         const d = new Date(dateStr);
@@ -505,6 +579,9 @@
         return map[status] || 'bg-gray-100 text-gray-800';
     }
 
+    // ========================================
+    // قوالب HTML
+    // ========================================
     function getHeaderHTML(order, customer, paymentMethodName, shippingMethodText) {
         return `
             <div class="logo-header">
@@ -570,7 +647,7 @@
             </div>
             <div class="terms-box">
                 <h4><i class="fas fa-info-circle"></i> تعليمات الفاتورة</h4>
-                <p>تخضع هذه الفاتورة لكامل الشروط والأحكام المرفقة، ويُعد اعتمادها أو سداد أي مبلغ بموجبها إقرارًا صريحًا ونهائيًا بالموافقة على جميع بنودها دون أي تحفظ</p>
+                <p>تخضع هذه الفاتورة لكامل الشروط والأحكام المرفقة</p>
             </div>
             <div class="thanks-block">
                 <p><i class="fas fa-heart" style="color:#ef4444"></i> شكراً لتسوقكم معنا</p>
@@ -578,7 +655,11 @@
         `;
     }
 
-    function createProductRowHTML(item) {
+    // ========================================
+    // دالة إنشاء صف المنتج
+    // ========================================
+    function createProductRowElement(item) {
+        const tr = document.createElement('tr');
         const price = item.price || 0;
         const qty = item.quantity || 0;
         let productImage = '';
@@ -602,17 +683,63 @@
             `<img src="${productImage}" class="product-img" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'product-img-fallback\'><i class=\'fas fa-image\'></i></div>';">` :
             `<div class="product-img-fallback"><i class="fas fa-box"></i></div>`;
         
-        return `
-            <tr>
-                <td style="text-align: right;">${escapeHtml(item.name)}</td
-                <td class="desc-text">${description || '—'}</td
-                <td style="text-align: center;">${imgHtml}</td
-                <td style="text-align: center;">${qty}</td
-                <td style="text-align: center;">${price.toFixed(2)} ريال</td
-            </tr>
+        tr.innerHTML = `
+            <td style="text-align: right;">${escapeHtml(item.name)}</td
+            <td class="desc-text">${description || '—'}</td
+            <td style="text-align: center;">${imgHtml}</td
+            <td style="text-align: center;">${qty}</td
+            <td style="text-align: center;">${price.toFixed(2)} ريال</td
         `;
+        return tr;
     }
 
+    // ========================================
+    // دالة حساب ارتفاع الرأس والتذييل
+    // ========================================
+    async function calculateFixedHeights(headerHTML, footerHTML) {
+        const tempHeader = document.createElement('div');
+        tempHeader.innerHTML = headerHTML;
+        const headerHeight = await getElementHeight(tempHeader);
+        
+        const tempFooter = document.createElement('div');
+        tempFooter.innerHTML = footerHTML;
+        const footerHeight = await getElementHeight(tempFooter);
+        
+        return { headerHeight, footerHeight };
+    }
+
+    // ========================================
+    // دالة تقسيم الصفوف ديناميكياً
+    // ========================================
+    async function splitRowsDynamic(rows, headerHeight, footerHeight) {
+        const pages = [];
+        let currentPageRows = [];
+        let currentHeight = 0;
+        const availableForRows = AVAILABLE_HEIGHT - headerHeight - footerHeight - SAFETY_BUFFER;
+        
+        for (let i = 0; i < rows.length; i++) {
+            const rowHeight = await getElementHeight(rows[i]);
+            
+            if (currentHeight + rowHeight > availableForRows && currentPageRows.length > 0) {
+                pages.push([...currentPageRows]);
+                currentPageRows = [];
+                currentHeight = 0;
+            }
+            
+            currentPageRows.push(rows[i]);
+            currentHeight += rowHeight;
+        }
+        
+        if (currentPageRows.length > 0) {
+            pages.push(currentPageRows);
+        }
+        
+        return pages.filter(page => page && page.length > 0);
+    }
+
+    // ========================================
+    // دالة عرض الفاتورة
+    // ========================================
     async function renderInvoice() {
         const urlParams = new URLSearchParams(window.location.search);
         const orderId = urlParams.get('id');
@@ -671,52 +798,88 @@
             }[order.shippingMethod] || 'استلام من المقر';
             
             // إنشاء صفوف المنتجات
-            let allProductsHTML = '';
+            const productRows = [];
             for (const item of items) {
-                allProductsHTML += createProductRowHTML(item);
+                productRows.push(createProductRowElement(item));
             }
-            
-            // تقسيم المنتجات (8 منتجات لكل صفحة)
-            const rows = allProductsHTML.match(/<tr[\s\S]*?<\/tr>/g) || [];
-            const productsArray = [];
-            for (let i = 0; i < rows.length; i += MAX_PRODUCTS_PER_PAGE) {
-                productsArray.push(rows.slice(i, i + MAX_PRODUCTS_PER_PAGE).join(''));
-            }
-            
-            const totalPages = Math.max(productsArray.length, 1);
-            const container = document.getElementById('pages');
-            container.innerHTML = '';
             
             const headerHTML = getHeaderHTML(order, customer, paymentMethodName, shippingMethodText);
             const footerHTML = getFooterHTML();
             const summaryHTML = getSummaryHTML(subtotal, discountValue, tax, total);
             
-            for (let p = 0; p < totalPages; p++) {
-                const isLastPage = (p === totalPages - 1);
+            // حساب ارتفاع الرأس والتذييل
+            const { headerHeight, footerHeight } = await calculateFixedHeights(headerHTML, footerHTML);
+            
+            // تقسيم الصفوف على الصفحات
+            const pages = await splitRowsDynamic(productRows, headerHeight, footerHeight);
+            
+            const container = document.getElementById('pages');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < pages.length; i++) {
+                const pageRows = pages[i];
+                const isLastPage = (i === pages.length - 1);
                 
-                const pageHTML = `
-                    <div class="page">
-                        ${headerHTML}
-                        <table class="product-table">
-                            <thead>
-                                <tr>
-                                    <th>المنتج / الخدمة</th>
-                                    <th>الوصف</th>
-                                    <th>الصورة</th>
-                                    <th>الكمية</th>
-                                    <th>سعر الوحدة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${productsArray[p] || ''}
-                            </tbody>
-                        能得到
-                        ${isLastPage ? summaryHTML : ''}
-                        ${footerHTML}
-                        <div class="page-number">صفحة ${p + 1} / ${totalPages}</div>
-                    </div>
+                // إنشاء الصفحة
+                const pageDiv = document.createElement('div');
+                pageDiv.className = 'page';
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'page-content';
+                
+                const innerDiv = document.createElement('div');
+                innerDiv.className = 'page-inner';
+                
+                // إضافة الرأس
+                const headerDiv = document.createElement('div');
+                headerDiv.innerHTML = headerHTML;
+                innerDiv.appendChild(headerDiv);
+                
+                // إضافة الجدول
+                const table = document.createElement('table');
+                table.className = 'product-table';
+                
+                const thead = document.createElement('thead');
+                thead.innerHTML = `
+                    <tr>
+                        <th>المنتج / الخدمة</th>
+                        <th>الوصف</th>
+                        <th>الصورة</th>
+                        <th>الكمية</th>
+                        <th>سعر الوحدة</th>
+                    </tr>
                 `;
-                container.innerHTML += pageHTML;
+                table.appendChild(thead);
+                
+                const tbody = document.createElement('tbody');
+                for (const row of pageRows) {
+                    tbody.appendChild(row.cloneNode(true));
+                }
+                table.appendChild(tbody);
+                innerDiv.appendChild(table);
+                
+                // إضافة الملخص في الصفحة الأخيرة
+                if (isLastPage) {
+                    const summaryDiv = document.createElement('div');
+                    summaryDiv.innerHTML = summaryHTML;
+                    innerDiv.appendChild(summaryDiv);
+                }
+                
+                // إضافة التذييل
+                const footerDiv = document.createElement('div');
+                footerDiv.innerHTML = footerHTML;
+                innerDiv.appendChild(footerDiv);
+                
+                // إضافة رقم الصفحة
+                const pageNumberDiv = document.createElement('div');
+                pageNumberDiv.className = 'page-number';
+                pageNumberDiv.textContent = `صفحة ${i + 1} / ${pages.length}`;
+                
+                contentDiv.appendChild(innerDiv);
+                pageDiv.appendChild(contentDiv);
+                pageDiv.appendChild(pageNumberDiv);
+                
+                container.appendChild(pageDiv);
             }
             
             document.getElementById('loading').style.display = 'none';
@@ -737,6 +900,9 @@
         }
     }
     
+    // ========================================
+    // دوال التصدير
+    // ========================================
     async function exportPDF() {
         const element = document.getElementById('pages');
         if (!element) return;
