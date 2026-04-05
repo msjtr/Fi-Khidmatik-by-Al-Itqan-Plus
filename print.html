@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>فاتورة إلكترونية - منصة في خدمتك</title>
     <link rel="icon" href="data:,">
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -17,44 +16,26 @@
         }
 
         body {
-            background: #e2e8f0;
             font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+            background: #e2e8f0;
+            padding: 20px;
             direction: rtl;
-            padding: 10px;
         }
 
-        /* حجم الصفحة A4 */
+        /* ===== حجم صفحة A4 ===== */
         .page {
             width: 210mm;
             min-height: 297mm;
             background: white;
+            margin: 0 auto 20px auto;
+            padding: 15mm 12mm;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
             position: relative;
             page-break-after: always;
             break-after: page;
         }
 
-        .page-content {
-            padding: 10mm 12mm;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        .page-inner {
-            flex: 1;
-        }
-
-        .page-number {
-            text-align: center;
-            font-size: 9px;
-            color: #94a3b8;
-            margin-top: 10px;
-            padding-top: 8px;
-            border-top: 1px solid #e2e8f0;
-        }
-
+        /* ===== أنماط الطباعة ===== */
         @media print {
             body {
                 background: white;
@@ -64,6 +45,7 @@
             .page {
                 box-shadow: none;
                 margin: 0;
+                padding: 15mm 12mm;
                 page-break-after: always;
             }
             .action-buttons {
@@ -75,21 +57,21 @@
             }
         }
 
-        /* Header */
+        /* ===== الرأس ===== */
         .logo-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 15px;
             border-bottom: 2px solid #1e3a5f;
-            padding-bottom: 8px;
-            margin-bottom: 10px;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
         }
 
         .logo-fallback {
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             background: linear-gradient(135deg, #1e3a5f, #3b82f6);
             border-radius: 12px;
             display: flex;
@@ -98,137 +80,145 @@
         }
 
         .logo-fallback i {
-            font-size: 24px;
+            font-size: 28px;
             color: white;
         }
 
         .invoice-title h1 {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 800;
             color: #1e3a5f;
+            margin: 0;
         }
 
         .invoice-title p {
-            font-size: 10px;
-            margin: 2px 0;
+            font-size: 11px;
+            margin: 3px 0;
+            color: #475569;
         }
 
         .badge-status {
             display: inline-block;
-            padding: 2px 10px;
+            padding: 3px 12px;
             border-radius: 20px;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 600;
         }
 
         .company-badge {
             background: #f1f5f9;
-            padding: 6px 10px;
+            padding: 8px 12px;
             border-radius: 10px;
-            font-size: 9px;
+            font-size: 10px;
             display: flex;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 10px;
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
-        /* Info Cards */
+        /* ===== بطاقات المعلومات ===== */
         .two-columns {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin: 8px 0;
+            gap: 15px;
+            margin: 12px 0;
         }
 
         .info-card {
             background: #f8fafc;
-            padding: 8px 10px;
-            border-radius: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
             border: 1px solid #e2e8f0;
         }
 
         .info-card h3 {
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 700;
-            margin-bottom: 4px;
+            margin-bottom: 5px;
             border-right: 3px solid #3b82f6;
-            padding-right: 6px;
+            padding-right: 8px;
+            color: #1e293b;
         }
 
         .info-card p {
-            font-size: 10px;
+            font-size: 11px;
             line-height: 1.4;
+            color: #334155;
         }
 
         .info-row {
             background: #f1f5f9;
-            padding: 6px 10px;
-            border-radius: 8px;
+            padding: 8px 12px;
+            border-radius: 10px;
             display: flex;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 6px;
-            margin: 6px 0;
-            font-size: 10px;
+            gap: 10px;
+            margin: 10px 0;
+            font-size: 11px;
+            font-weight: 500;
         }
 
         .section-title {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 800;
-            margin: 10px 0 8px 0;
+            margin: 15px 0 10px 0;
             border-right: 4px solid #3b82f6;
             padding-right: 10px;
+            color: #1e293b;
         }
 
-        /* Table */
+        /* ===== الجدول ===== */
         .product-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 10px;
-            margin: 6px 0;
+            margin: 10px 0;
         }
 
         .product-table th {
             background: #1e3a5f;
             color: white;
-            padding: 6px 4px;
+            padding: 8px 6px;
             border: 1px solid #2d4a6e;
             text-align: center;
+            font-weight: 700;
         }
 
         .product-table td {
             border: 1px solid #cbd5e1;
-            padding: 5px 4px;
+            padding: 6px 5px;
             text-align: center;
+            color: #1e293b;
         }
 
         .product-table td:first-child {
             text-align: right;
+            font-weight: 500;
         }
 
-        .product-table th:nth-child(1) { width: 18%; }
-        .product-table th:nth-child(2) { width: 10%; }
+        /* عرض الأعمدة */
+        .product-table th:nth-child(1) { width: 25%; }
+        .product-table th:nth-child(2) { width: 35%; }
         .product-table th:nth-child(3) { width: 10%; }
-        .product-table th:nth-child(4) { width: 28%; }
-        .product-table th:nth-child(5) { width: 8%; }
-        .product-table th:nth-child(6) { width: 13%; }
-        .product-table th:nth-child(7) { width: 13%; }
+        .product-table th:nth-child(4) { width: 15%; }
+        .product-table th:nth-child(5) { width: 15%; }
 
         .product-img {
-            width: 32px;
-            height: 32px;
+            width: 35px;
+            height: 35px;
             object-fit: cover;
-            border-radius: 5px;
+            border-radius: 6px;
             display: block;
             margin: 0 auto;
         }
 
         .product-img-fallback {
-            width: 32px;
-            height: 32px;
+            width: 35px;
+            height: 35px;
             background: #f1f5f9;
-            border-radius: 5px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -236,7 +226,7 @@
         }
 
         .product-img-fallback i {
-            font-size: 14px;
+            font-size: 16px;
             color: #94a3b8;
         }
 
@@ -247,80 +237,94 @@
             line-height: 1.3;
         }
 
-        /* Summary */
+        /* ===== الملخص ===== */
         .summary-box {
-            background: #f0fdf4;
-            padding: 8px 12px;
-            border-radius: 10px;
-            margin: 10px 0;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            padding: 12px 18px;
+            border-radius: 12px;
+            margin: 15px 0;
         }
 
         .summary-row {
             display: flex;
             justify-content: space-between;
-            padding: 4px 0;
-            font-size: 11px;
+            padding: 5px 0;
+            border-bottom: 1px dashed #cbd5e1;
+            font-size: 12px;
         }
 
         .summary-row.total {
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 800;
             color: #166534;
             border-top: 2px solid #86efac;
-            padding-top: 6px;
-            margin-top: 4px;
+            padding-top: 8px;
+            margin-top: 5px;
+            border-bottom: none;
         }
 
         .terms-box {
             background: #fefce8;
-            padding: 6px 10px;
-            border-radius: 8px;
-            border-right: 3px solid #eab308;
-            margin: 8px 0;
-            font-size: 9px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border-right: 4px solid #eab308;
+            margin: 12px 0;
+            font-size: 10px;
         }
 
         .thanks-block {
             text-align: center;
-            margin: 8px 0;
-            padding: 6px;
+            margin: 12px 0;
+            padding: 10px;
             background: #eff6ff;
-            border-radius: 14px;
-            font-size: 11px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #1e40af;
         }
 
-        /* Footer */
+        /* ===== التذييل ===== */
         .footer-static {
-            margin-top: 10px;
+            margin-top: 15px;
             text-align: center;
             border-top: 2px solid #1e3a5f;
-            padding-top: 8px;
+            padding-top: 12px;
         }
 
         .contact-links {
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 15px;
             background: #f8fafc;
-            padding: 5px 10px;
-            border-radius: 35px;
+            padding: 8px 15px;
+            border-radius: 40px;
         }
 
         .contact-links span {
-            font-size: 8px;
+            font-size: 9px;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
+            color: #334155;
         }
 
         .footer-copyright {
-            font-size: 7px;
+            font-size: 8px;
             color: #94a3b8;
-            margin-top: 4px;
+            margin-top: 6px;
         }
 
-        /* Buttons */
+        .page-number {
+            text-align: center;
+            font-size: 10px;
+            color: #94a3b8;
+            margin-top: 15px;
+            padding-top: 8px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        /* ===== أزرار ===== */
         .action-buttons {
             position: fixed;
             bottom: 20px;
@@ -333,12 +337,13 @@
         }
 
         .btn {
-            padding: 8px 20px;
+            padding: 8px 22px;
             border-radius: 40px;
             border: none;
             font-weight: 600;
             cursor: pointer;
             font-size: 13px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
         .btn-print { background: #3b82f6; color: white; }
@@ -346,14 +351,14 @@
         .btn-png { background: #8b5cf6; color: white; }
         .btn-close { background: #64748b; color: white; }
 
-        .loading-spinner-simple {
+        .loading-spinner {
             border: 3px solid #e2e8f0;
             border-top-color: #3b82f6;
             width: 40px;
             height: 40px;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin: 0 auto 12px;
+            margin: 0 auto 15px;
         }
 
         @keyframes spin {
@@ -362,12 +367,14 @@
     </style>
 </head>
 <body>
-<div id="loading" class="text-center py-20">
-    <div class="loading-spinner-simple"></div>
-    <p class="text-gray-600">جاري تحميل الفاتورة...</p>
+
+<div id="loading" style="text-align:center; padding:50px">
+    <div class="loading-spinner"></div>
+    <p style="color:#64748b">جاري تحميل الفاتورة...</p>
 </div>
-<div id="invoiceContainer" style="display: none;"></div>
-<div class="action-buttons" id="actionButtons" style="display: none;">
+<div id="pages" style="display:none"></div>
+
+<div class="action-buttons" id="actionButtons" style="display:none">
     <button class="btn btn-print" id="printBtn"><i class="fas fa-print"></i> طباعة</button>
     <button class="btn btn-pdf" id="pdfBtn"><i class="fas fa-file-pdf"></i> PDF</button>
     <button class="btn btn-png" id="pngBtn"><i class="fas fa-image"></i> صورة</button>
@@ -393,16 +400,13 @@
     let productsMap = new Map();
     let currentFileName = "";
     
-    // إعدادات الصفحة (بالبكسل)
-    const PAGE_CONFIG = {
-        width: 793,      // 210mm بالبكسل
-        height: 1123,    // 297mm بالبكسل
-        topMargin: 80,   // الهامش العلوي
-        bottomMargin: 70, // الهامش السفلي
-        rowHeight: 38,    // ارتفاع صف المنتج
-        headerHeight: 380, // ارتفاع الرأس التقريبي
-        footerHeight: 80   // ارتفاع التذييل التقريبي
-    };
+    // ===== إعدادات الصفحة (بالمليمتر) =====
+    const MM = 3.78;
+    const TOP_MARGIN = 15 * MM;     // 15mm هامش علوي
+    const BOTTOM_MARGIN = 25 * MM;  // 25mm هامش سفلي
+    const PAGE_HEIGHT = 297 * MM;   // ارتفاع A4
+    const MAX_CONTENT_HEIGHT = PAGE_HEIGHT - TOP_MARGIN - BOTTOM_MARGIN;
+    const BUFFER = 30;              // مسافة أمان
     
     async function loadCustomersAndProducts() {
         const customersSnap = await getDocs(collection(db, 'customers'));
@@ -456,31 +460,28 @@
         return map[status] || 'bg-gray-100 text-gray-800';
     }
     
-    function showLoading() { 
-        let overlay = document.getElementById('loadingOverlay'); 
-        if (!overlay) { 
-            overlay = document.createElement('div'); 
-            overlay.id = 'loadingOverlay'; 
-            overlay.className = 'loading-overlay'; 
-            overlay.innerHTML = `<div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>جاري إنشاء الفاتورة...</p></div>`; 
-            document.body.appendChild(overlay); 
-        } 
-        overlay.style.display = 'flex'; 
+    // ===== قياس ارتفاع العنصر =====
+    async function getHeight(element) {
+        const container = document.createElement('div');
+        container.style.position = 'absolute';
+        container.style.visibility = 'hidden';
+        container.style.top = '-9999px';
+        container.style.width = '210mm';
+        container.style.direction = 'rtl';
+        document.body.appendChild(container);
+        container.appendChild(element);
+        
+        await new Promise(r => setTimeout(r, 30));
+        const height = element.offsetHeight;
+        document.body.removeChild(container);
+        return height;
     }
     
-    function hideLoading() { 
-        const overlay = document.getElementById('loadingOverlay'); 
-        if (overlay) overlay.style.display = 'none'; 
-    }
-    
-    // حساب عدد الصفوف التي تتسع في الصفحة
-    function getRowsPerPage() {
-        const availableHeight = PAGE_CONFIG.height - PAGE_CONFIG.topMargin - PAGE_CONFIG.bottomMargin - PAGE_CONFIG.headerHeight - PAGE_CONFIG.footerHeight;
-        return Math.floor(availableHeight / PAGE_CONFIG.rowHeight);
-    }
-    
-    function createProductRowHTML(item, productImage, description, price, qty, itemTotal) {
+    // ===== إنشاء صف المنتج =====
+    function createProductRow(item, productImage, description, price, qty, itemTotal) {
+        const tr = document.createElement('tr');
         const imgSrc = productImage && productImage.trim() !== '' ? productImage : '';
+        
         let processedDescription = description || '';
         if (processedDescription) processedDescription = processedDescription.replace(/\n/g, "<br>");
         
@@ -488,17 +489,49 @@
             `<img src="${imgSrc}" class="product-img" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'product-img-fallback\'><i class=\'fas fa-box\'></i></div>';">` :
             `<div class="product-img-fallback"><i class="fas fa-box"></i></div>`;
         
-        return `
-            <tr>
-                <td style="text-align: right;">${escapeHtml(item.name)}</td>
-                <td>${imgHtml}</td>
-                <td>${escapeHtml(item.barcode || '—')}</td>
-                <td class="desc-text">${processedDescription}</td>
-                <td>${qty}</td>
-                <td>${price.toFixed(2)} ريال</td>
-                <td>${itemTotal.toFixed(2)} ريال</td>
-            </tr>
+        tr.innerHTML = `
+            <td style="text-align: right;">${escapeHtml(item.name)}</td>
+            <td class="desc-text">${processedDescription || '—'}</td>
+            <td>${qty}</td>
+            <td>${price.toFixed(2)} ريال</td>
+            <td>${itemTotal.toFixed(2)} ريال</td>
         `;
+        return tr;
+    }
+    
+    // ===== تقسيم الصفحات =====
+    async function paginateProducts(productRowsData) {
+        const rows = [];
+        const heights = [];
+        
+        for (const data of productRowsData) {
+            const row = createProductRow(data.item, data.productImage, data.description, data.price, data.qty, data.itemTotal);
+            const height = await getHeight(row);
+            rows.push(row);
+            heights.push(height);
+        }
+        
+        const pages = [];
+        let currentPage = [];
+        let currentHeight = 0;
+        
+        for (let i = 0; i < rows.length; i++) {
+            if (currentHeight + heights[i] > MAX_CONTENT_HEIGHT - BUFFER) {
+                if (currentPage.length > 0) {
+                    pages.push(currentPage);
+                }
+                currentPage = [];
+                currentHeight = 0;
+            }
+            currentPage.push(i);
+            currentHeight += heights[i];
+        }
+        
+        if (currentPage.length > 0) {
+            pages.push(currentPage);
+        }
+        
+        return { pages, rows };
     }
     
     async function renderInvoice() {
@@ -507,7 +540,7 @@
         const autoAction = urlParams.get('auto');
         
         if (!orderId) {
-            document.getElementById('loading').innerHTML = '<div class="text-center text-red-600 p-10">رقم الطلب غير موجود</div>';
+            document.getElementById('loading').innerHTML = '<div style="color:red">رقم الطلب غير موجود</div>';
             return;
         }
         
@@ -515,29 +548,49 @@
             await loadCustomersAndProducts();
             const order = await getOrder(orderId);
             if (!order) {
-                document.getElementById('loading').innerHTML = '<div class="text-center text-red-600 p-10">الطلب غير موجود</div>';
+                document.getElementById('loading').innerHTML = '<div style="color:red">الطلب غير موجود</div>';
                 return;
             }
             
-            const customer = customersMap.get(order.customerId) || { name: '__________', phone: '__________', city: '__________', street: '__________', email: '__________' };
+            const customer = customersMap.get(order.customerId) || { 
+                name: '__________', phone: '__________', city: '__________', 
+                street: '__________', email: '__________' 
+            };
+            
             const clientName = (customer.name || 'client').replace(/[^a-zA-Z0-9\u0600-\u06FF]/g, '_');
             const orderNumber = order.orderNumber || order.id;
             const today = new Date();
             const dateStr = `${today.getFullYear()}-${(today.getMonth()+1).toString().padStart(2,'0')}-${today.getDate().toString().padStart(2,'0')}`;
             currentFileName = `${clientName}_${orderNumber}_${dateStr}`;
             
+            // حساب الإجماليات
             let subtotal = 0;
             const items = order.items || [];
-            for (const item of items) subtotal += (item.price || 0) * (item.quantity || 0);
+            for (const item of items) {
+                subtotal += (item.price || 0) * (item.quantity || 0);
+            }
             
             let discountValue = order.discount || 0;
-            if (order.discountType === 'percent' && discountValue > 0) discountValue = (subtotal * discountValue) / 100;
+            if (order.discountType === 'percent' && discountValue > 0) {
+                discountValue = (subtotal * discountValue) / 100;
+            }
             const afterDiscount = subtotal - discountValue;
             const tax = afterDiscount * 0.15;
             const total = afterDiscount + tax;
             
-            const paymentMethodName = order.paymentMethodName || (order.paymentMethod === 'mada' ? 'مدى' : order.paymentMethod === 'mastercard' ? 'ماستركارد' : order.paymentMethod === 'visa' ? 'فيزا' : order.paymentMethod === 'stcpay' ? 'STCPay' : order.paymentMethod === 'tamara' ? 'تمارا' : order.paymentMethod === 'tabby' ? 'تابي' : 'أخرى');
-            const shippingMethodText = { 'pickup': '🏪 استلام من المقر', 'delivery': '🚚 شحن منزلي', 'noship': '📥 لا يتطلب شحن' }[order.shippingMethod] || 'استلام من المقر';
+            const paymentMethodName = order.paymentMethodName || 
+                (order.paymentMethod === 'mada' ? 'مدى' : 
+                order.paymentMethod === 'mastercard' ? 'ماستركارد' : 
+                order.paymentMethod === 'visa' ? 'فيزا' : 
+                order.paymentMethod === 'stcpay' ? 'STCPay' : 
+                order.paymentMethod === 'tamara' ? 'تمارا' : 
+                order.paymentMethod === 'tabby' ? 'تابي' : 'أخرى');
+            
+            const shippingMethodText = { 
+                'pickup': '🏪 استلام من المقر', 
+                'delivery': '🚚 شحن منزلي', 
+                'noship': '📥 لا يتطلب شحن' 
+            }[order.shippingMethod] || 'استلام من المقر';
             
             // تجهيز بيانات المنتجات
             const productRowsData = [];
@@ -555,18 +608,21 @@
                 }
                 if (!productImage && item.image) productImage = item.image;
                 if (description) description = escapeHtml(description);
-                productRowsData.push({ item, productImage, description: description || '', price, qty, itemTotal });
+                productRowsData.push({ 
+                    item, productImage, description: description || '', 
+                    price, qty, itemTotal 
+                });
             }
             
-            // حساب عدد الصفوف لكل صفحة ديناميكياً
-            const rowsPerPage = getRowsPerPage();
-            const totalPages = Math.ceil(productRowsData.length / rowsPerPage);
+            // تقسيم المنتجات على الصفحات
+            const { pages, rows } = await paginateProducts(productRowsData);
+            const totalPages = pages.length;
             
-            // قالب الرأس المشترك
-            const getHeaderHTML = (pageNum, totalPages) => `
+            // قالب الرأس
+            const getHeaderHTML = (pageNum) => `
                 <div class="logo-header">
                     <div class="logo-fallback"><i class="fas fa-handshake"></i></div>
-                    <div class="invoice-title text-left">
+                    <div class="invoice-title">
                         <h1>فاتورة إلكترونية</h1>
                         <p><strong>رقم الفاتورة:</strong> ${escapeHtml(order.orderNumber || order.id)}</p>
                         <p><strong>التاريخ:</strong> ${formatDate(order.orderDate)} | <strong>الوقت:</strong> ${formatTime(order.orderTime)}</p>
@@ -579,14 +635,28 @@
                     <span><i class="fas fa-chart-line"></i> الرقم الضريبي: 312495447600003</span>
                 </div>
                 <div class="two-columns">
-                    <div class="info-card"><h3><i class="fas fa-building"></i> مصدرة من</h3><p>منصة في خدمتك<br>المملكة العربية السعودية<br>حائل - حي النقرة - شارع سعد المشاط<br>رقم المبنى: 3085 | الرمز البريدي: 55431</p></div>
-                    <div class="info-card"><h3><i class="fas fa-user"></i> مصدرة إلى</h3><p><strong>العميل:</strong> ${escapeHtml(customer.name || '__________')}<br><strong>الجوال:</strong> ${escapeHtml(customer.phone || '__________')}<br><strong>العنوان:</strong> ${escapeHtml(customer.city || '__________')} ${escapeHtml(customer.street || '__________')}</p></div>
+                    <div class="info-card">
+                        <h3><i class="fas fa-building"></i> مصدرة من</h3>
+                        <p>منصة في خدمتك<br>المملكة العربية السعودية<br>حائل - حي النقرة - شارع سعد المشاط<br>رقم المبنى: 3085 | الرمز البريدي: 55431</p>
+                    </div>
+                    <div class="info-card">
+                        <h3><i class="fas fa-user"></i> مصدرة إلى</h3>
+                        <p><strong>العميل:</strong> ${escapeHtml(customer.name || '__________')}<br>
+                        <strong>الجوال:</strong> ${escapeHtml(customer.phone || '__________')}<br>
+                        <strong>العنوان:</strong> ${escapeHtml(customer.city || '__________')} ${escapeHtml(customer.street || '__________')}</p>
+                    </div>
                 </div>
-                <div class="info-row"><span><i class="fas fa-credit-card"></i> <strong>طريقة الدفع:</strong> ${paymentMethodName}</span><span><i class="fas fa-truck"></i> <strong>الاستلام:</strong> ${shippingMethodText}</span></div>
-                <div class="section-title">تفاصيل المنتجات ${totalPages > 1 ? `(صفحة ${pageNum} من ${totalPages})` : ''}</div>
+                <div class="info-row">
+                    <span><i class="fas fa-credit-card"></i> <strong>طريقة الدفع:</strong> ${paymentMethodName}</span>
+                    <span><i class="fas fa-check-circle"></i> <strong>رمز الموافقة:</strong> ${order.approvalCode || 'APV-' + Math.floor(Math.random()*10000)}</span>
+                </div>
+                <div class="info-row">
+                    <span><i class="fas fa-truck"></i> <strong>طريقة الاستلام:</strong> ${shippingMethodText}</span>
+                </div>
+                <div class="section-title">تفاصيل المنتجات / الخدمات ${totalPages > 1 ? `(صفحة ${pageNum} من ${totalPages})` : ''}</div>
             `;
             
-            // قالب التذييل المشترك
+            // قالب التذييل
             const getFooterHTML = () => `
                 <div class="footer-static">
                     <div class="contact-links">
@@ -599,63 +669,66 @@
                 </div>
             `;
             
-            // قالب الملخص (يظهر فقط في الصفحة الأخيرة)
+            // قالب الملخص
             const getSummaryHTML = () => `
                 <div class="summary-box">
                     <div class="summary-row"><span>المجموع الفرعي:</span><span>${subtotal.toFixed(2)} ريال</span></div>
-                    <div class="summary-row"><span>الخصم:</span><span style="color:#dc2626;">- ${discountValue.toFixed(2)} ريال</span></div>
+                    <div class="summary-row"><span>إجمالي الخصم:</span><span style="color:#dc2626;">- ${discountValue.toFixed(2)} ريال</span></div>
                     <div class="summary-row"><span>ضريبة القيمة المضافة (15%):</span><span>${tax.toFixed(2)} ريال</span></div>
                     <div class="summary-row total"><span>الإجمالي النهائي شامل الضريبة:</span><span>${total.toFixed(2)} ريال</span></div>
                 </div>
-                <div class="terms-box"><h4><i class="fas fa-info-circle"></i> تعليمات الفاتورة</h4><p>تخضع هذه الفاتورة لكامل الشروط والأحكام المرفقة، ويُعد اعتمادها أو سداد أي مبلغ بموجبها إقرارًا صريحًا ونهائيًا بالموافقة على جميع بنودها دون أي تحفظ، مع إقرار العميل بمسؤوليته عن الاطلاع عليها</p></div>
-                <div class="thanks-block"><p class="font-bold text-blue-800"><i class="fas fa-heart"></i> شكراً لتسوقكم معنا</p></div>
+                <div class="terms-box">
+                    <h4><i class="fas fa-info-circle"></i> تعليمات الفاتورة</h4>
+                    <p>تخضع هذه الفاتورة لكامل الشروط والأحكام المرفقة، ويُعد اعتمادها أو سداد أي مبلغ بموجبها إقرارًا صريحًا ونهائيًا بالموافقة على جميع بنودها دون أي تحفظ.</p>
+                </div>
+                <div class="thanks-block">
+                    <p><i class="fas fa-heart" style="color:#ef4444"></i> شكراً لتسوقكم معنا</p>
+                </div>
             `;
             
-            const container = document.getElementById('invoiceContainer');
+            // بناء الصفحات
+            const container = document.getElementById('pages');
             container.innerHTML = '';
             
-            // بناء الصفحات ديناميكياً
-            for (let page = 0; page < totalPages; page++) {
-                const start = page * rowsPerPage;
-                const end = Math.min(start + rowsPerPage, productRowsData.length);
-                const pageProducts = productRowsData.slice(start, end);
-                const isLastPage = (page === totalPages - 1);
+            for (let p = 0; p < pages.length; p++) {
+                const pageIndices = pages[p];
+                const isLastPage = (p === pages.length - 1);
                 
+                // بناء صفوف الجدول
                 let tableRows = '';
-                for (const data of pageProducts) {
-                    tableRows += createProductRowHTML(data.item, data.productImage, data.description, data.price, data.qty, data.itemTotal);
+                for (const idx of pageIndices) {
+                    tableRows += rows[idx].outerHTML;
                 }
                 
-                container.innerHTML += `
-                    <div class="page">
-                        <div class="page-content">
-                            <div class="page-inner">
-                                ${getHeaderHTML(page + 1, totalPages)}
-                                <table class="product-table">
-                                    <thead>
-                                        <tr>
-                                            <th>اسم المنتج</th>
-                                            <th>الصورة</th>
-                                            <th>الباركود</th>
-                                            <th>الوصف</th>
-                                            <th>الكمية</th>
-                                            <th>سعر الوحدة</th>
-                                            <th>الإجمالي</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>${tableRows}</tbody>
-                                </table>
-                                ${isLastPage ? getSummaryHTML() : ''}
-                                ${getFooterHTML()}
-                            </div>
-                            <div class="page-number">صفحة ${page + 1} / ${totalPages}</div>
-                        </div>
-                    </div>
+                const pageDiv = document.createElement('div');
+                pageDiv.className = 'page';
+                pageDiv.innerHTML = `
+                    ${getHeaderHTML(p + 1)}
+                    
+                    <table class="product-table">
+                        <thead>
+                            <tr>
+                                <th>المنتج / الخدمة</th>
+                                <th>الوصف</th>
+                                <th>الكمية</th>
+                                <th>سعر الوحدة</th>
+                                <th>الإجمالي</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                    
+                    ${isLastPage ? getSummaryHTML() : ''}
+                    ${getFooterHTML()}
+                    <div class="page-number">صفحة ${p + 1} / ${pages.length}</div>
                 `;
+                container.appendChild(pageDiv);
             }
             
             document.getElementById('loading').style.display = 'none';
-            document.getElementById('invoiceContainer').style.display = 'block';
+            document.getElementById('pages').style.display = 'block';
             document.getElementById('actionButtons').style.display = 'flex';
             
             document.getElementById('printBtn').onclick = () => window.print();
@@ -668,16 +741,16 @@
             
         } catch (error) {
             console.error(error);
-            document.getElementById('loading').innerHTML = `<div class="text-center text-red-600 p-10">خطأ: ${error.message}</div>`;
+            document.getElementById('loading').innerHTML = `<div style="color:red">خطأ: ${error.message}</div>`;
         }
     }
     
     async function exportPDF() {
-        const element = document.getElementById('invoiceContainer');
+        const element = document.getElementById('pages');
         if (!element) return;
         const btn = document.getElementById('pdfBtn');
         if (btn) btn.disabled = true;
-        showLoading();
+        
         try {
             await html2pdf().set({
                 margin: [0, 0, 0, 0],
@@ -690,16 +763,15 @@
             alert('حدث خطأ أثناء تصدير PDF');
         } finally {
             if (btn) btn.disabled = false;
-            hideLoading();
         }
     }
     
     async function exportPNG() {
-        const element = document.getElementById('invoiceContainer');
+        const element = document.getElementById('pages');
         if (!element) return;
         const btn = document.getElementById('pngBtn');
         if (btn) btn.disabled = true;
-        showLoading();
+        
         try {
             const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
             const link = document.createElement('a');
@@ -710,7 +782,6 @@
             alert('حدث خطأ أثناء تصدير الصورة');
         } finally {
             if (btn) btn.disabled = false;
-            hideLoading();
         }
     }
     
