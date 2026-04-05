@@ -97,63 +97,63 @@
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 15px;
             border-bottom: 2px solid #1e3a5f;
-            padding-bottom: 8px;
-            margin-bottom: 12px;
+            padding-bottom: 12px;
+            margin-bottom: 15px;
         }
 
         .logo-area img {
-            max-height: 60px;
+            max-height: 65px;
             width: auto;
         }
 
         .logo-fallback {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #1e3a5f, #3b82f6);
-            border-radius: 12px;
+            width: 65px;
+            height: 65px;
+            background: linear-gradient(135deg, #1e3a5f, #2d6a4f);
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .logo-fallback i {
-            font-size: 28px;
+            font-size: 30px;
             color: white;
         }
 
         .invoice-title h1 {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 800;
             color: #1e3a5f;
             margin: 0;
         }
 
         .invoice-title p {
-            font-size: 11px;
-            margin: 3px 0;
+            font-size: 12px;
+            margin: 4px 0;
             color: #475569;
         }
 
         .badge-status {
             display: inline-block;
-            padding: 3px 12px;
-            border-radius: 20px;
-            font-size: 11px;
+            padding: 4px 14px;
+            border-radius: 25px;
+            font-size: 12px;
             font-weight: 600;
         }
 
         .company-badge {
             background: #f1f5f9;
-            padding: 8px 12px;
-            border-radius: 10px;
-            font-size: 10px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 11px;
             display: flex;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 12px;
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
         /* ========================================
@@ -162,64 +162,68 @@
         .two-columns {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin: 10px 0;
+            gap: 15px;
+            margin: 12px 0;
         }
 
         .info-card {
             background: #f8fafc;
-            padding: 10px 12px;
-            border-radius: 10px;
+            padding: 12px 14px;
+            border-radius: 12px;
             border: 1px solid #e2e8f0;
         }
 
         .info-card h3 {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 700;
-            margin-bottom: 5px;
-            border-right: 3px solid #3b82f6;
-            padding-right: 8px;
+            margin-bottom: 6px;
+            border-right: 3px solid #2d6a4f;
+            padding-right: 10px;
+            color: #1e293b;
         }
 
         .info-card p {
-            font-size: 11px;
-            line-height: 1.4;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #334155;
         }
 
         .info-row {
             background: #f1f5f9;
-            padding: 8px 12px;
-            border-radius: 8px;
+            padding: 10px 14px;
+            border-radius: 10px;
             display: flex;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 8px;
-            margin: 8px 0;
-            font-size: 11px;
+            gap: 10px;
+            margin: 10px 0;
+            font-size: 12px;
         }
 
         .section-title {
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 800;
-            margin: 12px 0 10px 0;
-            border-right: 4px solid #3b82f6;
-            padding-right: 10px;
+            margin: 15px 0 12px 0;
+            border-right: 4px solid #2d6a4f;
+            padding-right: 12px;
+            color: #1e293b;
         }
 
         /* ========================================
-           PRODUCT TABLE
+           PRODUCT TABLE - 5 أعمدة
            ======================================== */
         .product-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 12px;
-            margin: 10px 0;
+            font-size: 13px;
+            margin: 12px 0;
+            table-layout: fixed;
         }
 
         .product-table th {
             background: #1e3a5f;
             color: white;
-            padding: 10px 6px;
+            padding: 12px 8px;
             border: 1px solid #2d4a6e;
             text-align: center;
             font-weight: 700;
@@ -227,36 +231,44 @@
 
         .product-table td {
             border: 1px solid #cbd5e1;
-            padding: 8px 5px;
+            padding: 10px 6px;
             text-align: center;
-            font-size: 12px;
+            vertical-align: middle;
         }
 
         .product-table td:first-child {
             text-align: right;
         }
 
-        .product-table th:nth-child(1) { width: 20%; }
-        .product-table th:nth-child(2) { width: 28%; }
-        .product-table th:nth-child(3) { width: 12%; }
-        .product-table th:nth-child(4) { width: 10%; }
-        .product-table th:nth-child(5) { width: 15%; }
-        .product-table th:nth-child(6) { width: 15%; }
+        /* عرض الأعمدة - 5 أعمدة */
+        .product-table th:nth-child(1) { width: 22%; }
+        .product-table th:nth-child(2) { width: 35%; }
+        .product-table th:nth-child(3) { width: 13%; }
+        .product-table th:nth-child(4) { width: 12%; }
+        .product-table th:nth-child(5) { width: 18%; }
 
+        /* منع انكسار الكلمات */
+        .product-table td,
+        .product-table th {
+            word-break: break-word;
+            white-space: normal;
+        }
+
+        /* صور المنتجات */
         .product-img {
-            width: 45px;
-            height: 45px;
+            width: 50px;
+            height: 50px;
             object-fit: cover;
-            border-radius: 6px;
+            border-radius: 8px;
             display: block;
             margin: 0 auto;
         }
 
         .product-img-fallback {
-            width: 45px;
-            height: 45px;
+            width: 50px;
+            height: 50px;
             background: #f1f5f9;
-            border-radius: 6px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -264,15 +276,16 @@
         }
 
         .product-img-fallback i {
-            font-size: 20px;
+            font-size: 22px;
             color: #94a3b8;
         }
 
         .desc-text {
             text-align: right;
             word-break: break-word;
-            font-size: 11px;
-            line-height: 1.3;
+            white-space: normal;
+            font-size: 12px;
+            line-height: 1.4;
         }
 
         /* ========================================
@@ -280,7 +293,7 @@
            ======================================== */
         .summary-box {
             background: #f0fdf4;
-            padding: 12px 18px;
+            padding: 14px 18px;
             border-radius: 12px;
             margin: 15px 0;
         }
@@ -290,26 +303,26 @@
             justify-content: space-between;
             padding: 6px 0;
             border-bottom: 1px dashed #cbd5e1;
-            font-size: 13px;
+            font-size: 14px;
         }
 
         .summary-row.total {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 800;
             color: #166534;
             border-top: 2px solid #86efac;
-            padding-top: 8px;
-            margin-top: 5px;
+            padding-top: 10px;
+            margin-top: 6px;
             border-bottom: none;
         }
 
         .terms-box {
             background: #fefce8;
-            padding: 10px 14px;
+            padding: 12px 16px;
             border-radius: 10px;
             border-right: 4px solid #eab308;
             margin: 12px 0;
-            font-size: 10px;
+            font-size: 11px;
         }
 
         .thanks-block {
@@ -317,8 +330,8 @@
             margin: 12px 0;
             padding: 10px;
             background: #eff6ff;
-            border-radius: 20px;
-            font-size: 13px;
+            border-radius: 25px;
+            font-size: 14px;
             font-weight: 600;
             color: #1e40af;
         }
@@ -329,7 +342,7 @@
         .footer-static {
             margin-top: 15px;
             text-align: center;
-            border-top: 2px solid #1e3a5f;
+            border-top: 2px solid #2d6a4f;
             padding-top: 12px;
         }
 
@@ -337,23 +350,23 @@
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 15px;
-            background: #f8fafc;
+            gap: 20px;
+            background: #e8f5e9;
             padding: 8px 15px;
-            border-radius: 40px;
+            border-radius: 50px;
         }
 
         .contact-links span {
-            font-size: 9px;
+            font-size: 10px;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            color: #334155;
+            gap: 6px;
+            color: #2d6a4f;
         }
 
         .footer-copyright {
-            font-size: 8px;
-            color: #94a3b8;
+            font-size: 9px;
+            color: #64748b;
             margin-top: 6px;
         }
 
@@ -367,17 +380,23 @@
             right: 0;
             display: flex;
             justify-content: center;
-            gap: 12px;
+            gap: 15px;
             z-index: 1000;
         }
 
         .btn {
-            padding: 8px 22px;
-            border-radius: 40px;
+            padding: 10px 25px;
+            border-radius: 50px;
             border: none;
             font-weight: 600;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
         }
 
         .btn-print { background: #3b82f6; color: white; }
@@ -387,8 +406,8 @@
         .loading-spinner {
             border: 3px solid #e2e8f0;
             border-top-color: #3b82f6;
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 15px;
@@ -407,14 +426,19 @@
                 padding: 0;
                 margin: 0;
             }
+            
             .page {
                 box-shadow: none;
                 margin: 0;
                 page-break-after: always;
             }
-            .action-buttons {
-                display: none;
+            
+            .action-buttons,
+            .btn,
+            button {
+                display: none !important;
             }
+            
             @page {
                 size: A4;
                 margin: 0;
@@ -424,9 +448,9 @@
 </head>
 <body>
 
-<div id="loading" style="text-align:center; padding:50px">
+<div id="loading" style="text-align:center; padding:60px">
     <div class="loading-spinner"></div>
-    <p style="color:#64748b">جاري تحميل الفاتورة...</p>
+    <p style="color:#64748b; font-size:14px">جاري تحميل الفاتورة...</p>
 </div>
 <div id="pages" style="display:none"></div>
 
@@ -448,6 +472,7 @@
         messagingSenderId: "186209858482",
         appId: "1:186209858482:web:186ca610780799ef562aab"
     };
+    
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
@@ -462,13 +487,17 @@
     const PAGE_HEIGHT = 297 * MM_TO_PX;
     const TOP_MARGIN_MM = 20;
     const BOTTOM_MARGIN_MM = 25;
+    const LEFT_MARGIN_MM = 15;
+    const RIGHT_MARGIN_MM = 15;
     const TOP_MARGIN_PX = TOP_MARGIN_MM * MM_TO_PX;
     const BOTTOM_MARGIN_PX = BOTTOM_MARGIN_MM * MM_TO_PX;
-    const MAX_CONTENT_HEIGHT_PX = PAGE_HEIGHT - TOP_MARGIN_PX - BOTTOM_MARGIN_PX;
-    const SAFETY_BUFFER_PX = 30;
+    const LEFT_MARGIN_PX = LEFT_MARGIN_MM * MM_TO_PX;
+    const RIGHT_MARGIN_PX = RIGHT_MARGIN_MM * MM_TO_PX;
+    const AVAILABLE_HEIGHT = PAGE_HEIGHT - TOP_MARGIN_PX - BOTTOM_MARGIN_PX;
+    const SAFETY_BUFFER = 30;
 
     // ========================================
-    // دالة قياس ارتفاع العنصر بدقة
+    // دالة قياس ارتفاع العنصر
     // ========================================
     async function getElementHeight(element) {
         return new Promise((resolve) => {
@@ -477,7 +506,7 @@
             container.style.visibility = 'hidden';
             container.style.top = '-9999px';
             container.style.left = '-9999px';
-            container.style.width = '180mm';
+            container.style.width = `${210 - LEFT_MARGIN_MM - RIGHT_MARGIN_MM}mm`;
             container.style.direction = 'rtl';
             document.body.appendChild(container);
             
@@ -557,7 +586,7 @@
         return `
             <div class="logo-header">
                 <div class="logo-area">
-                    <img src="/images/logo.svg" alt="شعار منصة في خدمتك" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'logo-fallback\'><i class=\'fas fa-handshake\'></i></div>';">
+                    <div class="logo-fallback"><i class="fas fa-handshake"></i></div>
                 </div>
                 <div class="invoice-title">
                     <h1>فاتورة إلكترونية</h1>
@@ -633,7 +662,6 @@
         const tr = document.createElement('tr');
         const price = item.price || 0;
         const qty = item.quantity || 0;
-        const itemTotal = price * qty;
         let productImage = '';
         let description = item.description || '';
         
@@ -652,28 +680,23 @@
         if (description) description = escapeHtml(description);
         
         const imgHtml = productImage ? 
-            `<img src="${productImage}" class="product-img" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'product-img-fallback\'><i class=\'fas fa-box\'></i></div>';">` :
+            `<img src="${productImage}" class="product-img" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'product-img-fallback\'><i class=\'fas fa-image\'></i></div>';">` :
             `<div class="product-img-fallback"><i class="fas fa-box"></i></div>`;
         
         tr.innerHTML = `
             <td style="text-align: right;">${escapeHtml(item.name)}</td
             <td class="desc-text">${description || '—'}</td
-            <td>${imgHtml}</td
-            <td>${qty}</td
-            <td>${price.toFixed(2)} ريال</td
-            <td>${itemTotal.toFixed(2)} ريال</td
+            <td style="text-align: center;">${imgHtml}</td
+            <td style="text-align: center;">${qty}</td
+            <td style="text-align: center;">${price.toFixed(2)} ريال</td
         `;
         return tr;
     }
 
     // ========================================
-    // دالة تقسيم الصفوف على الصفحات
+    // دالة حساب ارتفاع الرأس والتذييل
     // ========================================
-    async function splitRowsIntoPages(rows, headerHTML, footerHTML) {
-        const pages = [];
-        let currentPageRows = [];
-        let currentHeight = 0;
-        
+    async function calculateFixedHeights(headerHTML, footerHTML) {
         const tempHeader = document.createElement('div');
         tempHeader.innerHTML = headerHTML;
         const headerHeight = await getElementHeight(tempHeader);
@@ -682,7 +705,17 @@
         tempFooter.innerHTML = footerHTML;
         const footerHeight = await getElementHeight(tempFooter);
         
-        const availableForRows = MAX_CONTENT_HEIGHT_PX - headerHeight - footerHeight - SAFETY_BUFFER_PX;
+        return { headerHeight, footerHeight };
+    }
+
+    // ========================================
+    // دالة تقسيم الصفوف ديناميكياً
+    // ========================================
+    async function splitRowsDynamic(rows, headerHeight, footerHeight) {
+        const pages = [];
+        let currentPageRows = [];
+        let currentHeight = 0;
+        const availableForRows = AVAILABLE_HEIGHT - headerHeight - footerHeight - SAFETY_BUFFER;
         
         for (let i = 0; i < rows.length; i++) {
             const rowHeight = await getElementHeight(rows[i]);
@@ -701,7 +734,7 @@
             pages.push(currentPageRows);
         }
         
-        return pages.length > 0 ? pages : [rows];
+        return pages.filter(page => page && page.length > 0);
     }
 
     // ========================================
@@ -770,13 +803,15 @@
                 productRows.push(createProductRowElement(item));
             }
             
-            // الحصول على قوالب HTML
             const headerHTML = getHeaderHTML(order, customer, paymentMethodName, shippingMethodText);
             const footerHTML = getFooterHTML();
             const summaryHTML = getSummaryHTML(subtotal, discountValue, tax, total);
             
+            // حساب ارتفاع الرأس والتذييل
+            const { headerHeight, footerHeight } = await calculateFixedHeights(headerHTML, footerHTML);
+            
             // تقسيم الصفوف على الصفحات
-            const pages = await splitRowsIntoPages(productRows, headerHTML, footerHTML);
+            const pages = await splitRowsDynamic(productRows, headerHeight, footerHeight);
             
             const container = document.getElementById('pages');
             container.innerHTML = '';
@@ -812,7 +847,6 @@
                         <th>الصورة</th>
                         <th>الكمية</th>
                         <th>سعر الوحدة</th>
-                        <th>الإجمالي</th>
                     </tr>
                 `;
                 table.appendChild(thead);
@@ -831,7 +865,7 @@
                     innerDiv.appendChild(summaryDiv);
                 }
                 
-                // إضافة التذييل الثابت
+                // إضافة التذييل
                 const footerDiv = document.createElement('div');
                 footerDiv.innerHTML = footerHTML;
                 innerDiv.appendChild(footerDiv);
@@ -879,9 +913,9 @@
             await html2pdf().set({
                 margin: [0, 0, 0, 0],
                 filename: `${currentFileName}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 3, dpi: 300, useCORS: true, logging: false },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: { scale: 3, dpi: 300, useCORS: true, logging: false, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: false }
             }).from(element).save();
         } catch (error) {
             alert('حدث خطأ أثناء تصدير PDF');
@@ -897,7 +931,7 @@
         if (btn) btn.disabled = true;
         
         try {
-            const canvas = await html2canvas(element, { scale: 3, dpi: 300, backgroundColor: '#ffffff', useCORS: true });
+            const canvas = await html2canvas(element, { scale: 3, dpi: 300, backgroundColor: '#ffffff', useCORS: true, logging: false });
             const link = document.createElement('a');
             link.download = `${currentFileName}.png`;
             link.href = canvas.toDataURL('image/png');
