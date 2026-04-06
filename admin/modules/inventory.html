@@ -21,21 +21,27 @@
             height: 50px;
             object-fit: cover;
             border-radius: 8px;
+            cursor: pointer;
+        }
+        .product-image-large {
+            transition: transform 0.2s;
+        }
+        .product-image-large:hover {
+            transform: scale(1.05);
         }
         .modal { transition: opacity 0.3s ease; }
         .toast {
             position: fixed;
             bottom: 20px;
             left: 20px;
-            background: #10b981;
-            color: white;
             padding: 12px 24px;
             border-radius: 8px;
             z-index: 1000;
             animation: slideIn 0.3s ease;
         }
-        .toast-error { background: #ef4444; }
-        .toast-warning { background: #f59e0b; }
+        .toast-success { background: #10b981; color: white; }
+        .toast-error { background: #ef4444; color: white; }
+        .toast-warning { background: #f59e0b; color: white; }
         @keyframes slideIn {
             from { transform: translateX(-100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
@@ -56,6 +62,28 @@
         button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+        }
+        .image-preview-container {
+            position: relative;
+            display: inline-block;
+        }
+        .image-preview-container:hover .remove-image-btn {
+            display: flex;
+        }
+        .remove-image-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: red;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -155,8 +183,10 @@
                         <input type="file" id="productMainImageFile" accept="image/*" class="border rounded-lg px-3 py-2">
                     </div>
                     <div id="mainImagePreview" class="mt-2 hidden">
-                        <img id="mainPreviewImg" class="product-image-preview">
-                        <button type="button" id="removeMainImageBtn" class="text-red-500 text-sm mt-1">إزالة الصورة</button>
+                        <div class="image-preview-container">
+                            <img id="mainPreviewImg" class="product-image-preview w-20 h-20 object-cover rounded-lg">
+                            <button type="button" id="removeMainImageBtn" class="remove-image-btn"><i class="fas fa-times"></i></button>
+                        </div>
                     </div>
                 </div>
 
@@ -226,7 +256,15 @@
             const productsRef = collection(db, 'products');
             const q = query(productsRef, orderBy('createdAt', 'desc'));
             const querySnapshot = await getDocs(q);
-            return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const productsList = querySnapshot.docs.map(doc => ({ 
+                id: doc.id, 
+                ...doc.data(),
+                // توحيد حقل الصورة (image أو mainImage)
+                image: doc.data().image || doc.data().mainImage || '',
+                mainImage: doc.data().mainImage || doc.data().image || ''
+            }));
+            console.log('✅ تم تحميل المنتجات:', productsList.length);
+            return productsList;
         } catch (error) {
             console.error('Error loading products:', error);
             return [];
@@ -234,11 +272,23 @@
     }
 
     async function addProduct(data) {
-        return await addDoc(collection(db, 'products'), data);
+        // توحيد حقل الصورة
+        const productData = {
+            ...data,
+            image: data.mainImage || data.image || '',
+            mainImage: data.mainImage || data.image || ''
+        };
+        return await addDoc(collection(db, 'products'), productData);
     }
 
     async function updateProduct(id, data) {
-        return await updateDoc(doc(db, 'products', id), data);
+        // توحيد حقل الصورة
+        const updateData = {
+            ...data,
+            image: data.mainImage || data.image || '',
+            mainImage: data.mainImage || data.image || ''
+        };
+        return await updateDoc(doc(db, 'products', id), updateData);
     }
 
     async function deleteProduct(id) {
@@ -262,14 +312,7 @@
     // ===================== دوال مساعدة =====================
     function showToast(message, type = 'success') {
         toast.textContent = message;
-        toast.className = `fixed bottom-4 left-4 px-6 py-3 rounded-lg shadow-lg z-50`;
-        if (type === 'error') {
-            toast.style.backgroundColor = '#ef4444';
-        } else if (type === 'warning') {
-            toast.style.backgroundColor = '#f59e0b';
-        } else {
-            toast.style.backgroundColor = '#10b981';
-        }
+        toast.className = `toast toast-${type}`;
         toast.classList.remove('hidden');
         setTimeout(() => toast.classList.add('hidden'), 3000);
     }
@@ -300,9 +343,12 @@
         if (file) {
             const reader = new FileReader();
             reader.onload = (ev) => {
-                mainPreviewImg.src = ev.target.result;
+                const imageUrl = ev.target.result;
+                mainPreviewImg.src = imageUrl;
                 mainImagePreview.classList.remove('hidden');
-                productMainImage.value = ev.target.result;
+                productMainImage.value = imageUrl;
+                // إظهار زر الإزالة
+                document.querySelector('.remove-image-btn').style.display = 'flex';
             };
             reader.readAsDataURL(file);
         }
@@ -312,6 +358,7 @@
         if (productMainImage.value) {
             mainPreviewImg.src = productMainImage.value;
             mainImagePreview.classList.remove('hidden');
+            document.querySelector('.remove-image-btn').style.display = 'flex';
         } else {
             mainImagePreview.classList.add('hidden');
         }
@@ -329,10 +376,12 @@
     function updateStats() {
         totalProductsSpan.textContent = products.length;
         
-        const productsWithImages = products.filter(p => p.mainImage && p.mainImage.trim() !== '').length;
+        const productsWithImages = products.filter(p => {
+            const img = p.mainImage || p.image;
+            return img && img.trim() !== '';
+        }).length;
         productsWithImagesSpan.textContent = productsWithImages;
         
-        // المنتجات المنخفضة (أقل من الحد الأدنى وأكبر من 0)
         const lowStock = products.filter(p => {
             const stock = p.stock || 0;
             const minStock = p.minStock || 5;
@@ -340,7 +389,6 @@
         }).length;
         lowStockCountSpan.textContent = lowStock;
         
-        // المنتجات التي نفدت (الكمية = 0)
         const outStock = products.filter(p => (p.stock || 0) === 0).length;
         outStockCountSpan.textContent = outStock;
     }
@@ -374,11 +422,16 @@
 
         productsTableBody.innerHTML = products.map(p => {
             const stock = p.stock || 0;
+            // الحصول على الصورة (من mainImage أو image)
+            const productImage = p.mainImage || p.image || '';
+            
             return `
             <tr class="border-b hover:bg-gray-50 transition ${getRowClass(p)}">
                 <td class="p-3">
-                    ${p.mainImage ? `<img src="${escapeHtml(p.mainImage)}" class="product-image-preview" onerror="this.style.display='none'">` : '<div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center"><i class="fas fa-image text-gray-400 text-xl"></i></div>'}
-                  </td>
+                    ${productImage ? 
+                        `<img src="${escapeHtml(productImage)}" class="product-image-preview" onclick="window.openImage('${escapeHtml(productImage)}')" onerror="this.style.display='none'">` : 
+                        '<div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center"><i class="fas fa-image text-gray-400 text-xl"></i></div>'}
+                   </td>
                 <td class="p-3">
                     <div class="font-semibold text-gray-800">${escapeHtml(p.name)}</div>
                     <div class="text-xs text-gray-500 font-mono">${escapeHtml(p.code || '—')}</div>
@@ -404,7 +457,7 @@
                     <button onclick="window.deleteProductHandler('${p.id}', '${escapeHtml(p.name)}')" class="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50 transition" title="حذف">
                         <i class="fas fa-trash-alt"></i>
                     </button>
-                  </td>
+                </td>
             </tr>
         `}).join('');
     }
@@ -437,6 +490,11 @@
         }
     };
 
+    // ===================== فتح الصورة =====================
+    window.openImage = (url) => {
+        window.open(url, '_blank');
+    };
+
     // ===================== تحميل وعرض البيانات =====================
     async function loadAndRender() {
         try {
@@ -466,10 +524,12 @@
                 document.getElementById('productStock').value = product.stock || 0;
                 document.getElementById('minStock').value = product.minStock || 5;
                 document.getElementById('productDescription').value = product.description || '';
-                if (product.mainImage) {
-                    productMainImage.value = product.mainImage;
-                    mainPreviewImg.src = product.mainImage;
+                const productImage = product.mainImage || product.image || '';
+                if (productImage) {
+                    productMainImage.value = productImage;
+                    mainPreviewImg.src = productImage;
                     mainImagePreview.classList.remove('hidden');
+                    document.querySelector('.remove-image-btn').style.display = 'flex';
                 } else {
                     productMainImage.value = '';
                     mainImagePreview.classList.add('hidden');
@@ -523,6 +583,7 @@
             minStock: minStock,
             description: description || null,
             mainImage: mainImage || null,
+            image: mainImage || null, // توحيد حقل الصورة
             code: code || generateRandomCode(),
             updatedAt: new Date().toISOString()
         };
