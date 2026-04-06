@@ -42,7 +42,7 @@ export async function getCollection(name, conditions = [], sortBy = null, limitC
         let ref = collection(db, name);
         let q = ref;
 
-        if (conditions.length) {
+        if (conditions.length > 0) {
             conditions.forEach(cond => {
                 q = query(q, where(cond.field, cond.operator, cond.value));
             });
@@ -68,31 +68,39 @@ export async function getCollection(name, conditions = [], sortBy = null, limitC
 // ================= Single Document =================
 export async function getDocument(collectionName, docId) {
     try {
+        if (!docId) return null;
         const ref = doc(db, collectionName, docId);
         const snap = await getDoc(ref);
         return snap.exists() ? { id: snap.id, ...snap.data() } : null;
     } catch (error) {
-        console.error(`❌ خطأ في المستند ${collectionName}:`, error);
+        console.error(`❌ خطأ في المستند ${collectionName}/${docId}:`, error);
         return null;
     }
 }
 
 // ================= Load Cache =================
 export async function loadCustomersAndProducts(forceReload = false) {
-    if (!forceReload && customersMap.size && productsMap.size) {
+    if (!forceReload && customersMap.size > 0 && productsMap.size > 0) {
+        console.log('✅ استخدام البيانات المخزنة مؤقتاً');
         return;
     }
 
     customersMap.clear();
     productsMap.clear();
 
-    const [customersSnap, productsSnap] = await Promise.all([
-        getDocs(collection(db, 'customers')),
-        getDocs(collection(db, 'products'))
-    ]);
+    try {
+        const [customersSnap, productsSnap] = await Promise.all([
+            getDocs(collection(db, 'customers')),
+            getDocs(collection(db, 'products'))
+        ]);
 
-    customersSnap.forEach(d => customersMap.set(d.id, d.data()));
-    productsSnap.forEach(d => productsMap.set(d.id, d.data()));
+        customersSnap.forEach(d => customersMap.set(d.id, d.data()));
+        productsSnap.forEach(d => productsMap.set(d.id, d.data()));
+        
+        console.log(`✅ تم تحميل ${customersMap.size} عميل و ${productsMap.size} منتج`);
+    } catch (error) {
+        console.error('❌ خطأ في تحميل الكاش:', error);
+    }
 }
 
 // ================= Order (مع دعم الصور) =================
@@ -103,7 +111,7 @@ export async function getOrderFull(orderId) {
 
         await loadCustomersAndProducts();
 
-        const customer = customersMap.get(order.customerId) || {};
+        const customer = customersMap.get(order.customerId) || { name: 'غير معروف' };
 
         const items = (order.items || []).map(item => {
             const product = productsMap.get(item.productId) || {};
@@ -133,15 +141,28 @@ export async function getOrderFull(orderId) {
     }
 }
 
-// ================= جلب جميع الطلبات مع الصور =================
-export async function getAllOrdersFull(limitCount = 100) {
+// ================= جلب جميع الطلبات مع الصور (محسّن) =================
+export async function getAllOrdersFull(limitCount = 500) {
     try {
+        console.log('🔄 جاري جلب جميع الطلبات مع الصور...');
+        
         await loadCustomersAndProducts();
         
-        const orders = await getCollection('orders', [], { field: 'createdAt', direction: 'desc' }, limitCount);
+        // جلب الطلبات مباشرة بدلاً من getCollection للتأكد
+        const ordersRef = collection(db, 'orders');
+        const q = query(ordersRef, orderBy('createdAt', 'desc'));
+        const querySnapshot = await getDocs(q);
+        
+        const orders = [];
+        querySnapshot.forEach((doc) => {
+            const orderData = doc.data();
+            orders.push({ id: doc.id, ...orderData });
+        });
+        
+        console.log(`✅ تم جلب ${orders.length} طلب من قاعدة البيانات`);
         
         const fullOrders = orders.map(order => {
-            const customer = customersMap.get(order.customerId) || {};
+            const customer = customersMap.get(order.customerId) || { name: 'غير معروف' };
             
             const items = (order.items || []).map(item => {
                 const product = productsMap.get(item.productId) || {};
@@ -171,6 +192,80 @@ export async function getAllOrdersFull(limitCount = 100) {
     }
 }
 
+// ================= جلب الطلبات مع فلترة (محسّن) =================
+export async function getFilteredOrdersFull(filters = {}) {
+    try {
+        console.log('🔄 جاري جلب الطلبات المفلترة...', filters);
+        
+        await loadCustomersAndProducts();
+        
+        let constraints = [];
+        
+        if (filters.status && filters.status !== '') {
+            constraints.push(where('status', '==', filters.status));
+        }
+        if (filters.customerId) {
+            constraints.push(where('customerId', '==', filters.customerId));
+        }
+        if (filters.shippingMethod && filters.shippingMethod !== '') {
+            constraints.push(where('shippingMethod', '==', filters.shippingMethod));
+        }
+        if (filters.startDate) {
+            constraints.push(where('orderDate', '>=', filters.startDate));
+        }
+        if (filters.endDate) {
+            constraints.push(where('orderDate', '<=', filters.endDate));
+        }
+        
+        // إضافة الترتيب
+        constraints.push(orderBy('createdAt', 'desc'));
+        
+        // إضافة الحد
+        if (filters.limit) {
+            constraints.push(limit(filters.limit));
+        }
+        
+        const ordersRef = collection(db, 'orders');
+        const q = constraints.length > 0 ? query(ordersRef, ...constraints) : query(ordersRef, orderBy('createdAt', 'desc'));
+        const querySnapshot = await getDocs(q);
+        
+        const orders = [];
+        querySnapshot.forEach((doc) => {
+            orders.push({ id: doc.id, ...doc.data() });
+        });
+        
+        const fullOrders = orders.map(order => {
+            const customer = customersMap.get(order.customerId) || { name: 'غير معروف' };
+            
+            const items = (order.items || []).map(item => {
+                const product = productsMap.get(item.productId) || {};
+                const finalImage = product.image || item.image || '';
+                
+                return {
+                    ...item,
+                    productName: product.name || item.name || 'غير معروف',
+                    description: product.description || item.description || '',
+                    image: finalImage,
+                    price: item.price || product.price || 0
+                };
+            });
+            
+            return {
+                ...order,
+                customer,
+                items
+            };
+        });
+        
+        console.log(`✅ تم جلب ${fullOrders.length} طلب مفلتر`);
+        return fullOrders;
+        
+    } catch (error) {
+        console.error("❌ خطأ في جلب الطلبات المفلترة:", error);
+        return [];
+    }
+}
+
 // ================= Totals Helper =================
 export function calculateTotals(items = [], discount = 0, discountType = 'fixed') {
     let subtotal = 0;
@@ -191,68 +286,184 @@ export function calculateTotals(items = [], discount = 0, discountType = 'fixed'
     };
 }
 
-// ================= Products =================
-export const loadProducts = () => getCollection('products');
-export const loadCustomers = () => getCollection('customers', [], { field: 'name', direction: 'asc' });
-export const loadOrders = () => getCollection('orders', [], { field: 'createdAt', direction: 'desc' });
+// ================= Products (محسّن) =================
+export const loadProducts = async () => {
+    try {
+        const productsRef = collection(db, 'products');
+        const q = query(productsRef, orderBy('createdAt', 'desc'));
+        const querySnapshot = await getDocs(q);
+        const products = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log(`✅ تم تحميل ${products.length} منتج`);
+        return products;
+    } catch (error) {
+        console.error('❌ خطأ في تحميل المنتجات:', error);
+        return [];
+    }
+};
+
+export const loadCustomers = async () => {
+    try {
+        const customersRef = collection(db, 'customers');
+        const q = query(customersRef, orderBy('name', 'asc'));
+        const querySnapshot = await getDocs(q);
+        const customers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log(`✅ تم تحميل ${customers.length} عميل`);
+        return customers;
+    } catch (error) {
+        console.error('❌ خطأ في تحميل العملاء:', error);
+        return [];
+    }
+};
+
+export const loadOrders = async () => {
+    try {
+        console.log('🔄 جاري تحميل الطلبات...');
+        const ordersRef = collection(db, 'orders');
+        const q = query(ordersRef, orderBy('createdAt', 'desc'));
+        const querySnapshot = await getDocs(q);
+        const orders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log(`✅ تم تحميل ${orders.length} طلب`);
+        return orders;
+    } catch (error) {
+        console.error('❌ خطأ في تحميل الطلبات:', error);
+        return [];
+    }
+};
 
 // ================= CRUD =================
-export const addProduct = (data) =>
-    addDoc(collection(db, 'products'), { 
-        ...data, 
-        image: data.image || '',
-        createdAt: nowISO(), 
-        updatedAt: nowISO() 
-    });
-
-export const updateProduct = (id, data) =>
-    updateDoc(doc(db, 'products', id), { 
-        ...data, 
-        image: data.image || '',
-        updatedAt: nowISO() 
-    });
-
-export const deleteProduct = (id) =>
-    deleteDoc(doc(db, 'products', id));
-
-export const addOrder = (data) => {
-    const itemsWithImages = (data.items || []).map(item => ({
-        ...item,
-        image: item.image || ''
-    }));
-    
-    return addDoc(collection(db, 'orders'), { 
-        ...data, 
-        items: itemsWithImages,
-        createdAt: nowISO(), 
-        updatedAt: nowISO() 
-    });
+export const addProduct = async (data) => {
+    try {
+        const docRef = await addDoc(collection(db, 'products'), { 
+            ...data, 
+            image: data.image || '',
+            createdAt: nowISO(), 
+            updatedAt: nowISO() 
+        });
+        console.log('✅ تم إضافة المنتج:', docRef.id);
+        return docRef;
+    } catch (error) {
+        console.error('❌ خطأ في إضافة المنتج:', error);
+        throw error;
+    }
 };
 
-export const updateOrder = (id, data) => {
-    const itemsWithImages = (data.items || []).map(item => ({
-        ...item,
-        image: item.image || ''
-    }));
-    
-    return updateDoc(doc(db, 'orders', id), { 
-        ...data, 
-        items: itemsWithImages,
-        updatedAt: nowISO() 
-    });
+export const updateProduct = async (id, data) => {
+    try {
+        await updateDoc(doc(db, 'products', id), { 
+            ...data, 
+            image: data.image || '',
+            updatedAt: nowISO() 
+        });
+        console.log('✅ تم تحديث المنتج:', id);
+        return true;
+    } catch (error) {
+        console.error('❌ خطأ في تحديث المنتج:', error);
+        throw error;
+    }
 };
 
-export const deleteOrder = (id) =>
-    deleteDoc(doc(db, 'orders', id));
+export const deleteProduct = async (id) => {
+    try {
+        await deleteDoc(doc(db, 'products', id));
+        console.log('✅ تم حذف المنتج:', id);
+        return true;
+    } catch (error) {
+        console.error('❌ خطأ في حذف المنتج:', error);
+        throw error;
+    }
+};
 
-export const addCustomer = (data) =>
-    addDoc(collection(db, 'customers'), { ...data, createdAt: nowISO(), updatedAt: nowISO() });
+export const addOrder = async (data) => {
+    try {
+        const itemsWithImages = (data.items || []).map(item => ({
+            ...item,
+            image: item.image || ''
+        }));
+        
+        const docRef = await addDoc(collection(db, 'orders'), { 
+            ...data, 
+            items: itemsWithImages,
+            createdAt: nowISO(), 
+            updatedAt: nowISO() 
+        });
+        console.log('✅ تم إضافة الطلب:', docRef.id);
+        return docRef;
+    } catch (error) {
+        console.error('❌ خطأ في إضافة الطلب:', error);
+        throw error;
+    }
+};
 
-export const updateCustomer = (id, data) =>
-    updateDoc(doc(db, 'customers', id), { ...data, updatedAt: nowISO() });
+export const updateOrder = async (id, data) => {
+    try {
+        const itemsWithImages = (data.items || []).map(item => ({
+            ...item,
+            image: item.image || ''
+        }));
+        
+        await updateDoc(doc(db, 'orders', id), { 
+            ...data, 
+            items: itemsWithImages,
+            updatedAt: nowISO() 
+        });
+        console.log('✅ تم تحديث الطلب:', id);
+        return true;
+    } catch (error) {
+        console.error('❌ خطأ في تحديث الطلب:', error);
+        throw error;
+    }
+};
 
-export const deleteCustomer = (id) =>
-    deleteDoc(doc(db, 'customers', id));
+export const deleteOrder = async (id) => {
+    try {
+        await deleteDoc(doc(db, 'orders', id));
+        console.log('✅ تم حذف الطلب:', id);
+        return true;
+    } catch (error) {
+        console.error('❌ خطأ في حذف الطلب:', error);
+        throw error;
+    }
+};
+
+export const addCustomer = async (data) => {
+    try {
+        const docRef = await addDoc(collection(db, 'customers'), { 
+            ...data, 
+            createdAt: nowISO(), 
+            updatedAt: nowISO() 
+        });
+        console.log('✅ تم إضافة العميل:', docRef.id);
+        return docRef;
+    } catch (error) {
+        console.error('❌ خطأ في إضافة العميل:', error);
+        throw error;
+    }
+};
+
+export const updateCustomer = async (id, data) => {
+    try {
+        await updateDoc(doc(db, 'customers', id), { 
+            ...data, 
+            updatedAt: nowISO() 
+        });
+        console.log('✅ تم تحديث العميل:', id);
+        return true;
+    } catch (error) {
+        console.error('❌ خطأ في تحديث العميل:', error);
+        throw error;
+    }
+};
+
+export const deleteCustomer = async (id) => {
+    try {
+        await deleteDoc(doc(db, 'customers', id));
+        console.log('✅ تم حذف العميل:', id);
+        return true;
+    } catch (error) {
+        console.error('❌ خطأ في حذف العميل:', error);
+        throw error;
+    }
+};
 
 // ================= دوال إضافية =================
 export async function updateProductImage(productId, imageUrl) {
@@ -274,6 +485,36 @@ export async function updateProductImage(productId, imageUrl) {
     } catch (error) {
         console.error('❌ خطأ في تحديث صورة المنتج:', error);
         return false;
+    }
+}
+
+export async function getProductWithImage(productId) {
+    try {
+        const product = await getDocument('products', productId);
+        if (!product) return null;
+        
+        return {
+            ...product,
+            image: product.image || '',
+            imageUrl: product.image || ''
+        };
+    } catch (error) {
+        console.error('❌ خطأ في جلب المنتج:', error);
+        return null;
+    }
+}
+
+// ================= دالة اختبار الاتصال =================
+export async function testConnection() {
+    try {
+        console.log('🔄 اختبار الاتصال بقاعدة البيانات...');
+        const testRef = collection(db, 'orders');
+        const snapshot = await getDocs(testRef);
+        console.log(`✅ الاتصال ناجح! عدد الطلبات: ${snapshot.size}`);
+        return { success: true, count: snapshot.size };
+    } catch (error) {
+        console.error('❌ فشل الاتصال:', error);
+        return { success: false, error: error.message };
     }
 }
 
