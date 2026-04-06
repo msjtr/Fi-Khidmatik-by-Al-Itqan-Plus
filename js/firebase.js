@@ -14,7 +14,7 @@ import {
     where,
     orderBy,
     limit,
-    writeBatch  // ✅ إضافة batch للعمليات المتعددة
+    writeBatch
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 // ================= Config =================
@@ -27,12 +27,15 @@ const firebaseConfig = {
     appId: "1:186209858482:web:186ca610780799ef562aab"
 };
 
+// تهيئة Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // ================= Cache =================
 export let customersMap = new Map();
 export let productsMap = new Map();
+let cacheLastUpdated = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 دقائق
 
 // ================= Helper =================
 const nowISO = () => new Date().toISOString();
@@ -40,8 +43,7 @@ const nowISO = () => new Date().toISOString();
 // ================= Advanced Collection =================
 export async function getCollection(name, conditions = [], sortBy = null, limitCount = null) {
     try {
-        let ref = collection(db, name);
-        let q = ref;
+        let q = collection(db, name);
 
         if (conditions.length > 0) {
             conditions.forEach(cond => {
@@ -61,7 +63,7 @@ export async function getCollection(name, conditions = [], sortBy = null, limitC
         return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
     } catch (error) {
-        console.error(`❌ خطأ في ${name}:`, error);
+        console.error(`❌ خطأ في جلب مجموعة ${name}:`, error);
         return [];
     }
 }
@@ -79,10 +81,11 @@ export async function getDocument(collectionName, docId) {
     }
 }
 
-// ================= Load Cache =================
+// ================= Load Cache with expiry =================
 export async function loadCustomersAndProducts(forceReload = false) {
-    if (!forceReload && customersMap.size > 0 && productsMap.size > 0) {
-        console.log('✅ استخدام البيانات المخزنة مؤقتاً');
+    const now = Date.now();
+    if (!forceReload && customersMap.size > 0 && productsMap.size > 0 && (now - cacheLastUpdated) < CACHE_DURATION) {
+        console.log('✅ استخدام البيانات المخزنة مؤقتاً (صالحة)');
         return;
     }
 
@@ -97,22 +100,29 @@ export async function loadCustomersAndProducts(forceReload = false) {
 
         customersSnap.forEach(d => customersMap.set(d.id, d.data()));
         productsSnap.forEach(d => productsMap.set(d.id, d.data()));
+        cacheLastUpdated = now;
         
         console.log(`✅ تم تحميل ${customersMap.size} عميل و ${productsMap.size} منتج`);
     } catch (error) {
         console.error('❌ خطأ في تحميل الكاش:', error);
+        throw error;
     }
 }
 
 // ================= Order (مع دعم الصور) =================
 export async function getOrderFull(orderId) {
     try {
+        if (!orderId) {
+            console.error('❌ orderId مطلوب');
+            return null;
+        }
+        
         const order = await getDocument('orders', orderId);
         if (!order) return null;
 
         await loadCustomersAndProducts();
 
-        const customer = customersMap.get(order.customerId) || { name: 'غير معروف' };
+        const customer = customersMap.get(order.customerId) || { name: 'غير معروف', phone: '', email: '' };
 
         const items = (order.items || []).map(item => {
             const product = productsMap.get(item.productId) || {};
@@ -120,6 +130,7 @@ export async function getOrderFull(orderId) {
             
             return {
                 ...item,
+                productId: item.productId || null,
                 productName: product.name || item.name || 'غير معروف',
                 description: product.description || item.description || '',
                 image: finalImage,
@@ -162,7 +173,7 @@ export async function getAllOrdersFull(limitCount = 500) {
         console.log(`✅ تم جلب ${orders.length} طلب من قاعدة البيانات`);
         
         const fullOrders = orders.map(order => {
-            const customer = customersMap.get(order.customerId) || { name: 'غير معروف' };
+            const customer = customersMap.get(order.customerId) || { name: 'غير معروف', phone: '', email: '' };
             
             const items = (order.items || []).map(item => {
                 const product = productsMap.get(item.productId) || {};
@@ -170,6 +181,7 @@ export async function getAllOrdersFull(limitCount = 500) {
                 
                 return {
                     ...item,
+                    productId: item.productId || null,
                     productName: product.name || item.name || 'غير معروف',
                     description: product.description || item.description || '',
                     image: finalImage,
@@ -199,7 +211,7 @@ export async function getFilteredOrdersFull(filters = {}) {
         
         await loadCustomersAndProducts();
         
-        let constraints = [];
+        const constraints = [orderBy('createdAt', 'desc')];
         
         if (filters.status && filters.status !== '') {
             constraints.push(where('status', '==', filters.status));
@@ -216,17 +228,12 @@ export async function getFilteredOrdersFull(filters = {}) {
         if (filters.endDate) {
             constraints.push(where('orderDate', '<=', filters.endDate));
         }
-        
-        // إضافة الترتيب
-        constraints.push(orderBy('createdAt', 'desc'));
-        
-        // إضافة الحد
         if (filters.limit) {
             constraints.push(limit(filters.limit));
         }
         
         const ordersRef = collection(db, 'orders');
-        const q = constraints.length > 0 ? query(ordersRef, ...constraints) : query(ordersRef, orderBy('createdAt', 'desc'));
+        const q = query(ordersRef, ...constraints);
         const querySnapshot = await getDocs(q);
         
         const orders = [];
@@ -235,7 +242,7 @@ export async function getFilteredOrdersFull(filters = {}) {
         });
         
         const fullOrders = orders.map(order => {
-            const customer = customersMap.get(order.customerId) || { name: 'غير معروف' };
+            const customer = customersMap.get(order.customerId) || { name: 'غير معروف', phone: '', email: '' };
             
             const items = (order.items || []).map(item => {
                 const product = productsMap.get(item.productId) || {};
@@ -243,6 +250,7 @@ export async function getFilteredOrdersFull(filters = {}) {
                 
                 return {
                     ...item,
+                    productId: item.productId || null,
                     productName: product.name || item.name || 'غير معروف',
                     description: product.description || item.description || '',
                     image: finalImage,
@@ -274,15 +282,15 @@ export function calculateTotals(items = [], discount = 0, discountType = 'fixed'
     });
 
     let discountAmount = discountType === 'percent' ? (subtotal * discount) / 100 : discount;
-    const afterDiscount = subtotal - discountAmount;
+    const afterDiscount = Math.max(0, subtotal - discountAmount);
     const vat = afterDiscount * 0.15;
     const total = afterDiscount + vat;
 
     return {
-        subtotal,
-        discount: discountAmount,
-        vat,
-        total
+        subtotal: parseFloat(subtotal.toFixed(2)),
+        discount: parseFloat(discountAmount.toFixed(2)),
+        vat: parseFloat(vat.toFixed(2)),
+        total: parseFloat(total.toFixed(2))
     };
 }
 
@@ -330,17 +338,29 @@ export const loadOrders = async () => {
     }
 };
 
-// ================= CRUD =================
+// ================= CRUD Operations =================
 export const addProduct = async (data) => {
     try {
-        const docRef = await addDoc(collection(db, 'products'), { 
+        if (!data.name || data.price === undefined) {
+            throw new Error('اسم المنتج والسعر مطلوبان');
+        }
+        
+        const productData = { 
             ...data, 
             image: data.image || '',
+            code: data.code || `PRD-${Date.now()}`,
+            stock: data.stock || 0,
             createdAt: nowISO(), 
             updatedAt: nowISO() 
-        });
+        };
+        
+        const docRef = await addDoc(collection(db, 'products'), productData);
         console.log('✅ تم إضافة المنتج:', docRef.id);
-        return docRef;
+        
+        // تحديث الكاش
+        productsMap.set(docRef.id, productData);
+        
+        return { id: docRef.id, ...productData };
     } catch (error) {
         console.error('❌ خطأ في إضافة المنتج:', error);
         throw error;
@@ -349,12 +369,23 @@ export const addProduct = async (data) => {
 
 export const updateProduct = async (id, data) => {
     try {
-        await updateDoc(doc(db, 'products', id), { 
+        if (!id) throw new Error('معرف المنتج مطلوب');
+        
+        const updateData = { 
             ...data, 
             image: data.image || '',
             updatedAt: nowISO() 
-        });
+        };
+        
+        await updateDoc(doc(db, 'products', id), updateData);
         console.log('✅ تم تحديث المنتج:', id);
+        
+        // تحديث الكاش
+        if (productsMap.has(id)) {
+            const existing = productsMap.get(id);
+            productsMap.set(id, { ...existing, ...updateData });
+        }
+        
         return true;
     } catch (error) {
         console.error('❌ خطأ في تحديث المنتج:', error);
@@ -366,6 +397,10 @@ export const deleteProduct = async (id) => {
     try {
         await deleteDoc(doc(db, 'products', id));
         console.log('✅ تم حذف المنتج:', id);
+        
+        // حذف من الكاش
+        productsMap.delete(id);
+        
         return true;
     } catch (error) {
         console.error('❌ خطأ في حذف المنتج:', error);
@@ -377,17 +412,22 @@ export const addOrder = async (data) => {
     try {
         const itemsWithImages = (data.items || []).map(item => ({
             ...item,
-            image: item.image || ''
+            image: item.image || '',
+            productId: item.productId || null
         }));
         
-        const docRef = await addDoc(collection(db, 'orders'), { 
+        const orderData = { 
             ...data, 
             items: itemsWithImages,
             createdAt: nowISO(), 
-            updatedAt: nowISO() 
-        });
+            updatedAt: nowISO(),
+            orderNumber: data.orderNumber || `ORD-${Date.now()}`
+        };
+        
+        const docRef = await addDoc(collection(db, 'orders'), orderData);
         console.log('✅ تم إضافة الطلب:', docRef.id);
-        return docRef;
+        
+        return { id: docRef.id, ...orderData };
     } catch (error) {
         console.error('❌ خطأ في إضافة الطلب:', error);
         throw error;
@@ -398,7 +438,8 @@ export const updateOrder = async (id, data) => {
     try {
         const itemsWithImages = (data.items || []).map(item => ({
             ...item,
-            image: item.image || ''
+            image: item.image || '',
+            productId: item.productId || null
         }));
         
         await updateDoc(doc(db, 'orders', id), { 
@@ -427,13 +468,23 @@ export const deleteOrder = async (id) => {
 
 export const addCustomer = async (data) => {
     try {
-        const docRef = await addDoc(collection(db, 'customers'), { 
+        if (!data.name || !data.phone) {
+            throw new Error('الاسم والجوال مطلوبان');
+        }
+        
+        const customerData = { 
             ...data, 
             createdAt: nowISO(), 
             updatedAt: nowISO() 
-        });
+        };
+        
+        const docRef = await addDoc(collection(db, 'customers'), customerData);
         console.log('✅ تم إضافة العميل:', docRef.id);
-        return docRef;
+        
+        // تحديث الكاش
+        customersMap.set(docRef.id, customerData);
+        
+        return { id: docRef.id, ...customerData };
     } catch (error) {
         console.error('❌ خطأ في إضافة العميل:', error);
         throw error;
@@ -447,6 +498,13 @@ export const updateCustomer = async (id, data) => {
             updatedAt: nowISO() 
         });
         console.log('✅ تم تحديث العميل:', id);
+        
+        // تحديث الكاش
+        if (customersMap.has(id)) {
+            const existing = customersMap.get(id);
+            customersMap.set(id, { ...existing, ...data });
+        }
+        
         return true;
     } catch (error) {
         console.error('❌ خطأ في تحديث العميل:', error);
@@ -458,6 +516,10 @@ export const deleteCustomer = async (id) => {
     try {
         await deleteDoc(doc(db, 'customers', id));
         console.log('✅ تم حذف العميل:', id);
+        
+        // حذف من الكاش
+        customersMap.delete(id);
+        
         return true;
     } catch (error) {
         console.error('❌ خطأ في حذف العميل:', error);
@@ -468,6 +530,8 @@ export const deleteCustomer = async (id) => {
 // ================= دوال إضافية =================
 export async function updateProductImage(productId, imageUrl) {
     try {
+        if (!productId) throw new Error('معرف المنتج مطلوب');
+        
         const productRef = doc(db, 'products', productId);
         await updateDoc(productRef, {
             image: imageUrl,
@@ -520,6 +584,11 @@ export async function testConnection() {
 
 // ================= دالة للعمليات المتعددة (Batch) =================
 export async function batchOperations(operations) {
+    if (!operations || operations.length === 0) {
+        console.warn('⚠️ لا توجد عمليات لتنفيذها');
+        return;
+    }
+    
     const batch = writeBatch(db);
     
     for (const op of operations) {
@@ -547,19 +616,61 @@ export async function getQuickStats() {
         ]);
         
         let totalRevenue = 0;
+        let totalOrders = 0;
         ordersSnap.forEach(doc => {
-            totalRevenue += doc.data().total || 0;
+            const data = doc.data();
+            totalRevenue += data.total || 0;
+            totalOrders++;
         });
         
         return {
             products: productsSnap.size,
-            orders: ordersSnap.size,
+            orders: totalOrders,
             customers: customersSnap.size,
-            revenue: totalRevenue
+            revenue: totalRevenue,
+            averageOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0
         };
     } catch (error) {
         console.error('❌ خطأ في جلب الإحصائيات:', error);
         return null;
+    }
+}
+
+// ================= دالة لتحديث الكاش =================
+export async function refreshCache() {
+    console.log('🔄 تحديث الكاش...');
+    await loadCustomersAndProducts(true);
+    console.log('✅ تم تحديث الكاش بنجاح');
+}
+
+// ================= دالة للبحث =================
+export async function searchProducts(searchTerm) {
+    try {
+        const products = await loadProducts();
+        const term = searchTerm.toLowerCase();
+        return products.filter(p => 
+            p.name?.toLowerCase().includes(term) ||
+            p.code?.toLowerCase().includes(term) ||
+            p.barcode?.toLowerCase().includes(term)
+        );
+    } catch (error) {
+        console.error('❌ خطأ في البحث عن المنتجات:', error);
+        return [];
+    }
+}
+
+export async function searchCustomers(searchTerm) {
+    try {
+        const customers = await loadCustomers();
+        const term = searchTerm.toLowerCase();
+        return customers.filter(c => 
+            c.name?.toLowerCase().includes(term) ||
+            c.phone?.includes(term) ||
+            c.email?.toLowerCase().includes(term)
+        );
+    } catch (error) {
+        console.error('❌ خطأ في البحث عن العملاء:', error);
+        return [];
     }
 }
 
