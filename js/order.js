@@ -90,6 +90,7 @@ export async function getOrderFromFirebase(orderId) {
 
         if (docSnap.exists()) {
             const data = docSnap.data();
+            console.log('✅ تم جلب الطلب:', orderId);
             return {
                 id: docSnap.id,
                 ...data,
@@ -113,11 +114,21 @@ export async function getOrderFromFirebase(orderId) {
     }
 }
 
-// ========== جلب جميع الطلبات ==========
+// ========== جلب جميع الطلبات (الإصدار المُحسّن) ==========
 export async function getAllOrdersFromFirebase(limitCount = 500) {
     try {
+        console.log('🔄 جاري جلب الطلبات من Firebase...');
+        
         const ordersRef = collection(db, 'orders');
-        const q = query(ordersRef, orderBy('timestamp', 'desc'), limit(limitCount));
+        
+        // محاولة جلب جميع الطلبات بدون ترتيب أولاً للتأكد
+        const allOrdersQuery = query(ordersRef);
+        const allOrdersSnapshot = await getDocs(allOrdersQuery);
+        
+        console.log(`📊 عدد الطلبات في قاعدة البيانات: ${allOrdersSnapshot.size}`);
+        
+        // ثم جلبها مرتبة
+        const q = query(ordersRef, orderBy('createdAt', 'desc'));
         const querySnapshot = await getDocs(q);
         
         const orders = [];
@@ -136,21 +147,36 @@ export async function getAllOrdersFromFirebase(limitCount = 500) {
             });
         });
 
-        console.log(`✅ تم جلب ${orders.length} طلب`);
+        console.log(`✅ تم جلب ${orders.length} طلب بنجاح`);
+        
+        // عرض أول 5 طلبات في الكونسول للتحقق
+        if (orders.length > 0) {
+            console.log('📋 أول 5 طلبات:', orders.slice(0, 5).map(o => ({
+                id: o.id,
+                orderNumber: o.orderNumber,
+                customer: o.customer,
+                date: o.orderDate
+            })));
+        }
+        
         return orders;
 
     } catch (error) {
         console.error('❌ خطأ في جلب الطلبات:', error);
+        console.error('تفاصيل الخطأ:', error.message);
         throw error;
     }
 }
 
-// ========== جلب الطلبات مع الفلترة ==========
+// ========== جلب الطلبات مع الفلترة (محسّن) ==========
 export async function getFilteredOrders(filters = {}) {
     try {
-        let ordersRef = collection(db, 'orders');
-        let constraints = [orderBy('timestamp', 'desc')];
+        console.log('🔄 جاري جلب الطلبات المفلترة...', filters);
         
+        let ordersRef = collection(db, 'orders');
+        let constraints = [];
+        
+        // إضافة شروط الفلترة
         if (filters.status && filters.status !== '') {
             constraints.push(where('status', '==', filters.status));
         }
@@ -166,6 +192,11 @@ export async function getFilteredOrders(filters = {}) {
         if (filters.endDate) {
             constraints.push(where('orderDate', '<=', filters.endDate));
         }
+        
+        // إضافة الترتيب
+        constraints.push(orderBy('createdAt', 'desc'));
+        
+        // إضافة الحد
         if (filters.limit) {
             constraints.push(limit(filters.limit));
         }
@@ -183,6 +214,7 @@ export async function getFilteredOrders(filters = {}) {
             orders.push({ id: doc.id, ...data, items: items });
         });
         
+        console.log(`✅ تم جلب ${orders.length} طلب مفلتر`);
         return orders;
         
     } catch (error) {
@@ -337,5 +369,33 @@ export async function exportOrdersToCSV(orders) {
     } catch (error) {
         console.error('❌ خطأ في التصدير:', error);
         throw error;
+    }
+}
+
+// ========== دالة اختبار للتحقق من الاتصال بقاعدة البيانات ==========
+export async function testFirebaseConnection() {
+    try {
+        console.log('🔄 اختبار الاتصال بقاعدة البيانات...');
+        
+        const ordersRef = collection(db, 'orders');
+        const snapshot = await getDocs(ordersRef);
+        
+        console.log(`✅ الاتصال ناجح! عدد الطلبات في قاعدة البيانات: ${snapshot.size}`);
+        
+        if (snapshot.size > 0) {
+            console.log('📋 أول طلب في قاعدة البيانات:');
+            snapshot.docs.forEach((doc, index) => {
+                if (index < 3) {
+                    console.log(`  - ${doc.id}:`, doc.data());
+                }
+            });
+        } else {
+            console.log('⚠️ لا توجد طلبات في قاعدة البيانات');
+        }
+        
+        return { success: true, count: snapshot.size };
+    } catch (error) {
+        console.error('❌ فشل الاتصال بقاعدة البيانات:', error);
+        return { success: false, error: error.message };
     }
 }
