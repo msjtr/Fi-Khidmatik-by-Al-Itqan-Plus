@@ -818,7 +818,7 @@
             
             console.log(`✅ تم جلب ${customersMap.size} عميل و ${productsMap.size} منتج`);
         } catch (error) {
-            console.error('خطأ في جلب البيانات:', error);
+            console.warn('⚠️ فشل في جلب العملاء/المنتجات، سيتم استخدام البيانات المحلية', error);
         }
     }
 
@@ -853,7 +853,7 @@
         return { subtotal, discount: discountAmount, tax, total };
     }
 
-    // ========== إنشاء باركود هيئة الزكاة ==========
+    // ========== إنشاء باركود هيئة الزكاة (ZATCA) - نسخة مصححة ==========
     function generateZATCAQRCode(order, total, tax) {
         const sellerName = 'منصة في خدمتك';
         const vatNumber = '312495447600003';
@@ -861,23 +861,19 @@
         const totalWithVAT = total;
         const vatAmount = tax;
         
-        // تشفير TLV
+        // دالة لتشفير TLV بشكل صحيح وفق معيار هيئة الزكاة
         function encodeTLV(tag, value) {
-            const tagHex = tag.toString(16).padStart(2, '0');
-            const lengthHex = value.length.toString(16).padStart(2, '0');
-            let valueHex = '';
-            for (let i = 0; i < value.length; i++) {
-                valueHex += value.charCodeAt(i).toString(16).padStart(2, '0');
-            }
-            return tagHex + lengthHex + valueHex;
+            const tagHex = String.fromCharCode(parseInt(tag));
+            const lengthHex = String.fromCharCode(value.length);
+            return tagHex + lengthHex + value;
         }
         
         let tlvData = '';
-        tlvData += encodeTLV(1, sellerName);
-        tlvData += encodeTLV(2, vatNumber);
-        tlvData += encodeTLV(3, timestamp);
-        tlvData += encodeTLV(4, totalWithVAT.toFixed(2));
-        tlvData += encodeTLV(5, vatAmount.toFixed(2));
+        tlvData += encodeTLV('1', sellerName);
+        tlvData += encodeTLV('2', vatNumber);
+        tlvData += encodeTLV('3', timestamp);
+        tlvData += encodeTLV('4', totalWithVAT.toFixed(2));
+        tlvData += encodeTLV('5', vatAmount.toFixed(2));
         
         const qrContainer = document.getElementById('qrcode');
         if (qrContainer) {
@@ -1128,7 +1124,12 @@
         showLoading(true);
         
         try {
-            await loadCustomersAndProducts();
+            // محاولة جلب العملاء والمنتجات
+            try {
+                await loadCustomersAndProducts();
+            } catch (error) {
+                console.warn('⚠️ فشل في جلب العملاء/المنتجات، سيتم استخدام البيانات المحلية', error);
+            }
             
             if (orderId && orderId !== 'null' && orderId !== 'undefined') {
                 const order = await getOrder(orderId);
