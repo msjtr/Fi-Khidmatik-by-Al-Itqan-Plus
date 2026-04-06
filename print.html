@@ -12,10 +12,6 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     
     <style>
-        /* ========================================
-           الأنماط الأساسية - تصميم احترافي عالي الجودة
-           ======================================== */
-        
         * {
             margin: 0;
             padding: 0;
@@ -41,8 +37,7 @@
             overflow: hidden;
         }
 
-        /* صفحات الفاتورة */
-        .invoice-page, .terms-page, .declaration-page {
+        .invoice-page, .terms-page {
             width: 210mm;
             min-height: 297mm;
             background: white;
@@ -55,7 +50,6 @@
             flex-direction: column;
         }
 
-        /* منع انقسام الصفوف */
         .invoice-table tr {
             break-inside: avoid;
             page-break-inside: avoid;
@@ -134,7 +128,6 @@
             display: inline-block;
         }
 
-        /* ========== العناوين ========== */
         .addresses {
             display: flex;
             gap: 20px;
@@ -161,7 +154,6 @@
             padding-right: 8px;
         }
 
-        /* ========== طرق الدفع والاستلام ========== */
         .payment-approval {
             display: flex;
             gap: 15px;
@@ -183,7 +175,6 @@
             color: #1e3a5f;
         }
 
-        /* ========== جدول المنتجات ========== */
         .invoice-table {
             width: 100%;
             border-collapse: collapse;
@@ -214,7 +205,6 @@
             background: #f1f5f9;
         }
 
-        /* ========== الإجماليات ========== */
         .totals {
             width: 280px;
             margin-right: auto;
@@ -240,7 +230,7 @@
             padding-top: 10px;
         }
 
-        /* ========== الباركودات - فقط باركود المنصة ========== */
+        /* ========== الباركود - بدون نصوص ========== */
         .barcodes-container {
             display: flex;
             justify-content: center;
@@ -255,7 +245,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 8px;
+            gap: 5px;
             text-align: center;
         }
 
@@ -264,22 +254,9 @@
             height: 100px;
         }
 
-        .barcode-label {
-            font-size: 11px;
-            font-weight: bold;
-            color: #1e3a5f;
-        }
-
-        .barcode-sub {
-            font-size: 9px;
-            color: #6c757d;
-        }
-
-        .barcode-note {
-            font-size: 9px;
-            color: #1e3a5f;
-            margin-top: 5px;
-            font-weight: 500;
+        /* إخفاء النصوص أسفل الباركود */
+        .barcode-label, .barcode-sub, .barcode-note {
+            display: none;
         }
 
         /* ========== تذييل الصفحة (التذليل) ========== */
@@ -309,7 +286,6 @@
             gap: 5px;
         }
 
-        /* ========== ترقيم الصفحات ========== */
         .page-number {
             text-align: left;
             font-size: 10px;
@@ -318,11 +294,7 @@
             direction: ltr;
         }
 
-        /* ========== صفحة الشروط والأحكام ========== */
-        .terms-page {
-            background: white;
-        }
-
+        /* ========== الشروط والأحكام ========== */
         .terms-page .page-title {
             color: #1e3a5f;
             margin-bottom: 15px;
@@ -376,24 +348,19 @@
             color: #1e3a5f;
         }
 
-        /* ========== صفحة الإقرار ========== */
-        .declaration-page {
-            background: white;
-        }
-
+        /* ========== الإقرار المدمج ========== */
         .declaration-box {
             background: #f8fafc;
             padding: 15px;
             border-radius: 12px;
             border: 1px solid #e2e8f0;
-            margin-top: 15px;
-            flex: 1;
+            margin: 20px 0 15px 0;
         }
 
         .signature-line {
             display: flex;
             justify-content: space-between;
-            margin-top: 25px;
+            margin-top: 20px;
             padding-top: 15px;
             border-top: 1px solid #e2e8f0;
         }
@@ -430,35 +397,29 @@
         .btn-success { background: #10b981; color: white; }
         .btn-danger { background: #ef4444; color: white; }
 
-        /* ========== أنماط الطباعة ========== */
         @media print {
             @page {
                 size: A4;
                 margin: 0;
             }
-            
             body {
                 background: white;
                 padding: 0;
                 margin: 0;
             }
-            
             .invoice-wrapper {
                 box-shadow: none;
                 margin: 0;
                 max-width: 100%;
             }
-            
-            .invoice-page, .terms-page, .declaration-page {
+            .invoice-page, .terms-page {
                 margin: 0;
                 padding: 15mm 12mm;
                 page-break-after: always;
             }
-            
             .action-buttons, .no-print {
                 display: none !important;
             }
-            
             * {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
@@ -466,7 +427,6 @@
             }
         }
 
-        /* ========== أنماط التحميل ========== */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -520,7 +480,7 @@
         }
 
         @media screen and (max-width: 768px) {
-            .invoice-page, .terms-page, .declaration-page { padding: 8mm 6mm; }
+            .invoice-page, .terms-page { padding: 8mm 6mm; }
             .invoice-table th, .invoice-table td { padding: 6px 4px; font-size: 9px; }
             .product-img { width: 40px; height: 40px; }
             .addresses, .payment-approval { flex-direction: column; gap: 10px; }
@@ -604,6 +564,21 @@
         const orderNumber = orderData?.orderNumber || 'unknown';
         const orderDate = orderData?.orderDate || new Date().toISOString().split('T')[0];
         return `فاتورة_${customerName}_${orderNumber}_${orderDate}`;
+    }
+
+    // جلب جميع الصور مسبقاً لضمان ظهورها في PDF
+    async function preloadImages(images) {
+        const promises = images.map(src => {
+            return new Promise((resolve) => {
+                if (!src) return resolve();
+                const img = new Image();
+                img.crossOrigin = "Anonymous";
+                img.onload = () => resolve();
+                img.onerror = () => resolve();
+                img.src = src;
+            });
+        });
+        await Promise.all(promises);
     }
 
     async function fetchCustomerData(customerId) {
@@ -712,7 +687,7 @@
             <tr>
                 <td style="text-align:center">${idx + 1}</td>
                 <td style="text-align:center">
-                    ${item.image ? `<img src="${item.image}" class="product-img" onerror="this.style.display='none'">` : 
+                    ${item.image ? `<img src="${item.image}" class="product-img" crossOrigin="Anonymous" onerror="this.style.display='none'">` : 
                       '<div style="width:50px;height:50px;background:#f3f4f6;border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;">📦</div>'}
                 </td>
                 <td style="text-align:right"><strong>${escapeHtml(item.name)}</strong><br><small>${escapeHtml(item.description || '')}</small></td>
@@ -778,13 +753,11 @@
         return `
             <div class="invoice-page">
                 ${buildHeader()}
-                
                 <div class="info-row">
                     <div class="info-item"><strong>📄 رقم الفاتورة:</strong> ${order.orderNumber}</div>
                     <div class="info-item"><strong>📅 التاريخ:</strong> ${formattedDate} &nbsp; <strong>⏰ الوقت:</strong> ${formattedTime}</div>
                     <div class="info-item"><span class="status-badge">✅ ${order.status || 'جديد'}</span></div>
                 </div>
-                
                 <div class="addresses">
                     <div class="address-box">
                         <strong>📦 مصدرة من</strong>
@@ -802,42 +775,33 @@
                         ✉️ <strong>البريد الإلكتروني:</strong> ${escapeHtml(order.customerEmail || order.email || '')}
                     </div>
                 </div>
-                
                 <div class="payment-approval">
                     <div class="payment-box"><strong>💳 طريقة الدفع:</strong> ${order.paymentMethodName || order.paymentMethod || 'مدى'}</div>
                     <div class="payment-box"><strong>🚚 طريقة استلام المنتج:</strong> ${shippingMethodText}</div>
                     <div class="approval-box"><strong>✓ رمز الموافقة:</strong> ${order.approvalCode || 'غير مطلوب'}</div>
                 </div>
-                
                 <table class="invoice-table">
                     <thead><tr><th>#</th><th>🖼️ الصورة</th><th>📦 المنتج / الوصف</th><th>🔢 الكمية</th><th>💰 سعر الوحدة</th><th>💵 الإجمالي</th></tr></thead>
                     <tbody>${itemsHtml}</tbody>
                 </table>
-                
                 <div class="totals">
                     <div><span>المجموع الفرعي:</span><span>${subtotal.toFixed(2)} ريال</span></div>
                     <div><span>🏷️ إجمالي الخصم:</span><span>- ${discount.toFixed(2)} ريال</span></div>
                     <div><span>🧾 ضريبة القيمة المضافة (15%):</span><span>${tax.toFixed(2)} ريال</span></div>
                     <div class="grand-total"><span>💰 الإجمالي النهائي شامل الضريبة:</span><span>${finalTotal.toFixed(2)} ريال</span></div>
                 </div>
-                
-                <!-- فقط باركود المنصة -->
+                <!-- باركود المنصة بدون نصوص -->
                 <div class="barcodes-container">
                     <div class="barcode-item">
                         <div id="platformQR" class="qr-placeholder"></div>
-                        <div class="barcode-label">🔗 منصة في خدمتك</div>
-                        <div class="barcode-sub">www.khidmatik.com</div>
-                        <div class="barcode-note">للوصول السريع إلى موقعنا الإلكتروني، يرجى مسح الباركود</div>
                     </div>
                 </div>
-                
                 ${buildFooter(pageNumber, totalPages)}
             </div>
         `;
     }
 
-    // ========== الشروط والأحكام مقسمة على 3 صفحات بالتساوي ==========
-    // الصفحة الأولى: الأبواب من أولاً إلى رابعاً (البنود 1-22)
+    // ========== صفحات الشروط (3 صفحات) مع دمج الإقرار في الصفحة الثالثة ==========
     function buildTermsPage1(pageNum, totalPages) {
         return `
             <div class="terms-page">
@@ -850,24 +814,21 @@
                     العميل مسؤولية عدم الاطلاع أو عدم الفهم لأي من البنود.
                 </div>
                 <div class="terms-content">
-                    <div class="terms-section">
-                        <h4>📌 أولاً: صلاحية العرض والتنفيذ</h4>
+                    <div class="terms-section"><h4>📌 أولاً: صلاحية العرض والتنفيذ</h4>
                         <p><strong>1. مدة صلاحية العرض:</strong> يكون هذا عرض السعر / الفاتورة صالحًا لمدة ثلاثة (3) أيام عمل فقط من تاريخ إصداره، ويُعد لاغيًا تلقائيًا بعد انتهاء هذه المدة دون الحاجة إلى إشعار مسبق، ولا يترتب على مقدم الخدمة أي التزام بعد ذلك.<br>
                         <strong>2. بدء التنفيذ:</strong> تبدأ أعمال التنفيذ بعد استلام الدفعة المقدمة المتفق عليها، واستلام جميع المتطلبات والمعلومات اللازمة من العميل بشكل كامل وواضح.<br>
                         <strong>3. مدة التنفيذ:</strong> تُحتسب مدة التنفيذ من تاريخ اكتمال استلام جميع المتطلبات، ولا يُعتد بأي مدة يترتب عليها تأخير بسبب العميل أو أي طرف خارجي.<br>
                         <strong>4. التأخير:</strong> لا يتحمل مقدم الخدمة أي مسؤولية عن أي تأخير ناتج عن ظروف خارجة عن إرادته، أو عن أطراف ثالثة، أو عن تأخر العميل في تزويد المتطلبات.<br>
                         <strong>5. الموافقات الخارجية:</strong> تخضع جميع الموافقات أو التراخيص الصادرة من الجهات الحكومية أو الجهات الخارجية لسياسات تلك الجهات، ولا يضمن مقدم الخدمة الحصول عليها بأي حال من الأحوال.</p>
                     </div>
-                    <div class="terms-section">
-                        <h4>💰 ثانياً: التكاليف والمسؤوليات المالية</h4>
+                    <div class="terms-section"><h4>💰 ثانياً: التكاليف والمسؤوليات المالية</h4>
                         <p><strong>6. الرسوم الخارجية:</strong> لا تشمل قيمة هذا عرض السعر / الفاتورة أي رسوم أو تكاليف خاصة بالجهات الخارجية مثل السيرفرات أو النطاقات أو التراخيص أو الرسوم الحكومية أو بوابات الدفع أو أي مزود خدمة طرف ثالث، ما لم يتم النص على خلاف ذلك بشكل صريح.<br>
                         <strong>7. خدمات الطرف الثالث:</strong> أي خدمات يتم تقديمها من خلال أطراف ثالثة تخضع لسياسات تلك الجهات، ولا يتحمل مقدم الخدمة أي مسؤولية عن أدائها أو جودتها أو توقفها أو تعديل سياساتها.<br>
                         <strong>8. المدفوعات الخارجية:</strong> جميع المبالغ التي يتم دفعها إلى جهات خارجية سواء بشكل مباشر من قبل العميل أو من خلال مقدم الخدمة لا يمكن استرجاعها تحت أي ظرف.<br>
                         <strong>9. الدفع نيابة عن العميل:</strong> في حال قيام مقدم الخدمة بسداد أي مبالغ نيابة عن العميل فإن تلك المبالغ تُعد دينًا مستحقًا على العميل ويلتزم بسدادها عند الطلب ولا تدخل ضمن أي تسوية أو استرجاع.<br>
                         <strong>10. الضريبة:</strong> جميع الأسعار المذكورة لا تشمل ضريبة القيمة المضافة ويتم إضافتها وفق الأنظمة المعمول بها.</p>
                     </div>
-                    <div class="terms-section">
-                        <h4>🚚 ثالثاً: التسليم والملكية</h4>
+                    <div class="terms-section"><h4>🚚 ثالثاً: التسليم والملكية</h4>
                         <p><strong>11. نطاق التسليم:</strong> يتم تنفيذ وتسليم الأعمال وفق النطاق المحدد في هذا عرض السعر / الفاتورة فقط ولا يشمل أي أعمال إضافية غير مذكورة.<br>
                         <strong>12. المنتج النهائي:</strong> يقتصر التسليم على المنتج النهائي الجاهز للاستخدام ولا يشمل الملفات المفتوحة أو الكود المصدري أو أي مواد إنتاج داخلية.<br>
                         <strong>13. الكود المصدري:</strong> يبقى الكود المصدري ملكًا حصريًا لمقدم الخدمة ولا يتم تسليمه إلا بموجب اتفاق مستقل ومقابل مالي يتم تحديده بشكل منفصل.<br>
@@ -875,8 +836,7 @@
                         <strong>15. عدم طلب التسليم:</strong> في حال عدم طلب العميل نقل الملكية أو تسليم المخرجات وفق ما سبق لا يلتزم مقدم الخدمة بتسليم أي أعمال أو ملفات.<br>
                         <strong>16. حق إعادة الاستخدام:</strong> يحتفظ مقدم الخدمة بحقه الكامل في إعادة استخدام أو تطوير أو الاستفادة من الأعمال المنفذة بأي شكل من الأشكال ما لم يتم الاتفاق على خلاف ذلك كتابةً.</p>
                     </div>
-                    <div class="terms-section">
-                        <h4>💳 رابعاً: الدفعات والاسترجاع</h4>
+                    <div class="terms-section"><h4>💳 رابعاً: الدفعات والاسترجاع</h4>
                         <p><strong>17. نظام الدفع:</strong> يتم سداد قيمة هذا عرض السعر / الفاتورة وفق الآلية المتفق عليها بين الطرفين سواء دفعة واحدة أو على دفعات.<br>
                         <strong>18. تأخر السداد:</strong> يحق لمقدم الخدمة إيقاف العمل بشكل فوري في حال تأخر العميل عن سداد أي دفعة مستحقة.<br>
                         <strong>19. عدم الاسترجاع:</strong> لا يحق للعميل المطالبة باسترجاع أي مبلغ مالي بعد بدء التنفيذ أو في حال الانسحاب أو عدم استكمال المشروع لأي سبب كان.<br>
@@ -890,43 +850,37 @@
         `;
     }
 
-    // الصفحة الثانية: الأبواب من خامساً إلى تاسعاً (البنود 23-40)
     function buildTermsPage2(pageNum, totalPages) {
         return `
             <div class="terms-page">
                 ${buildHeader()}
                 <div class="page-title">📜 الشروط والأحكام والتعليمات (تابع)</div>
                 <div class="terms-content">
-                    <div class="terms-section">
-                        <h4>🛡️ خامساً: الضمان</h4>
+                    <div class="terms-section"><h4>🛡️ خامساً: الضمان</h4>
                         <p><strong>23. الضمان:</strong> يتم تحديد الضمان إن وجد وفق الخطة التشغيلية للمشروع وطبيعته.<br>
                         <strong>24. نطاق الضمان:</strong> يقتصر الضمان على الأخطاء الفنية الناتجة عن مقدم الخدمة فقط.<br>
                         <strong>25. الاستثناءات:</strong> لا يشمل الضمان أي مشاكل ناتجة عن عوامل خارجية أو سوء استخدام أو تعديلات من طرف العميل أو طرف ثالث.</p>
                     </div>
-                    <div class="terms-section">
-                        <h4>🔚 سادساً: انتهاء العلاقة والمسؤولية</h4>
+                    <div class="terms-section"><h4>🔚 سادساً: انتهاء العلاقة والمسؤولية</h4>
                         <p><strong>26. انتهاء العلاقة:</strong> تنتهي العلاقة التعاقدية بين الطرفين فور تسليم المشروع وفق النطاق المتفق عليه.<br>
                         <strong>27. المسؤولية بعد التسليم:</strong> لا يتحمل مقدم الخدمة أي مسؤولية لاحقة عن المشروع بعد التسليم.<br>
                         <strong>28. التشغيل:</strong> يتحمل العميل المسؤولية الكاملة عن تشغيل المشروع وإدارته.<br>
                         <strong>29. البيانات:</strong> يتحمل العميل مسؤولية حفظ النسخ الاحتياطية للبيانات.<br>
                         <strong>30. براءة الذمة:</strong> لا يتحمل مقدم الخدمة أي مسؤولية عن أي خدمات مقدمة من أطراف ثالثة أو توقفها.</p>
                     </div>
-                    <div class="terms-section">
-                        <h4>📞 سابعاً: التواصل والتنفيذ</h4>
+                    <div class="terms-section"><h4>📞 سابعاً: التواصل والتنفيذ</h4>
                         <p><strong>31. وسائل التواصل:</strong> تُعتمد وسائل التواصل الرسمية المسجلة فقط كقنوات معتمدة بين الطرفين.<br>
                         <strong>32. التفويض:</strong> يلتزم العميل بإشعار مقدم الخدمة رسميًا في حال تفويض أي شخص للتواصل نيابة عنه.<br>
                         <strong>33. النسخ الإلكترونية:</strong> تُعتبر جميع النسخ الإلكترونية من هذا عرض السعر / الفاتورة بما في ذلك المرسلة عبر البريد الإلكتروني أو وسائل التواصل نسخًا معتمدة ولها نفس القوة القانونية.</p>
                     </div>
-                    <div class="terms-section">
-                        <h4>⚖️ ثامناً: البنود القانونية</h4>
+                    <div class="terms-section"><h4>⚖️ ثامناً: البنود القانونية</h4>
                         <p><strong>34. طبيعة العلاقة:</strong> تُعد العلاقة بين الطرفين علاقة تعاقدية مستقلة ولا تُنشئ أي شراكة أو وكالة أو تمثيل قانوني.<br>
                         <strong>35. كامل الاتفاق:</strong> يمثل هذا المستند كامل الاتفاق بين الطرفين ويلغي أي اتفاقات أو تفاهمات سابقة سواء كانت شفهية أو مكتوبة.<br>
                         <strong>36. الأخطاء غير المقصودة:</strong> في حال وجود أي خطأ غير مقصود في الصياغة فإنه لا يؤثر على صحة باقي البنود وتبقى سارية وملزمة.<br>
                         <strong>37. عدم التنازل:</strong> عدم استخدام مقدم الخدمة لأي من حقوقه لا يُعد تنازلًا عنها ويحتفظ بحقه في استخدامها في أي وقت لاحق.<br>
                         <strong>38. اللغة المعتمدة:</strong> في حال ترجمة هذا المستند إلى أي لغة أخرى تُعتمد النسخة العربية في التفسير.</p>
                     </div>
-                    <div class="terms-section">
-                        <h4>⚖️ تاسعاً: النزاعات</h4>
+                    <div class="terms-section"><h4>⚖️ تاسعاً: النزاعات</h4>
                         <p><strong>39. حل النزاعات:</strong> يتم السعي لحل أي نزاع ينشأ بين الطرفين بشكل ودي خلال مدة مناسبة من تاريخ الإشعار.<br>
                         <strong>40. الجهة المختصة:</strong> في حال عدم التوصل إلى حل يحق لمقدم الخدمة تحديد الجهة القضائية أو التحكيمية المختصة.</p>
                     </div>
@@ -936,15 +890,13 @@
         `;
     }
 
-    // الصفحة الثالثة: الأبواب من عاشراً إلى ثاني عشر (البنود 41-57)
-    function buildTermsPage3(pageNum, totalPages) {
+    function buildTermsPage3WithDeclaration(pageNum, totalPages) {
         return `
             <div class="terms-page">
                 ${buildHeader()}
                 <div class="page-title">📜 الشروط والأحكام والتعليمات (تابع)</div>
                 <div class="terms-content">
-                    <div class="terms-section">
-                        <h4>🌍 عاشراً: البنود المتقدمة</h4>
+                    <div class="terms-section"><h4>🌍 عاشراً: البنود المتقدمة</h4>
                         <p><strong>41. القوة القاهرة:</strong> لا يتحمل مقدم الخدمة أي مسؤولية عن التأخير أو عدم التنفيذ الناتج عن ظروف خارجة عن الإرادة.<br>
                         <strong>42. السرية:</strong> يلتزم الطرفان بالمحافظة على سرية المعلومات وعدم الإفصاح عنها لأي طرف ثالث دون موافقة خطية.<br>
                         <strong>43. التعديلات خارج النطاق:</strong> أي طلبات أو تعديلات خارج نطاق هذا المستند يتم تنفيذها بموجب عرض وسعر مستقل.<br>
@@ -952,48 +904,33 @@
                         <strong>45. الاستلام الحكمي:</strong> يُعد المشروع مستلمًا ومقبولًا من قبل العميل بعد مضي سبعة أيام من تاريخ تسليمه في حال عدم تقديم اعتراض رسمي.<br>
                         <strong>46. الاعتراض:</strong> يجب على العميل تقديم أي اعتراض بشكل مكتوب وواضح خلال مدة سبعة أيام من تاريخ التسليم.</p>
                     </div>
-                    <div class="terms-section">
-                        <h4>🏦 حادي عشر: البنود المالية والقانونية المتقدمة</h4>
+                    <div class="terms-section"><h4>🏦 حادي عشر: البنود المالية والقانونية المتقدمة</h4>
                         <p><strong>47. المدفوعات الخارجية:</strong> لا تُعد أي مبالغ تُدفع لجهات خارجية مستحقة لمقدم الخدمة ولا يحق المطالبة بها أو استرجاعها.<br>
                         <strong>48. المدفوعات بالنيابة:</strong> تُحتسب أي مدفوعات يقوم بها مقدم الخدمة نيابة عن العميل ضمن تكاليف المشروع ويلتزم العميل بسدادها.<br>
                         <strong>49. تفسير البنود:</strong> يتم تفسير بنود هذا المستند بما يحقق الغرض منها وبما يحفظ حقوق مقدم الخدمة.<br>
                         <strong>50. حق رفض الخدمة:</strong> يحتفظ مقدم الخدمة بحقه في رفض تقديم الخدمة أو إيقافها في أي مرحلة مع احتساب الأعمال المنفذة.</p>
                     </div>
-                    <div class="terms-section">
-                        <h4>🛡️ ثاني عشر: الحماية القانونية</h4>
+                    <div class="terms-section"><h4>🛡️ ثاني عشر: الحماية القانونية</h4>
                         <p><strong>51. التنازل عن المطالبات:</strong> يتنازل العميل عن أي مطالبات أو تعويضات تتجاوز قيمة هذا عرض السعر / الفاتورة.<br>
                         <strong>52. حدود المسؤولية:</strong> لا تتجاوز مسؤولية مقدم الخدمة في جميع الأحوال إجمالي المبلغ المدفوع من قبل العميل.<br>
                         <strong>53. الاستخدام غير المشروع:</strong> لا يتحمل مقدم الخدمة أي مسؤولية عن استخدام العميل للمخرجات بشكل مخالف للأنظمة.<br>
                         <strong>54. الملكية الفكرية:</strong> تبقى جميع حقوق الملكية الفكرية محفوظة لمقدم الخدمة ما لم يتم الاتفاق على نقلها بشكل مكتوب.<br>
                         <strong>55. تحديث الشروط:</strong> يحق لمقدم الخدمة تحديث أو تعديل هذه الشروط مستقبلاً وتسري على الأعمال الجديدة.<br>
                         <strong>56. استقلالية البنود:</strong> يتم تفسير كل بند من بنود هذا المستند بشكل مستقل دون التأثير على بقية البنود.<br>
-                        <strong>57. الشروط الإضافية والملحقات:</strong> في حال وجود أي شروط أو طلبات أو متطلبات إضافية من قبل العميل سواء كانت فنية أو تشغيلية أو مالية أو تنظيمية ولم تكن ضمن نطاق هذا عرض السعر / الفاتورة فإنه يتم توثيقها حصراً في ملحق اتفاق مستقل يتم إعداده واعتماده من قبل الطرفين بشكل خطي ورسمي، ولا تُعد تلك الشروط أو الطلبات الإضافية جزءًا من هذا المستند ولا يترتب عليها أي تعديل أو تأثير على أي من بنوده ما لم يتم النص على ذلك صراحةً وبشكل مكتوب في ذلك الملحق، كما لا يُعتد بأي اتفاقات أو تفاهمات أو مراسلات سواء كانت شفهية أو غير موثقة ما لم يتم تضمينها في ملحق رسمي معتمد.</p>
+                        <strong>57. الشروط الإضافية والملحقات:</strong> في حال وجود أي شروط أو طلبات أو متطلبات إضافية من قبل العميل ... يتم توثيقها حصراً في ملحق اتفاق مستقل.</p>
                     </div>
                 </div>
-                ${buildFooter(pageNum, totalPages)}
-            </div>
-        `;
-    }
-
-    function buildDeclarationPage(pageNum, totalPages) {
-        return `
-            <div class="declaration-page">
-                ${buildHeader()}
-                <div class="page-title" style="font-size:20px; margin-bottom:20px;">✍️ الإقرار والتوقيع</div>
-                
+                <!-- الإقرار والتوقيع مباشرة تحت آخر البند -->
                 <div class="declaration-box">
                     <p style="font-size:13px; font-weight:bold; text-align:center; line-height:1.8;">
                         🤝 أقر أنا العميل بالاطلاع على جميع الشروط والأحكام أعلاه وأوافق عليها بالكامل وأتعهد بالالتزام بها دون أي استثناء.
                     </p>
                 </div>
-                
                 <div class="signature-line">
                     <div><strong>👤 الاسم:</strong> ${escapeHtml(orderData?.customerName || '_________________')}</div>
                     <div><strong>📅 التاريخ:</strong> ${new Date().toLocaleDateString('ar-SA')}</div>
                 </div>
-                <div style="margin-top:12px;"><strong>✍️ التوقيع:</strong> _________________</div>
-                <div style="margin-top:8px; font-size:10px; color:#666;">📌 يعد هذا التوقيع إقراراً نهائياً بالموافقة على جميع البنود والشروط</div>
-                
+                <div style="margin-top:12px; margin-bottom:15px;"><strong>✍️ التوقيع:</strong> _________________</div>
                 ${buildFooter(pageNum, totalPages)}
             </div>
         `;
@@ -1001,28 +938,24 @@
 
     async function renderFullInvoice() {
         await fetchOrderData();
-        
         if (!orderData) {
-            document.getElementById('invoiceRoot').innerHTML = `
-                <div class="loading-box" style="text-align:center;padding:50px;">
-                    <p style="color:red;">❌ حدث خطأ في تحميل الفاتورة</p>
-                    <button onclick="window.close()" style="margin-top:20px;padding:10px20px;">إغلاق</button>
-                </div>`;
+            document.getElementById('invoiceRoot').innerHTML = `<div class="loading-box" style="text-align:center;padding:50px;"><p style="color:red;">❌ حدث خطأ في تحميل الفاتورة</p><button onclick="window.close()" style="margin-top:20px;padding:10px20px;">إغلاق</button></div>`;
             hideLoading();
             return;
         }
         
-        // إجمالي الصفحات: صفحة الفاتورة + 3 صفحات شروط + صفحة الإقرار = 5 صفحات
-        const page1 = buildInvoicePage(orderData, 1, 5);
-        const page2 = buildTermsPage1(2, 5);
-        const page3 = buildTermsPage2(3, 5);
-        const page4 = buildTermsPage3(4, 5);
-        const page5 = buildDeclarationPage(5, 5);
+        // تجهيز الصور مسبقاً
+        const imageUrls = orderData.items?.map(item => item.image).filter(url => url) || [];
+        await preloadImages(imageUrls);
         
-        document.getElementById('invoiceRoot').innerHTML = page1 + page2 + page3 + page4 + page5;
+        const page1 = buildInvoicePage(orderData, 1, 4);
+        const page2 = buildTermsPage1(2, 4);
+        const page3 = buildTermsPage2(3, 4);
+        const page4 = buildTermsPage3WithDeclaration(4, 4);
+        
+        document.getElementById('invoiceRoot').innerHTML = page1 + page2 + page3 + page4;
         
         setTimeout(() => {
-            // فقط باركود المنصة
             const platformQrDiv = document.getElementById('platformQR');
             if (platformQrDiv && typeof QRCode !== 'undefined') {
                 try {
@@ -1043,25 +976,10 @@
 
     function printInvoice() {
         const printWindow = window.open('', '_blank');
-        if (!printWindow) {
-            showToast('الرجاء السماح للنوافذ المنبثقة', 'error');
-            return;
-        }
-        
+        if (!printWindow) { showToast('الرجاء السماح للنوافذ المنبثقة', 'error'); return; }
         const styles = document.querySelector('style').innerHTML;
         const content = document.getElementById('invoiceRoot').innerHTML;
-        
-        printWindow.document.write(`
-            <!DOCTYPE html>
-            <html dir="rtl">
-            <head>
-                <meta charset="UTF-8">
-                <title>فاتورة ${orderData.orderNumber}</title>
-                <style>${styles} body { padding:0; margin:0; background:white; } .action-buttons, .no-print { display:none !important; } @page { size: A4; margin: 0; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }</style>
-            </head>
-            <body>${content}</body>
-            </html>
-        `);
+        printWindow.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>فاتورة ${orderData.orderNumber}</title><style>${styles} body { padding:0; margin:0; background:white; } .action-buttons, .no-print { display:none !important; } @page { size: A4; margin: 0; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }</style></head><body>${content}</body></html>`);
         printWindow.document.close();
         printWindow.focus();
         printWindow.print();
@@ -1070,7 +988,7 @@
 
     async function generatePDF() {
         const element = document.getElementById('invoiceRoot');
-        const pages = element.querySelectorAll('.invoice-page, .terms-page, .declaration-page');
+        const pages = element.querySelectorAll('.invoice-page, .terms-page');
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4');
         showLoading('جاري إنشاء PDF بدقة عالية...');
@@ -1080,24 +998,22 @@
                 if (i !== 0) pdf.addPage();
                 pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 210, 297);
             }
-            const fileName = generateFileName();
-            pdf.save(`${fileName}.pdf`);
-            showToast('تم حفظ PDF بدقة عالية', 'success');
+            pdf.save(`${generateFileName()}.pdf`);
+            showToast('تم حفظ PDF', 'success');
         } catch (error) { showToast('خطأ في PDF', 'error'); }
         finally { hideLoading(); }
     }
 
     async function generatePNG() {
         const element = document.getElementById('invoiceRoot');
-        showLoading('جاري إنشاء PNG بدقة عالية...');
+        showLoading('جاري إنشاء PNG...');
         try {
             const canvas = await html2canvas(element, { scale: 4, backgroundColor: '#ffffff', useCORS: true });
             const link = document.createElement('a');
-            const fileName = generateFileName();
-            link.download = `${fileName}.png`;
+            link.download = `${generateFileName()}.png`;
             link.href = canvas.toDataURL();
             link.click();
-            showToast('تم حفظ PNG بدقة عالية', 'success');
+            showToast('تم حفظ PNG', 'success');
         } catch (error) { showToast('خطأ في PNG', 'error'); }
         finally { hideLoading(); }
     }
@@ -1106,7 +1022,7 @@
         const element = document.getElementById('invoiceRoot');
         const zip = new JSZip();
         const { jsPDF } = window.jspdf;
-        const pages = element.querySelectorAll('.invoice-page, .terms-page, .declaration-page');
+        const pages = element.querySelectorAll('.invoice-page, .terms-page');
         const pdf = new jsPDF('p', 'mm', 'a4');
         showLoading('جاري إنشاء الملف المضغوط...');
         try {
