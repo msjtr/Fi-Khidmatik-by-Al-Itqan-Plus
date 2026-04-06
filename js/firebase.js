@@ -1,4 +1,4 @@
-// ================= Firebase Core =================
+// ===================== Firebase Core =====================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import {
     getFirestore,
@@ -79,7 +79,6 @@ export async function getDocument(collectionName, docId) {
 
 // ================= Load Cache =================
 export async function loadCustomersAndProducts(forceReload = false) {
-
     if (!forceReload && customersMap.size && productsMap.size) {
         return;
     }
@@ -96,9 +95,8 @@ export async function loadCustomersAndProducts(forceReload = false) {
     productsSnap.forEach(d => productsMap.set(d.id, d.data()));
 }
 
-// ================= Order (🔥 أهم تعديل - دعم الصور) =================
+// ================= Order (مع دعم الصور) =================
 export async function getOrderFull(orderId) {
-
     try {
         const order = await getDocument('orders', orderId);
         if (!order) return null;
@@ -107,20 +105,16 @@ export async function getOrderFull(orderId) {
 
         const customer = customersMap.get(order.customerId) || {};
 
-        // ✅ تحسين: جلب المنتجات مع الصور من المخزون
         const items = (order.items || []).map(item => {
             const product = productsMap.get(item.productId) || {};
-            
-            // ✅ الأولوية: صورة المنتج من المخزون، ثم الصورة المحفوظة في الطلب
             const finalImage = product.image || item.image || '';
             
             return {
                 ...item,
                 productName: product.name || item.name || 'غير معروف',
                 description: product.description || item.description || '',
-                image: finalImage,  // ✅ الصورة النهائية
+                image: finalImage,
                 price: item.price || product.price || 0,
-                // ✅ معلومات إضافية من المخزون
                 stock: product.stock || 0,
                 cost: product.cost || 0,
                 code: product.code || item.barcode || ''
@@ -157,7 +151,7 @@ export async function getAllOrdersFull(limitCount = 100) {
                     ...item,
                     productName: product.name || item.name || 'غير معروف',
                     description: product.description || item.description || '',
-                    image: finalImage,  // ✅ الصورة النهائية
+                    image: finalImage,
                     price: item.price || product.price || 0
                 };
             });
@@ -178,26 +172,26 @@ export async function getAllOrdersFull(limitCount = 100) {
 }
 
 // ================= Totals Helper =================
-export function calculateTotals(items = [], discount = 0) {
-
+export function calculateTotals(items = [], discount = 0, discountType = 'fixed') {
     let subtotal = 0;
-
     items.forEach(i => {
         subtotal += (i.price || 0) * (i.quantity || 0);
     });
 
-    const vat = subtotal * 0.15;
-    const total = subtotal + vat - discount;
+    let discountAmount = discountType === 'percent' ? (subtotal * discount) / 100 : discount;
+    const afterDiscount = subtotal - discountAmount;
+    const vat = afterDiscount * 0.15;
+    const total = afterDiscount + vat;
 
     return {
         subtotal,
+        discount: discountAmount,
         vat,
-        discount,
         total
     };
 }
 
-// ================= Products (مع دعم الصور) =================
+// ================= Products =================
 export const loadProducts = () => getCollection('products');
 export const loadCustomers = () => getCollection('customers', [], { field: 'name', direction: 'asc' });
 export const loadOrders = () => getCollection('orders', [], { field: 'orderDate', direction: 'desc' });
@@ -206,7 +200,7 @@ export const loadOrders = () => getCollection('orders', [], { field: 'orderDate'
 export const addProduct = (data) =>
     addDoc(collection(db, 'products'), { 
         ...data, 
-        image: data.image || '',  // ✅ حفظ الصورة
+        image: data.image || '',
         createdAt: nowISO(), 
         updatedAt: nowISO() 
     });
@@ -221,12 +215,10 @@ export const updateProduct = (id, data) =>
 export const deleteProduct = (id) =>
     deleteDoc(doc(db, 'products', id));
 
-// ✅ إضافة طلب مع دعم الصور
 export const addOrder = (data) => {
-    // التأكد من حفظ الصور في المنتجات داخل الطلب
     const itemsWithImages = (data.items || []).map(item => ({
         ...item,
-        image: item.image || ''  // ✅ حفظ الصورة في الطلب
+        image: item.image || ''
     }));
     
     return addDoc(collection(db, 'orders'), { 
@@ -253,7 +245,16 @@ export const updateOrder = (id, data) => {
 export const deleteOrder = (id) =>
     deleteDoc(doc(db, 'orders', id));
 
-// ================= دوال إضافية للصور =================
+export const addCustomer = (data) =>
+    addDoc(collection(db, 'customers'), { ...data, createdAt: nowISO(), updatedAt: nowISO() });
+
+export const updateCustomer = (id, data) =>
+    updateDoc(doc(db, 'customers', id), { ...data, updatedAt: nowISO() });
+
+export const deleteCustomer = (id) =>
+    deleteDoc(doc(db, 'customers', id));
+
+// ================= دوال إضافية =================
 export async function updateProductImage(productId, imageUrl) {
     try {
         const productRef = doc(db, 'products', productId);
@@ -262,7 +263,6 @@ export async function updateProductImage(productId, imageUrl) {
             updatedAt: nowISO()
         });
         
-        // تحديث الكاش
         if (productsMap.has(productId)) {
             const product = productsMap.get(productId);
             productsMap.set(productId, { ...product, image: imageUrl });
@@ -277,7 +277,6 @@ export async function updateProductImage(productId, imageUrl) {
     }
 }
 
-// ================= جلب منتج مع صورته =================
 export async function getProductWithImage(productId) {
     try {
         const product = await getDocument('products', productId);
@@ -286,72 +285,12 @@ export async function getProductWithImage(productId) {
         return {
             ...product,
             image: product.image || '',
-            imageUrl: product.image || ''  // توافق
+            imageUrl: product.image || ''
         };
         
     } catch (error) {
         console.error('❌ خطأ في جلب المنتج:', error);
         return null;
-    }
-}
-
-// ================= تصفية الطلبات حسب تاريخ مع صور =================
-export async function getFilteredOrdersWithImages(filters = {}) {
-    try {
-        await loadCustomersAndProducts();
-        
-        let conditions = [];
-        
-        if (filters.status && filters.status !== '') {
-            conditions.push({ field: 'status', operator: '==', value: filters.status });
-        }
-        
-        if (filters.customerId) {
-            conditions.push({ field: 'customerId', operator: '==', value: filters.customerId });
-        }
-        
-        if (filters.shippingMethod && filters.shippingMethod !== '') {
-            conditions.push({ field: 'shippingMethod', operator: '==', value: filters.shippingMethod });
-        }
-        
-        if (filters.startDate) {
-            conditions.push({ field: 'orderDate', operator: '>=', value: filters.startDate });
-        }
-        
-        if (filters.endDate) {
-            conditions.push({ field: 'orderDate', operator: '<=', value: filters.endDate });
-        }
-        
-        const orders = await getCollection('orders', conditions, { field: 'orderDate', direction: 'desc' }, filters.limit || 100);
-        
-        const fullOrders = orders.map(order => {
-            const customer = customersMap.get(order.customerId) || {};
-            
-            const items = (order.items || []).map(item => {
-                const product = productsMap.get(item.productId) || {};
-                const finalImage = product.image || item.image || '';
-                
-                return {
-                    ...item,
-                    productName: product.name || item.name || 'غير معروف',
-                    description: product.description || item.description || '',
-                    image: finalImage,
-                    price: item.price || product.price || 0
-                };
-            });
-            
-            return {
-                ...order,
-                customer,
-                items
-            };
-        });
-        
-        return fullOrders;
-        
-    } catch (error) {
-        console.error('❌ خطأ في جلب الطلبات المفلترة:', error);
-        return [];
     }
 }
 
