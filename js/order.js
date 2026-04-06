@@ -114,21 +114,23 @@ export async function getOrderFromFirebase(orderId) {
     }
 }
 
-// ========== جلب جميع الطلبات (الإصدار المُحسّن) ==========
+// ========== جلب جميع الطلبات (نسخة محسّنة - بدون تكرار) ==========
 export async function getAllOrdersFromFirebase(limitCount = 500) {
     try {
         console.log('🔄 جاري جلب الطلبات من Firebase...');
         
         const ordersRef = collection(db, 'orders');
         
-        // محاولة جلب جميع الطلبات بدون ترتيب أولاً للتأكد
-        const allOrdersQuery = query(ordersRef);
-        const allOrdersSnapshot = await getDocs(allOrdersQuery);
+        // استخدام orderBy مع createdAt مع التعامل مع الحقول المفقودة
+        // استخدام orderBy مع '__name__' كبديل آمن
+        let q;
+        try {
+            q = query(ordersRef, orderBy('createdAt', 'desc'), limit(limitCount));
+        } catch (error) {
+            console.warn('⚠️ لا يمكن الترتيب بـ createdAt، استخدام الترتيب الافتراضي');
+            q = query(ordersRef, limit(limitCount));
+        }
         
-        console.log(`📊 عدد الطلبات في قاعدة البيانات: ${allOrdersSnapshot.size}`);
-        
-        // ثم جلبها مرتبة
-        const q = query(ordersRef, orderBy('createdAt', 'desc'));
         const querySnapshot = await getDocs(q);
         
         const orders = [];
@@ -154,7 +156,7 @@ export async function getAllOrdersFromFirebase(limitCount = 500) {
             console.log('📋 أول 5 طلبات:', orders.slice(0, 5).map(o => ({
                 id: o.id,
                 orderNumber: o.orderNumber,
-                customer: o.customer,
+                customer: o.customer || o.customerId,
                 date: o.orderDate
             })));
         }
@@ -164,7 +166,22 @@ export async function getAllOrdersFromFirebase(limitCount = 500) {
     } catch (error) {
         console.error('❌ خطأ في جلب الطلبات:', error);
         console.error('تفاصيل الخطأ:', error.message);
-        throw error;
+        // إعادة محاولة جلب بدون ترتيب
+        try {
+            console.log('🔄 محاولة جلب الطلبات بدون ترتيب...');
+            const ordersRef = collection(db, 'orders');
+            const simpleQuery = query(ordersRef, limit(limitCount));
+            const simpleSnapshot = await getDocs(simpleQuery);
+            const orders = [];
+            simpleSnapshot.forEach((doc) => {
+                orders.push({ id: doc.id, ...doc.data() });
+            });
+            console.log(`✅ تم جلب ${orders.length} طلب (بدون ترتيب)`);
+            return orders;
+        } catch (fallbackError) {
+            console.error('❌ فشلت المحاولة الثانية:', fallbackError);
+            throw error;
+        }
     }
 }
 
@@ -193,8 +210,12 @@ export async function getFilteredOrders(filters = {}) {
             constraints.push(where('orderDate', '<=', filters.endDate));
         }
         
-        // إضافة الترتيب
-        constraints.push(orderBy('createdAt', 'desc'));
+        // إضافة الترتيب (مع التعامل مع الأخطاء)
+        try {
+            constraints.push(orderBy('createdAt', 'desc'));
+        } catch (error) {
+            console.warn('⚠️ لا يمكن الترتيب بـ createdAt');
+        }
         
         // إضافة الحد
         if (filters.limit) {
@@ -342,12 +363,12 @@ export async function exportOrdersToCSV(orders) {
             return [
                 order.orderNumber,
                 order.orderDate,
-                order.customer,
-                order.phone,
+                order.customer || 'غير معروف',
+                order.phone || '—',
                 productsList,
-                order.total,
-                order.status,
-                order.paymentMethodName || order.paymentMethod
+                order.total || 0,
+                order.status || 'جديد',
+                order.paymentMethodName || order.paymentMethod || '—'
             ];
         });
         
@@ -372,6 +393,28 @@ export async function exportOrdersToCSV(orders) {
     }
 }
 
+// ========== جلب طلبات العميل ==========
+export async function getCustomerOrders(customerId) {
+    try {
+        if (!customerId) throw new Error('معرّف العميل مطلوب');
+        
+        const ordersRef = collection(db, 'orders');
+        const q = query(ordersRef, where('customerId', '==', customerId), orderBy('createdAt', 'desc'));
+        const querySnapshot = await getDocs(q);
+        
+        const orders = [];
+        querySnapshot.forEach((doc) => {
+            orders.push({ id: doc.id, ...doc.data() });
+        });
+        
+        console.log(`✅ تم جلب ${orders.length} طلب للعميل ${customerId}`);
+        return orders;
+    } catch (error) {
+        console.error('❌ خطأ في جلب طلبات العميل:', error);
+        throw error;
+    }
+}
+
 // ========== دالة اختبار للتحقق من الاتصال بقاعدة البيانات ==========
 export async function testFirebaseConnection() {
     try {
@@ -383,14 +426,22 @@ export async function testFirebaseConnection() {
         console.log(`✅ الاتصال ناجح! عدد الطلبات في قاعدة البيانات: ${snapshot.size}`);
         
         if (snapshot.size > 0) {
-            console.log('📋 أول طلب في قاعدة البيانات:');
+            console.log('📋 أول 3 طلبات في قاعدة البيانات:');
             snapshot.docs.forEach((doc, index) => {
                 if (index < 3) {
-                    console.log(`  - ${doc.id}:`, doc.data());
+                    const data = doc.data();
+                    console.log(`  ${index + 1}. ID: ${doc.id}`);
+                    console.log(`     رقم الطلب: ${data.orderNumber || 'غير محدد'}`);
+                    console.log(`     العميل: ${data.customer || data.customerId || 'غير محدد'}`);
+                    console.log(`     التاريخ: ${data.orderDate || 'غير محدد'}`);
+                    console.log(`     الإجمالي: ${data.total || 0} ريال`);
+                    console.log('     ---');
                 }
             });
         } else {
             console.log('⚠️ لا توجد طلبات في قاعدة البيانات');
+            console.log('💡 يمكنك إضافة طلب تجريبي باستخدام:');
+            console.log('   await addOrder({ orderNumber: "TEST-001", customer: "عميل تجريبي", total: 100 });');
         }
         
         return { success: true, count: snapshot.size };
