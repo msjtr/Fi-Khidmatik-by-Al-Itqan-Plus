@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إدارة الطلبات - نظام متكامل</title>
-    <!-- إصلاح favicon 404 -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -46,6 +45,7 @@
         .action-btn:hover { transform: scale(1.05); }
         .ql-toolbar.ql-snow { border-radius: 12px 12px 0 0; }
         .ql-container.ql-snow { border-radius: 0 0 12px 12px; min-height: 120px; }
+        .product-image-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 p-6 font-sans">
@@ -481,7 +481,7 @@ async function updateProductStock(productId, newStock) {
 
 // ========== المتغيرات العامة ==========
 let customers = [], products = [], orders = [], currentOrderId = null;
-let selectedPaymentMethod = 'mada'; // متغير افتراضي
+let selectedPaymentMethod = 'mada';
 let currentView = 'grid';
 let currentFilters = { status: '', customer: '', shippingMethod: '', dateFrom: '', dateTo: '' };
 let currentShippingMethod = 'pickup';
@@ -572,6 +572,7 @@ async function loadCustomersList() {
 async function loadProductsList() {
     try {
         products = await loadProducts();
+        console.log('تم تحميل المنتجات:', products.length);
     } catch (err) {
         showToast('خطأ في تحميل المنتجات', 'error');
     }
@@ -627,8 +628,16 @@ async function renderOrders() {
             return icons[status] || '📋';
         };
         
+        // دالة لعرض صورة المنتج بشكل صحيح
+        const getProductImageHtml = (imageUrl) => {
+            if (imageUrl && imageUrl.trim() !== '') {
+                return `<img src="${escapeHtml(imageUrl)}" class="product-image-thumb" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`;
+            }
+            return '<div class="w-[50px] h-[50px] bg-gray-100 rounded-lg flex items-center justify-center"><i class="fas fa-image text-gray-400"></i></div>';
+        };
+        
         const html = filtered.map(order => {
-            const productNames = (order.items || []).map(i => i.name || i.productDetails?.name || 'منتج غير معروف').slice(0, 3);
+            const productItems = (order.items || []).slice(0, 3);
             const productCount = (order.items || []).length;
             return `
             <div class="order-card bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100">
@@ -659,8 +668,13 @@ async function renderOrders() {
                     
                     <div class="mt-3 text-sm text-gray-600 bg-gray-50 p-3 rounded-xl">
                         <div class="font-semibold mb-2"><i class="fas fa-boxes ml-1"></i> المنتجات:</div>
-                        <div class="flex flex-wrap gap-2">
-                            ${productNames.map(name => `<span class="bg-white px-2 py-1 rounded-lg text-xs shadow-sm">${escapeHtml(name)}</span>`).join('')}
+                        <div class="flex flex-wrap gap-3">
+                            ${productItems.map(item => `
+                                <div class="flex items-center gap-2 bg-white px-2 py-1 rounded-lg shadow-sm">
+                                    ${getProductImageHtml(item.image)}
+                                    <span class="text-xs">${escapeHtml(item.name)}</span>
+                                </div>
+                            `).join('')}
                             ${productCount > 3 ? `<span class="bg-gray-200 px-2 py-1 rounded-lg text-xs">+${productCount - 3} أخرى</span>` : ''}
                         </div>
                     </div>
@@ -701,7 +715,7 @@ function addProductRow(pd = null) {
     row.className = 'product-row';
     
     const productImage = pd?.image || '';
-    const imageHtml = productImage ? `<img src="${productImage}" class="product-image-preview" onclick="window.openImage('${productImage}')">` : '<div class="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400"><i class="fas fa-image text-2xl"></i></div>';
+    const imageHtml = productImage ? `<img src="${productImage}" class="product-image-preview" onclick="window.openImage('${productImage}')" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\"w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400\"><i class=\"fas fa-image text-2xl\"></i></div><input type=\"hidden\" class=\"product-image\" value=\"\">';">` : '<div class="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400"><i class="fas fa-image text-2xl"></i></div>';
     
     row.innerHTML = `
         <div class="flex gap-3 flex-wrap md:flex-nowrap">
@@ -805,7 +819,7 @@ function openInventoryModal() {
         const filtered = products.filter(p => p.name?.toLowerCase().includes(term));
         listDiv.innerHTML = filtered.map(p => `
             <div class="p-3 border rounded-xl cursor-pointer hover:bg-purple-50 transition flex items-center gap-3" onclick="window.selectFromInventory('${p.id}')">
-                ${p.image ? `<img src="${p.image}" class="w-12 h-12 object-cover rounded-lg">` : '<div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center"><i class="fas fa-box text-gray-400"></i></div>'}
+                ${p.image ? `<img src="${p.image}" class="w-12 h-12 object-cover rounded-lg" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2748%27 height=%2748%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23999%27 stroke-width=%272%27%3E%3Crect x=%273%27 y=%273%27 width=%2718%27 height=%2718%27 rx=%272%27/%3E%3Ccircle cx=%278.5%27 cy=%278.5%27 r=%271.5%27/%3E%3Cpath d=%27M21 15l-5-4-4 4-3-3-4 4%27/%3E%3C/svg%3E';">` : '<div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center"><i class="fas fa-box text-gray-400"></i></div>'}
                 <div class="flex-1"><div class="font-semibold">${escapeHtml(p.name)}</div><div class="text-sm text-gray-500">${(p.price || 0).toFixed(2)} ريال | مخزون: ${p.stock || 0}</div></div>
             </div>
         `).join('');
@@ -822,8 +836,8 @@ window.selectFromInventory = (id) => {
             name: p.name, 
             price: p.price, 
             barcode: p.code, 
-            image: p.image, 
-            description: p.description 
+            image: p.image || '', 
+            description: p.description || ''
         });
         document.getElementById('inventoryModal').classList.add('hidden');
         showToast(`تم إضافة ${p.name}`, 'success');
@@ -945,8 +959,11 @@ async function saveQuickProduct(e) {
         currentProductRowTemp.querySelector('.product-id').value = productId;
         
         const imgContainer = currentProductRowTemp.querySelector('.product-image-container');
-        if (image) imgContainer.innerHTML = `<img src="${image}" class="product-image-preview" onclick="window.openImage('${image}')"><input type="hidden" class="product-image" value="${image}">`;
-        else imgContainer.innerHTML = '<div class="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400"><i class="fas fa-image text-2xl"></i></div><input type="hidden" class="product-image" value="">';
+        if (image) {
+            imgContainer.innerHTML = `<img src="${image}" class="product-image-preview" onclick="window.openImage('${image}')"><input type="hidden" class="product-image" value="${image}">`;
+        } else {
+            imgContainer.innerHTML = '<div class="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400"><i class="fas fa-image text-2xl"></i></div><input type="hidden" class="product-image" value="">';
+        }
         
         const ed = currentProductRowTemp.querySelector('.product-desc-editor .ql-editor');
         if (ed) ed.innerHTML = description;
@@ -1086,7 +1103,6 @@ function openModal() {
 async function saveOrder(e) {
     e.preventDefault();
     
-    // التحقق من طريقة الدفع
     if (!selectedPaymentMethod) {
         showToast('يرجى اختيار طريقة الدفع', 'error');
         return;
@@ -1133,6 +1149,7 @@ async function saveOrder(e) {
         const name = r.querySelector('.product-name').value.trim();
         const price = parseFloat(r.querySelector('.product-price').value);
         const qty = parseInt(r.querySelector('.product-quantity').value);
+        const image = r.querySelector('.product-image').value;
         if (!name || isNaN(price) || qty <= 0) { showToast('جميع المنتجات مطلوبة', 'error'); return; }
         items.push({
             productId: r.querySelector('.product-id').value || null,
@@ -1140,7 +1157,7 @@ async function saveOrder(e) {
             price, 
             quantity: qty,
             barcode: r.querySelector('.product-barcode').value,
-            image: r.querySelector('.product-image').value,
+            image: image || '',
             description: r.querySelector('.product-desc-hidden').value
         });
     }
@@ -1150,7 +1167,6 @@ async function saveOrder(e) {
     const discountValue = parseFloat(document.getElementById('discountValue').value) || 0;
     const discountType = document.getElementById('discountType').value;
     
-    // تحديد اسم طريقة الدفع بشكل صحيح
     let paymentMethodName = '';
     switch(selectedPaymentMethod) {
         case 'mada': paymentMethodName = 'مدى'; break;
@@ -1172,7 +1188,7 @@ async function saveOrder(e) {
         shippingMethod, 
         shippingAddress, 
         extraEmail,
-        paymentMethod: selectedPaymentMethod, // التأكد من أن القيمة موجودة
+        paymentMethod: selectedPaymentMethod,
         paymentMethodName: paymentMethodName,
         approvalCode: approvalCode || null, 
         otherPaymentText: otherText || null, 
