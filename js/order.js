@@ -1,4 +1,3 @@
-// js/order.js
 import { 
     db, 
     collection, 
@@ -11,25 +10,19 @@ import {
     query, 
     orderBy, 
     limit,
-    where,
-    Timestamp
+    where
 } from './firebase.js';
 
 // ========== دوال مساعدة ==========
-/**
- * تحويل بيانات الطلب إلى صيغة آمنة للتخزين
- */
 function sanitizeOrderData(orderData) {
-    // معالجة المنتجات مع الحفاظ على الصور
     const items = (orderData.items || orderData.cart || []).map(item => ({
         productId: item.productId || null,
         name: item.name || '',
         price: parseFloat(item.price) || 0,
         quantity: parseInt(item.quantity) || 1,
         barcode: item.barcode || '',
-        image: item.image || '',  // ✅ الحفاظ على الصورة
+        image: item.image || '',
         description: item.description || '',
-        // دعم للبيانات القديمة
         productDetails: item.productDetails || null
     }));
     
@@ -38,7 +31,7 @@ function sanitizeOrderData(orderData) {
         customerId: orderData.customerId || null,
         phone: orderData.phone || '',
         cart: items,
-        items: items,  // توافق مع النظام القديم
+        items: items,
         total: orderData.total || 0,
         payment: orderData.payment || '',
         paymentMethod: orderData.paymentMethod || orderData.payment || '',
@@ -64,7 +57,6 @@ export async function saveOrderToFirebase(orderData) {
         const ordersRef = collection(db, 'orders');
         const safeData = sanitizeOrderData(orderData);
         
-        // إنشاء رقم طلب فريد
         const timestamp = Date.now();
         const orderNumber = orderData.orderNumber || `KF-${timestamp.toString().slice(-8)}`;
         
@@ -91,9 +83,7 @@ export async function saveOrderToFirebase(orderData) {
 // ========== جلب طلب بواسطة ID ==========
 export async function getOrderFromFirebase(orderId) {
     try {
-        if (!orderId) {
-            throw new Error('معرّف الطلب مطلوب');
-        }
+        if (!orderId) throw new Error('معرّف الطلب مطلوب');
         
         const docRef = doc(db, 'orders', orderId);
         const docSnap = await getDoc(docRef);
@@ -103,10 +93,9 @@ export async function getOrderFromFirebase(orderId) {
             return {
                 id: docSnap.id,
                 ...data,
-                // توافق مع كل من cart و items مع الحفاظ على الصور
                 items: (data.items || data.cart || []).map(item => ({
                     ...item,
-                    image: item.image || ''  // ✅ التأكد من وجود حقل الصورة
+                    image: item.image || ''
                 })),
                 cart: (data.cart || data.items || []).map(item => ({
                     ...item,
@@ -128,13 +117,7 @@ export async function getOrderFromFirebase(orderId) {
 export async function getAllOrdersFromFirebase(limitCount = 500) {
     try {
         const ordersRef = collection(db, 'orders');
-        
-        const q = query(
-            ordersRef,
-            orderBy('timestamp', 'desc'),
-            limit(limitCount)
-        );
-
+        const q = query(ordersRef, orderBy('timestamp', 'desc'), limit(limitCount));
         const querySnapshot = await getDocs(q);
         
         const orders = [];
@@ -142,7 +125,7 @@ export async function getAllOrdersFromFirebase(limitCount = 500) {
             const data = doc.data();
             const items = (data.items || data.cart || []).map(item => ({
                 ...item,
-                image: item.image || ''  // ✅ التأكد من وجود حقل الصورة
+                image: item.image || ''
             }));
             
             orders.push({ 
@@ -168,31 +151,21 @@ export async function getFilteredOrders(filters = {}) {
         let ordersRef = collection(db, 'orders');
         let constraints = [orderBy('timestamp', 'desc')];
         
-        // إضافة فلتر الحالة
         if (filters.status && filters.status !== '') {
             constraints.push(where('status', '==', filters.status));
         }
-        
-        // إضافة فلتر العميل
         if (filters.customerId) {
             constraints.push(where('customerId', '==', filters.customerId));
         }
-        
-        // إضافة فلتر طريقة الاستلام
         if (filters.shippingMethod && filters.shippingMethod !== '') {
             constraints.push(where('shippingMethod', '==', filters.shippingMethod));
         }
-        
-        // إضافة فلتر التاريخ
         if (filters.startDate) {
             constraints.push(where('orderDate', '>=', filters.startDate));
         }
-        
         if (filters.endDate) {
             constraints.push(where('orderDate', '<=', filters.endDate));
         }
-        
-        // إضافة حد للنتائج
         if (filters.limit) {
             constraints.push(limit(filters.limit));
         }
@@ -207,11 +180,7 @@ export async function getFilteredOrders(filters = {}) {
                 ...item,
                 image: item.image || ''
             }));
-            orders.push({ 
-                id: doc.id, 
-                ...data,
-                items: items
-            });
+            orders.push({ id: doc.id, ...data, items: items });
         });
         
         return orders;
@@ -225,21 +194,13 @@ export async function getFilteredOrders(filters = {}) {
 // ========== تحديث حالة الطلب ==========
 export async function updateOrderStatusInFirebase(orderId, newStatus) {
     try {
-        if (!orderId || !newStatus) {
-            throw new Error('معرّف الطلب والحالة الجديدة مطلوبان');
-        }
+        if (!orderId || !newStatus) throw new Error('معرّف الطلب والحالة الجديدة مطلوبان');
         
         const validStatuses = ['جديد', 'تحت التنفيذ', 'تم التنفيذ', 'تحت المراجعة', 'مسترجع', 'ملغي'];
-        if (!validStatuses.includes(newStatus)) {
-            throw new Error('حالة غير صالحة: ' + newStatus);
-        }
+        if (!validStatuses.includes(newStatus)) throw new Error('حالة غير صالحة: ' + newStatus);
         
         const docRef = doc(db, 'orders', orderId);
-        
-        await updateDoc(docRef, { 
-            status: newStatus,
-            updatedAt: new Date().toISOString()
-        });
+        await updateDoc(docRef, { status: newStatus, updatedAt: new Date().toISOString() });
 
         console.log('✅ تم تحديث حالة الطلب:', orderId, '->', newStatus);
         return true;
@@ -275,16 +236,11 @@ export async function updateOrderInFirebase(orderId, orderData) {
 // ========== حذف طلب ==========
 export async function deleteOrderFromFirebase(orderId) {
     try {
-        if (!orderId) {
-            throw new Error('معرّف الطلب مطلوب');
-        }
-        
+        if (!orderId) throw new Error('معرّف الطلب مطلوب');
         const docRef = doc(db, 'orders', orderId);
         await deleteDoc(docRef);
-        
         console.log('✅ تم حذف الطلب:', orderId);
         return true;
-        
     } catch (error) {
         console.error('❌ خطأ في حذف الطلب:', error);
         throw error;
@@ -309,21 +265,13 @@ export async function getOrdersStatistics() {
         
         orders.forEach(order => {
             stats.totalRevenue += order.total || 0;
-            
             const status = order.status || 'غير محدد';
             stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
-            
-            if (order.timestamp && order.timestamp >= thirtyDaysAgo) {
-                stats.last30Days++;
-            }
-            
-            if (order.createdAt && order.createdAt.split('T')[0] === today) {
-                stats.today++;
-            }
+            if (order.timestamp && order.timestamp >= thirtyDaysAgo) stats.last30Days++;
+            if (order.createdAt && order.createdAt.split('T')[0] === today) stats.today++;
         });
         
         return stats;
-        
     } catch (error) {
         console.error('❌ خطأ في جلب الإحصائيات:', error);
         throw error;
@@ -334,7 +282,6 @@ export async function getOrdersStatistics() {
 export async function searchOrders(searchTerm) {
     try {
         const orders = await getAllOrdersFromFirebase();
-        
         const term = searchTerm.toLowerCase();
         const filtered = orders.filter(order => {
             return (
@@ -344,113 +291,17 @@ export async function searchOrders(searchTerm) {
                 order.items?.some(item => item.name?.toLowerCase().includes(term))
             );
         });
-        
         return filtered;
-        
     } catch (error) {
         console.error('❌ خطأ في البحث:', error);
         throw error;
     }
 }
 
-// ========== طباعة الفاتورة مع الصور ==========
-export function printOrder(order) {
-    try {
-        const printWindow = window.open('', '_blank', 'width=800,height=600');
-        
-        // دالة لعرض الصورة في الطباعة
-        const getProductImageHtml = (imageUrl, productName) => {
-            if (imageUrl && imageUrl.trim() !== '') {
-                return `<img src="${imageUrl}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px;" onerror="this.style.display='none'">`;
-            }
-            return `<div style="width: 40px; height: 40px; background: #f3f4f6; border-radius: 8px; display: flex; align-items: center; justify-content: center;">📦</div>`;
-        };
-        
-        const itemsHtml = (order.items || order.cart || []).map((item, index) => `
-            <tr>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${index + 1}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${getProductImageHtml(item.image, item.name)}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${item.name}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${item.quantity || 1}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${(item.price || 0).toFixed(2)}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</td>
-            </tr>
-        `).join('');
-        
-        const total = order.total || 0;
-        
-        printWindow.document.write(`
-            <!DOCTYPE html>
-            <html dir="rtl">
-            <head>
-                <meta charset="UTF-8">
-                <title>فاتورة ${order.orderNumber}</title>
-                <style>
-                    body { font-family: Arial, sans-serif; padding: 20px; }
-                    .header { text-align: center; margin-bottom: 30px; }
-                    .info { margin-bottom: 20px; }
-                    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                    th, td { border: 1px solid #ddd; padding: 8px; }
-                    th { background: #f2f2f2; text-align: center; }
-                    .total { text-align: left; font-size: 18px; font-weight: bold; margin-top: 20px; }
-                    @media print {
-                        button { display: none; }
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h2>فاتورة إلكترونية</h2>
-                    <p>منصة في خدمتك - المملكة العربية السعودية</p>
-                </div>
-                
-                <div class="info">
-                    <p><strong>رقم الفاتورة:</strong> ${order.orderNumber}</p>
-                    <p><strong>التاريخ:</strong> ${order.orderDate || new Date(order.createdAt).toLocaleDateString('ar-SA')}</p>
-                    <p><strong>الوقت:</strong> ${order.orderTime || ''}</p>
-                    <p><strong>العميل:</strong> ${order.customer}</p>
-                    <p><strong>الجوال:</strong> ${order.phone}</p>
-                    <p><strong>حالة الطلب:</strong> ${order.status || 'جديد'}</p>
-                </div>
-                
-                <table>
-                    <thead>
-                        <tr><th>#</th><th>الصورة</th><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr>
-                    </thead>
-                    <tbody>
-                        ${itemsHtml}
-                    </tbody>
-                </table>
-                
-                <div class="total">
-                    الإجمالي: ${total.toFixed(2)} ريال
-                </div>
-                
-                <div style="text-align: center; margin-top: 50px;">
-                    <p>شكراً لتسوقكم معنا</p>
-                </div>
-                
-                <div style="text-align: center; margin-top: 20px;">
-                    <button onclick="window.print()" style="padding: 10px 20px;">🖨️ طباعة</button>
-                    <button onclick="window.close()" style="padding: 10px 20px;">✖️ إغلاق</button>
-                </div>
-            </body>
-            </html>
-        `);
-        
-        printWindow.document.close();
-        
-    } catch (error) {
-        console.error('❌ خطأ في الطباعة:', error);
-        throw error;
-    }
-}
-
-// ========== تصدير المنتجات مع الصور ==========
+// ========== تصدير CSV ==========
 export async function exportOrdersToCSV(orders) {
     try {
         const headers = ['رقم الطلب', 'التاريخ', 'العميل', 'الجوال', 'المنتجات', 'الإجمالي', 'الحالة', 'طريقة الدفع'];
-        
         const rows = orders.map(order => {
             const productsList = (order.items || []).map(item => 
                 `${item.name} (${item.quantity} × ${item.price})`
@@ -483,7 +334,6 @@ export async function exportOrdersToCSV(orders) {
         URL.revokeObjectURL(url);
         
         return true;
-        
     } catch (error) {
         console.error('❌ خطأ في التصدير:', error);
         throw error;
