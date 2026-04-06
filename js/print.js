@@ -142,14 +142,23 @@ export function generateZATCAQRCode(containerId, orderData) {
     const totalWithVAT = orderData.total || 0;
     const vatAmount = orderData.tax || 0;
     
-    // بيانات الفاتورة المتوافقة مع ZATCA (TLV format)
-    const tlvData = encodeTLV([
-        { tag: '1', value: sellerName },
-        { tag: '2', value: vatNumber },
-        { tag: '3', value: timestamp },
-        { tag: '4', value: totalWithVAT.toFixed(2) },
-        { tag: '5', value: vatAmount.toFixed(2) }
-    ]);
+    // تشفير TLV لهيئة الزكاة
+    function encodeTLV(tag, value) {
+        const tagHex = tag.toString(16).padStart(2, '0');
+        const lengthHex = value.length.toString(16).padStart(2, '0');
+        let valueHex = '';
+        for (let i = 0; i < value.length; i++) {
+            valueHex += value.charCodeAt(i).toString(16).padStart(2, '0');
+        }
+        return tagHex + lengthHex + valueHex;
+    }
+    
+    let tlvData = '';
+    tlvData += encodeTLV(1, sellerName);
+    tlvData += encodeTLV(2, vatNumber);
+    tlvData += encodeTLV(3, timestamp);
+    tlvData += encodeTLV(4, totalWithVAT.toFixed(2));
+    tlvData += encodeTLV(5, vatAmount.toFixed(2));
     
     const container = document.getElementById(containerId);
     if (container) {
@@ -163,21 +172,6 @@ export function generateZATCAQRCode(containerId, orderData) {
             correctLevel: QRCode.CorrectLevel.H
         });
     }
-}
-
-/**
- * تشفير البيانات بصيغة TLV لهيئة الزكاة
- */
-function encodeTLV(tags) {
-    let result = '';
-    for (const tag of tags) {
-        const value = tag.value;
-        const length = value.length;
-        result += tag.tag;
-        result += String.fromCharCode(length);
-        result += value;
-    }
-    return result;
 }
 
 // ========== دوال مساعدة للتحميل ==========
@@ -194,7 +188,7 @@ function showLoading(message) {
         `;
         loadingOverlay.innerHTML = `
             <div style="background: white; padding: 20px; border-radius: 12px; text-align: center;">
-                <div class="loading-spinner" style="border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 10px;"></div>
+                <div class="loading-spinner" style="border: 3px solid #f3f3f3; border-top: 3px solid #1e40af; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 10px;"></div>
                 <p id="loadingMessage">جاري التحميل...</p>
             </div>
         `;
@@ -213,9 +207,29 @@ function hideLoading() {
 }
 
 function showSuccess(message) {
-    alert('✅ ' + message);
+    const toast = document.createElement('div');
+    toast.className = 'toast-message';
+    toast.textContent = '✅ ' + message;
+    toast.style.cssText = `
+        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+        background: #10b981; color: white; padding: 10px 20px;
+        border-radius: 8px; z-index: 10000; font-size: 14px;
+        animation: slideUp 0.3s ease;
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
 }
 
 function showError(message) {
-    alert('❌ ' + message);
+    const toast = document.createElement('div');
+    toast.className = 'toast-message';
+    toast.textContent = '❌ ' + message;
+    toast.style.cssText = `
+        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+        background: #ef4444; color: white; padding: 10px 20px;
+        border-radius: 8px; z-index: 10000; font-size: 14px;
+        animation: slideUp 0.3s ease;
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
 }
