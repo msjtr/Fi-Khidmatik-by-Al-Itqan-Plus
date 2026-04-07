@@ -191,6 +191,16 @@
         };
     }
 
+
+    // بعد تحميل orderData
+setTimeout(() => {
+    const nameSpan = document.querySelector('.customer-name-display');
+    const dateSpan = document.querySelector('.customer-date-display');
+    if (nameSpan) nameSpan.textContent = orderData.customerName || '_________________';
+    if (dateSpan) dateSpan.textContent = `${formatDateYMD(orderData.orderDate)} - ${formatTime12(orderData.orderTime)}`;
+}, 200);
+
+    
     function showLoading(msg) {
         let ov = document.getElementById('loadingOverlay');
         if (!ov) {
