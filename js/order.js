@@ -1,17 +1,18 @@
 // js/order.js - نظام إدارة الطلبات المتكامل
 
+// استيراد دوال Firebase بشكل صحيح
 import { 
-    db, 
-    addDoc, 
-    collection, 
-    doc, 
-    getDoc, 
-    getDocs, 
-    updateDoc, 
-    deleteDoc, 
-    query, 
-    where, 
-    orderBy, 
+    db,
+    collection,
+    doc,
+    addDoc,
+    getDoc,
+    getDocs,
+    updateDoc,
+    deleteDoc,
+    query,
+    where,
+    orderBy,
     limit,
     writeBatch,
     serverTimestamp
