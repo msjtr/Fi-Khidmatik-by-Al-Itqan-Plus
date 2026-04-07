@@ -1,5 +1,5 @@
 // ========================================
-// بيانات البائع (مستوردة من terms.js)
+// بيانات البائع
 // ========================================
 const sellerData = {
     name: "منصة في خدمتك",
@@ -355,24 +355,22 @@ async function loadInvoice(firebaseDb) {
         var order = await fetchOrder(orderId);
         currentOrder = order;
         
-        // استيراد دوال الشروط من terms.js
         var html = buildInvoicePage(order, 1, 4);
         
         if (typeof buildTermsPage1 === 'function') {
-            html += buildTermsPage1(2, 4, sellerData, buildHeader, buildFooter);
-            html += buildTermsPage2(3, 4, sellerData, buildHeader, buildFooter);
-            html += buildTermsPage3(order, 4, 4, sellerData, buildHeader, buildFooter, formatDate, formatTime, escapeHtml);
+            html += buildTermsPage1(2, 4);
+            html += buildTermsPage2(3, 4);
+            html += buildTermsPage3(order, 4, 4);
         }
         
         document.getElementById('invoiceRoot').innerHTML = html;
         
-        // إنشاء QR Codes
         setTimeout(function() {
             if (typeof QRCode !== 'undefined') {
                 var zatcaDiv = document.getElementById('zatcaQR');
                 if (zatcaDiv) {
                     try {
-                        var zatcaData = generateZATCAQRData(order, sellerData);
+                        var zatcaData = generateZATCAQRData(order);
                         new QRCode(zatcaDiv, { text: zatcaData, width: 90, height: 90 });
                     } catch(e) { console.log('ZATCA QR Error:', e); }
                 }
@@ -395,6 +393,7 @@ async function loadInvoice(firebaseDb) {
         }, 200);
         
         showToast('تم تحميل الفاتورة بنجاح', false);
+        
     } catch (error) {
         console.error('Error:', error);
         document.getElementById('invoiceRoot').innerHTML = '<div class="page" style="text-align:center;display:flex;align-items:center;justify-content:center;"><div><h2 style="color:#ef4444;">خطأ</h2><p>' + error.message + '</p><button onclick="location.reload()" style="margin-top:20px;padding:8px 16px;background:#1e3a5f;color:white;border:none;border-radius:8px;cursor:pointer;">إعادة المحاولة</button></div></div>';
@@ -403,5 +402,11 @@ async function loadInvoice(firebaseDb) {
         hideLoading();
     }
 }
-// في نهاية دالة loadInvoice، بعد hideLoading()
-return currentOrder;
+
+// ========================================
+// تصدير الدوال للاستخدام العام
+// ========================================
+window.loadInvoice = loadInvoice;
+window.generatePDF = generatePDF;
+window.calculateTotals = calculateTotals;
+window.sellerData = sellerData;
