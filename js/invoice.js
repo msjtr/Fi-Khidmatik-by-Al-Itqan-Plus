@@ -402,6 +402,7 @@ async function loadInvoice(firebaseDb) {
         hideLoading();
     }
 }
+// ... باقي الكود ...
 
 // ========================================
 // تصدير الدوال للاستخدام العام
@@ -410,3 +411,11 @@ window.loadInvoice = loadInvoice;
 window.generatePDF = generatePDF;
 window.calculateTotals = calculateTotals;
 window.sellerData = sellerData;
+window.buildHeader = buildHeader;
+window.buildFooter = buildFooter;
+window.formatDate = formatDate;
+window.formatTime = formatTime;
+window.escapeHtml = escapeHtml;
+window.showToast = showToast;
+window.showLoading = showLoading;
+window.hideLoading = hideLoading;
