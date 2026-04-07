@@ -18,6 +18,7 @@
     <script src="js/zatca.js"></script>
     <script src="js/terms.js"></script>
     <script src="js/invoice.js"></script>
+    <script src="js/print.js"></script>
 </head>
 <body>
 
@@ -25,8 +26,9 @@
 
 <div class="action-buttons no-print">
     <button class="btn btn-primary" id="printBtn"><i class="fas fa-print"></i> طباعة</button>
-    <button class="btn btn-secondary" id="pdfBtn"><i class="fas fa-file-pdf"></i> PDF</button>
-    <button class="btn btn-purple" id="downloadBtn"><i class="fas fa-download"></i> تحميل</button>
+    <button class="btn btn-secondary" id="previewBtn"><i class="fas fa-eye"></i> معاينة</button>
+    <button class="btn btn-purple" id="pdfBtn"><i class="fas fa-file-pdf"></i> PDF</button>
+    <button class="btn" id="pngBtn" style="background:#059669;color:white;"><i class="fas fa-image"></i> PNG</button>
     <button class="btn btn-danger" id="closeBtn"><i class="fas fa-times"></i> إغلاق</button>
 </div>
 
@@ -46,15 +48,18 @@
         const db = firebase.firestore();
         
         // ربط الأزرار
-        document.getElementById('printBtn').onclick = function() { window.print(); };
-        document.getElementById('pdfBtn').onclick = generatePDF;
-        document.getElementById('downloadBtn').onclick = function() { 
-            if (typeof generatePDF === 'function') generatePDF(); 
-        };
-        document.getElementById('closeBtn').onclick = function() { window.close(); };
+        document.getElementById('printBtn').onclick = () => printInvoice();
+        document.getElementById('previewBtn').onclick = () => previewPrint();
+        document.getElementById('pdfBtn').onclick = () => exportToPDF();
+        document.getElementById('pngBtn').onclick = () => exportToPNG();
+        document.getElementById('closeBtn').onclick = () => window.close();
         
-        // تحميل الفاتورة
-        loadInvoice(db);
+        // تحميل الفاتورة وتهيئة وحدة الطباعة
+        loadInvoice(db).then((order) => {
+            if (order) {
+                initPrintModule(order, db);
+            }
+        });
     })();
 </script>
 </body>
