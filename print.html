@@ -4,76 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>في خدمتك - فاتورة إلكترونية</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="css/invoice.css">
-    
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     
-    <!-- ترتيب تحميل الملفات مهم جداً -->
-    <script src="js/firebase-config.js"></script>
+    <!-- فقط الملفات الموجودة لديك -->
     <script src="js/zatca.js"></script>
     <script src="js/terms.js"></script>
     <script src="js/invoice.js"></script>
     <script src="js/print.js"></script>
+    
+    <style>
+        /* جميع الأنماط هنا - انسخ من ردودي السابقة */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* ... باقي الأنماط ... */
+    </style>
 </head>
 <body>
 
 <div id="invoiceRoot" class="invoice-wrapper"></div>
 
 <div class="action-buttons no-print">
-    <button class="btn btn-primary" id="printBtn"><i class="fas fa-print"></i> طباعة</button>
-    <button class="btn btn-secondary" id="previewBtn"><i class="fas fa-eye"></i> معاينة</button>
-    <button class="btn btn-purple" id="pdfBtn"><i class="fas fa-file-pdf"></i> PDF</button>
-    <button class="btn btn-danger" id="closeBtn"><i class="fas fa-times"></i> إغلاق</button>
+    <button class="btn btn-primary" id="printBtn">🖨️ طباعة</button>
+    <button class="btn btn-purple" id="pdfBtn">📄 PDF</button>
+    <button class="btn btn-danger" id="closeBtn">✖️ إغلاق</button>
 </div>
 
 <script>
-    // انتظر تحميل جميع الملفات ثم ابدأ
-    document.addEventListener('DOMContentLoaded', function() {
-        // تهيئة Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
-            authDomain: "msjt301-974bb.firebaseapp.com",
-            projectId: "msjt301-974bb",
-            storageBucket: "msjt301-974bb.firebasestorage.app",
-            messagingSenderId: "186209858482",
-            appId: "1:186209858482:web:186ca610780799ef562aab"
-        };
-
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const db = firebase.firestore();
-        
-        // ربط الأزرار
-        const printBtn = document.getElementById('printBtn');
-        const previewBtn = document.getElementById('previewBtn');
-        const pdfBtn = document.getElementById('pdfBtn');
-        const closeBtn = document.getElementById('closeBtn');
-        
-        if (printBtn) printBtn.onclick = function() { if (typeof printInvoice === 'function') printInvoice(); else console.error('printInvoice not defined'); };
-        if (previewBtn) previewBtn.onclick = function() { if (typeof previewPrint === 'function') previewPrint(); else console.error('previewPrint not defined'); };
-        if (pdfBtn) pdfBtn.onclick = function() { if (typeof exportToPDF === 'function') exportToPDF(); else console.error('exportToPDF not defined'); };
-        if (closeBtn) closeBtn.onclick = function() { window.close(); };
-        
-        // تحميل الفاتورة
-        if (typeof loadInvoice === 'function') {
-            loadInvoice(db).then(function(order) {
-                if (order && typeof initPrintModule === 'function') {
-                    initPrintModule(order, db);
-                }
-            }).catch(function(error) {
-                console.error('Error loading invoice:', error);
-            });
-        } else {
-            console.error('loadInvoice function not found. Check if invoice.js loaded correctly.');
-        }
-    });
+    // تهيئة Firebase مباشرة هنا
+    const firebaseConfig = {
+        apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
+        authDomain: "msjt301-974bb.firebaseapp.com",
+        projectId: "msjt301-974bb",
+        storageBucket: "msjt301-974bb.firebasestorage.app",
+        messagingSenderId: "186209858482",
+        appId: "1:186209858482:web:186ca610780799ef562aab"
+    };
+    
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+    
+    // ربط الأزرار
+    document.getElementById('printBtn').onclick = function() { window.print(); };
+    document.getElementById('pdfBtn').onclick = function() { if (typeof exportToPDF === 'function') exportToPDF(); };
+    document.getElementById('closeBtn').onclick = function() { window.close(); };
+    
+    // تحميل الفاتورة
+    if (typeof loadInvoice === 'function') {
+        loadInvoice(db);
+    } else {
+        console.error('loadInvoice not defined');
+        document.getElementById('invoiceRoot').innerHTML = '<div class="page"><h2>خطأ</h2><p>لم يتم تحميل ملف invoice.js بشكل صحيح</p></div>';
+    }
 </script>
 </body>
 </html>
