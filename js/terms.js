@@ -72,7 +72,6 @@ const termsContent = `
 </div>
 `;
 
-// الصفحة الثانية من الشروط (تضاف عند الحاجة)
 const termsPage2Content = `
 <div class="terms-main-container">
     <div class="main-title">📜 الشروط والأحكام (تابع)</div>
