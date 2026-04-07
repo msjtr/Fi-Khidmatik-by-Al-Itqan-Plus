@@ -11,7 +11,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #e9ecef; font-family: 'Segoe UI', 'Cairo', sans-serif; padding: 30px 20px; display: flex; justify-content: center; }
         .invoice-wrapper { max-width: 210mm; margin: 0 auto; background: white; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); border-radius: 8px; }
-        .invoice-page { width: 210mm; min-height: 297mm; background: white; padding: 15mm 12mm; page-break-after: always; break-inside: avoid; position: relative; }
+        .invoice-page, .terms-page { width: 210mm; min-height: 297mm; background: white; padding: 15mm 12mm; page-break-after: always; break-inside: avoid; position: relative; }
         .header-top { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #1e3a5f; padding-bottom: 12px; margin-bottom: 20px; flex-wrap: wrap; }
         .logo-area { display: flex; align-items: center; gap: 10px; }
         .logo-img { width: 65px; height: 65px; object-fit: contain; }
@@ -49,7 +49,15 @@
         .loading-spinner { border: 4px solid #f3f3f3; border-top: 4px solid #1e3a5f; border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .toast-message { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 8px; background: #10b981; color: white; z-index: 10000; }
-        .terms-insert { page-break-after: always; }
+        .page-break { page-break-after: always; }
+        .terms-section { break-inside: avoid; page-break-inside: avoid; }
+        .terms-two-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
+        .terms-column { display: flex; flex-direction: column; gap: 15px; }
+        .page-title { color: #1e3a5f; margin-bottom: 20px; font-size: 22px; font-weight: bold; border-right: 4px solid #1e3a5f; padding-right: 12px; }
+        .terms-intro { background: #fef3c7; padding: 15px; border-radius: 10px; margin-bottom: 25px; font-size: 11px; line-height: 1.8; border-right: 4px solid #f59e0b; }
+        .declaration-box { background: #f8fafc; padding: 18px; border-radius: 12px; border: 1px solid #e2e8f0; margin: 20px 0; text-align: center; }
+        .declaration-box p { font-size: 13px; font-weight: bold; line-height: 1.8; }
+        .signature-line { display: flex; justify-content: space-between; margin-top: 25px; padding-top: 15px; border-top: 1px solid #e2e8f0; }
     </style>
 </head>
 <body>
@@ -76,21 +84,57 @@
     const db = getFirestore(app);
 
     let orderData = null;
-    let termsHtml = '';
+    let termsContent = null;
+    let totalPages = 0;
+
+    function buildHeader() {
+        return `
+            <div class="header-top">
+                <div class="logo-area">
+                    <img src="images/logo.svg" class="logo-img" onerror="this.src='https://placehold.co/65x65/1e3a5f/white?text=في+خدمتك'">
+                    <div>
+                        <div class="platform-name">منصة في خدمتك</div>
+                        <div class="platform-slogan">خدمات تقنية متكاملة</div>
+                    </div>
+                </div>
+                <div class="invoice-title">فاتورة إلكترونية</div>
+                <div class="legal-numbers">
+                    <div>رقم شهادة العمل الحر: FL-765735204</div>
+                    <div>الرقم الضريبي: 312495447600003</div>
+                </div>
+            </div>
+        `;
+    }
+
+    function buildFooter(pageNum, total) {
+        return `
+            <div class="footer-note">
+                <div class="contact-info">
+                    <span>📞 الهاتف: 966534051317</span>
+                    <span>💬 الواتساب: 966545312021</span>
+                    <span>✉️ البريد: info@fi-khidmatik.com</span>
+                    <span>🌐 الموقع: www.khidmatik.com</span>
+                </div>
+                <div>هذه الفاتورة إلكترونية - نسخة معتمدة قانونياً</div>
+                <div class="page-number">صفحة ${pageNum} من ${total}</div>
+            </div>
+        `;
+    }
 
     async function loadTerms() {
         try {
-            const response = await fetch('terms.html');
+            const response = await fetch('terms.html?t=' + Date.now());
             if (!response.ok) throw new Error('فشل تحميل ملف الشروط');
-            let html = await response.text();
+            const html = await response.text();
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
-            const content = doc.querySelector('.terms-container');
-            if (content) termsHtml = content.outerHTML;
-            else termsHtml = '<div class="error">لم يتم العثور على محتوى الشروط</div>';
+            // استخراج محتوى body بالكامل مع الاحتفاظ بالأنماط
+            const bodyContent = doc.body.innerHTML;
+            termsContent = bodyContent;
+            console.log('تم تحميل الشروط بنجاح');
         } catch(e) {
-            console.error(e);
-            termsHtml = '<div class="error">خطأ في تحميل الشروط والأحكام</div>';
+            console.error('خطأ في تحميل الشروط:', e);
+            termsContent = '<div class="error" style="color:red;padding:20px;text-align:center;">خطأ في تحميل الشروط والأحكام</div>';
         }
     }
 
@@ -144,7 +188,7 @@
     function formatDateYMD(d) { if(!d) return ''; let p=d.split('-'); return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:d; }
     function escapeHtml(str) { if(!str) return ''; return String(str).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
 
-    function buildInvoicePage() {
+    function buildInvoicePage(pageNum, total) {
         const itemsHtml = (orderData.items || []).map((item, idx) => `
             <tr>
                 <td style="text-align:center">${idx+1}</td>
@@ -156,67 +200,81 @@
             </tr>
         `).join('');
         const subtotal = orderData.subtotal || orderData.items.reduce((s,i)=>s+(i.price*i.quantity),0);
-        const total = orderData.total || (subtotal - orderData.discount + orderData.tax);
+        const totalAmount = orderData.total || (subtotal - orderData.discount + orderData.tax);
         const ship = orderData.shippingMethod === 'delivery' ? 'شحن منزلي' : 'استلام من المقر';
-        return `<div class="invoice-page">
-            <div class="header-top">
-                <div class="logo-area">
-                    <img src="images/logo.svg" class="logo-img" onerror="this.src='https://placehold.co/65x65/1e3a5f/white?text=في+خدمتك'">
-                    <div><div class="platform-name">منصة في خدمتك</div><div class="platform-slogan">خدمات تقنية متكاملة</div></div>
+        return `
+            <div class="invoice-page">
+                ${buildHeader()}
+                <div class="info-row">
+                    <div><strong>رقم الفاتورة:</strong> ${orderData.orderNumber}</div>
+                    <div><strong>التاريخ:</strong> ${formatDateYMD(orderData.orderDate)} - ${formatTime12(orderData.orderTime)}</div>
+                    <div><span class="status-badge">${orderData.status}</span></div>
                 </div>
-                <div class="invoice-title">فاتورة إلكترونية</div>
-                <div class="legal-numbers"><div>رقم شهادة العمل الحر: FL-765735204</div><div>الرقم الضريبي: 312495447600003</div></div>
+                <div class="addresses">
+                    <div class="address-box"><strong>مصدرة من</strong> منصة في خدمتك<br>المملكة العربية السعودية<br>حائل - حي النقرة - مبنى 3085</div>
+                    <div class="address-box"><strong>مصدرة إلى</strong> ${escapeHtml(orderData.customerName)}<br>${escapeHtml(orderData.customerAddress)}<br>هاتف: ${escapeHtml(orderData.customerPhone)}<br>بريد: ${escapeHtml(orderData.customerEmail)}</div>
+                </div>
+                <div class="payment-approval">
+                    <div class="payment-box"><strong>طريقة الدفع:</strong> ${orderData.paymentMethodName}</div>
+                    <div class="payment-box"><strong>طريقة الاستلام:</strong> ${ship}</div>
+                    <div class="approval-box"><strong>رمز الموافقة:</strong> ${orderData.approvalCode}</div>
+                </div>
+                <table class="invoice-table">
+                    <thead><tr><th>#</th><th>الصورة</th><th>المنتج / الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr></thead>
+                    <tbody>${itemsHtml}</tbody>
+                </table>
+                <div class="totals">
+                    <div><span>المجموع الفرعي:</span><span>${subtotal.toFixed(2)} ريال</span></div>
+                    <div><span>الخصم:</span><span>- ${orderData.discount.toFixed(2)} ريال</span></div>
+                    <div><span>ضريبة القيمة المضافة 15%:</span><span>${orderData.tax.toFixed(2)} ريال</span></div>
+                    <div class="grand-total"><span>الإجمالي النهائي:</span><span>${totalAmount.toFixed(2)} ريال</span></div>
+                </div>
+                <div class="barcodes-container"><div class="barcode-item"><div id="platformQR" class="qr-placeholder"></div></div></div>
+                ${buildFooter(pageNum, total)}
             </div>
-            <div class="info-row">
-                <div><strong>رقم الفاتورة:</strong> ${orderData.orderNumber}</div>
-                <div><strong>التاريخ:</strong> ${formatDateYMD(orderData.orderDate)} - ${formatTime12(orderData.orderTime)}</div>
-                <div><span class="status-badge">${orderData.status}</span></div>
+        `;
+    }
+
+    // بناء صفحة الشروط مع إضافة الترويسة والتذييل
+    function buildTermsPage(content, pageNum, total) {
+        return `
+            <div class="terms-page">
+                ${buildHeader()}
+                ${content}
+                ${buildFooter(pageNum, total)}
             </div>
-            <div class="addresses">
-                <div class="address-box"><strong>مصدرة من</strong> منصة في خدمتك<br>المملكة العربية السعودية<br>حائل - حي النقرة - مبنى 3085</div>
-                <div class="address-box"><strong>مصدرة إلى</strong> ${escapeHtml(orderData.customerName)}<br>${escapeHtml(orderData.customerAddress)}<br>هاتف: ${escapeHtml(orderData.customerPhone)}<br>بريد: ${escapeHtml(orderData.customerEmail)}</div>
-            </div>
-            <div class="payment-approval">
-                <div class="payment-box"><strong>طريقة الدفع:</strong> ${orderData.paymentMethodName}</div>
-                <div class="payment-box"><strong>طريقة الاستلام:</strong> ${ship}</div>
-                <div class="approval-box"><strong>رمز الموافقة:</strong> ${orderData.approvalCode}</div>
-            </div>
-            <table class="invoice-table">
-                <thead><tr><th>#</th><th>الصورة</th><th>المنتج / الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr></thead>
-                <tbody>${itemsHtml}</tbody>
-            </table>
-            <div class="totals">
-                <div><span>المجموع الفرعي:</span><span>${subtotal.toFixed(2)} ريال</span></div>
-                <div><span>الخصم:</span><span>- ${orderData.discount.toFixed(2)} ريال</span></div>
-                <div><span>ضريبة القيمة المضافة 15%:</span><span>${orderData.tax.toFixed(2)} ريال</span></div>
-                <div class="grand-total"><span>الإجمالي النهائي:</span><span>${total.toFixed(2)} ريال</span></div>
-            </div>
-            <div class="barcodes-container"><div class="barcode-item"><div id="platformQR" class="qr-placeholder"></div></div></div>
-            <div class="footer-note">
-                <div class="contact-info"><span>📞 966534051317</span><span>💬 966545312021</span><span>✉️ info@fi-khidmatik.com</span><span>🌐 www.khidmatik.com</span></div>
-                <div>هذه الفاتورة إلكترونية - نسخة معتمدة قانونياً</div>
-                <div class="page-number">صفحة 1</div>
-            </div>
-        </div>`;
+        `;
     }
 
     async function renderCompleteInvoice() {
-        showLoading('جاري تحميل الفاتورة والشروط...');
-        await loadTerms();
-        await fetchOrderData();
-        const invoiceHtml = buildInvoicePage();
-        const fullHtml = invoiceHtml + `<div class="terms-insert">${termsHtml}</div>`;
-        document.getElementById('invoiceRoot').innerHTML = fullHtml;
+        showLoading('جاري تحميل الفاتورة...');
+        await Promise.all([loadTerms(), fetchOrderData()]);
+        
+        if (!termsContent) {
+            termsContent = '<div class="error" style="color:red;padding:20px;">خطأ في تحميل الشروط</div>';
+        }
+        
+        // حساب عدد الصفحات: فاتورة (1) + صفحة الشروط (2) = 2 صفحة رئيسية
+        // لكن محتوى الشروط قد يمتد لعدة صفحات تلقائياً حسب المحتوى
+        totalPages = 2; // سيتم تحديثه عند الطباعة/PDF
+        
+        const page1 = buildInvoicePage(1, 2);
+        const page2 = buildTermsPage(termsContent, 2, 2);
+        
+        document.getElementById('invoiceRoot').innerHTML = page1 + page2;
+        
         setTimeout(() => {
             const qr = document.getElementById('platformQR');
-            if (qr && typeof QRCode !== 'undefined') new QRCode(qr, { text: 'https://www.khidmatik.com', width: 100, height: 100 });
+            if (qr && typeof QRCode !== 'undefined') {
+                new QRCode(qr, { text: 'https://www.khidmatik.com', width: 100, height: 100 });
+            }
         }, 100);
         hideLoading();
     }
 
     async function generatePDF() {
         const root = document.getElementById('invoiceRoot');
-        const pages = root.querySelectorAll('.invoice-page, .terms-insert');
+        const pages = root.querySelectorAll('.invoice-page, .terms-page');
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4');
         showLoading('جاري إنشاء PDF...');
@@ -228,7 +286,10 @@
             }
             pdf.save(`فاتورة_${orderData.orderNumber}.pdf`);
             showToast('تم حفظ PDF بنجاح');
-        } catch(e) { showToast('خطأ في إنشاء PDF'); }
+        } catch(e) { 
+            console.error(e);
+            showToast('خطأ في إنشاء PDF'); 
+        }
         finally { hideLoading(); }
     }
 
