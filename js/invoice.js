@@ -1,6 +1,8 @@
 // ========================================
-// بيانات البائع
+// invoice.js - دوال إنشاء الفاتورة الإلكترونية (نسخة محسنة)
 // ========================================
+
+// بيانات البائع (ثابتة)
 const sellerData = {
     name: "في خدمتك",
     taxNumber: "312495447600003",
@@ -12,178 +14,18 @@ const sellerData = {
     website: "www.khidmatik.com"
 };
 
-let currentOrder = null;
-let db = null;
 // ========================================
-// invoice.js - دوال إنشاء الفاتورة الإلكترونية
-// ========================================
-
-// دوال مساعدة (إذا لم تكن موجودة في print.js)
-function formatCurrency(amount) {
-    return amount.toFixed(2) + ' ريال';
-}
-
-// بناء صفحة الفاتورة الأساسية
-function buildInvoicePage(order, customer) {
-    const items = order.items || [];
-    const subtotal = order.subtotal || 0;
-    const discount = order.discount || 0;
-    const tax = order.tax || 0;
-    const total = order.total || 0;
-
-    const productsHtml = items.map((item, index) => `
-        <tr>
-            <td>${index + 1}</td>
-            <td>${window.escapeHtml(item.name)}</td>
-            <td>${window.escapeHtml(item.description || '')}</td>
-            <td class="product-image-cell">
-                ${item.image ? `<img src="${item.image}" class="product-img" onerror="this.style.display='none'">` : '-'}
-            </td>
-            <td>${item.quantity}</td>
-            <td>${item.price.toFixed(2)} ريال</td>
-        </tr>
-    `).join('');
-
-    const shippingMethodText = {
-        'pickup': 'استلام من المقر',
-        'delivery': 'شحن منزلي',
-        'noship': 'لا يتطلب شحن'
-    }[order.shippingMethod] || order.shippingMethod;
-
-    const paymentMethodText = order.paymentMethodName || order.paymentMethod || 'غير محدد';
-
-    return `
-        <div class="page invoice-page">
-            ${window.buildHeader('فاتورة إلكترونية')}
-            
-            <!-- معلومات الفاتورة الأساسية -->
-            <div class="invoice-info">
-                <div class="invoice-number">
-                    <strong>رقم الفاتورة:</strong> ${window.escapeHtml(order.orderNumber)}
-                </div>
-                <div class="invoice-date">
-                    <strong>التاريخ:</strong> ${window.formatDate(order.orderDate)} - ${window.formatTime(order.orderTime)}
-                </div>
-                <div class="invoice-status">
-                    <strong>حالة الطلب:</strong> ${order.status}
-                </div>
-            </div>
-            
-            <!-- المصدر والمصدر إليه -->
-            <div class="addresses">
-                <div class="address-card">
-                    <strong>مصدرة من:</strong>
-                    <p>منصة في خدمتك<br>المملكة العربية السعودية - حائل - حي النقرة<br>شارع سعد المشاط - مبنى 3085<br>الرمز البريدي: 55431</p>
-                </div>
-                <div class="address-card">
-                    <strong>مصدرة إلى:</strong>
-                    <p>${window.escapeHtml(customer?.name || 'غير معروف')}<br>
-                    ${customer?.city ? customer.city + ' - ' : ''}${customer?.street || ''}<br>
-                    جوال: ${customer?.phone || ''}<br>
-                    بريد: ${customer?.email || ''}</p>
-                </div>
-            </div>
-            
-            <!-- طريقة الدفع والاستلام -->
-            <div class="payment-shipping">
-                <div class="payment-card">
-                    <strong>طريقة الدفع:</strong> ${paymentMethodText}
-                    ${order.approvalCode ? `<br><strong>رمز الموافقة:</strong> ${order.approvalCode}` : ''}
-                </div>
-                <div class="shipping-card">
-                    <strong>طريقة استلام المنتج:</strong> ${shippingMethodText}
-                </div>
-            </div>
-            
-            <!-- جدول المنتجات -->
-            <table class="products-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>اسم المنتج</th>
-                        <th>وصف المنتج</th>
-                        <th>صورة المنتج</th>
-                        <th>الكمية</th>
-                        <th>سعر الوحدة</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${productsHtml}
-                </tbody>
-            </table>
-            
-            <!-- الإجماليات -->
-            <div class="totals-box">
-                <div class="totals-row"><span>المجموع الفرعي:</span><span>${subtotal.toFixed(2)} ريال</span></div>
-                <div class="totals-row"><span>إجمالي الخصم:</span><span>- ${discount.toFixed(2)} ريال</span></div>
-                <div class="totals-row"><span>ضريبة القيمة المضافة (15%):</span><span>${tax.toFixed(2)} ريال</span></div>
-                <div class="totals-row grand-total"><span>الإجمالي النهائي شامل الضريبة:</span><span>${total.toFixed(2)} ريال</span></div>
-            </div>
-            
-            <!-- باركود ZATCA -->
-            <div class="barcodes">
-                <div class="qr-code" id="zatca-qr-${order.id}"></div>
-                <div class="barcode-info">
-                    <p>الرقم الضريبي: 312495447600003</p>
-                    <p>رقم شهادة العمل الحر: FL-765735204</p>
-                </div>
-            </div>
-            
-            <!-- تذييل الفاتورة -->
-            <div class="invoice-footer">
-                <p>تخضع هذه الفاتورة لكامل الشروط والأحكام المرفقة</p>
-                <p><strong>شكراً لتسوقكم معنا</strong></p>
-            </div>
-            
-            ${window.buildFooter(1, 4)}
-        </div>
-    `;
-}
-
-// تصدير الدوال للنافذة
-window.buildInvoicePage = buildInvoicePage;
-window.formatCurrency = formatCurrency;
-// ========================================
-// دوال مساعدة
+// دوال مساعدة (تجنب التعارض مع print.js)
 // ========================================
 function cleanText(text) {
     if (!text) return '';
-    var cleaned = text.replace(/[^\u0600-\u06FF\s\u0621-\u064A\u0660-\u0669\.\,\-\+\#\@\&\*\(\)]/g, '');
+    let cleaned = text.replace(/[^\u0600-\u06FF\s\u0621-\u064A\u0660-\u0669\.\,\-\+\#\@\&\*\(\)]/g, '');
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
     return cleaned || text;
 }
 
-function formatDate(d) {
-    if (!d) return '';
-    var parts = d.split('-');
-    if (parts.length === 3) {
-        return parts[2] + '/' + parts[1] + '/' + parts[0];
-    }
-    return d;
-}
-
-function formatTime(time24) {
-    if (!time24) return '';
-    var parts = time24.split(':');
-    var hour = parseInt(parts[0]);
-    var minute = parts[1];
-    var ap = hour >= 12 ? 'مساء' : 'صباح';
-    hour = hour % 12 || 12;
-    return hour + ':' + minute + ' ' + ap;
-}
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
-}
-
 function getStatusText(status) {
-    var map = {
+    const map = {
         'جديد': 'جديد',
         'تحت التنفيذ': 'قيد التنفيذ',
         'تم التنفيذ': 'مكتمل',
@@ -201,7 +43,7 @@ function getShippingText(method) {
 }
 
 function getPaymentName(method) {
-    var names = {
+    const names = {
         'mada': 'مدى',
         'mastercard': 'ماستركارد',
         'visa': 'فيزا',
@@ -213,61 +55,210 @@ function getPaymentName(method) {
     return names[method] || method || 'مدى';
 }
 
-function showLoading(msg) {
-    var ov = document.getElementById('loadingOverlay');
-    if (!ov) {
-        ov = document.createElement('div');
-        ov.id = 'loadingOverlay';
-        ov.className = 'loading-overlay';
-        ov.innerHTML = '<div class="loading-box"><div class="loading-spinner"></div><p id="loadingMsg"></p></div>';
-        document.body.appendChild(ov);
-    }
-    document.getElementById('loadingMsg').textContent = msg;
-    ov.style.display = 'flex';
-}
-
-function hideLoading() {
-    var ov = document.getElementById('loadingOverlay');
-    if (ov) ov.style.display = 'none';
-}
-
-function showToast(msg, isError) {
-    var t = document.createElement('div');
-    t.className = 'toast-message';
-    t.style.background = isError ? '#ef4444' : '#10b981';
-    t.innerHTML = (isError ? 'خطأ ' : 'تم ') + msg;
-    document.body.appendChild(t);
-    setTimeout(function() { t.remove(); }, 3000);
+// توليد نص QR لهيئة الزكاة (ZATCA) – مبسط
+function generateZATCAQRData(order) {
+    // يجب أن يكون هذا النص مطابقاً لمتطلبات الفاتورة الإلكترونية
+    // يمكنك تعديله حسب الحاجة
+    return JSON.stringify({
+        seller_name: sellerData.name,
+        tax_number: sellerData.taxNumber,
+        invoice_date: order.orderDate,
+        invoice_total: order.total,
+        total_tax: order.tax
+    });
 }
 
 // ========================================
-// جلب الطلب من Firebase
+// بناء رأس الصفحة (يستخدم sellerData)
 // ========================================
-async function fetchOrder(orderId) {
-    var orderDoc = await db.collection('orders').doc(orderId).get();
-    if (!orderDoc.exists) throw new Error('الطلب غير موجود');
-    var order = { id: orderDoc.id, ...orderDoc.data() };
+function buildInvoiceHeader(title) {
+    const logoPath = "images/logo.svg";
+    const errorHtml = '<div class="logo-error">شعار<br>في خدمتك</div>';
     
-    var customer = { name: 'غير معروف', phone: '', email: '', address: '' };
+    const rightSection = `
+        <div class="header-right">
+            <div class="logo-area">
+                <div class="logo-img-wrapper">
+                    <img src="${logoPath}" class="logo-img" alt="شعار في خدمتك" onerror="this.outerHTML = '${errorHtml}'">
+                </div>
+                <div class="logo-text">
+                    <div class="platform-name">في خدمتك</div>
+                    <div class="platform-slogan">Fi Khidmatik</div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const centerSection = `
+        <div class="header-center">
+            <div class="page-title">${title}</div>
+        </div>
+    `;
+    
+    const leftSection = `
+        <div class="header-left">
+            <div class="legal-numbers">
+                <div>شهادة العمل الحر: ${sellerData.licenseNumber}</div>
+                <div>الرقم الضريبي: ${sellerData.taxNumber}</div>
+            </div>
+        </div>
+    `;
+    
+    return `<div class="page-header">${rightSection}${centerSection}${leftSection}</div>`;
+}
+
+// ========================================
+// بناء تذييل الصفحة
+// ========================================
+function buildInvoiceFooter(pageNum, totalPages) {
+    return `
+        <div class="page-footer">
+            <div class="contact-info">
+                <span>هاتف: ${sellerData.phone}</span>
+                <span>واتساب: ${sellerData.whatsapp}</span>
+                <span>بريد: ${sellerData.email}</span>
+                <span>موقع: ${sellerData.website}</span>
+            </div>
+            <div>هذه الفاتورة إلكترونية - نسخة معتمدة قانونيا</div>
+            <div class="page-number">صفحة ${pageNum} من ${totalPages}</div>
+        </div>
+    `;
+}
+
+// ========================================
+// حساب الإجماليات (نسخة محسنة)
+// ========================================
+function calculateInvoiceTotals(order) {
+    let subtotal = order.subtotal || 0;
+    if (!subtotal && order.items) {
+        subtotal = order.items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0);
+    }
+    let discount = order.discount || 0;
+    let tax = order.tax || ((subtotal - discount) * 0.15);
+    let total = order.total || (subtotal - discount + tax);
+    return { subtotal, discount, tax, total };
+}
+
+// ========================================
+// صفحة الفاتورة الرئيسية (تعتمد على دوال window إذا وجدت)
+// ========================================
+function buildInvoicePage(order, pageNum, totalPages) {
+    // استخدام دوال مساعدة من window (إن وجدت) أو من الداخل
+    const formatDate = window.formatDate || function(d) { return d; };
+    const formatTime = window.formatTime || function(t) { return t; };
+    const escape = window.escapeHtml || function(s) { return s; };
+    
+    const totals = calculateInvoiceTotals(order);
+    const items = order.items || [];
+    
+    let itemsHtml = '';
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        itemsHtml += `
+            <tr>
+                <td style="text-align:center">${i+1}</td>
+                <td style="text-align:center">
+                    ${item.image ? `<img src="${item.image}" class="product-img" onerror="this.style.display='none'">` : '<div style="width:50px;height:50px;background:#e2e8f0;border-radius:8px;"></div>'}
+                </td>
+                <td style="text-align:right"><strong>${escape(cleanText(item.productName || item.name))}</strong><br><small>${escape(cleanText(item.description))}</small></td>
+                <td style="text-align:center">${item.quantity}</td>
+                <td style="text-align:center">${(item.price || 0).toFixed(2)} ريال</td>
+                <td style="text-align:center">${((item.price || 0) * (item.quantity || 1)).toFixed(2)} ريال</td>
+            </tr>
+        `;
+    }
+    
+    return `
+        <div class="page invoice-page">
+            ${buildInvoiceHeader('فاتورة إلكترونية')}
+            
+            <div class="info-grid">
+                <div class="info-item"><div class="info-label">رقم الفاتورة</div><div class="info-value">${escape(order.orderNumber)}</div></div>
+                <div class="info-item"><div class="info-label">التاريخ</div><div class="info-value">${formatDate(order.orderDate)} - ${formatTime(order.orderTime)}</div></div>
+                <div class="info-item"><div class="info-label">الحالة</div><div class="status-badge">${getStatusText(order.status)}</div></div>
+            </div>
+            
+            <div class="addresses">
+                <div class="address-card">
+                    <strong>مصدرة من</strong>
+                    ${sellerData.name}<br>
+                    المملكة العربية السعودية<br>
+                    ${sellerData.address}<br>
+                    ${sellerData.phone}
+                </div>
+                <div class="address-card">
+                    <strong>مصدرة إلى</strong>
+                    ${escape(order.customerName)}<br>
+                    ${escape(order.customerAddress)}<br>
+                    ${escape(order.customerPhone)}<br>
+                    ${escape(order.customerEmail)}
+                </div>
+            </div>
+            
+            <div class="payment-grid">
+                <div class="payment-card"><strong>طريقة الدفع</strong><br>${getPaymentName(order.paymentMethod)}</div>
+                <div class="payment-card"><strong>طريقة الاستلام</strong><br>${getShippingText(order.shippingMethod)}</div>
+                <div class="payment-card"><strong>رمز الموافقة</strong><br>${order.approvalCode || 'غير مطلوب'}</div>
+            </div>
+            
+            <table class="products-table">
+                <thead>
+                    <tr><th>#</th><th>الصورة</th><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr>
+                </thead>
+                <tbody>${itemsHtml}</tbody>
+            </table>
+            
+            <div class="totals-box">
+                <div class="totals-row"><span>المجموع الفرعي</span><span>${totals.subtotal.toFixed(2)} ريال</span></div>
+                ${totals.discount > 0 ? `<div class="totals-row"><span>الخصم</span><span>- ${totals.discount.toFixed(2)} ريال</span></div>` : ''}
+                <div class="totals-row"><span>ضريبة القيمة المضافة 15%</span><span>${totals.tax.toFixed(2)} ريال</span></div>
+                <div class="totals-row grand-total"><span>الإجمالي النهائي</span><span>${totals.total.toFixed(2)} ريال</span></div>
+            </div>
+            
+            <div class="barcodes">
+                <div class="barcode-right"><div class="barcode-item"><div id="zatcaQR" class="qr-code"></div><p>باركود هيئة الزكاة</p></div></div>
+                <div class="barcode-center"><div class="barcode-item"><div id="orderQR" class="qr-code"></div><p>باركود الطلب</p></div></div>
+                <div class="barcode-left"><div class="barcode-item"><div id="downloadQR" class="qr-code"></div><p>باركود التحميل</p></div></div>
+            </div>
+            
+            ${buildInvoiceFooter(pageNum, totalPages)}
+        </div>
+    `;
+}
+
+// ========================================
+// جلب الطلب من Firebase (Firestore v9)
+// ========================================
+async function fetchOrderData(db, orderId) {
+    if (!db) throw new Error('Firestore غير مهيأ');
+    const { doc, getDoc, collection, getDocs } = await import("https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js");
+    
+    const orderRef = doc(db, "orders", orderId);
+    const orderSnap = await getDoc(orderRef);
+    if (!orderSnap.exists()) throw new Error('الطلب غير موجود');
+    const order = { id: orderSnap.id, ...orderSnap.data() };
+    
+    let customer = { name: 'غير معروف', phone: '', email: '', address: '' };
     if (order.customerId) {
         try {
-            var customerDoc = await db.collection('customers').doc(order.customerId).get();
-            if (customerDoc.exists) customer = customerDoc.data();
+            const customerRef = doc(db, "customers", order.customerId);
+            const customerSnap = await getDoc(customerRef);
+            if (customerSnap.exists()) customer = customerSnap.data();
         } catch(e) {}
     }
     
-    var items = [];
-    for (var i = 0; i < (order.items || []).length; i++) {
-        var item = order.items[i];
-        var productImage = item.image || '';
-        var productName = cleanText(item.name) || 'منتج';
-        var productDesc = cleanText(item.description) || '';
+    const items = [];
+    for (let item of (order.items || [])) {
+        let productImage = item.image || '';
+        let productName = cleanText(item.name) || 'منتج';
+        let productDesc = cleanText(item.description) || '';
         
         if (item.productId && item.productId !== 'null' && !item.productId.startsWith('temp_')) {
             try {
-                var productDoc = await db.collection('products').doc(item.productId).get();
-                if (productDoc.exists) {
-                    var product = productDoc.data();
+                const productRef = doc(db, "products", item.productId);
+                const productSnap = await getDoc(productRef);
+                if (productSnap.exists()) {
+                    const product = productSnap.data();
                     productImage = product.image || productImage;
                     productName = cleanText(product.name) || productName;
                     productDesc = cleanText(product.description) || productDesc;
@@ -306,299 +297,82 @@ async function fetchOrder(orderId) {
 }
 
 // ========================================
-// حساب الإجماليات
+// تحميل وعرض الفاتورة (دالة رئيسية)
 // ========================================
-function calculateTotals(order) {
-    var subtotal = order.subtotal || 0;
-    if (!subtotal && order.items) {
-        subtotal = 0;
-        for (var i = 0; i < order.items.length; i++) {
-            subtotal += (order.items[i].price || 0) * (order.items[i].quantity || 1);
-        }
-    }
-    var discount = order.discount || 0;
-    var tax = order.tax || ((subtotal - discount) * 0.15);
-    var total = order.total || (subtotal - discount + tax);
-    return { subtotal: subtotal, discount: discount, tax: tax, total: total };
-}
+let currentOrder = null;
 
-// ========================================
-// بناء رأس الصفحة مع رسالة خطأ للشعار
-// ========================================
-function buildHeader(title) {
-    // مسار الشعار
-    const logoPath = "images/logo.svg";
-    
-    // رسالة الخطأ التي ستظهر عند فشل تحميل الشعار
-    const errorHtml = '<div class="logo-error">شعار<br>في خدمتك</div>';
-    
-    // القسم الأيمن: الشعار والاسم
-    var rightSection = '<div class="header-right">' +
-        '<div class="logo-area">' +
-            '<div class="logo-img-wrapper">' +
-                '<img src="' + logoPath + '" class="logo-img" alt="شعار في خدمتك" onerror="this.outerHTML = \'' + errorHtml + '\'">' +
-            '</div>' +
-            '<div class="logo-text">' +
-                '<div class="platform-name">في خدمتك</div>' +
-                '<div class="platform-slogan">Fi Khidmatik</div>' +
-            '</div>' +
-        '</div>' +
-    '</div>';
-    
-    // القسم الأوسط: عنوان الصفحة
-    var centerSection = '<div class="header-center">' +
-        '<div class="page-title">' + title + '</div>' +
-    '</div>';
-    
-    // القسم الأيسر: الأرقام القانونية
-    var leftSection = '<div class="header-left">' +
-        '<div class="legal-numbers">' +
-            '<div>شهادة العمل الحر: ' + sellerData.licenseNumber + '</div>' +
-            '<div>الرقم الضريبي: ' + sellerData.taxNumber + '</div>' +
-        '</div>' +
-    '</div>';
-    
-    return '<div class="page-header">' +
-        rightSection +
-        centerSection +
-        leftSection +
-    '</div>';
-}
-
-// ========================================
-// بناء تذييل الصفحة
-// ========================================
-function buildFooter(pageNum, totalPages) {
-    return '<div class="page-footer">' +
-        '<div class="contact-info">' +
-            '<span>هاتف: ' + sellerData.phone + '</span>' +
-            '<span>واتساب: ' + sellerData.whatsapp + '</span>' +
-            '<span>بريد: ' + sellerData.email + '</span>' +
-            '<span>موقع: ' + sellerData.website + '</span>' +
-        '</div>' +
-        '<div>هذه الفاتورة إلكترونية - نسخة معتمدة قانونيا</div>' +
-        '<div class="page-number">صفحة ' + pageNum + ' من ' + totalPages + '</div>' +
-    '</div>';
-}
-
-// ========================================
-// صفحة الفاتورة
-// ========================================
-function buildInvoicePage(order, pageNum, totalPages) {
-    var totals = calculateTotals(order);
-    
-    var itemsHtml = '';
-    for (var i = 0; i < order.items.length; i++) {
-        var item = order.items[i];
-        itemsHtml += '<tr>' +
-            '<td style="text-align:center">' + (i+1) + '</td>' +
-            '<td style="text-align:center">' +
-                (item.image ? '<img src="' + item.image + '" class="product-img" onerror="this.style.display=\'none\'">' : '<div style="width:50px;height:50px;background:#e2e8f0;border-radius:8px;"></div>') +
-            '</td>' +
-            '<td style="text-align:right"><strong>' + escapeHtml(item.productName) + '</strong><br><small>' + escapeHtml(item.description) + '</small></td>' +
-            '<td style="text-align:center">' + item.quantity + '</td>' +
-            '<td style="text-align:center">' + item.price.toFixed(2) + ' ريال</td>' +
-            '<td style="text-align:center">' + (item.price * item.quantity).toFixed(2) + ' ريال</td>' +
-        '</tr>';
-    }
-    
-    return '<div class="page">' +
-        buildHeader("فاتورة إلكترونية") +
-        '<div class="info-grid">' +
-            '<div class="info-item"><div class="info-label">رقم الفاتورة</div><div class="info-value">' + order.orderNumber + '</div></div>' +
-            '<div class="info-item"><div class="info-label">التاريخ</div><div class="info-value">' + formatDate(order.orderDate) + ' - ' + formatTime(order.orderTime) + '</div></div>' +
-            '<div class="info-item"><div class="info-label">الحالة</div><div class="status-badge">' + getStatusText(order.status) + '</div></div>' +
-        '</div>' +
-        '<div class="addresses">' +
-            '<div class="address-card">' +
-                '<strong>مصدرة من</strong>' +
-                sellerData.name + '<br>' +
-                'المملكة العربية السعودية<br>' +
-                sellerData.address + '<br>' +
-                sellerData.phone +
-            '</div>' +
-            '<div class="address-card">' +
-                '<strong>مصدرة إلى</strong>' +
-                escapeHtml(order.customerName) + '<br>' +
-                escapeHtml(order.customerAddress) + '<br>' +
-                escapeHtml(order.customerPhone) + '<br>' +
-                escapeHtml(order.customerEmail) +
-            '</div>' +
-        '</div>' +
-        '<div class="payment-grid">' +
-            '<div class="payment-card"><strong>طريقة الدفع</strong>' + order.paymentMethodName + '</div>' +
-            '<div class="payment-card"><strong>طريقة الاستلام</strong>' + getShippingText(order.shippingMethod) + '</div>' +
-            '<div class="payment-card"><strong>رمز الموافقة</strong>' + (order.approvalCode || 'غير مطلوب') + '</div>' +
-        '</div>' +
-        '<table class="products-table">' +
-            '<thead>' +
-                '<tr><th>#</th><th>الصورة</th><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr>' +
-            '</thead>' +
-            '<tbody>' + itemsHtml + '</tbody>' +
-        '</table>' +
-        '<div class="totals-box">' +
-            '<div class="totals-row"><span>المجموع الفرعي</span><span>' + totals.subtotal.toFixed(2) + ' ريال</span></div>' +
-            (totals.discount > 0 ? '<div class="totals-row"><span>الخصم</span><span>- ' + totals.discount.toFixed(2) + ' ريال</span></div>' : '') +
-            '<div class="totals-row"><span>ضريبة القيمة المضافة 15%</span><span>' + totals.tax.toFixed(2) + ' ريال</span></div>' +
-            '<div class="totals-row grand-total"><span>الإجمالي النهائي</span><span>' + totals.total.toFixed(2) + ' ريال</span></div>' +
-        '</div>' +
-        '<div class="barcodes">' +
-            '<div class="barcode-right">' +
-                '<div class="barcode-item">' +
-                    '<div id="zatcaQR" class="qr-code"></div>' +
-                    '<p>باركود هيئة الزكاة</p>' +
-                '</div>' +
-            '</div>' +
-            '<div class="barcode-center">' +
-                '<div class="barcode-item">' +
-                    '<div id="orderQR" class="qr-code"></div>' +
-                    '<p>باركود الطلب</p>' +
-                '</div>' +
-            '</div>' +
-            '<div class="barcode-left">' +
-                '<div class="barcode-item">' +
-                    '<div id="downloadQR" class="qr-code"></div>' +
-                    '<p>باركود التحميل</p>' +
-                '</div>' +
-            '</div>' +
-        '</div>' +
-        buildFooter(pageNum, totalPages) +
-    '</div>';
-}
-
-// ========================================
-// تصدير PDF
-// ========================================
-async function generatePDF() {
-    var pages = document.querySelectorAll('.page');
-    if (!pages.length) {
-        showToast('لا توجد فاتورة للتصدير', true);
-        return;
-    }
-    
-    showLoading('جاري إنشاء PDF...');
-    
-    var buttons = document.querySelector('.action-buttons');
-    var originalDisplay = null;
-    if (buttons) {
-        originalDisplay = buttons.style.display;
-        buttons.style.display = 'none';
-    }
-    
-    try {
-        var { jsPDF } = window.jspdf;
-        var pdf = new jsPDF('p', 'mm', 'a4');
-        
-        for (var i = 0; i < pages.length; i++) {
-            var canvas = await html2canvas(pages[i], { 
-                scale: 2, 
-                useCORS: false,
-                backgroundColor: '#ffffff', 
-                logging: false,
-                allowTaint: true
-            });
-            
-            if (i !== 0) pdf.addPage();
-            var imgData = canvas.toDataURL('image/png');
-            var imgWidth = 210;
-            var imgHeight = (canvas.height * imgWidth) / canvas.width;
-            pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-        }
-        
-        pdf.save('فاتورة_' + (currentOrder?.orderNumber || 'invoice') + '.pdf');
-        showToast('تم حفظ PDF بنجاح', false);
-        
-    } catch(error) {
-        console.error('PDF Error:', error);
-        showToast('خطأ في إنشاء PDF', true);
-    } finally {
-        if (buttons) {
-            buttons.style.display = originalDisplay || 'flex';
-        }
-        hideLoading();
-    }
-}
-
-// ========================================
-// تحميل وعرض الفاتورة
-// ========================================
 async function loadInvoice(firebaseDb) {
-    db = firebaseDb;
-    
-    var params = new URLSearchParams(window.location.search);
-    var orderId = params.get('id');
-    
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get('id');
     if (!orderId || orderId === 'null') {
-        document.getElementById('invoiceRoot').innerHTML = '<div class="page" style="text-align:center"><div><h2>خطأ</h2><p>لم يتم تحديد رقم الطلب</p></div></div>';
+        document.getElementById('invoiceRoot').innerHTML = '<div class="page" style="text-align:center"><h2>خطأ</h2><p>لم يتم تحديد رقم الطلب</p></div>';
         return;
     }
     
-    showLoading('جاري تحميل الفاتورة...');
+    if (window.showLoading) window.showLoading('جاري تحميل الفاتورة...');
+    else console.log('Loading...');
     
     try {
-        var order = await fetchOrder(orderId);
+        const order = await fetchOrderData(firebaseDb, orderId);
         currentOrder = order;
         
-        var html = buildInvoicePage(order, 1, 4);
+        let html = buildInvoicePage(order, 1, 4);
         
-        if (typeof buildTermsPage1 === 'function') {
-            html += buildTermsPage1(2, 4);
-            html += buildTermsPage2(3, 4);
-            html += buildTermsPage3(order, 4, 4);
+        // إضافة صفحات الشروط والأحكام إذا كانت موجودة
+        if (typeof window.buildTermsPage1 === 'function') {
+            html += window.buildTermsPage1(2, 4);
+            html += window.buildTermsPage2(3, 4);
+            if (typeof window.buildTermsPage3 === 'function') {
+                html += window.buildTermsPage3(order, { name: order.customerName }, order.orderDate, order.orderTime, 4, 4);
+            }
         }
         
         document.getElementById('invoiceRoot').innerHTML = html;
         
-        setTimeout(function() {
+        // إنشاء QR codes بعد تحميل DOM
+        setTimeout(() => {
             if (typeof QRCode !== 'undefined') {
-                var zatcaDiv = document.getElementById('zatcaQR');
+                const zatcaDiv = document.getElementById('zatcaQR');
                 if (zatcaDiv) {
                     try {
-                        var zatcaData = window.generateZATCAQRData(order);
+                        const zatcaData = generateZATCAQRData(order);
                         new QRCode(zatcaDiv, { text: zatcaData, width: 90, height: 90 });
                     } catch(e) { console.log('ZATCA QR Error:', e); }
                 }
-                
-                var orderDiv = document.getElementById('orderQR');
+                const orderDiv = document.getElementById('orderQR');
                 if (orderDiv) {
                     try {
                         new QRCode(orderDiv, { text: window.location.href, width: 90, height: 90 });
-                    } catch(e) { console.log('Order QR Error:', e); }
+                    } catch(e) {}
                 }
-                
-                var downloadDiv = document.getElementById('downloadQR');
+                const downloadDiv = document.getElementById('downloadQR');
                 if (downloadDiv) {
                     try {
-                        var downloadUrl = window.location.origin + window.location.pathname + '?id=' + orderId;
+                        const downloadUrl = window.location.origin + window.location.pathname + '?id=' + orderId;
                         new QRCode(downloadDiv, { text: downloadUrl, width: 90, height: 90 });
-                    } catch(e) { console.log('Download QR Error:', e); }
+                    } catch(e) {}
                 }
             }
         }, 200);
         
-        showToast('تم تحميل الفاتورة بنجاح', false);
-        
+        if (window.showToast) window.showToast('تم تحميل الفاتورة بنجاح', false);
     } catch (error) {
-        console.error('Error:', error);
-        document.getElementById('invoiceRoot').innerHTML = '<div class="page" style="text-align:center"><div><h2>خطأ</h2><p>' + error.message + '</p><button onclick="location.reload()">إعادة المحاولة</button></div></div>';
-        showToast(error.message, true);
+        console.error(error);
+        document.getElementById('invoiceRoot').innerHTML = `<div class="page" style="text-align:center"><h2>خطأ</h2><p>${error.message}</p><button onclick="location.reload()">إعادة المحاولة</button></div>`;
+        if (window.showToast) window.showToast(error.message, true);
     } finally {
-        hideLoading();
+        if (window.hideLoading) window.hideLoading();
     }
 }
 
 // ========================================
-// تصدير الدوال
+// تصدير الدوال المستخدمة خارجياً
 // ========================================
-window.loadInvoice = loadInvoice;
-window.generatePDF = generatePDF;
-window.calculateTotals = calculateTotals;
 window.sellerData = sellerData;
-window.buildHeader = buildHeader;
-window.buildFooter = buildFooter;
-window.formatDate = formatDate;
-window.formatTime = formatTime;
-window.escapeHtml = escapeHtml;
-window.showToast = showToast;
-window.showLoading = showLoading;
-window.hideLoading = hideLoading;
+window.buildInvoiceHeader = buildInvoiceHeader;
+window.buildInvoiceFooter = buildInvoiceFooter;
+window.buildInvoicePage = buildInvoicePage;
+window.calculateInvoiceTotals = calculateInvoiceTotals;
+window.fetchOrderData = fetchOrderData;
+window.loadInvoice = loadInvoice;
+window.generateZATCAQRData = generateZATCAQRData;
