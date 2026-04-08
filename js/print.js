@@ -38,7 +38,7 @@ const sellerLegal = {
     taxNumber: "312495447600003"
 };
 
-// بناء رأس الصفحة للشروط (يضاف فيه الشهادة والرقم الضريبي)
+// بناء رأس الصفحة للشروط
 window.buildHeader = function(title) {
     return `
         <div class="page-header">
@@ -178,7 +178,7 @@ async function exportToPDF() {
         for (var i = 0; i < pages.length; i++) {
             var canvas = await html2canvas(pages[i], { 
                 scale: 3, 
-                useCORS: true,  // لتحميل الصور من أي مصدر
+                useCORS: true,
                 backgroundColor: '#ffffff', 
                 logging: false,
                 allowTaint: false
@@ -224,7 +224,7 @@ async function exportToPDF() {
     }
 }
 
-// تصدير PNG
+// تصدير PNG (دقة عالية)
 async function exportToPNG() {
     var pages = document.querySelectorAll('.page');
     if (!pages.length) {
@@ -235,12 +235,13 @@ async function exportToPNG() {
         printShowToast('جاري تحميل المكتبات...', true);
         return;
     }
-    printShowLoading('جاري إنشاء PNG...');
+    printShowLoading('جاري إنشاء PNG بدقة عالية...');
     try {
         for (var i = 0; i < pages.length; i++) {
             var canvas = await html2canvas(pages[i], { scale: 3, useCORS: true, backgroundColor: '#ffffff' });
             var link = document.createElement('a');
-            link.download = `invoice_page_${i+1}.png`;
+            var fileName = `invoice_page_${i+1}.png`;
+            link.download = fileName;
             link.href = canvas.toDataURL('image/png');
             link.click();
         }
