@@ -43,7 +43,8 @@
     .products-table,
     .totals-box,
     .barcodes,
-    .page-footer {
+    .page-footer,
+    .terms-section {
         page-break-inside: avoid;
         break-inside: avoid;
     }
@@ -456,6 +457,184 @@ body {
 }
 
 /* ========================================
+   الشروط والأحكام
+   ======================================== */
+.terms-container {
+    display: block;
+    direction: rtl;
+}
+
+.terms-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1e3a5f;
+    text-align: center;
+    margin: 10px 0 15px;
+    border-bottom: 2px solid #1e3a5f;
+    padding-bottom: 8px;
+}
+
+.legal-notice {
+    background-color: #fef3c7;
+    border-right: 4px solid #f59e0b;
+    padding: 12px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+}
+
+.legal-notice strong {
+    color: #92400e;
+    font-size: 13px;
+}
+
+.legal-notice span {
+    color: #78350f;
+    font-size: 10px;
+    line-height: 1.6;
+}
+
+.terms-section {
+    margin-bottom: 20px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+.terms-section-header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2c4c7a 100%);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.terms-section-icon {
+    font-size: 18px;
+    background: rgba(255,255,255,0.2);
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.terms-section-header h4 {
+    margin: 0;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.terms-section-content {
+    padding-right: 6px;
+}
+
+.terms-section-content p {
+    font-size: 9px;
+    line-height: 1.5;
+    color: #2d3a4a;
+    margin-bottom: 6px;
+}
+
+.terms-section-content strong {
+    color: #1e3a5f;
+}
+
+.declaration {
+    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+    border-right: 4px solid #0284c7;
+    padding: 12px 15px;
+    margin: 15px 0;
+    border-radius: 10px;
+    page-break-inside: avoid;
+}
+
+.declaration-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.declaration-icon {
+    font-size: 20px;
+}
+
+.declaration-header p {
+    font-size: 14px;
+    font-weight: bold;
+    margin: 0;
+    color: #0369a1;
+}
+
+.declaration-text {
+    margin: 0;
+    color: #075985;
+    font-size: 12px;
+}
+
+.signature-area {
+    margin-top: 15px;
+    padding: 12px 15px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    page-break-inside: avoid;
+}
+
+.signature-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.signature-icon {
+    font-size: 18px;
+}
+
+.signature-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1e293b;
+    min-width: 80px;
+}
+
+.signature-value {
+    color: #1e293b;
+    font-weight: 500;
+    font-size: 12px;
+}
+
+.signature-line {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px dashed #cbd5e1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.signature-placeholder {
+    border-bottom: 1px solid #94a3b8;
+    min-width: 150px;
+    display: inline-block;
+    height: 20px;
+}
+
+/* ألوان مختلفة لكل قسم */
+.terms-section:nth-child(1) .terms-section-header { background: linear-gradient(135deg, #1e3a5f 0%, #2c4c7a 100%); }
+.terms-section:nth-child(2) .terms-section-header { background: linear-gradient(135deg, #14532d 0%, #166534 100%); }
+.terms-section:nth-child(3) .terms-section-header { background: linear-gradient(135deg, #4c1d95 0%, #5b21b6 100%); }
+.terms-section:nth-child(4) .terms-section-header { background: linear-gradient(135deg, #b45309 0%, #c2410c 100%); }
+.terms-section:nth-child(5) .terms-section-header { background: linear-gradient(135deg, #065f46 0%, #047857 100%); }
+.terms-section:nth-child(6) .terms-section-header { background: linear-gradient(135deg, #7c2d12 0%, #9a3412 100%); }
+.terms-section:nth-child(7) .terms-section-header { background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%); }
+.terms-section:nth-child(8) .terms-section-header { background: linear-gradient(135deg, #831843 0%, #9d174d 100%); }
+.terms-section:nth-child(9) .terms-section-header { background: linear-gradient(135deg, #374151 0%, #4b5563 100%); }
+.terms-section:nth-child(10) .terms-section-header { background: linear-gradient(135deg, #0e7490 0%, #0891b2 100%); }
+
+/* ========================================
    أزرار التحكم (شاشة فقط)
    ======================================== */
 .action-buttons {
@@ -481,6 +660,10 @@ body {
     font-weight: bold;
     font-size: 11px;
     transition: all 0.2s;
+}
+
+.btn:hover {
+    transform: scale(1.02);
 }
 
 .btn-primary {
@@ -600,186 +783,3 @@ body {
         width: 100%;
     }
 }
-
-/* ========================================
-   أنماط الشروط والأحكام
-   ======================================== */
-.terms-container {
-    display: block;
-    direction: rtl;
-    font-family: 'Segoe UI', 'Cairo', sans-serif;
-}
-
-.terms-title {
-    font-size: 18px;
-    font-weight: bold;
-    color: #1e3a5f;
-    text-align: center;
-    margin: 10px 0 15px;
-    border-bottom: 2px solid #1e3a5f;
-    padding-bottom: 8px;
-}
-
-.legal-notice {
-    background-color: #fef3c7;
-    border-right: 4px solid #f59e0b;
-    padding: 15px;
-    margin-bottom: 25px;
-    border-radius: 8px;
-}
-
-.legal-notice strong {
-    color: #92400e;
-    font-size: 14px;
-}
-
-.legal-notice span {
-    color: #78350f;
-    font-size: 11px;
-    line-height: 1.6;
-}
-
-.terms-section {
-    margin-bottom: 25px;
-    page-break-inside: avoid;
-    break-inside: avoid;
-}
-
-.terms-section-header {
-    background: linear-gradient(135deg, #1e3a5f 0%, #2c4c7a 100%);
-    color: white;
-    padding: 10px 18px;
-    border-radius: 10px;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.terms-section-icon {
-    font-size: 22px;
-    background: rgba(255,255,255,0.2);
-    padding: 5px 10px;
-    border-radius: 8px;
-}
-
-.terms-section-header h4 {
-    margin: 0;
-    color: white;
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.terms-section-content {
-    padding-right: 8px;
-}
-
-.terms-section-content p {
-    font-size: 10px;
-    line-height: 1.6;
-    color: #2d3a4a;
-    margin-bottom: 8px;
-}
-
-.terms-section-content strong {
-    color: #1e3a5f;
-}
-
-.declaration {
-    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
-    border-right: 4px solid #0284c7;
-    padding: 15px 20px;
-    margin: 20px 0;
-    border-radius: 12px;
-    page-break-inside: avoid;
-}
-
-.declaration-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
-}
-
-.declaration-icon {
-    font-size: 24px;
-}
-
-.declaration-header p {
-    font-size: 16px;
-    font-weight: bold;
-    margin: 0;
-    color: #0369a1;
-}
-
-.declaration-text {
-    margin: 0;
-    color: #075985;
-    font-size: 13px;
-}
-
-.signature-area {
-    margin-top: 20px;
-    padding: 18px 20px;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    page-break-inside: avoid;
-}
-
-.signature-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 15px;
-    flex-wrap: wrap;
-}
-
-.signature-icon {
-    font-size: 20px;
-}
-
-.signature-label {
-    font-size: 14px;
-    font-weight: 600;
-    color: #1e293b;
-    min-width: 100px;
-}
-
-.signature-value {
-    color: #1e293b;
-    font-weight: 500;
-    font-size: 14px;
-}
-
-.signature-line {
-    margin-top: 20px;
-    padding-top: 15px;
-    border-top: 1px dashed #cbd5e1;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.signature-placeholder {
-    border-bottom: 1px solid #94a3b8;
-    min-width: 200px;
-    display: inline-block;
-    height: 25px;
-}
-
-/* ألوان مختلفة لكل قسم باستخدام nth-child */
-.terms-section:nth-child(1) .terms-section-header { background: linear-gradient(135deg, #1e3a5f 0%, #2c4c7a 100%); }
-.terms-section:nth-child(2) .terms-section-header { background: linear-gradient(135deg, #14532d 0%, #166534 100%); }
-.terms-section:nth-child(3) .terms-section-header { background: linear-gradient(135deg, #4c1d95 0%, #5b21b6 100%); }
-.terms-section:nth-child(4) .terms-section-header { background: linear-gradient(135deg, #b45309 0%, #c2410c 100%); }
-.terms-section:nth-child(5) .terms-section-header { background: linear-gradient(135deg, #065f46 0%, #047857 100%); }
-.terms-section:nth-child(6) .terms-section-header { background: linear-gradient(135deg, #7c2d12 0%, #9a3412 100%); }
-.terms-section:nth-child(7) .terms-section-header { background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%); }
-.terms-section:nth-child(8) .terms-section-header { background: linear-gradient(135deg, #831843 0%, #9d174d 100%); }
-.terms-section:nth-child(9) .terms-section-header { background: linear-gradient(135deg, #374151 0%, #4b5563 100%); }
-.terms-section:nth-child(10) .terms-section-header { background: linear-gradient(135deg, #0e7490 0%, #0891b2 100%); }
-.terms-section:nth-child(11) .terms-section-header { background: linear-gradient(135deg, #854d0e 0%, #a16207 100%); }
-.terms-section:nth-child(12) .terms-section-header { background: linear-gradient(135deg, #701a75 0%, #86198f 100%); }
-.terms-section:nth-child(13) .terms-section-header { background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); }
