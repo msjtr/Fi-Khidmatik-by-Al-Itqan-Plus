@@ -14,7 +14,135 @@ const sellerData = {
 
 let currentOrder = null;
 let db = null;
+// ========================================
+// invoice.js - دوال إنشاء الفاتورة الإلكترونية
+// ========================================
 
+// دوال مساعدة (إذا لم تكن موجودة في print.js)
+function formatCurrency(amount) {
+    return amount.toFixed(2) + ' ريال';
+}
+
+// بناء صفحة الفاتورة الأساسية
+function buildInvoicePage(order, customer) {
+    const items = order.items || [];
+    const subtotal = order.subtotal || 0;
+    const discount = order.discount || 0;
+    const tax = order.tax || 0;
+    const total = order.total || 0;
+
+    const productsHtml = items.map((item, index) => `
+        <tr>
+            <td>${index + 1}</td>
+            <td>${window.escapeHtml(item.name)}</td>
+            <td>${window.escapeHtml(item.description || '')}</td>
+            <td class="product-image-cell">
+                ${item.image ? `<img src="${item.image}" class="product-img" onerror="this.style.display='none'">` : '-'}
+            </td>
+            <td>${item.quantity}</td>
+            <td>${item.price.toFixed(2)} ريال</td>
+        </tr>
+    `).join('');
+
+    const shippingMethodText = {
+        'pickup': 'استلام من المقر',
+        'delivery': 'شحن منزلي',
+        'noship': 'لا يتطلب شحن'
+    }[order.shippingMethod] || order.shippingMethod;
+
+    const paymentMethodText = order.paymentMethodName || order.paymentMethod || 'غير محدد';
+
+    return `
+        <div class="page invoice-page">
+            ${window.buildHeader('فاتورة إلكترونية')}
+            
+            <!-- معلومات الفاتورة الأساسية -->
+            <div class="invoice-info">
+                <div class="invoice-number">
+                    <strong>رقم الفاتورة:</strong> ${window.escapeHtml(order.orderNumber)}
+                </div>
+                <div class="invoice-date">
+                    <strong>التاريخ:</strong> ${window.formatDate(order.orderDate)} - ${window.formatTime(order.orderTime)}
+                </div>
+                <div class="invoice-status">
+                    <strong>حالة الطلب:</strong> ${order.status}
+                </div>
+            </div>
+            
+            <!-- المصدر والمصدر إليه -->
+            <div class="addresses">
+                <div class="address-card">
+                    <strong>مصدرة من:</strong>
+                    <p>منصة في خدمتك<br>المملكة العربية السعودية - حائل - حي النقرة<br>شارع سعد المشاط - مبنى 3085<br>الرمز البريدي: 55431</p>
+                </div>
+                <div class="address-card">
+                    <strong>مصدرة إلى:</strong>
+                    <p>${window.escapeHtml(customer?.name || 'غير معروف')}<br>
+                    ${customer?.city ? customer.city + ' - ' : ''}${customer?.street || ''}<br>
+                    جوال: ${customer?.phone || ''}<br>
+                    بريد: ${customer?.email || ''}</p>
+                </div>
+            </div>
+            
+            <!-- طريقة الدفع والاستلام -->
+            <div class="payment-shipping">
+                <div class="payment-card">
+                    <strong>طريقة الدفع:</strong> ${paymentMethodText}
+                    ${order.approvalCode ? `<br><strong>رمز الموافقة:</strong> ${order.approvalCode}` : ''}
+                </div>
+                <div class="shipping-card">
+                    <strong>طريقة استلام المنتج:</strong> ${shippingMethodText}
+                </div>
+            </div>
+            
+            <!-- جدول المنتجات -->
+            <table class="products-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>اسم المنتج</th>
+                        <th>وصف المنتج</th>
+                        <th>صورة المنتج</th>
+                        <th>الكمية</th>
+                        <th>سعر الوحدة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${productsHtml}
+                </tbody>
+            </table>
+            
+            <!-- الإجماليات -->
+            <div class="totals-box">
+                <div class="totals-row"><span>المجموع الفرعي:</span><span>${subtotal.toFixed(2)} ريال</span></div>
+                <div class="totals-row"><span>إجمالي الخصم:</span><span>- ${discount.toFixed(2)} ريال</span></div>
+                <div class="totals-row"><span>ضريبة القيمة المضافة (15%):</span><span>${tax.toFixed(2)} ريال</span></div>
+                <div class="totals-row grand-total"><span>الإجمالي النهائي شامل الضريبة:</span><span>${total.toFixed(2)} ريال</span></div>
+            </div>
+            
+            <!-- باركود ZATCA -->
+            <div class="barcodes">
+                <div class="qr-code" id="zatca-qr-${order.id}"></div>
+                <div class="barcode-info">
+                    <p>الرقم الضريبي: 312495447600003</p>
+                    <p>رقم شهادة العمل الحر: FL-765735204</p>
+                </div>
+            </div>
+            
+            <!-- تذييل الفاتورة -->
+            <div class="invoice-footer">
+                <p>تخضع هذه الفاتورة لكامل الشروط والأحكام المرفقة</p>
+                <p><strong>شكراً لتسوقكم معنا</strong></p>
+            </div>
+            
+            ${window.buildFooter(1, 4)}
+        </div>
+    `;
+}
+
+// تصدير الدوال للنافذة
+window.buildInvoicePage = buildInvoicePage;
+window.formatCurrency = formatCurrency;
 // ========================================
 // دوال مساعدة
 // ========================================
