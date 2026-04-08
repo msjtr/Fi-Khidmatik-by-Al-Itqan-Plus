@@ -14,7 +14,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     
-    <!-- ترتيب تحميل الملفات مهم -->
     <script src="js/zatca.js"></script>
     <script src="js/terms.js"></script>
     <script src="js/invoice.js"></script>
@@ -28,16 +27,11 @@
     <button class="btn btn-primary" id="printBtn"><i class="fas fa-print"></i> طباعة</button>
     <button class="btn btn-secondary" id="previewBtn"><i class="fas fa-eye"></i> معاينة</button>
     <button class="btn btn-purple" id="pdfBtn"><i class="fas fa-file-pdf"></i> PDF</button>
-    <button class="btn" id="downloadTrackedBtn" style="background:#059669;color:white;"><i class="fas fa-download"></i> تحميل مع التتبع</button>
-    <button class="btn" id="copyLinkBtn" style="background:#0284c7;color:white;"><i class="fas fa-link"></i> نسخ الرابط</button>
     <button class="btn btn-danger" id="closeBtn"><i class="fas fa-times"></i> إغلاق</button>
 </div>
 
 <script>
-    // انتظر تحميل DOM بالكامل
     document.addEventListener('DOMContentLoaded', function() {
-        
-        // تهيئة Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
             authDomain: "msjt301-974bb.firebaseapp.com",
@@ -47,112 +41,44 @@
             appId: "1:186209858482:web:186ca610780799ef562aab"
         };
 
-        // تجنب إعادة التهيئة إذا كانت Firebase مهيأة مسبقاً
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
         
-        // استخدام متغير محلي بدلاً من db العام لتجنب التعارض
         const firestoreDb = firebase.firestore();
         
-        // ========================================
-        // ربط الأزرار
-        // ========================================
-        
-        // زر الطباعة
         const printBtn = document.getElementById('printBtn');
-        if (printBtn) {
-            printBtn.onclick = function() { 
-                if (typeof printInvoice === 'function') {
-                    printInvoice();
-                } else {
-                    window.print();
-                }
-            };
-        }
-        
-        // زر المعاينة
         const previewBtn = document.getElementById('previewBtn');
-        if (previewBtn) {
-            previewBtn.onclick = function() { 
-                if (typeof previewPrint === 'function') {
-                    previewPrint();
-                } else {
-                    alert('معاينة غير متاحة');
-                }
-            };
-        }
-        
-        // زر PDF
         const pdfBtn = document.getElementById('pdfBtn');
-        if (pdfBtn) {
-            pdfBtn.onclick = function() { 
-                if (typeof exportToPDF === 'function') {
-                    exportToPDF();
-                } else if (typeof generatePDF === 'function') {
-                    generatePDF();
-                } else {
-                    alert('PDF غير متاح');
-                }
-            };
-        }
-        
-        // زر التحميل مع التتبع
-        const downloadTrackedBtn = document.getElementById('downloadTrackedBtn');
-        if (downloadTrackedBtn) {
-            downloadTrackedBtn.onclick = function() { 
-                if (typeof downloadInvoiceWithTracking === 'function') {
-                    downloadInvoiceWithTracking();
-                } else if (typeof generatePDF === 'function') {
-                    generatePDF();
-                } else {
-                    alert('التحميل غير متاح');
-                }
-            };
-        }
-        
-        // زر نسخ الرابط
-        const copyLinkBtn = document.getElementById('copyLinkBtn');
-        if (copyLinkBtn) {
-            copyLinkBtn.onclick = function() { 
-                const orderId = new URLSearchParams(window.location.search).get('id');
-                if (orderId && typeof copyInvoiceLink === 'function') {
-                    copyInvoiceLink(orderId);
-                } else if (orderId) {
-                    // نسخ الرابط مباشرة إذا كانت الدالة غير متوفرة
-                    const link = window.location.href;
-                    navigator.clipboard.writeText(link).then(function() {
-                        alert('تم نسخ رابط الفاتورة');
-                    }).catch(function() {
-                        alert('فشل نسخ الرابط');
-                    });
-                } else {
-                    alert('لا يمكن نسخ الرابط');
-                }
-            };
-        }
-        
-        // زر الإغلاق
         const closeBtn = document.getElementById('closeBtn');
-        if (closeBtn) {
-            closeBtn.onclick = function() { 
-                window.close();
-            };
-        }
         
-        // ========================================
-        // تحميل الفاتورة
-        // ========================================
+        if (printBtn) printBtn.onclick = function() { 
+            if (typeof printInvoice === 'function') printInvoice();
+            else window.print();
+        };
+        
+        if (previewBtn) previewBtn.onclick = function() { 
+            if (typeof previewPrint === 'function') previewPrint();
+            else alert('معاينة غير متاحة');
+        };
+        
+        if (pdfBtn) pdfBtn.onclick = function() { 
+            if (typeof exportToPDF === 'function') exportToPDF();
+            else if (typeof generatePDF === 'function') generatePDF();
+            else alert('PDF غير متاح');
+        };
+        
+        if (closeBtn) closeBtn.onclick = function() { window.close(); };
+        
         if (typeof loadInvoice === 'function') {
-            loadInvoice(firestoreDb);
+            loadInvoice(firestoreDb).then(function(order) {
+                if (order && typeof initPrintModule === 'function') {
+                    initPrintModule(order, firestoreDb);
+                }
+            });
         } else {
-            console.error('loadInvoice function not found');
-            const root = document.getElementById('invoiceRoot');
-            if (root) {
-                root.innerHTML = '<div class="page" style="text-align:center;padding:50px;"><h2 style="color:#ef4444;">خطأ</h2><p>لم يتم تحميل ملف invoice.js بشكل صحيح</p><p>الرجاء تحديث الصفحة</p></div>';
-            }
+            document.getElementById('invoiceRoot').innerHTML = '<div class="page" style="text-align:center;padding:50px;"><h2 style="color:#ef4444;">خطأ</h2><p>لم يتم تحميل ملف invoice.js بشكل صحيح</p></div>';
         }
-        
     });
 </script>
 </body>
