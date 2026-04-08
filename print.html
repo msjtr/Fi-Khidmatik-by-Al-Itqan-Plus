@@ -6,12 +6,12 @@
     <title>طباعة الفاتورة</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖨️</text></svg>">
     
-    <!-- المكتبات الأساسية -->
+    <!-- المكتبات الخارجية -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <!-- الملفات الخاصة بك -->
+    <!-- ملفات المشروع -->
     <link rel="stylesheet" href="/fi-khidmatik/css/invoice.css">
     <script src="/fi-khidmatik/js/print.js"></script>
     <script src="/fi-khidmatik/js/terms.js"></script>
@@ -78,6 +78,55 @@
             margin-top: 50px;
             font-size: 18px;
         }
+        /* أنماط إضافية للفاتورة */
+        .invoice-header {
+            margin-bottom: 20px;
+        }
+        .invoice-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e3a5f;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .customer-info, .order-info {
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .product-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .product-table th, .product-table td {
+            border: 1px solid #cbd5e1;
+            padding: 8px;
+            text-align: center;
+            font-size: 12px;
+        }
+        .product-table th {
+            background: #1e3a5f;
+            color: white;
+        }
+        .totals {
+            width: 300px;
+            margin-right: auto;
+            margin-top: 15px;
+        }
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+        }
+        .grand-total {
+            font-weight: bold;
+            font-size: 16px;
+            border-top: 1px solid #1e3a5f;
+            margin-top: 5px;
+            padding-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -105,7 +154,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // دوال مساعدة
+        // دوال مساعدة (في حال لم تكن موجودة في print.js)
         function formatDate(dateStr) {
             if (!dateStr) return '';
             const d = new Date(dateStr);
@@ -121,16 +170,88 @@
             return `${hour.toString().padStart(2, '0')}:${m} ${ampm}`;
         }
 
-        // تحميل بيانات العميل
-        async function loadCustomer(customerId) {
-            const docRef = doc(db, "customers", customerId);
-            const snap = await getDoc(docRef);
-            return snap.exists() ? snap.data() : null;
+        // بناء صفحة الفاتورة
+        function buildInvoicePage(order, customer) {
+            const items = order.items || [];
+            const subtotal = order.subtotal || 0;
+            const discount = order.discount || 0;
+            const tax = order.tax || 0;
+            const total = order.total || 0;
+
+            const productsHtml = items.map(item => `
+                <tr>
+                    <td>${escapeHtml(item.name)}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.price.toFixed(2)} ريال</td>
+                    <td>${(item.quantity * item.price).toFixed(2)} ريال</td>
+                </tr>
+            `).join('');
+
+            const shippingMethodText = {
+                'pickup': 'استلام من المقر',
+                'delivery': 'شحن منزلي',
+                'noship': 'لا يتطلب شحن'
+            }[order.shippingMethod] || order.shippingMethod;
+
+            return `
+                <div class="page">
+                    <div class="page-header">
+                        <div class="header-right"></div>
+                        <div class="header-center">
+                            <div class="page-title">فاتورة رسمية</div>
+                        </div>
+                        <div class="header-left"></div>
+                    </div>
+                    
+                    <div class="invoice-header">
+                        <div class="invoice-title">فاتورة رقم: ${escapeHtml(order.orderNumber)}</div>
+                    </div>
+                    
+                    <div class="customer-info">
+                        <strong>بيانات العميل:</strong><br>
+                        الاسم: ${escapeHtml(customer?.name || 'غير معروف')}<br>
+                        الجوال: ${escapeHtml(customer?.phone || '')}<br>
+                        البريد: ${escapeHtml(customer?.email || '')}<br>
+                        ${order.shippingMethod === 'delivery' ? `العنوان: ${escapeHtml(order.shippingAddress?.city || '')} - ${escapeHtml(order.shippingAddress?.street || '')}` : ''}
+                    </div>
+                    
+                    <div class="order-info">
+                        <strong>معلومات الطلب:</strong><br>
+                        التاريخ: ${formatDate(order.orderDate)}<br>
+                        الوقت: ${formatTime(order.orderTime)}<br>
+                        حالة الطلب: ${order.status}<br>
+                        طريقة الاستلام: ${shippingMethodText}<br>
+                        طريقة الدفع: ${order.paymentMethodName || order.paymentMethod}
+                    </div>
+                    
+                    <table class="product-table">
+                        <thead>
+                            <tr><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr>
+                        </thead>
+                        <tbody>
+                            ${productsHtml}
+                        </tbody>
+                    </table>
+                    
+                    <div class="totals">
+                        <div class="totals-row"><span>المجموع الفرعي:</span><span>${subtotal.toFixed(2)} ريال</span></div>
+                        <div class="totals-row"><span>الخصم:</span><span>${discount.toFixed(2)} ريال</span></div>
+                        <div class="totals-row"><span>الضريبة (15%):</span><span>${tax.toFixed(2)} ريال</span></div>
+                        <div class="totals-row grand-total"><span>الإجمالي:</span><span>${total.toFixed(2)} ريال</span></div>
+                    </div>
+                    
+                    <div class="page-footer">
+                        <div class="contact-info">
+                            <span><i class="fas fa-phone"></i> 0530000000</span>
+                            <span><i class="fas fa-envelope"></i> info@example.com</span>
+                        </div>
+                        <div class="page-number">صفحة 1 من 4</div>
+                    </div>
+                </div>
+            `;
         }
 
-        // دالة إنشاء صفحات الشروط والأحكام (يجب أن تكون موجودة في terms.js)
-        // إذا لم تكن موجودة، سنستخدم دوال افتراضية هنا
-        async function renderInvoice(orderId) {
+        async function renderCompleteInvoice(orderId) {
             try {
                 // جلب الطلب
                 const orderRef = doc(db, "orders", orderId);
@@ -142,27 +263,26 @@
                 const order = { id: orderSnap.id, ...orderSnap.data() };
                 
                 // جلب العميل
-                const customer = await loadCustomer(order.customerId);
-                
-                // استخدام الدوال من window إذا كانت موجودة (من print.js أو terms.js)
-                let html = '';
-                if (typeof window.buildTermsPage1 === 'function') {
-                    html += window.buildTermsPage1(1, 3);
-                    html += window.buildTermsPage2(2, 3);
-                    html += window.buildTermsPage3(order, customer, formatDate(order.orderDate), formatTime(order.orderTime), 3, 3);
-                } else {
-                    // دوال احتياطية مبسطة
-                    html = `
-                        <div class="page"><h3>الشروط والأحكام (صفحة 1)</h3><p>محتوى الشروط والأحكام...</p></div>
-                        <div class="page"><h3>الشروط والأحكام (صفحة 2)</h3><p>محتوى الشروط والأحكام...</p></div>
-                        <div class="page">
-                            <h3>إقرار العميل</h3>
-                            <p><strong>العميل:</strong> ${customer?.name || ''}</p>
-                            <p><strong>التاريخ:</strong> ${formatDate(order.orderDate)} - ${formatTime(order.orderTime)}</p>
-                            <p><strong>التوقيع:</strong> _________________</p>
-                        </div>
-                    `;
+                let customer = null;
+                if (order.customerId) {
+                    const customerRef = doc(db, "customers", order.customerId);
+                    const customerSnap = await getDoc(customerRef);
+                    if (customerSnap.exists()) customer = customerSnap.data();
                 }
+                
+                // بناء صفحات الفاتورة
+                let html = buildInvoicePage(order, customer);
+                
+                // إضافة صفحات الشروط والأحكام من terms.js (إذا كانت الدوال موجودة)
+                if (typeof window.buildTermsPage1 === 'function') {
+                    html += window.buildTermsPage1(2, 4);
+                    html += window.buildTermsPage2(3, 4);
+                    html += window.buildTermsPage3(order, customer, formatDate(order.orderDate), formatTime(order.orderTime), 4, 4);
+                } else {
+                    // تنبيه للمطور
+                    console.warn('⚠️ دوال buildTermsPage مفقودة من terms.js');
+                }
+                
                 document.getElementById('printContent').innerHTML = html;
                 
                 // طباعة تلقائية إذا أرسلنا auto=print
@@ -176,13 +296,13 @@
             }
         }
 
-        // تشغيل
+        // بدء التشغيل
         const params = new URLSearchParams(window.location.search);
         const orderId = params.get('id');
         if (!orderId) {
             document.getElementById('printContent').innerHTML = '<div class="error-message">❌ لم يتم تحديد رقم الطلب</div>';
         } else {
-            renderInvoice(orderId);
+            renderCompleteInvoice(orderId);
         }
     </script>
 </body>
