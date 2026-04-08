@@ -107,6 +107,30 @@
                 root.innerHTML = '<div class="page" style="text-align:center;padding:50px;"><h2 style="color:#ef4444;">خطأ</h2><p>لم يتم تحميل ملف invoice.js بشكل صحيح</p><p>الرجاء تحديث الصفحة</p></div>';
             }
         }
+
+
+         // أضف هذه الأزرار بعد ربط الأزرار الموجودة
+const downloadTrackedBtn = document.getElementById('downloadTrackedBtn');
+const copyLinkBtn = document.getElementById('copyLinkBtn');
+
+if (downloadTrackedBtn) {
+    downloadTrackedBtn.onclick = function() { 
+        if (typeof downloadInvoiceWithTracking === 'function') {
+            downloadInvoiceWithTracking();
+        } else if (typeof generatePDF === 'function') {
+            generatePDF();
+        }
+    };
+}
+
+if (copyLinkBtn) {
+    copyLinkBtn.onclick = async function() { 
+        const orderId = new URLSearchParams(window.location.search).get('id');
+        if (orderId && typeof copyInvoiceLink === 'function') {
+            await copyInvoiceLink(orderId);
+        }
+    };
+}
         
         // دالة مساعدة للتنبيهات إذا لم تكن موجودة
         if (typeof showToast !== 'function') {
