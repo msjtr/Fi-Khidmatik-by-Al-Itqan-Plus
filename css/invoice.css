@@ -9,41 +9,52 @@
    إعدادات الطباعة الأساسية - حل مشكلة القص
    ======================================== */
 @media print {
-
     @page {
         size: A4;
-        margin: 8mm; /* ✅ أهم تعديل */
+        margin: 8mm; /* ✅ إصلاح القص */
     }
-
+    
+    html, body {
+        margin: 0;
+        padding: 0;
+        background: white;
+        width: 210mm;
+    }
+    
     body {
         margin: 0;
         padding: 0;
         background: white;
     }
-
+    
     .invoice-wrapper {
-        width: 100%;
         max-width: 100%;
+        width: 100%;
+        margin: 0;
         box-shadow: none;
     }
-
+    
     .page {
-        box-sizing: border-box; /* ✅ يمنع القص */
-        width: 100%;
-        padding: 5mm;
         margin: 0;
+        padding: 5mm 8mm !important;
+        width: 100%;
+        min-height: auto; /* ✅ إصلاح */
         page-break-after: always;
         break-after: page;
         page-break-inside: avoid;
         break-inside: avoid;
+        box-shadow: none;
         background: white;
+        position: relative;
+        box-sizing: border-box; /* ✅ مهم */
+        overflow: hidden;
     }
-
+    
     .page:last-child {
         page-break-after: auto;
     }
-
-    /* منع انقطاع الأقسام */
+    
+    /* منع انقطاع الأقسام المهمة */
     .page-header,
     .info-grid,
     .addresses,
@@ -56,16 +67,16 @@
         page-break-inside: avoid;
         break-inside: avoid;
     }
-
-    /* إخفاء عناصر غير مطلوبة */
+    
+    /* إخفاء عناصر الطباعة */
     .action-buttons,
     .no-print,
     .btn,
     .loading-overlay {
         display: none !important;
     }
-
-    /* ضمان الألوان */
+    
+    /* ضمان ظهور الألوان */
     .status-badge,
     .products-table th,
     .terms-section-header {
@@ -94,7 +105,7 @@ body {
 }
 
 /* ========================================
-   الشاشة
+   إعدادات الصفحة للشاشة
    ======================================== */
 @media screen {
     .page {
@@ -104,7 +115,6 @@ body {
         margin-bottom: 20px;
         background: white;
     }
-
     .page:last-child {
         page-break-after: auto;
         margin-bottom: 0;
@@ -125,20 +135,126 @@ body {
     gap: 6px;
 }
 
-.header-right { flex: 1; text-align: right; }
-.header-center { flex: 2; text-align: center; }
-.header-left { flex: 1; text-align: left; }
+.header-right {
+    flex: 1;
+    text-align: right;
+    min-width: 120px;
+}
+
+.header-center {
+    flex: 2;
+    text-align: center;
+}
+
+.header-left {
+    flex: 1;
+    text-align: left;
+    min-width: 140px;
+}
 
 /* ========================================
-   جدول المنتجات (مهم جداً)
+   معلومات الفاتورة
+   ======================================== */
+.info-grid {
+    display: flex;
+    justify-content: space-between;
+    background: #f8fafc;
+    padding: 6px 10px;
+    border-radius: 6px;
+    margin: 10px 0;
+    border: 1px solid #e2e8f0;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.info-item {
+    text-align: center;
+}
+
+.info-label {
+    font-size: 8px;
+    color: #6c757d;
+    margin-bottom: 2px;
+}
+
+.info-value {
+    font-weight: bold;
+    font-size: 10px;
+}
+
+.status-badge {
+    background: #10b981;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 15px;
+    font-size: 9px;
+    display: inline-block;
+}
+
+/* ========================================
+   العناوين
+   ======================================== */
+.addresses {
+    display: flex;
+    gap: 10px;
+    margin: 10px 0;
+    flex-wrap: wrap;
+}
+
+.address-card {
+    flex: 1;
+    background: #f9fafb;
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    font-size: 8px;
+    line-height: 1.4;
+}
+
+.address-card strong {
+    display: block;
+    margin-bottom: 3px;
+    color: #1e3a5f;
+    font-size: 9px;
+    border-right: 2px solid #1e3a5f;
+    padding-right: 4px;
+}
+
+/* ========================================
+   معلومات الدفع والشحن
+   ======================================== */
+.payment-grid {
+    display: flex;
+    gap: 8px;
+    margin: 10px 0;
+    flex-wrap: wrap;
+}
+
+.payment-card {
+    flex: 1;
+    background: #f1f5f9;
+    padding: 5px 6px;
+    border-radius: 5px;
+    font-size: 8px;
+    text-align: center;
+}
+
+.payment-card strong {
+    display: block;
+    margin-bottom: 2px;
+    color: #1e3a5f;
+    font-size: 9px;
+}
+
+/* ========================================
+   جدول المنتجات (تم إصلاحه)
    ======================================== */
 .products-table {
     width: 100%;
     border-collapse: collapse;
     margin: 10px 0;
     font-size: 8px;
-
-    table-layout: fixed; /* ✅ يمنع التمدد */
+    table-layout: fixed;
     word-wrap: break-word;
 }
 
@@ -148,32 +264,159 @@ body {
     padding: 5px 3px;
     border: 1px solid #2d4a7a;
     text-align: center;
+    font-weight: 600;
 }
 
 .products-table td {
     border: 1px solid #cbd5e1;
     padding: 5px 3px;
+    vertical-align: middle;
+}
+
+.product-img {
+    width: 25px;
+    height: 25px;
+    object-fit: cover;
+    border-radius: 4px;
+    background: #f1f5f9;
 }
 
 /* ========================================
-   الباركود
+   الإجماليات
+   ======================================== */
+.totals-box {
+    width: 200px;
+    margin-right: auto;
+    margin-top: 10px;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 6px;
+}
+
+.totals-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 0;
+    font-size: 9px;
+}
+
+.grand-total {
+    font-weight: bold;
+    font-size: 11px;
+    color: #1e3a5f;
+    border-top: 1px solid #1e3a5f;
+    margin-top: 3px;
+    padding-top: 5px;
+}
+
+/* ========================================
+   الباركودات
    ======================================== */
 .barcodes {
     display: flex;
-    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
     gap: 8px;
+    margin: 12px 0;
+    padding: 8px;
+    background: #f8fafc;
+    border-radius: 6px;
+    flex-wrap: wrap;
+}
+
+.barcode-right,
+.barcode-center,
+.barcode-left {
+    flex: 1;
+    text-align: center;
+    min-width: 70px;
 }
 
 /* ========================================
-   تحسين الاستجابة
+   الشروط والأحكام (كامل)
+   ======================================== */
+.terms-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #1e3a5f;
+    text-align: center;
+    margin: 8px 0 12px;
+    border-bottom: 2px solid #1e3a5f;
+    padding-bottom: 6px;
+}
+
+.legal-notice {
+    background-color: #fef3c7;
+    border-right: 3px solid #f59e0b;
+    padding: 8px 10px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+}
+
+.legal-notice strong {
+    color: #92400e;
+    font-size: 11px;
+}
+
+.legal-notice span {
+    color: #78350f;
+    font-size: 9px;
+    line-height: 1.5;
+}
+
+.terms-section {
+    margin-bottom: 15px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+.terms-section-header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2c4c7a 100%);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.terms-section-header h4 {
+    margin: 0;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.terms-section-content p {
+    font-size: 8px;
+    line-height: 1.4;
+    color: #2d3a4a;
+    margin-bottom: 4px;
+}
+
+/* ========================================
+   الفوتر
+   ======================================== */
+.page-footer {
+    margin-top: 15px;
+    font-size: 7px;
+    text-align: center;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 6px;
+}
+
+/* ========================================
+   الموبايل
    ======================================== */
 @media (max-width: 768px) {
-    body { padding: 10px; }
-
-    .page {
-        padding: 5mm !important;
+    body {
+        padding: 10px;
     }
-
+    
+    .page {
+        padding: 5mm 6mm !important;
+    }
+    
     .addresses,
     .payment-grid,
     .barcodes {
