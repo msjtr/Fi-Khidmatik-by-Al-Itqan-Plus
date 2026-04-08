@@ -381,16 +381,14 @@ async function loadInvoice(firebaseDb) {
                         new QRCode(orderDiv, { text: window.location.href, width: 90, height: 90 });
                     } catch(e) { console.log('Order QR Error:', e); }
                 }
+var downloadDiv = document.getElementById('downloadQR');
+if (downloadDiv) {
+    try {
+        // استخدام الدالة الجديدة لإنشاء باركود التحميل من قاعدة البيانات
+        await createDownloadQRCode(orderId, 'downloadQR');
+    } catch(e) { console.log('Download QR Error:', e); }
+}
                 
-                var downloadDiv = document.getElementById('downloadQR');
-                if (downloadDiv) {
-                    try {
-                        var downloadUrl = window.location.origin + window.location.pathname + '?id=' + orderId;
-                        new QRCode(downloadDiv, { text: downloadUrl, width: 90, height: 90 });
-                    } catch(e) { console.log('Download QR Error:', e); }
-                }
-            }
-        }, 200);
         
         showToast('تم تحميل الفاتورة بنجاح', false);
         
@@ -581,3 +579,12 @@ window.escapeHtml = escapeHtml;
 window.showToast = showToast;
 window.showLoading = showLoading;
 window.hideLoading = hideLoading;
+
+// تصدير دوال الباركود الجديدة
+window.saveInvoiceDownloadUrl = saveInvoiceDownloadUrl;
+window.getInvoiceDownloadUrl = getInvoiceDownloadUrl;
+window.createDownloadQRCode = createDownloadQRCode;
+window.downloadInvoiceWithTracking = downloadInvoiceWithTracking;
+window.copyInvoiceLink = copyInvoiceLink;
+window.getInvoiceShareLink = getInvoiceShareLink;
+window.incrementInvoiceDownloadCount = incrementInvoiceDownloadCount;
