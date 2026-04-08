@@ -195,11 +195,14 @@ function calculateTotals(order) {
 }
 
 // ========================================
-// بناء رأس الصفحة (يمين - وسط - يسار)
+// بناء رأس الصفحة (يمين - وسط - يسار) مع شعار من images/logo.svg
 // ========================================
 function buildHeader(title) {
-    // شعار SVG مدمج لـ "في خدمتك"
-    const logoSvg = `<svg width="65" height="65" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    // مسار الشعار من مجلد images
+    const logoPath = "images/logo.svg";
+    
+    // شعار احتياطي (SVG مدمج) في حالة فشل تحميل الصورة
+    const fallbackLogo = `<svg width="65" height="65" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
         <rect width="100" height="100" rx="20" fill="#1e3a5f"/>
         <text x="50" y="68" text-anchor="middle" fill="white" font-size="42" font-weight="bold" font-family="Cairo, sans-serif">خ</text>
     </svg>`;
@@ -207,7 +210,9 @@ function buildHeader(title) {
     // القسم الأيمن: الشعار والاسم
     var rightSection = '<div class="header-right">' +
         '<div class="logo-area">' +
-            '<div class="logo-img-wrapper">' + logoSvg + '</div>' +
+            '<div class="logo-img-wrapper">' +
+                '<img src="' + logoPath + '" class="logo-img" alt="شعار في خدمتك" onerror="this.style.display=\'none\'; this.parentElement.innerHTML=\'' + fallbackLogo + '\'">' +
+            '</div>' +
             '<div class="logo-text">' +
                 '<div class="platform-name">في خدمتك</div>' +
                 '<div class="platform-slogan">Fi Khidmatik</div>' +
@@ -301,7 +306,7 @@ function buildInvoicePage(order, pageNum, totalPages) {
             '<div class="payment-card"><strong>رمز الموافقة</strong>' + (order.approvalCode || 'غير مطلوب') + '</div>' +
         '</div>' +
         '<table class="products-table">' +
-            '<thead><tr><th>#</th><th>الصورة</th><th>المنتج / الخدمة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th><tr></thead>' +
+            '<thead><tr><th>#</th><th>الصورة</th><th>المنتج / الخدمة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead>' +
             '<tbody>' + itemsHtml + '</tbody>' +
         '</table>' +
         '<div class="totals-box">' +
