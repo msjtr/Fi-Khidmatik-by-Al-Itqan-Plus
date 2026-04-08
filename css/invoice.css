@@ -4,26 +4,60 @@
     box-sizing: border-box;
 }
 
+/* ========================================
+   أنماط الطباعة المحسنة
+   ======================================== */
 @media print {
+    /* إخفاء العناصر غير المرغوب فيها */
     .no-print {
         display: none !important;
     }
     .action-buttons {
         display: none !important;
     }
+    
+    /* إعدادات الصفحة */
+    @page {
+        size: A4;
+        margin: 0;
+    }
+    
     body {
         background: white;
         padding: 0;
         margin: 0;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
+    
     .page {
+        width: 100%;
+        min-height: auto;
+        background: white;
+        padding: 15mm 12mm;
         page-break-after: always;
+        position: relative;
+        box-shadow: none;
     }
+    
     .page:last-child {
         page-break-after: auto;
     }
+    
+    /* ضمان ظهور الألوان والخلفيات */
+    .status-badge,
+    .btn,
+    .products-table th,
+    .terms-card h4,
+    .legal-notice {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
 }
 
+/* ========================================
+   الأنماط العامة
+   ======================================== */
 body {
     background: #e9ecef;
     font-family: 'Segoe UI', 'Cairo', 'Tahoma', sans-serif;
@@ -44,7 +78,7 @@ body {
     width: 210mm;
     min-height: 297mm;
     background: white;
-    padding: 15mm 12mm;
+    padding: 12mm 10mm;
     page-break-after: always;
     position: relative;
 }
@@ -54,7 +88,7 @@ body {
 }
 
 /* ========================================
-   رأس الصفحة - توزيع ثلاثي (مصغر)
+   رأس الصفحة
    ======================================== */
 .page-header {
     display: flex;
@@ -70,7 +104,7 @@ body {
 .header-right {
     flex: 1;
     text-align: right;
-    min-width: 150px;
+    min-width: 140px;
 }
 
 .header-center {
@@ -81,7 +115,7 @@ body {
 .header-left {
     flex: 1;
     text-align: left;
-    min-width: 180px;
+    min-width: 160px;
 }
 
 .logo-area {
@@ -169,33 +203,33 @@ body {
    ======================================== */
 .page-footer {
     position: absolute;
-    bottom: 15mm;
-    left: 12mm;
-    right: 12mm;
+    bottom: 10mm;
+    left: 10mm;
+    right: 10mm;
     font-size: 9px;
     text-align: center;
     border-top: 1px solid #e2e8f0;
-    padding-top: 10px;
+    padding-top: 8px;
 }
 
 .contact-info {
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap: 15px;
     flex-wrap: wrap;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
 }
 
 .contact-info span {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
 }
 
 .page-number {
-    text-align: left;
+    text-align: center;
     direction: ltr;
-    margin-top: 6px;
+    margin-top: 5px;
     font-size: 8px;
     color: #94a3b8;
 }
@@ -252,8 +286,8 @@ body {
 .address-card {
     flex: 1;
     background: #f9fafb;
-    padding: 12px;
-    border-radius: 10px;
+    padding: 10px;
+    border-radius: 8px;
     border: 1px solid #e5e7eb;
     font-size: 10px;
     line-height: 1.6;
@@ -281,7 +315,7 @@ body {
 .payment-card {
     flex: 1;
     background: #f1f5f9;
-    padding: 8px 12px;
+    padding: 8px 10px;
     border-radius: 8px;
     font-size: 10px;
     text-align: center;
@@ -320,8 +354,8 @@ body {
 }
 
 .product-img {
-    width: 40px;
-    height: 40px;
+    width: 35px;
+    height: 35px;
     object-fit: cover;
     border-radius: 6px;
     background: #f1f5f9;
@@ -331,11 +365,11 @@ body {
    الإجماليات
    ======================================== */
 .totals-box {
-    width: 250px;
+    width: 240px;
     margin-right: auto;
     margin-top: 15px;
     border-top: 2px solid #e2e8f0;
-    padding-top: 10px;
+    padding-top: 8px;
 }
 
 .totals-row {
@@ -355,7 +389,7 @@ body {
 }
 
 /* ========================================
-   الباركودات - توزيع ثلاثي (مصغر)
+   الباركودات
    ======================================== */
 .barcodes {
     display: flex;
@@ -363,7 +397,7 @@ body {
     align-items: center;
     gap: 12px;
     margin: 20px 0;
-    padding: 12px;
+    padding: 10px;
     background: #f8fafc;
     border-radius: 10px;
     flex-wrap: wrap;
@@ -393,13 +427,13 @@ body {
 
 .barcode-item p {
     font-size: 9px;
-    margin-top: 6px;
+    margin-top: 5px;
     color: #666;
 }
 
 .qr-code {
-    width: 70px;
-    height: 70px;
+    width: 65px;
+    height: 65px;
     margin: 0 auto;
 }
 
@@ -418,25 +452,25 @@ body {
 
 .legal-notice {
     background: #fef3c7;
-    padding: 12px 15px;
+    padding: 10px 12px;
     border-radius: 8px;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     border-right: 4px solid #f59e0b;
-    font-size: 11px;
+    font-size: 10px;
     line-height: 1.6;
 }
 
 .terms-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin-bottom: 20px;
+    gap: 12px;
+    margin-bottom: 15px;
 }
 
 .terms-card {
     background: #fafafa;
-    padding: 12px;
-    border-radius: 10px;
+    padding: 10px;
+    border-radius: 8px;
     border: 1px solid #e5e7eb;
     break-inside: avoid;
 }
@@ -444,38 +478,38 @@ body {
 .terms-card h4 {
     background: #1e3a5f;
     color: white;
-    padding: 4px 12px;
+    padding: 4px 10px;
     border-radius: 20px;
-    font-size: 12px;
-    margin-bottom: 10px;
+    font-size: 11px;
+    margin-bottom: 8px;
     display: inline-block;
 }
 
 .terms-card p {
     font-size: 9px;
-    line-height: 1.6;
+    line-height: 1.5;
     color: #2d3a4a;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
 }
 
 .declaration {
     background: #f0f4f9;
-    padding: 15px;
-    border-radius: 10px;
+    padding: 12px;
+    border-radius: 8px;
     text-align: center;
-    margin: 15px 0;
+    margin: 12px 0;
 }
 
 .signature-area {
     display: flex;
     justify-content: space-between;
-    margin-top: 15px;
-    padding-top: 12px;
+    margin-top: 12px;
+    padding-top: 10px;
     border-top: 1px solid #cbd5e1;
 }
 
 /* ========================================
-   أزرار التحكم
+   أزرار التحكم (تظهر فقط على الشاشة)
    ======================================== */
 .action-buttons {
     display: flex;
@@ -625,7 +659,7 @@ body {
     }
     
     .qr-code {
-        width: 60px;
-        height: 60px;
+        width: 55px;
+        height: 55px;
     }
 }
