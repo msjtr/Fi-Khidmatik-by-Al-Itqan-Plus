@@ -1,6 +1,5 @@
 // ========================================
-// print.js - دوال الطباعة المتقدمة
-// مع تضمين الأنماط مباشرة (بدون ملف خارجي)
+// print.js - دوال الطباعة المتقدمة (نسخة محسنة)
 // ========================================
 
 let printCurrentOrder = null;
@@ -52,13 +51,11 @@ function getInlineStyles() {
             box-sizing: border-box;
         }
 
-        /* إعدادات الطباعة الأساسية */
         @media print {
             @page {
                 size: A4;
                 margin: 15mm 12mm 15mm 12mm;
             }
-            
             body {
                 margin: 0;
                 padding: 0;
@@ -66,7 +63,6 @@ function getInlineStyles() {
                 print-color-adjust: exact;
                 -webkit-print-color-adjust: exact;
             }
-            
             .page {
                 margin: 0;
                 padding: 0;
@@ -77,33 +73,20 @@ function getInlineStyles() {
                 background: white;
                 position: relative;
             }
-            
             .page:last-child {
                 page-break-after: auto;
             }
-            
-            .page-header,
-            .info-grid,
-            .addresses,
-            .payment-grid,
-            .products-table,
-            .totals-box,
-            .barcodes,
-            .page-footer,
+            .page-header, .info-grid, .addresses, .payment-grid,
+            .products-table, .totals-box, .barcodes, .page-footer,
             .terms-section {
                 page-break-inside: avoid;
                 break-inside: avoid;
             }
-            
-            .action-buttons,
-            .no-print,
-            .btn,
-            .loading-overlay {
+            .action-buttons, .no-print, .btn, .loading-overlay {
                 display: none !important;
             }
         }
 
-        /* الأنماط العامة */
         body {
             background: #e9ecef;
             font-family: 'Segoe UI', 'Cairo', 'Tahoma', sans-serif;
@@ -113,14 +96,6 @@ function getInlineStyles() {
             align-items: center;
         }
 
-        .invoice-wrapper {
-            max-width: 210mm;
-            margin: 0 auto;
-            background: white;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-        }
-
-        /* إعدادات الصفحة */
         .page {
             width: 100%;
             max-width: 210mm;
@@ -136,10 +111,6 @@ function getInlineStyles() {
                 box-shadow: 0 0 10px rgba(0,0,0,0.1);
                 margin-bottom: 20px;
             }
-            .page:last-child {
-                page-break-after: auto;
-                margin-bottom: 0;
-            }
         }
 
         @media print {
@@ -150,7 +121,6 @@ function getInlineStyles() {
             }
         }
 
-        /* رأس الصفحة */
         .page-header {
             display: flex;
             justify-content: space-between;
@@ -161,69 +131,14 @@ function getInlineStyles() {
             flex-wrap: wrap;
             gap: 8px;
         }
+        .header-right { flex: 1; text-align: right; min-width: 130px; }
+        .header-center { flex: 2; text-align: center; }
+        .header-left { flex: 1; text-align: left; min-width: 150px; }
+        .logo-area { display: flex; align-items: center; gap: 6px; justify-content: flex-start; }
+        .platform-name { font-size: 13px; font-weight: bold; color: #1e3a5f; }
+        .platform-slogan { font-size: 8px; color: #6c757d; }
+        .page-title { font-size: 16px; font-weight: bold; color: #1e3a5f; display: inline-block; }
 
-        .header-right {
-            flex: 1;
-            text-align: right;
-            min-width: 130px;
-        }
-
-        .header-center {
-            flex: 2;
-            text-align: center;
-        }
-
-        .header-left {
-            flex: 1;
-            text-align: left;
-            min-width: 150px;
-        }
-
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            justify-content: flex-start;
-        }
-
-        .logo-img {
-            width: 35px;
-            height: 35px;
-            object-fit: contain;
-        }
-
-        .logo-placeholder {
-            width: 35px;
-            height: 35px;
-            background: linear-gradient(135deg, #1e3a5f, #2d4a7a);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        .platform-name {
-            font-size: 13px;
-            font-weight: bold;
-            color: #1e3a5f;
-        }
-
-        .platform-slogan {
-            font-size: 8px;
-            color: #6c757d;
-        }
-
-        .page-title {
-            font-size: 16px;
-            font-weight: bold;
-            color: #1e3a5f;
-            display: inline-block;
-        }
-
-        /* تذييل الصفحة */
         .page-footer {
             margin-top: 20px;
             font-size: 8px;
@@ -231,23 +146,9 @@ function getInlineStyles() {
             border-top: 1px solid #e2e8f0;
             padding-top: 8px;
         }
+        .contact-info { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 5px; }
+        .page-number { text-align: center; margin-top: 4px; font-size: 8px; color: #94a3b8; }
 
-        .contact-info {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 5px;
-        }
-
-        .page-number {
-            text-align: center;
-            margin-top: 4px;
-            font-size: 8px;
-            color: #94a3b8;
-        }
-
-        /* معلومات الفاتورة */
         .info-grid {
             display: flex;
             justify-content: space-between;
@@ -259,30 +160,16 @@ function getInlineStyles() {
             flex-wrap: wrap;
             gap: 6px;
         }
+        .info-item { text-align: center; }
+        .info-label { font-size: 9px; color: #6c757d; margin-bottom: 2px; }
+        .info-value { font-weight: bold; font-size: 11px; }
 
-        .info-item {
-            text-align: center;
-        }
-
-        .info-label {
-            font-size: 9px;
-            color: #6c757d;
-            margin-bottom: 2px;
-        }
-
-        .info-value {
-            font-weight: bold;
-            font-size: 11px;
-        }
-
-        /* جدول المنتجات */
         .products-table {
             width: 100%;
             border-collapse: collapse;
             margin: 12px 0;
             font-size: 9px;
         }
-
         .products-table th {
             background: #1e3a5f;
             color: white;
@@ -291,14 +178,12 @@ function getInlineStyles() {
             text-align: center;
             font-weight: 600;
         }
-
         .products-table td {
             border: 1px solid #cbd5e1;
             padding: 6px 4px;
             vertical-align: middle;
         }
 
-        /* الإجماليات */
         .totals-box {
             width: 220px;
             margin-right: auto;
@@ -306,14 +191,12 @@ function getInlineStyles() {
             border-top: 1px solid #e2e8f0;
             padding-top: 8px;
         }
-
         .totals-row {
             display: flex;
             justify-content: space-between;
             padding: 3px 0;
             font-size: 10px;
         }
-
         .grand-total {
             font-weight: bold;
             font-size: 13px;
@@ -323,7 +206,6 @@ function getInlineStyles() {
             padding-top: 6px;
         }
 
-        /* الباركودات */
         .barcodes {
             display: flex;
             justify-content: space-between;
@@ -335,20 +217,10 @@ function getInlineStyles() {
             border-radius: 8px;
             flex-wrap: wrap;
         }
-
-        .qr-code {
-            width: 60px;
-            height: 60px;
-            margin: 0 auto;
-        }
+        .qr-code { width: 60px; height: 60px; margin: 0 auto; }
 
         /* أنماط الشروط والأحكام */
-        .terms-container {
-            display: block;
-            direction: rtl;
-            font-family: 'Segoe UI', 'Cairo', sans-serif;
-        }
-
+        .terms-container { display: block; direction: rtl; font-family: 'Segoe UI', 'Cairo', sans-serif; }
         .terms-title {
             font-size: 18px;
             font-weight: bold;
@@ -358,7 +230,6 @@ function getInlineStyles() {
             border-bottom: 2px solid #1e3a5f;
             padding-bottom: 8px;
         }
-
         .legal-notice {
             background-color: #fef3c7;
             border-right: 4px solid #f59e0b;
@@ -366,24 +237,9 @@ function getInlineStyles() {
             margin-bottom: 25px;
             border-radius: 8px;
         }
-
-        .legal-notice strong {
-            color: #92400e;
-            font-size: 14px;
-        }
-
-        .legal-notice span {
-            color: #78350f;
-            font-size: 11px;
-            line-height: 1.6;
-        }
-
-        .terms-section {
-            margin-bottom: 25px;
-            page-break-inside: avoid;
-            break-inside: avoid;
-        }
-
+        .legal-notice strong { color: #92400e; font-size: 14px; }
+        .legal-notice span { color: #78350f; font-size: 11px; line-height: 1.6; }
+        .terms-section { margin-bottom: 25px; page-break-inside: avoid; break-inside: avoid; }
         .terms-section-header {
             color: white;
             padding: 10px 18px;
@@ -394,36 +250,16 @@ function getInlineStyles() {
             gap: 12px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-
         .terms-section-icon {
             font-size: 22px;
             background: rgba(255,255,255,0.2);
             padding: 5px 10px;
             border-radius: 8px;
         }
-
-        .terms-section-header h4 {
-            margin: 0;
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .terms-section-content {
-            padding-right: 8px;
-        }
-
-        .terms-section-content p {
-            font-size: 10px;
-            line-height: 1.6;
-            color: #2d3a4a;
-            margin-bottom: 8px;
-        }
-
-        .terms-section-content strong {
-            color: #1e3a5f;
-        }
-
+        .terms-section-header h4 { margin: 0; color: white; font-size: 16px; font-weight: 600; }
+        .terms-section-content { padding-right: 8px; }
+        .terms-section-content p { font-size: 10px; line-height: 1.6; color: #2d3a4a; margin-bottom: 8px; }
+        .terms-section-content strong { color: #1e3a5f; }
         .declaration {
             background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
             border-right: 4px solid #0284c7;
@@ -432,31 +268,10 @@ function getInlineStyles() {
             border-radius: 12px;
             page-break-inside: avoid;
         }
-
-        .declaration-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 12px;
-        }
-
-        .declaration-icon {
-            font-size: 24px;
-        }
-
-        .declaration-header p {
-            font-size: 16px;
-            font-weight: bold;
-            margin: 0;
-            color: #0369a1;
-        }
-
-        .declaration-text {
-            margin: 0;
-            color: #075985;
-            font-size: 13px;
-        }
-
+        .declaration-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .declaration-icon { font-size: 24px; }
+        .declaration-header p { font-size: 16px; font-weight: bold; margin: 0; color: #0369a1; }
+        .declaration-text { margin: 0; color: #075985; font-size: 13px; }
         .signature-area {
             margin-top: 20px;
             padding: 18px 20px;
@@ -465,32 +280,10 @@ function getInlineStyles() {
             border: 1px solid #e2e8f0;
             page-break-inside: avoid;
         }
-
-        .signature-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-
-        .signature-icon {
-            font-size: 20px;
-        }
-
-        .signature-label {
-            font-size: 14px;
-            font-weight: 600;
-            color: #1e293b;
-            min-width: 100px;
-        }
-
-        .signature-value {
-            color: #1e293b;
-            font-weight: 500;
-            font-size: 14px;
-        }
-
+        .signature-row { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; flex-wrap: wrap; }
+        .signature-icon { font-size: 20px; }
+        .signature-label { font-size: 14px; font-weight: 600; color: #1e293b; min-width: 100px; }
+        .signature-value { color: #1e293b; font-weight: 500; font-size: 14px; }
         .signature-line {
             margin-top: 20px;
             padding-top: 15px;
@@ -499,7 +292,6 @@ function getInlineStyles() {
             align-items: center;
             gap: 12px;
         }
-
         .signature-placeholder {
             border-bottom: 1px solid #94a3b8;
             min-width: 200px;
@@ -522,7 +314,6 @@ function getInlineStyles() {
         .terms-section-12 .terms-section-header { background: linear-gradient(135deg, #701a75 0%, #86198f 100%); }
         .terms-section-13 .terms-section-header { background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); }
 
-        /* استجابة للشاشات الصغيرة */
         @media (max-width: 768px) {
             body { padding: 10px; }
             .page { padding: 5mm 6mm; }
@@ -535,7 +326,6 @@ function getInlineStyles() {
             .signature-row { flex-direction: column; align-items: flex-start; gap: 5px; }
         }
 
-        /* أزرار المعاينة */
         .preview-buttons {
             text-align: center;
             padding: 20px;
@@ -547,7 +337,6 @@ function getInlineStyles() {
             box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
             z-index: 1000;
         }
-
         .preview-buttons button {
             padding: 10px 20px;
             margin: 5px;
@@ -556,29 +345,37 @@ function getInlineStyles() {
             cursor: pointer;
             font-size: 14px;
         }
-
-        .btn-print {
-            background: #1e3a5f;
-            color: white;
-        }
-
-        .btn-close {
-            background: #ef4444;
-            color: white;
-        }
+        .btn-print { background: #1e3a5f; color: white; }
+        .btn-close { background: #ef4444; color: white; }
     `;
 }
 
 function previewPrint() {
     try {
-        var printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
+        // الحصول على جميع الصفحات
+        var pages = document.querySelectorAll('.page');
+        
+        console.log('عدد الصفحات الموجودة:', pages.length);
+        
+        if (pages.length === 0) {
+            printShowToast('لا توجد صفحات للطباعة! يرجى إنشاء الفاتورة أولاً', true);
+            return;
+        }
+        
+        var printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,toolbar=yes');
         if (!printWindow) {
             printShowToast('الرجاء السماح بالنوافذ المنبثقة', true);
             return;
         }
         
-        var pages = document.querySelectorAll('.page');
         var inlineStyles = getInlineStyles();
+        
+        // تجميع محتوى الصفحات
+        var pagesContent = '';
+        pages.forEach(function(page, index) {
+            pagesContent += page.outerHTML;
+            console.log('تم إضافة صفحة رقم:', index + 1);
+        });
         
         var printContent = '<!DOCTYPE html>' +
             '<html dir="rtl" lang="ar">' +
@@ -588,24 +385,23 @@ function previewPrint() {
                 '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">' +
                 '<style>' + inlineStyles + '</style>' +
             '</head>' +
-            '<body>';
-        
-        pages.forEach(function(page) {
-            printContent += page.outerHTML;
-        });
-        
-        printContent += '<div class="preview-buttons no-print">' +
-            '<button class="btn-print" onclick="window.print()">🖨️ طباعة</button>' +
-            '<button class="btn-close" onclick="window.close()">✖️ إغلاق</button>' +
+            '<body>' +
+            pagesContent +
+            '<div class="preview-buttons no-print">' +
+                '<button class="btn-print" onclick="window.print()">🖨️ طباعة</button>' +
+                '<button class="btn-close" onclick="window.close()">✖️ إغلاق</button>' +
             '</div>' +
             '</body>' +
             '</html>';
         
         printWindow.document.write(printContent);
         printWindow.document.close();
+        
+        printShowToast('تم فتح معاينة الطباعة', false);
+        
     } catch (error) {
         console.error('Preview Error:', error);
-        printShowToast('حدث خطأ في المعاينة', true);
+        printShowToast('حدث خطأ في المعاينة: ' + error.message, true);
     }
 }
 
@@ -638,6 +434,8 @@ async function exportToPDF() {
         var pdf = new jsPDF('p', 'mm', 'a4');
         
         for (var i = 0; i < pages.length; i++) {
+            console.log('جاري معالجة الصفحة:', i + 1);
+            
             var canvas = await html2canvas(pages[i], { 
                 scale: 2, 
                 useCORS: false,
@@ -690,6 +488,7 @@ function initPrintModule(order, db) {
     });
     
     console.log('تم تهيئة وحدة الطباعة بنجاح');
+    console.log('الطلب الحالي:', printCurrentOrder);
 }
 
 // تصدير الدوال
