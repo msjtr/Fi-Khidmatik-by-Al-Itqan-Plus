@@ -1,6 +1,3 @@
-/* ========================================
-   الأنماط الأساسية والطباعة
-   ======================================== */
 * {
     margin: 0;
     padding: 0;
@@ -9,6 +6,9 @@
 
 @media print {
     .no-print {
+        display: none !important;
+    }
+    .action-buttons {
         display: none !important;
     }
     body {
@@ -53,9 +53,6 @@ body {
     page-break-after: auto;
 }
 
-/* ========================================
-   رأس الصفحة الموحد
-   ======================================== */
 .page-header {
     display: flex;
     justify-content: space-between;
@@ -70,13 +67,6 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
-}
-
-.logo-img {
-    width: 65px;
-    height: 65px;
-    border-radius: 12px;
-    object-fit: contain;
 }
 
 .logo-placeholder {
@@ -116,9 +106,6 @@ body {
     line-height: 1.5;
 }
 
-/* ========================================
-   تذييل الصفحة الموحد
-   ======================================== */
 .page-footer {
     position: absolute;
     bottom: 15mm;
@@ -152,9 +139,6 @@ body {
     color: #94a3b8;
 }
 
-/* ========================================
-   معلومات الفاتورة
-   ======================================== */
 .info-grid {
     display: flex;
     justify-content: space-between;
@@ -191,9 +175,6 @@ body {
     display: inline-block;
 }
 
-/* ========================================
-   العناوين (مصدرة من / إلى)
-   ======================================== */
 .addresses {
     display: flex;
     gap: 20px;
@@ -220,9 +201,6 @@ body {
     padding-right: 8px;
 }
 
-/* ========================================
-   معلومات الدفع والشحن
-   ======================================== */
 .payment-grid {
     display: flex;
     gap: 15px;
@@ -246,9 +224,6 @@ body {
     font-size: 12px;
 }
 
-/* ========================================
-   جدول المنتجات
-   ======================================== */
 .products-table {
     width: 100%;
     border-collapse: collapse;
@@ -279,9 +254,6 @@ body {
     background: #f1f5f9;
 }
 
-/* ========================================
-   الإجماليات
-   ======================================== */
 .totals-box {
     width: 280px;
     margin-right: auto;
@@ -306,9 +278,6 @@ body {
     padding-top: 10px;
 }
 
-/* ========================================
-   الباركودات
-   ======================================== */
 .barcodes {
     display: flex;
     justify-content: center;
@@ -336,9 +305,6 @@ body {
     margin: 0 auto;
 }
 
-/* ========================================
-   الشروط والأحكام
-   ======================================== */
 .terms-title {
     font-size: 22px;
     font-weight: bold;
@@ -391,13 +357,6 @@ body {
     margin-bottom: 8px;
 }
 
-.terms-card strong {
-    color: #1e3a5f;
-}
-
-/* ========================================
-   إقرار العميل
-   ======================================== */
 .declaration {
     background: #f0f4f9;
     padding: 18px;
@@ -414,9 +373,6 @@ body {
     border-top: 1px solid #cbd5e1;
 }
 
-/* ========================================
-   أزرار التحكم
-   ======================================== */
 .action-buttons {
     display: flex;
     justify-content: center;
@@ -467,9 +423,6 @@ body {
     color: white;
 }
 
-/* ========================================
-   تحميل وتنبيهات
-   ======================================== */
 .loading-overlay {
     position: fixed;
     top: 0;
@@ -517,9 +470,6 @@ body {
     color: white;
 }
 
-/* ========================================
-   استجابة للشاشات الصغيرة
-   ======================================== */
 @media (max-width: 768px) {
     .page {
         padding: 10mm 8mm;
