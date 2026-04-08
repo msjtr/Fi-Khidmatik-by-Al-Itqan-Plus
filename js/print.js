@@ -1,9 +1,12 @@
 // ========================================
-// print.js - دوال الطباعة المتقدمة (نسخة محسنة)
+// print.js - دوال الطباعة المتقدمة (مع إضافة الشعار)
 // ========================================
 
+let printCurrentOrder = null;
+let printDb = null;
+
 // ========================================
-// الدوال المساعدة التي تحتاجها terms.js
+// الدوال المساعدة الأساسية
 // ========================================
 
 window.formatDate = function(dateStr) {
@@ -32,14 +35,34 @@ window.escapeHtml = function(str) {
     });
 };
 
+// ========================================
+// دوال الشعار ورأس وتذييل الصفحة
+// ========================================
+
+function getLogoHTML() {
+    return `
+        <div class="logo-area">
+            <img src="/fi-khidmatik/images/logo.svg" alt="شعار المنصة" class="logo-img" onerror="this.style.display='none'">
+            <div class="logo-text">
+                <div class="platform-name">متجرك الذكي</div>
+                <div class="platform-slogan">منصة متكاملة</div>
+            </div>
+        </div>
+    `;
+}
+
 window.buildHeader = function(title) {
     return `
         <div class="page-header">
-            <div class="header-right"></div>
+            <div class="header-right">
+                ${getLogoHTML()}
+            </div>
             <div class="header-center">
                 <div class="page-title">${title}</div>
             </div>
-            <div class="header-left"></div>
+            <div class="header-left">
+                <!-- يمكن إضافة بيانات إضافية هنا -->
+            </div>
         </div>
     `;
 };
@@ -57,11 +80,8 @@ window.buildFooter = function(pageNum, totalPages) {
 };
 
 // ========================================
-// بقية دوال الطباعة
+// دوال التحكم في الطباعة
 // ========================================
-
-let printCurrentOrder = null;
-let printDb = null;
 
 function printShowLoading(msg) {
     var ov = document.getElementById('loadingOverlay');
@@ -100,7 +120,10 @@ function printInvoice() {
     }
 }
 
+// ========================================
 // جميع أنماط CSS مضمّنة هنا
+// ========================================
+
 function getInlineStyles() {
     return `
         * {
@@ -192,9 +215,32 @@ function getInlineStyles() {
         .header-right { flex: 1; text-align: right; min-width: 130px; }
         .header-center { flex: 2; text-align: center; }
         .header-left { flex: 1; text-align: left; min-width: 150px; }
-        .logo-area { display: flex; align-items: center; gap: 6px; justify-content: flex-start; }
-        .platform-name { font-size: 13px; font-weight: bold; color: #1e3a5f; }
-        .platform-slogan { font-size: 8px; color: #6c757d; }
+        
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: flex-start;
+        }
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+        .platform-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #1e3a5f;
+        }
+        .platform-slogan {
+            font-size: 10px;
+            color: #6c757d;
+        }
+        
         .page-title { font-size: 16px; font-weight: bold; color: #1e3a5f; display: inline-block; }
 
         .page-footer {
@@ -408,9 +454,12 @@ function getInlineStyles() {
     `;
 }
 
+// ========================================
+// معاينة الطباعة
+// ========================================
+
 function previewPrint() {
     try {
-        // الحصول على جميع الصفحات
         var pages = document.querySelectorAll('.page');
         
         console.log('عدد الصفحات الموجودة:', pages.length);
@@ -428,7 +477,6 @@ function previewPrint() {
         
         var inlineStyles = getInlineStyles();
         
-        // تجميع محتوى الصفحات
         var pagesContent = '';
         pages.forEach(function(page, index) {
             pagesContent += page.outerHTML;
@@ -462,6 +510,10 @@ function previewPrint() {
         printShowToast('حدث خطأ في المعاينة: ' + error.message, true);
     }
 }
+
+// ========================================
+// تصدير إلى PDF
+// ========================================
 
 async function exportToPDF() {
     var pages = document.querySelectorAll('.page');
@@ -533,6 +585,10 @@ async function exportToPDF() {
     }
 }
 
+// ========================================
+// تهيئة وحدة الطباعة
+// ========================================
+
 function initPrintModule(order, db) {
     printCurrentOrder = order;
     printDb = db;
@@ -549,7 +605,10 @@ function initPrintModule(order, db) {
     console.log('الطلب الحالي:', printCurrentOrder);
 }
 
-// تصدير الدوال
+// ========================================
+// تصدير الدوال للنافذة
+// ========================================
+
 window.printInvoice = printInvoice;
 window.previewPrint = previewPrint;
 window.exportToPDF = exportToPDF;
