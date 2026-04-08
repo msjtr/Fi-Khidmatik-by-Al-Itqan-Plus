@@ -3,82 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>في خدمتك - فاتورة إلكترونية</title>
+    <title>نظام الفواتير</title>
     
-    <!-- أيقونة التبويب - شعار في خدمتك -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%231e3a5f'/%3E%3Ctext x='50' y='68' text-anchor='middle' fill='white' font-size='42' font-weight='bold' font-family='Cairo'%3Eخ%3C/text%3E%3C/svg%3E">
-    
+    <!-- المكتبات الأساسية -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="css/invoice.css">
     
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <!-- مكتبات PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     
-    <script src="js/zatca.js"></script>
-    <script src="js/terms.js"></script>
-    <script src="js/invoice.js"></script>
-    <script src="js/print.js"></script>
+    <style>
+        /* أنماط إضافية للشاشة */
+        .action-buttons {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary {
+            background: #1e3a5f;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #334155;
+            color: white;
+        }
+        
+        .btn-purple {
+            background: #6b21a5;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+    </style>
 </head>
 <body>
-
-<div id="invoiceRoot" class="invoice-wrapper"></div>
-
-<div class="action-buttons no-print">
-    <button class="btn btn-primary" id="printBtn"><i class="fas fa-print"></i> طباعة</button>
-    <button class="btn btn-secondary" id="previewBtn"><i class="fas fa-eye"></i> معاينة</button>
-    <button class="btn btn-purple" id="pdfBtn"><i class="fas fa-file-pdf"></i> PDF</button>
-    <button class="btn btn-danger" id="closeBtn"><i class="fas fa-times"></i> إغلاق</button>
-</div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const firebaseConfig = {
-            apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
-            authDomain: "msjt301-974bb.firebaseapp.com",
-            projectId: "msjt301-974bb",
-            storageBucket: "msjt301-974bb.firebasestorage.app",
-            messagingSenderId: "186209858482",
-            appId: "1:186209858482:web:186ca610780799ef562aab"
-        };
-
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        
-        const firestoreDb = firebase.firestore();
-        
-        const printBtn = document.getElementById('printBtn');
-        const previewBtn = document.getElementById('previewBtn');
-        const pdfBtn = document.getElementById('pdfBtn');
-        const closeBtn = document.getElementById('closeBtn');
-        
-        if (printBtn) printBtn.onclick = function() { 
-            if (typeof printInvoice === 'function') printInvoice();
-            else window.print();
-        };
-        
-        if (previewBtn) previewBtn.onclick = function() { 
-            if (typeof previewPrint === 'function') previewPrint();
-            else alert('معاينة غير متاحة');
-        };
-        
-        if (pdfBtn) pdfBtn.onclick = function() { 
-            if (typeof exportToPDF === 'function') exportToPDF();
-            else if (typeof generatePDF === 'function') generatePDF();
-            else alert('PDF غير متاح');
-        };
-        
-        if (closeBtn) closeBtn.onclick = function() { window.close(); };
-        
-        if (typeof loadInvoice === 'function') {
-            loadInvoice(firestoreDb);
-        } else {
-            document.getElementById('invoiceRoot').innerHTML = '<div class="page" style="text-align:center;padding:50px;"><h2 style="color:#ef4444;">خطأ</h2><p>لم يتم تحميل ملف invoice.js بشكل صحيح</p></div>';
-        }
-    });
-</script>
+    <div id="app"></div>
+    
+    <script src="js/print.js"></script>
 </body>
 </html>
