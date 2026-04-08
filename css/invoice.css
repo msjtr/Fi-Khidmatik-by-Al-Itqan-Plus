@@ -1,4 +1,7 @@
 ```css
+/* ========================================
+   RESET
+   ======================================== */
 * {
     margin: 0;
     padding: 0;
@@ -6,165 +9,119 @@
 }
 
 /* ========================================
-   إعدادات الطباعة الأساسية - حل مشكلة القص
+   ROOT VARIABLES (احترافي)
+   ======================================== */
+:root {
+    --primary: #1e3a5f;
+    --secondary: #334155;
+    --light: #f8fafc;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --muted: #64748b;
+    --success: #10b981;
+}
+
+/* ========================================
+   PRINT SETTINGS (بدون قص)
    ======================================== */
 @media print {
     @page {
         size: A4;
-        margin: 8mm; /* ✅ إصلاح القص */
+        margin: 8mm;
     }
-    
+
     html, body {
-        margin: 0;
-        padding: 0;
-        background: white;
         width: 210mm;
+        background: white;
     }
-    
+
     body {
         margin: 0;
         padding: 0;
-        background: white;
     }
-    
-    .invoice-wrapper {
-        max-width: 100%;
-        width: 100%;
-        margin: 0;
-        box-shadow: none;
-    }
-    
+
     .page {
-        margin: 0;
-        padding: 5mm 8mm !important;
         width: 100%;
-        min-height: auto; /* ✅ إصلاح */
+        padding: 6mm;
+        box-sizing: border-box;
         page-break-after: always;
         break-after: page;
-        page-break-inside: avoid;
         break-inside: avoid;
-        box-shadow: none;
-        background: white;
-        position: relative;
-        box-sizing: border-box; /* ✅ مهم */
-        overflow: hidden;
     }
-    
+
     .page:last-child {
         page-break-after: auto;
     }
-    
-    /* منع انقطاع الأقسام المهمة */
-    .page-header,
-    .info-grid,
-    .addresses,
-    .payment-grid,
-    .products-table,
-    .totals-box,
-    .barcodes,
-    .page-footer,
-    .terms-section {
-        page-break-inside: avoid;
-        break-inside: avoid;
-    }
-    
-    /* إخفاء عناصر الطباعة */
-    .action-buttons,
-    .no-print,
-    .btn,
-    .loading-overlay {
+
+    .no-print {
         display: none !important;
     }
-    
-    /* ضمان ظهور الألوان */
-    .status-badge,
-    .products-table th,
-    .terms-section-header {
-        print-color-adjust: exact;
-        -webkit-print-color-adjust: exact;
-    }
 }
 
 /* ========================================
-   الأنماط العامة
+   BODY
    ======================================== */
 body {
-    background: #e9ecef;
-    font-family: 'Segoe UI', 'Cairo', 'Tahoma', sans-serif;
-    padding: 20px;
+    background: #eef2f7;
+    font-family: 'Cairo', 'Tahoma', sans-serif;
+    color: var(--text);
     display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.invoice-wrapper {
-    max-width: 210mm;
-    margin: 0 auto;
-    background: white;
-    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+    justify-content: center;
+    padding: 20px;
 }
 
 /* ========================================
-   إعدادات الصفحة للشاشة
+   WRAPPER
    ======================================== */
-@media screen {
-    .page {
-        padding: 10mm 12mm;
-        min-height: 297mm;
-        page-break-after: always;
-        margin-bottom: 20px;
-        background: white;
-    }
-    .page:last-child {
-        page-break-after: auto;
-        margin-bottom: 0;
-    }
+.invoice-wrapper {
+    width: 210mm;
+    background: white;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
 }
 
 /* ========================================
-   رأس الصفحة
+   PAGE
+   ======================================== */
+.page {
+    padding: 12mm;
+    min-height: 297mm;
+}
+
+/* ========================================
+   HEADER
    ======================================== */
 .page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid #1e3a5f;
-    padding-bottom: 6px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-    gap: 6px;
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
 }
 
-.header-right {
-    flex: 1;
-    text-align: right;
-    min-width: 120px;
+.logo {
+    font-weight: bold;
+    font-size: 14px;
+    color: var(--primary);
 }
 
-.header-center {
-    flex: 2;
-    text-align: center;
-}
-
-.header-left {
-    flex: 1;
-    text-align: left;
-    min-width: 140px;
+.page-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--primary);
 }
 
 /* ========================================
-   معلومات الفاتورة
+   INFO GRID
    ======================================== */
 .info-grid {
     display: flex;
     justify-content: space-between;
-    background: #f8fafc;
-    padding: 6px 10px;
-    border-radius: 6px;
-    margin: 10px 0;
-    border: 1px solid #e2e8f0;
-    flex-wrap: wrap;
-    gap: 5px;
+    background: var(--light);
+    border: 1px solid var(--border);
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
 }
 
 .info-item {
@@ -172,255 +129,133 @@ body {
 }
 
 .info-label {
-    font-size: 8px;
-    color: #6c757d;
-    margin-bottom: 2px;
+    font-size: 10px;
+    color: var(--muted);
 }
 
 .info-value {
+    font-size: 12px;
     font-weight: bold;
-    font-size: 10px;
-}
-
-.status-badge {
-    background: #10b981;
-    color: white;
-    padding: 2px 8px;
-    border-radius: 15px;
-    font-size: 9px;
-    display: inline-block;
 }
 
 /* ========================================
-   العناوين
+   ADDRESSES
    ======================================== */
 .addresses {
     display: flex;
     gap: 10px;
-    margin: 10px 0;
-    flex-wrap: wrap;
+    margin-bottom: 15px;
 }
 
 .address-card {
     flex: 1;
-    background: #f9fafb;
-    padding: 6px;
-    border-radius: 6px;
-    border: 1px solid #e5e7eb;
-    font-size: 8px;
-    line-height: 1.4;
-}
-
-.address-card strong {
-    display: block;
-    margin-bottom: 3px;
-    color: #1e3a5f;
-    font-size: 9px;
-    border-right: 2px solid #1e3a5f;
-    padding-right: 4px;
+    background: var(--light);
+    border: 1px solid var(--border);
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 11px;
 }
 
 /* ========================================
-   معلومات الدفع والشحن
-   ======================================== */
-.payment-grid {
-    display: flex;
-    gap: 8px;
-    margin: 10px 0;
-    flex-wrap: wrap;
-}
-
-.payment-card {
-    flex: 1;
-    background: #f1f5f9;
-    padding: 5px 6px;
-    border-radius: 5px;
-    font-size: 8px;
-    text-align: center;
-}
-
-.payment-card strong {
-    display: block;
-    margin-bottom: 2px;
-    color: #1e3a5f;
-    font-size: 9px;
-}
-
-/* ========================================
-   جدول المنتجات (تم إصلاحه)
+   TABLE
    ======================================== */
 .products-table {
     width: 100%;
     border-collapse: collapse;
-    margin: 10px 0;
-    font-size: 8px;
+    margin-bottom: 15px;
     table-layout: fixed;
-    word-wrap: break-word;
 }
 
 .products-table th {
-    background: #1e3a5f;
+    background: var(--primary);
     color: white;
-    padding: 5px 3px;
-    border: 1px solid #2d4a7a;
-    text-align: center;
-    font-weight: 600;
+    padding: 8px;
+    font-size: 11px;
 }
 
 .products-table td {
-    border: 1px solid #cbd5e1;
-    padding: 5px 3px;
-    vertical-align: middle;
-}
-
-.product-img {
-    width: 25px;
-    height: 25px;
-    object-fit: cover;
-    border-radius: 4px;
-    background: #f1f5f9;
+    border: 1px solid var(--border);
+    padding: 6px;
+    font-size: 11px;
+    text-align: center;
 }
 
 /* ========================================
-   الإجماليات
+   TOTALS
    ======================================== */
 .totals-box {
-    width: 200px;
+    width: 250px;
     margin-right: auto;
-    margin-top: 10px;
-    border-top: 1px solid #e2e8f0;
-    padding-top: 6px;
+    border-top: 2px solid var(--primary);
+    padding-top: 10px;
 }
 
 .totals-row {
     display: flex;
     justify-content: space-between;
-    padding: 2px 0;
-    font-size: 9px;
+    font-size: 12px;
+    margin-bottom: 5px;
 }
 
 .grand-total {
+    font-size: 14px;
     font-weight: bold;
-    font-size: 11px;
-    color: #1e3a5f;
-    border-top: 1px solid #1e3a5f;
-    margin-top: 3px;
-    padding-top: 5px;
+    color: var(--primary);
 }
 
 /* ========================================
-   الباركودات
+   BARCODE
    ======================================== */
 .barcodes {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    margin: 12px 0;
-    padding: 8px;
-    background: #f8fafc;
-    border-radius: 6px;
-    flex-wrap: wrap;
-}
-
-.barcode-right,
-.barcode-center,
-.barcode-left {
-    flex: 1;
-    text-align: center;
-    min-width: 70px;
+    margin: 15px 0;
 }
 
 /* ========================================
-   الشروط والأحكام (كامل)
+   TERMS
    ======================================== */
-.terms-title {
-    font-size: 16px;
-    font-weight: bold;
-    color: #1e3a5f;
-    text-align: center;
-    margin: 8px 0 12px;
-    border-bottom: 2px solid #1e3a5f;
-    padding-bottom: 6px;
-}
-
-.legal-notice {
-    background-color: #fef3c7;
-    border-right: 3px solid #f59e0b;
-    padding: 8px 10px;
-    margin-bottom: 15px;
-    border-radius: 6px;
-}
-
-.legal-notice strong {
-    color: #92400e;
-    font-size: 11px;
-}
-
-.legal-notice span {
-    color: #78350f;
-    font-size: 9px;
-    line-height: 1.5;
-}
-
 .terms-section {
-    margin-bottom: 15px;
-    page-break-inside: avoid;
-    break-inside: avoid;
+    margin-top: 15px;
+    border-top: 2px solid var(--primary);
+    padding-top: 10px;
 }
 
-.terms-section-header {
-    background: linear-gradient(135deg, #1e3a5f 0%, #2c4c7a 100%);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 6px;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.terms-title {
+    font-weight: bold;
+    margin-bottom: 10px;
 }
 
-.terms-section-header h4 {
-    margin: 0;
-    color: white;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.terms-section-content p {
-    font-size: 8px;
-    line-height: 1.4;
-    color: #2d3a4a;
-    margin-bottom: 4px;
+.terms-text {
+    font-size: 11px;
+    line-height: 1.6;
 }
 
 /* ========================================
-   الفوتر
+   FOOTER
    ======================================== */
 .page-footer {
-    margin-top: 15px;
-    font-size: 7px;
+    margin-top: 20px;
+    font-size: 10px;
     text-align: center;
-    border-top: 1px solid #e2e8f0;
-    padding-top: 6px;
+    color: var(--muted);
 }
 
 /* ========================================
-   الموبايل
+   RESPONSIVE
    ======================================== */
 @media (max-width: 768px) {
-    body {
-        padding: 10px;
-    }
-    
     .page {
-        padding: 5mm 6mm !important;
+        padding: 6mm;
     }
-    
-    .addresses,
-    .payment-grid,
-    .barcodes {
+
+    .addresses {
         flex-direction: column;
+    }
+
+    .info-grid {
+        flex-direction: column;
+        gap: 10px;
     }
 }
 ```
