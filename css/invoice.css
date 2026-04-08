@@ -53,6 +53,9 @@ body {
     page-break-after: auto;
 }
 
+/* ========================================
+   رأس الصفحة - توزيع ثلاثي (يمين - وسط - يسار)
+   ======================================== */
 .page-header {
     display: flex;
     justify-content: space-between;
@@ -61,12 +64,45 @@ body {
     padding-bottom: 12px;
     margin-bottom: 25px;
     flex-wrap: wrap;
+    gap: 15px;
+}
+
+.header-right {
+    flex: 1;
+    text-align: right;
+    min-width: 180px;
+}
+
+.header-center {
+    flex: 2;
+    text-align: center;
+}
+
+.header-left {
+    flex: 1;
+    text-align: left;
+    min-width: 200px;
 }
 
 .logo-area {
     display: flex;
     align-items: center;
     gap: 12px;
+    justify-content: flex-start;
+}
+
+.logo-img-wrapper {
+    width: 65px;
+    height: 65px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo-img-wrapper svg {
+    width: 100%;
+    height: 100%;
+    border-radius: 16px;
 }
 
 .logo-placeholder {
@@ -82,6 +118,11 @@ body {
     font-weight: bold;
 }
 
+.logo-text {
+    display: flex;
+    flex-direction: column;
+}
+
 .platform-name {
     font-size: 18px;
     font-weight: bold;
@@ -89,23 +130,34 @@ body {
 }
 
 .platform-slogan {
-    font-size: 10px;
+    font-size: 11px;
     color: #6c757d;
+    direction: ltr;
 }
 
 .page-title {
     font-size: 22px;
     font-weight: bold;
     color: #1e3a5f;
+    display: inline-block;
 }
 
 .legal-numbers {
     text-align: left;
     font-size: 10px;
     color: #4a5568;
-    line-height: 1.5;
+    line-height: 1.6;
 }
 
+.legal-numbers i {
+    width: 16px;
+    margin-left: 4px;
+    color: #1e3a5f;
+}
+
+/* ========================================
+   تذييل الصفحة
+   ======================================== */
 .page-footer {
     position: absolute;
     bottom: 15mm;
@@ -139,6 +191,9 @@ body {
     color: #94a3b8;
 }
 
+/* ========================================
+   معلومات الفاتورة
+   ======================================== */
 .info-grid {
     display: flex;
     justify-content: space-between;
@@ -175,6 +230,9 @@ body {
     display: inline-block;
 }
 
+/* ========================================
+   العناوين
+   ======================================== */
 .addresses {
     display: flex;
     gap: 20px;
@@ -201,6 +259,9 @@ body {
     padding-right: 8px;
 }
 
+/* ========================================
+   معلومات الدفع والشحن
+   ======================================== */
 .payment-grid {
     display: flex;
     gap: 15px;
@@ -224,6 +285,9 @@ body {
     font-size: 12px;
 }
 
+/* ========================================
+   جدول المنتجات
+   ======================================== */
 .products-table {
     width: 100%;
     border-collapse: collapse;
@@ -254,6 +318,9 @@ body {
     background: #f1f5f9;
 }
 
+/* ========================================
+   الإجماليات
+   ======================================== */
 .totals-box {
     width: 280px;
     margin-right: auto;
@@ -278,15 +345,37 @@ body {
     padding-top: 10px;
 }
 
+/* ========================================
+   الباركودات - توزيع ثلاثي (يمين - وسط - يسار)
+   ======================================== */
 .barcodes {
     display: flex;
-    justify-content: center;
-    gap: 40px;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
     margin: 25px 0;
     padding: 15px;
     background: #f8fafc;
     border-radius: 12px;
     flex-wrap: wrap;
+}
+
+.barcode-right {
+    flex: 1;
+    text-align: center;
+    min-width: 100px;
+}
+
+.barcode-center {
+    flex: 1;
+    text-align: center;
+    min-width: 100px;
+}
+
+.barcode-left {
+    flex: 1;
+    text-align: center;
+    min-width: 100px;
 }
 
 .barcode-item {
@@ -299,12 +388,20 @@ body {
     color: #666;
 }
 
+.barcode-item i {
+    margin-left: 4px;
+    color: #1e3a5f;
+}
+
 .qr-code {
     width: 90px;
     height: 90px;
     margin: 0 auto;
 }
 
+/* ========================================
+   الشروط والأحكام
+   ======================================== */
 .terms-title {
     font-size: 22px;
     font-weight: bold;
@@ -357,6 +454,10 @@ body {
     margin-bottom: 8px;
 }
 
+.terms-card strong {
+    color: #1e3a5f;
+}
+
 .declaration {
     background: #f0f4f9;
     padding: 18px;
@@ -373,6 +474,9 @@ body {
     border-top: 1px solid #cbd5e1;
 }
 
+/* ========================================
+   أزرار التحكم
+   ======================================== */
 .action-buttons {
     display: flex;
     justify-content: center;
@@ -423,6 +527,9 @@ body {
     color: white;
 }
 
+/* ========================================
+   تحميل وتنبيهات
+   ======================================== */
 .loading-overlay {
     position: fixed;
     top: 0;
@@ -470,6 +577,9 @@ body {
     color: white;
 }
 
+/* ========================================
+   استجابة للشاشات الصغيرة
+   ======================================== */
 @media (max-width: 768px) {
     .page {
         padding: 10mm 8mm;
@@ -491,5 +601,29 @@ body {
     .btn {
         padding: 6px 12px;
         font-size: 11px;
+    }
+    
+    /* استجابة رأس الصفحة */
+    .page-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    .header-right, .header-center, .header-left {
+        text-align: center;
+        width: 100%;
+    }
+    .logo-area {
+        justify-content: center;
+    }
+    .legal-numbers {
+        text-align: center;
+    }
+    
+    /* استجابة الباركودات */
+    .barcodes {
+        flex-direction: column;
+    }
+    .barcode-right, .barcode-center, .barcode-left {
+        width: 100%;
     }
 }
