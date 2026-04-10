@@ -8,15 +8,19 @@
 
 <body>
 
-<button class="no-print" onclick="window.print()">🖨️ طباعة</button>
-<button class="no-print" onclick="downloadPDF()">📄 PDF</button>
+<div class="actions no-print">
+  <button onclick="window.print()">🖨️ طباعة</button>
+  <button onclick="downloadPDF()">📄 تحميل PDF</button>
+</div>
 
-<!-- 🧾 صفحة الفاتورة -->
+<div id="app">
+
+<!-- 🧾 الفاتورة -->
 <div class="page" id="invoice">
 
 <div class="header">
   <div>
-    <h2 id="invoiceNumber"></h2>
+    <h2 id="invoiceNumber">...</h2>
     <div id="date"></div>
   </div>
 
@@ -27,10 +31,8 @@
 </div>
 
 <div class="info">
-  <div>
-    العميل: <span id="clientName"></span><br>
-    المدينة: <span id="city"></span>
-  </div>
+  العميل: <span id="clientName"></span><br>
+  المدينة: <span id="city"></span>
 </div>
 
 <table>
@@ -55,22 +57,31 @@
 
 </div>
 
-<!-- 📄 صفحة الشروط -->
+<!-- 📄 الشروط -->
 <div class="page">
 <h2>الشروط والأحكام</h2>
 <div id="termsContent"></div>
 </div>
 
+</div>
+
+<!-- 🔥 Firebase v8 -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<!-- مكتبات -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+<!-- ملفاتك -->
+<script src="js/firebase.js"></script>
 <script type="module" src="js/print.js"></script>
 
 <script>
 async function downloadPDF(){
   const { jsPDF } = window.jspdf;
-  const canvas = await html2canvas(document.body, {scale:2});
+  const canvas = await html2canvas(document.getElementById("app"), {scale:2});
   const img = canvas.toDataURL("image/png");
 
   const pdf = new jsPDF('p','mm','a4');
