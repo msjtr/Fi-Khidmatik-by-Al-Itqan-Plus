@@ -14,16 +14,15 @@ const sellerData = {
     website: "https://fi-khidmatik.com.sa"
 };
 
-// صورة placeholder (SVG)
-const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='45' height='45' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='2' width='20' height='20' rx='2.18' ry='2.18'%3E%3C/rect%3E%3Cpath d='M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5'%3E%3C/path%3E%3C/svg%3E";
+// صورة placeholder (SVG) - تم تعديلها لاستخدام علامات تنصيص مزدوجة
+const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"45\" height=\"45\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"%23999\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"%3E%3Crect x=\"2\" y=\"2\" width=\"20\" height=\"20\" rx=\"2.18\" ry=\"2.18\"%3E%3C/rect%3E%3Cpath d=\"M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5\"%3E%3C/path%3E%3C/svg%3E";
 
 // النطاقات التي تحتاج إلى وكيل (تسبب CORS)
 const CORS_BLOCKED_DOMAINS = ['cdn.salla.sa', 'cdn.salla.com.sa', 'salla.sa'];
 
-// وكيل CORS (يمكن تعطيله)
+// وكيل CORS
 const CORS_PROXY = "https://api.allorigins.win/raw?url=";
 
-// دالة لتحويل المسار النسبي إلى مطلق
 function toAbsoluteUrl(url) {
     if (!url) return '';
     if (url.startsWith('data:') || url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -120,10 +119,11 @@ function buildInvoicePage(order, pageNum, totalPages) {
     for (let i=0; i<items.length; i++) {
         const item = items[i];
         const finalImageUrl = getFinalImageUrl(item.image);
+        const safeImageUrl = finalImageUrl.replace(/"/g, '&quot;');
         itemsHtml += `
             <tr>
                 <td style="text-align:center">${i+1}</td>
-                <td style="text-align:center"><img src="${finalImageUrl}" class="product-img" style="width:45px;height:45px;object-fit:cover;" onerror="this.src='${PLACEHOLDER_IMAGE}'"></td>
+                <td style="text-align:center"><img src="${safeImageUrl}" class="product-img" style="width:45px;height:45px;object-fit:cover;" onerror="this.src='${PLACEHOLDER_IMAGE.replace(/'/g, "\\'")}'"></td>
                 <td style="text-align:right"><strong>${escape(cleanText(item.name))}</strong><br><small>${escape(cleanText(item.description))}</small></td>
                 <td style="text-align:center">${item.quantity}</td>
                 <td style="text-align:center;direction:ltr">${(item.price||0).toFixed(2)} ريال</td>
@@ -158,7 +158,7 @@ function buildInvoicePage(order, pageNum, totalPages) {
                 <div class="payment-card"><i class="fas fa-check-circle"></i> <strong>رمز الموافقة</strong><br>${order.approvalCode || 'غير مطلوب'}</div>
                 <div class="payment-card"><i class="fas fa-truck"></i> <strong>طريقة الاستلام</strong><br>${getShippingText(order.shippingMethod)}</div>
             </div>
-            <table class="products-table"><thead><tr><th>#</th><th>الصورة</th><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${itemsHtml}</tbody>能有
+            <table class="products-table"><thead><tr><th>#</th><th>الصورة</th><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${itemsHtml}</tbody></table>
             <div class="totals-box">
                 <div class="totals-row"><span>المجموع الفرعي</span><span>${subtotal.toFixed(2)} ريال</span></div>
                 ${discount>0?`<div class="totals-row"><span>الخصم</span><span>- ${discount.toFixed(2)} ريال</span></div>`:''}
