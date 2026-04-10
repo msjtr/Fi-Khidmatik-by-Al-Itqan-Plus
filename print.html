@@ -3,54 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة في خدمتك - الفاتورة الإلكترونية والشروط الكاملة</title>
-    
+    <title>منصة في خدمتك - المستند الكامل</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/gh/ushelp/EasyQRCodeJS@master/dist/easy.qrcode.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <style>
-        :root { --primary: #1e3a5f; --secondary: #f8fafc; --text: #1a202c; --accent: #d4af37; }
+        :root { --primary: #1e3a5f; --secondary: #f8fafc; --accent: #d4af37; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #e2e8f0; font-family: 'Tajawal', sans-serif; color: var(--text); line-height: 1.5; }
+        body { background: #e2e8f0; font-family: 'Tajawal', sans-serif; color: #1a202c; }
 
         .page { 
             width: 210mm; min-height: 297mm; padding: 15mm; 
-            margin: 20px auto; background: white; box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            margin: 20px auto; background: white; box-shadow: 0 0 20px rgba(0,0,0,0.1);
             display: flex; flex-direction: column; page-break-after: always; position: relative;
         }
 
         /* الهيدر الثابت */
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--primary); padding-bottom: 15px; margin-bottom: 20px; }
-        .branding h1 { color: var(--primary); font-size: 24px; font-weight: 800; margin-bottom: 5px; }
-        .branding p { font-size: 11px; color: #64748b; font-weight: bold; }
+        .logo-box img { height: 60px; width: auto; }
+        .branding h1 { color: var(--primary); font-size: 24px; font-weight: 800; }
+        .branding p { font-size: 11px; font-weight: bold; color: #64748b; }
         .doc-type { background: var(--primary); color: white; padding: 10px 25px; border-radius: 5px; font-weight: 800; }
 
         /* تفاصيل الفاتورة */
-        .meta-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; }
+        .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .meta-box { background: var(--secondary); padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; }
         .meta-box label { display: block; font-size: 10px; color: #64748b; font-weight: bold; margin-bottom: 5px; }
-        .meta-box span { font-weight: 700; color: var(--primary); font-size: 12px; }
+        .meta-box span { font-weight: 700; color: var(--primary); font-size: 13px; }
 
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         th { background: var(--primary); color: white; padding: 12px; font-size: 11px; }
-        td { border: 1px solid #e2e8f0; padding: 10px; text-align: center; font-size: 11px; word-wrap: break-word; }
+        td { border: 1px solid #e2e8f0; padding: 10px; text-align: center; font-size: 11px; }
 
-        /* تنسيق الشروط والأحكام - النص الكامل */
-        .terms-content { font-size: 9.5px; text-align: justify; color: #334155; }
-        .disclaimer-box { background: #fffbeb; border: 1px solid #fef3c7; padding: 12px; border-radius: 6px; font-weight: bold; margin-bottom: 15px; border-right: 5px solid #f59e0b; }
-        .section-h { background: #f1f5f9; padding: 6px 12px; border-right: 4px solid var(--primary); margin: 15px 0 8px; font-weight: 800; color: var(--primary); font-size: 11px; }
-        .clause { margin-bottom: 6px; padding-right: 15px; position: relative; }
+        /* تنسيق نصوص الشروط كاملة */
+        .terms-content { font-size: 9px; text-align: justify; line-height: 1.6; color: #334155; }
+        .disclaimer-box { background: #fffbeb; border-right: 5px solid #f59e0b; padding: 12px; border-radius: 4px; font-weight: bold; margin-bottom: 15px; font-size: 10px; border: 1px solid #fef3c7; }
+        .section-h { background: #f1f5f9; padding: 6px 12px; border-right: 4px solid var(--primary); margin: 12px 0 6px; font-weight: 800; color: var(--primary); font-size: 11px; }
+        .clause { margin-bottom: 5px; padding-right: 15px; position: relative; }
         .clause::before { content: "•"; position: absolute; right: 0; color: var(--accent); font-weight: bold; }
 
         /* الروابط والتذييل */
-        .links-area { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; border-top: 1px solid #eee; padding-top: 15px; }
-        .link-card { background: #f8fafc; padding: 10px; border-radius: 6px; text-align: center; font-size: 10px; border: 1px solid #e2e8f0; }
-        .link-card a { color: var(--primary); text-decoration: none; font-weight: bold; }
+        .links-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; border-top: 1px solid #eee; padding-top: 15px; }
+        .link-item { background: #f8fafc; padding: 8px; border-radius: 6px; text-align: center; font-size: 10px; border: 1px solid #e2e8f0; }
+        .link-item a { color: var(--primary); text-decoration: none; font-weight: bold; }
 
         .qr-area { display: flex; justify-content: space-around; align-items: center; margin-top: auto; padding-top: 20px; }
-        .footer-nav { background: var(--primary); color: white; padding: 10px 20px; border-radius: 6px; display: flex; justify-content: space-between; font-size: 10px; margin-top: 15px; }
+        .footer-nav { background: var(--primary); color: white; padding: 10px 20px; border-radius: 6px; display: flex; justify-content: space-between; font-size: 10px; margin-top: 10px; }
 
         .no-print { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 100; }
         .print-btn { background: var(--primary); color: white; padding: 15px 40px; border: none; border-radius: 50px; cursor: pointer; font-weight: 800; box-shadow: 0 10px 15px rgba(0,0,0,0.2); }
@@ -60,11 +60,11 @@
 </head>
 <body>
 
-<div id="loading" style="text-align:center; padding:100px;">جاري معالجة المستند الشامل (3 صفحات)...</div>
+<div id="loading" style="text-align:center; padding:100px;">جاري معالجة المستند الشامل (57 بنداً)...</div>
 <div id="app"></div>
 
 <div class="no-print">
-    <button class="print-btn" onclick="window.print()">🖨️ طباعة المستند بالكامل (A4)</button>
+    <button class="print-btn" onclick="window.print()">🖨️ طباعة المستند (A4)</button>
 </div>
 
 <script>
@@ -80,7 +80,7 @@ const firebaseConfig = {
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const CONST = {
+const INFO = {
     name: "منصة في خدمتك",
     taxId: "312495447600003",
     license: "FL-765735204",
@@ -88,136 +88,122 @@ const CONST = {
     zatca: "https://zatca.gov.sa/ar/eServices/Pages/TaxpayerLookup.aspx"
 };
 
-async function init() {
+async function start() {
     const id = new URLSearchParams(window.location.search).get('id');
     if (!id) { document.getElementById('loading').innerHTML = "معرف الفاتورة مفقود"; return; }
     try {
         const doc = await db.collection("orders").doc(id).get();
         if (doc.exists) {
             document.getElementById('loading').style.display = 'none';
-            render(doc.id, doc.data());
+            renderApp(doc.id, doc.data());
         }
     } catch (e) { console.error(e); }
 }
 
-function render(id, data) {
+function renderApp(id, data) {
     const app = document.getElementById('app');
-    const customerName = data.customerName || '---';
+    const customer = data.customerName || '---';
 
-    // الصفحة 1: الفاتورة والروابط
+    // الصفحة 1: الفاتورة
     let p1 = `
     <div class="page">
         <div class="header">
-            <div class="branding"><h1>${CONST.name}</h1><p>شهادة العمل الحر: ${CONST.license} | الرقم الضريبي: ${CONST.taxId}</p></div>
+            <div class="logo-box"><img src="/images/logo.svg" onerror="this.style.display='none'"></div>
+            <div class="branding"><h1>${INFO.name}</h1><p>العمل الحر: ${INFO.license} | الضريبي: ${INFO.taxId}</p></div>
             <div class="doc-type">فاتورة إلكترونية</div>
         </div>
         <div class="meta-grid">
             <div class="meta-box"><label>بيانات الفاتورة</label><span>رقم: ${data.orderNumber || id.toUpperCase()} | التاريخ: ${data.date || '---'}</span></div>
-            <div class="meta-box"><label>العميل</label><span>${customerName}</span></div>
+            <div class="meta-box"><label>العميل</label><span>${customer}</span></div>
         </div>
         <table>
-            <thead><tr><th style="width:50px">#</th><th>المنتج</th><th style="width:70px">الكمية</th><th style="width:100px">السعر</th><th style="width:100px">الإجمالي</th></tr></thead>
+            <thead><tr><th>#</th><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead>
             <tbody>
                 ${(data.items || []).map((item, i) => `<tr><td>${i+1}</td><td>${item.name}</td><td>${item.qty}</td><td>${item.price}</td><td>${item.qty * item.price}</td></tr>`).join('')}
             </tbody>
         </table>
-        <div style="width:250px; margin-right:auto; border:2px solid var(--primary); padding:12px; border-radius:6px; background:var(--secondary);">
-            <div style="display:flex; justify-content:space-between; font-weight:800; color:var(--primary);"><span>الإجمالي النهائي:</span><span>${data.total} ر.س</span></div>
+        <div style="width:250px; margin-right:auto; border:2px solid var(--primary); padding:10px; border-radius:6px; background:var(--secondary); text-align:center; font-weight:800;">
+            الإجمالي النهائي: ${data.total} ر.س
         </div>
-
-        <div class="links-area">
-            <div class="link-card">التحقق الضريبي (ZATCA)<br><a href="${CONST.zatca}" target="_blank">اضغط هنا للتحقق</a></div>
-            <div class="link-card">رابط الموقع الرسمي<br><a href="${CONST.linktree}" target="_blank">Linktree</a></div>
-            <div class="link-card">رابط الفاتورة المباشر<br><a href="${window.location.href}" target="_blank">فتح الرابط</a></div>
+        <div class="links-bar">
+            <div class="link-item">التحقق الضريبي (ZATCA)<br><a href="${INFO.zatca}" target="_blank">اضغط هنا</a></div>
+            <div class="link-item">رابط الموقع الرسمي<br><a href="${INFO.linktree}" target="_blank">Linktree</a></div>
+            <div class="link-item">رابط الفاتورة المباشر<br><a href="${window.location.href}" target="_blank">فتح الرابط</a></div>
         </div>
-
-        <div class="qr-area"><div id="qr1"></div><div id="qr2"></div></div>
-        <div class="footer-nav"><span>هذه الفاتورة إلكترونية - نسخة معتمدة قانونياً</span><span>صفحة 1 من 3</span></div>
+        <div class="qr-area"><div id="q1"></div><div id="q2"></div></div>
+        <div class="footer-nav"><span>نسخة معتمدة رقمياً</span><span>صفحة 1 من 3</span></div>
     </div>`;
 
-    // الصفحة 2: الشروط والأحكام (نص كامل 1-33)
+    // الصفحة 2: الشروط (1-33)
     let p2 = `
     <div class="page">
-        <div class="header"><h1>${CONST.name}</h1><div class="doc-type">الشروط والأحكام (1)</div></div>
+        <div class="header"><h1>${INFO.name}</h1><div class="doc-type">الشروط والأحكام (1)</div></div>
         <div class="terms-content">
-            <div class="disclaimer-box">إقرار مسؤولية البيانات والمعلومات: يقر العميل ويوافق على أن جميع المعلومات والبيانات والمستندات التي قام بتزويد مقدم الخدمة بها أو تم إدراجها في هذا المستند صحيحة ودقيقة ومكتملة، ويتحمل وحده كامل المسؤولية عنها.</div>
-            
-            <div class="section-h">أولاً: صلاحية العرض والتنفيذ (1-5)</div>
+            <div class="disclaimer-box">إقرار مسؤولية البيانات والمعلومات: يقر العميل ويوافق على أن جميع المعلومات والبيانات والمستندات التي قام بتزويد مقدم الخدمة بها أو تم إدراجها في هذا المستند صحيحة ودقيقة ومكتملة، ويتحمل وحده كامل المسؤولية عنها، كما يتحمل كافة الآثار القانونية والمالية والفنية المترتبة على أي خطأ أو نقص.</div>
+            <div class="section-h">أولاً: صلاحية العرض والتنفيذ</div>
             <div class="clause">1. مدة صلاحية العرض: يكون هذا عرض السعر / الفاتورة صالحًا لمدة ثلاثة (3) أيام عمل فقط من تاريخ إصداره، ويُعد لاغيًا تلقائيًا بعد انتهاء هذه المدة.</div>
-            <div class="clause">2. بدء التنفيذ: تبدأ أعمال التنفيذ بعد استلام الدفعة المقدمة المتفق عليها، واستلام جميع المتطلبات والمعلومات اللازمة من العميل بشكل كامل وواضح.</div>
-            <div class="clause">3. مدة التنفيذ: تُحتسب مدة التنفيذ من تاريخ اكتمال استلام جميع المتطلبات، ولا يُعتد بأي مدة يترتب عليها تأخير بسبب العميل.</div>
-            <div class="clause">4. التأخير: لا يتحمل مقدم الخدمة أي مسؤولية عن أي تأخير ناتج عن ظروف خارجة عن إرادته، أو عن أطراف ثالثة.</div>
+            <div class="clause">2. بدء التنفيذ: تبدأ أعمال التنفيذ بعد استلام الدفعة المقدمة المتفق عليها، واستلام جميع المتطلبات والمعلومات اللازمة من العميل.</div>
+            <div class="clause">3. مدة التنفيذ: تُحتسب مدة التنفيذ من تاريخ اكتمال استلام جميع المتطلبات.</div>
+            <div class="clause">4. التأخير: لا يتحمل مقدم الخدمة أي مسؤولية عن أي تأخير ناتج عن ظروف خارجة عن إرادته.</div>
             <div class="clause">5. الموافقات الخارجية: تخضع جميع الموافقات أو التراخيص الصادرة من الجهات الحكومية لسياسات تلك الجهات.</div>
-
-            <div class="section-h">ثانياً: التكاليف والمسؤوليات المالية (6-10)</div>
-            <div class="clause">6. الرسوم الخارجية: لا تشمل قيمة الفاتورة أي رسوم خاصة بالجهات الخارجية مثل السيرفرات أو النطاقات أو التراخيص.</div>
-            <div class="clause">7. خدمات الطرف الثالث: تخضع لسياسات تلك الجهات، ولا يتحمل مقدم الخدمة أي مسؤولية عن أدائها أو جودتها.</div>
+            <div class="section-h">ثانياً: التكاليف والمسؤوليات المالية</div>
+            <div class="clause">6. الرسوم الخارجية: لا تشمل قيمة الفاتورة أي رسوم خاصة بالجهات الخارجية مثل السيرفرات أو النطاقات.</div>
+            <div class="clause">7. خدمات الطرف الثالث: تخضع لسياسات تلك الجهات، ولا يتحمل مقدم الخدمة أي مسؤولية عن أدائها.</div>
             <div class="clause">8. المدفوعات الخارجية: جميع المبالغ التي يتم دفعها إلى جهات خارجية لا يمكن استرجاعها تحت أي ظرف.</div>
             <div class="clause">9. الدفع نيابة عن العميل: تُعد ديناً مستحقاً على العميل ويلتزم بسدادها عند الطلب.</div>
             <div class="clause">10. الضريبة: جميع الأسعار المذكورة لا تشمل ضريبة القيمة المضافة ويتم إضافتها وفق الأنظمة.</div>
-
-            <div class="section-h">ثالثاً: التسليم والملكية (11-16)</div>
-            <div class="clause">11. نطاق التسليم: يتم تنفيذ وتسليم الأعمال وفق النطاق المحدد في هذا المستند فقط ولا يشمل أي أعمال إضافية.</div>
-            <div class="clause">12. المنتج النهائي: يقتصر التسليم على المنتج النهائي الجاهز للاستخدام ولا يشمل الملفات المفتوحة أو الكود المصدري.</div>
+            <div class="section-h">ثالثاً: التسليم والملكية</div>
+            <div class="clause">11. نطاق التسليم: يتم تنفيذ وتسليم الأعمال وفق النطاق المحدد في هذا المستند فقط.</div>
+            <div class="clause">12. المنتج النهائي: يقتصر التسليم على المنتج النهائي الجاهز للاستخدام ولا يشمل الملفات المفتوحة.</div>
             <div class="clause">13. الكود المصدري: يبقى الكود المصدري ملكًا حصريًا لمقدم الخدمة ولا يتم تسليمه إلا بموجب اتفاق مستقل.</div>
             <div class="clause">14. نقل الملكية: لا يتم نقل ملكية أي من الأعمال إلا بعد اتفاق مكتوب وصريح وسداد كامل المقابل المالي.</div>
             <div class="clause">16. حق إعادة الاستخدام: يحتفظ مقدم الخدمة بحقه الكامل في إعادة استخدام أو تطوير الأعمال المنفذة.</div>
-
-            <div class="section-h">رابعاً: الدفعات والاسترجاع (17-22)</div>
+            <div class="section-h">رابعاً: الدفعات والاسترجاع</div>
             <div class="clause">17. نظام الدفع: يتم سداد قيمة هذا المستند وفق الآلية المتفق عليها بين الطرفين.</div>
-            <div class="clause">18. تأخر السداد: يحق لمقدم الخدمة إيقاف العمل بشكل فوري في حال تأخر العميل عن سداد أي دفعة.</div>
+            <div class="clause">18. تأخر السداد: يحق لمقدم الخدمة إيقاف العمل بشكل فوري في حال تأخر العميل.</div>
             <div class="clause">19. عدم الاسترجاع: لا يحق للعميل المطالبة باسترجاع أي مبلغ مالي بعد بدء التنفيذ أو الانسحاب.</div>
             <div class="clause">22. الرسوم الإدارية: تُضاف رسوم تشغيلية وإدارية بنسبة 20% على قيمة الأعمال المنفذة عند الإيقاف.</div>
         </div>
-        <div class="footer-nav"><span>تخضع هذه الفاتورة لكامل الشروط والأحكام المرفقة</span><span>صفحة 2 من 3</span></div>
+        <div class="footer-nav"><span>تتمة البنود في الصفحة التالية</span><span>صفحة 2 من 3</span></div>
     </div>`;
 
-    // الصفحة 3: تتمة الشروط (34-57) والإقرار
+    // الصفحة 3: تتمة الشروط (34-57)
     let p3 = `
     <div class="page">
-        <div class="header"><h1>${CONST.name}</h1><div class="doc-type">الشروط والأحكام (2)</div></div>
+        <div class="header"><h1>${INFO.name}</h1><div class="doc-type">الشروط والأحكام (2)</div></div>
         <div class="terms-content">
-            <div class="section-h">خامساً إلى ثامناً: الضمان والبنود القانونية (23-38)</div>
-            <div class="clause">23. الضمان: يتم تحديده وفق الخطة التشغيلية للمشروع. 24. يقتصر على الأخطاء الفنية الناتجة عنا فقط.</div>
-            <div class="clause">26. انتهاء العلاقة: تنتهي العلاقة التعاقدية فور تسليم المشروع وفق النطاق المتفق عليه.</div>
-            <div class="clause">31. وسائل التواصل: تُعتمد وسائل التواصل الرسمية المسجلة فقط كقنوات معتمدة بين الطرفين.</div>
+            <div class="section-h">خامساً إلى حادي عشر: الضمان والنزاعات</div>
+            <div class="clause">24. يقتصر الضمان على الأخطاء الفنية الناتجة عن مقدم الخدمة فقط.</div>
+            <div class="clause">31. وسائل التواصل: تُعتمد وسائل التواصل الرسمية المسجلة فقط كقنوات معتمدة.</div>
             <div class="clause">35. كامل الاتفاق: يمثل هذا المستند كامل الاتفاق ويلغي أي تفاهمات سابقة شفهية أو مكتوبة.</div>
-
-            <div class="section-h">تاسعاً إلى حادي عشر: النزاعات والبنود المتقدمة (39-50)</div>
-            <div class="clause">39. حل النزاعات: يتم السعي لحل أي نزاع ينشأ بين الطرفين بشكل ودي خلال مدة مناسبة.</div>
+            <div class="clause">39. حل النزاعات: يتم السعي لحل أي نزاع ينشأ بين الطرفين بشكل ودي.</div>
             <div class="clause">41. القوة القاهرة: لا نتحمل المسؤولية عن التأخير الناتج عن ظروف خارجة عن الإرادة.</div>
             <div class="clause">45. الاستلام الحكمي: يُعد المشروع مستلماً ومقبولاً بعد مضي 7 أيام من تاريخ تسليمه في حال عدم الاعتراض.</div>
-            <div class="clause">50. حق رفض الخدمة: نحتفظ بالحق في رفض أو إيقاف الخدمة في أي مرحلة مع احتساب الأعمال المنفذة.</div>
-
-            <div class="section-h">ثاني عشر: الحماية القانونية والشروط الإضافية (51-57)</div>
+            <div class="clause">50. حق رفض الخدمة: نحتفظ بالحق في رفض أو إيقاف الخدمة مع احتساب الأعمال المنفذة.</div>
+            <div class="section-h">ثاني عشر: الحماية القانونية والشروط الإضافية</div>
             <div class="clause">51. التنازل عن المطالبات: يتنازل العميل عن أي مطالبات تتجاوز قيمة هذا المستند.</div>
             <div class="clause">52. حدود المسؤولية: لا تتجاوز مسؤوليتنا في جميع الأحوال إجمالي المبلغ المدفوع فعلياً.</div>
             <div class="clause">54. الملكية الفكرية: تبقى جميع حقوق الملكية الفكرية محفوظة لمقدم الخدمة ما لم يتم الاتفاق كتابياً على نقلها.</div>
             <div class="clause">57. الشروط الإضافية والملحقات: في حال وجود أي شروط أو متطلبات إضافية فإنه يتم توثيقها حصراً في ملحق اتفاق مستقل يتم إعداده واعتماده خطياً، ولا تُعد تلك الشروط جزءاً من هذا المستند ولا يُعتد بأي تفاهمات شفهية خارج هذا الإطار.</div>
 
-            <div style="margin-top:25px; border:2px solid var(--primary); padding:15px; border-radius:10px; background:var(--secondary);">
-                <h4 style="text-align:center; color:var(--primary); margin-bottom:10px;">إقرار العميل بالموافقة التامة</h4>
+            <div style="margin-top:40px; border:2px solid var(--primary); padding:20px; border-radius:10px; background:var(--secondary);">
+                <h4 style="text-align:center; color:var(--primary); margin-bottom:10px;">إقرار وموافقة العميل</h4>
                 <p>أقر أنا العميل بالاطلاع على جميع الشروط والأحكام الـ (57) المذكورة في هذا المستند وأوافق عليها بالكامل وأتعهد بالالتزام بها.</p>
-                <div style="display:flex; justify-content:space-between; margin-top:15px; font-weight:bold;">
-                    <span>الاسم: ${customerName}</span>
+                <div style="display:flex; justify-content:space-between; margin-top:20px; font-weight:bold;">
+                    <span>الاسم: ${customer}</span>
                     <span>التاريخ: ${new Date().toLocaleDateString('ar-SA')}</span>
                 </div>
-                <div style="margin-top:10px;">التوقيع: ...........................................</div>
+                <div style="margin-top:15px;">التوقيع: .......................................</div>
             </div>
         </div>
-        <div class="qr-area" style="margin-top:auto;"><div id="qr3"></div></div>
-        <div class="footer-nav"><span>www.khidmatik.com | الهاتف: 966534051317</span><span>صفحة 3 من 3</span></div>
+        <div class="footer-nav"><span>www.khidmatik.com</span><span>صفحة 3 من 3</span></div>
     </div>`;
 
     app.innerHTML = p1 + p2 + p3;
-    
-    // توليد الأكواد (ZATCA QR و URL QR)
-    new QRCode(document.getElementById("qr1"), { text: `Seller:${CONST.name}|VAT:${CONST.taxId}|Total:${data.total}`, width: 85, height: 85 });
-    new QRCode(document.getElementById("qr2"), { text: window.location.href, width: 85, height: 85 });
-    new QRCode(document.getElementById("qr3"), { text: `Approved_by_${customerName}`, width: 60, height: 60 });
+    new QRCode(document.getElementById("q1"), { text: `Seller:${INFO.name}|VAT:${INFO.taxId}|Total:${data.total}`, width: 85, height: 85 });
+    new QRCode(document.getElementById("q2"), { text: window.location.href, width: 85, height: 85 });
 }
-
-window.onload = init;
+window.onload = start;
 </script>
 </body>
 </html>
