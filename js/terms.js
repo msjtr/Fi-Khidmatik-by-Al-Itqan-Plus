@@ -1,244 +1,80 @@
 // ========================================
-// صفحات الشروط والأحكام - نسخة محسنة
+// terms.js - صفحات الشروط والأحكام المبسطة
 // ========================================
 
 function buildTermsPage1(pageNum, totalPages) {
-    return '<div class="page">' +
-        window.buildHeader("الشروط والأحكام") +
-        '<div class="terms-container">' +
-            '<div class="terms-title">الشروط والأحكام والتعليمات</div>' +
-            
-            '<div class="legal-notice">' +
-                '<strong>إقرار مسؤولية البيانات والمعلومات:</strong><br>' +
-                '<span>يقر العميل ويوافق على أن جميع المعلومات والبيانات والمستندات التي قام بتزويد مقدم الخدمة بها أو تم إدراجها في هذا المستند صحيحة ودقيقة ومكتملة، ويتحمل وحده كامل المسؤولية عنها، كما يتحمل كافة الآثار القانونية والمالية والفنية المترتبة على أي خطأ أو نقص أو عدم دقة فيها، ويلتزم بتعويض مقدم الخدمة تعويضًا كاملاً عن أي أضرار أو خسائر أو مطالبات تنشأ نتيجة لذلك، دون أدنى مسؤولية على مقدم الخدمة.</span><br><br>' +
-                '<span>يُعد هذا المستند (عرض سعر / فاتورة) اتفاقًا ملزمًا قانونيًا بين الطرفين، ويُعتبر اعتماد العميل أو سداد أي دفعة أو بدء التنفيذ إقرارًا صريحًا ونهائيًا بالموافقة على جميع ما ورد فيه من شروط وأحكام دون أي تحفظ، كما يتحمل العميل مسؤولية عدم الاطلاع أو عدم الفهم لأي من البنود.</span>' +
-            '</div>' +
-
-            '<div class="terms-section terms-section-1">' +
-                '<div class="terms-section-header">' +
-                    '<span class="terms-section-icon">📋</span>' +
-                    '<h4>أولاً: صلاحية العرض والتنفيذ</h4>' +
-                '</div>' +
-                '<div class="terms-section-content">' +
-                    '<p><strong>1. مدة صلاحية العرض:</strong> يكون هذا عرض السعر / الفاتورة صالحًا لمدة ثلاثة (3) أيام عمل فقط من تاريخ إصداره، ويُعد لاغيًا تلقائيًا بعد انتهاء هذه المدة دون الحاجة إلى إشعار مسبق، ولا يترتب على مقدم الخدمة أي التزام بعد ذلك.</p>' +
-                    '<p><strong>2. بدء التنفيذ:</strong> تبدأ أعمال التنفيذ بعد استلام الدفعة المقدمة المتفق عليها، واستلام جميع المتطلبات والمعلومات اللازمة من العميل بشكل كامل وواضح.</p>' +
-                    '<p><strong>3. مدة التنفيذ:</strong> تُحتسب مدة التنفيذ من تاريخ اكتمال استلام جميع المتطلبات، ولا يُعتد بأي مدة يترتب عليها تأخير بسبب العميل أو أي طرف خارجي.</p>' +
-                    '<p><strong>4. التأخير:</strong> لا يتحمل مقدم الخدمة أي مسؤولية عن أي تأخير ناتج عن ظروف خارجة عن إرادته، أو عن أطراف ثالثة، أو عن تأخر العميل في تزويد المتطلبات.</p>' +
-                    '<p><strong>5. الموافقات الخارجية:</strong> تخضع جميع الموافقات أو التراخيص الصادرة من الجهات الحكومية أو الجهات الخارجية لسياسات تلك الجهات، ولا يضمن مقدم الخدمة الحصول عليها بأي حال من الأحوال.</p>' +
-                '</div>' +
-            '</div>' +
-
-            '<div class="terms-section terms-section-2">' +
-                '<div class="terms-section-header">' +
-                    '<span class="terms-section-icon">💰</span>' +
-                    '<h4>ثانياً: التكاليف والمسؤوليات المالية</h4>' +
-                '</div>' +
-                '<div class="terms-section-content">' +
-                    '<p><strong>6. الرسوم الخارجية:</strong> لا تشمل قيمة هذا عرض السعر / الفاتورة أي رسوم أو تكاليف خاصة بالجهات الخارجية مثل السيرفرات أو النطاقات أو التراخيص أو الرسوم الحكومية أو بوابات الدفع أو أي مزود خدمة طرف ثالث، ما لم يتم النص على خلاف ذلك بشكل صريح.</p>' +
-                    '<p><strong>7. خدمات الطرف الثالث:</strong> أي خدمات يتم تقديمها من خلال أطراف ثالثة تخضع لسياسات تلك الجهات، ولا يتحمل مقدم الخدمة أي مسؤولية عن أدائها أو جودتها أو توقفها أو تعديل سياساتها.</p>' +
-                    '<p><strong>8. المدفوعات الخارجية:</strong> جميع المبالغ التي يتم دفعها إلى جهات خارجية سواء بشكل مباشر من قبل العميل أو من خلال مقدم الخدمة لا يمكن استرجاعها تحت أي ظرف.</p>' +
-                    '<p><strong>9. الدفع نيابة عن العميل:</strong> في حال قيام مقدم الخدمة بسداد أي مبالغ نيابة عن العميل فإن تلك المبالغ تُعد دينًا مستحقًا على العميل ويلتزم بسدادها عند الطلب ولا تدخل ضمن أي تسوية أو استرجاع.</p>' +
-                    '<p><strong>10. الضريبة:</strong> جميع الأسعار المذكورة لا تشمل ضريبة القيمة المضافة ويتم إضافتها وفق الأنظمة المعمول بها.</p>' +
-                '</div>' +
-            '</div>' +
-
-            '<div class="terms-section terms-section-3">' +
-                '<div class="terms-section-header">' +
-                    '<span class="terms-section-icon">📦</span>' +
-                    '<h4>ثالثاً: التسليم والملكية</h4>' +
-                '</div>' +
-                '<div class="terms-section-content">' +
-                    '<p><strong>11. نطاق التسليم:</strong> يتم تنفيذ وتسليم الأعمال وفق النطاق المحدد في هذا عرض السعر / الفاتورة فقط ولا يشمل أي أعمال إضافية غير مذكورة.</p>' +
-                    '<p><strong>12. المنتج النهائي:</strong> يقتصر التسليم على المنتج النهائي الجاهز للاستخدام ولا يشمل الملفات المفتوحة أو الكود المصدري أو أي مواد إنتاج داخلية.</p>' +
-                    '<p><strong>13. الكود المصدري:</strong> يبقى الكود المصدري ملكًا حصريًا لمقدم الخدمة ولا يتم تسليمه إلا بموجب اتفاق مستقل ومقابل مالي يتم تحديده بشكل منفصل.</p>' +
-                    '<p><strong>14. نقل الملكية:</strong> لا يتم نقل ملكية أي من الأعمال أو المواد أو المخرجات إلا بعد اتفاق مكتوب وصريح وسداد كامل المقابل المالي الخاص بنقل الملكية.</p>' +
-                    '<p><strong>15. عدم طلب التسليم:</strong> في حال عدم طلب العميل نقل الملكية أو تسليم المخرجات وفق ما سبق لا يلتزم مقدم الخدمة بتسليم أي أعمال أو ملفات.</p>' +
-                    '<p><strong>16. حق إعادة الاستخدام:</strong> يحتفظ مقدم الخدمة بحقه الكامل في إعادة استخدام أو تطوير أو الاستفادة من الأعمال المنفذة بأي شكل من الأشكال ما لم يتم الاتفاق على خلاف ذلك كتابةً.</p>' +
-                '</div>' +
-            '</div>' +
-
-            '<div class="terms-section terms-section-4">' +
-                '<div class="terms-section-header">' +
-                    '<span class="terms-section-icon">💳</span>' +
-                    '<h4>رابعاً: الدفعات والاسترجاع</h4>' +
-                '</div>' +
-                '<div class="terms-section-content">' +
-                    '<p><strong>17. نظام الدفع:</strong> يتم سداد قيمة هذا عرض السعر / الفاتورة وفق الآلية المتفق عليها بين الطرفين سواء دفعة واحدة أو على دفعات.</p>' +
-                    '<p><strong>18. تأخر السداد:</strong> يحق لمقدم الخدمة إيقاف العمل بشكل فوري في حال تأخر العميل عن سداد أي دفعة مستحقة.</p>' +
-                    '<p><strong>19. عدم الاسترجاع:</strong> لا يحق للعميل المطالبة باسترجاع أي مبلغ مالي بعد بدء التنفيذ أو في حال الانسحاب أو عدم استكمال المشروع لأي سبب كان.</p>' +
-                    '<p><strong>20. إيقاف المشروع من مقدم الخدمة:</strong> يحق لمقدم الخدمة إيقاف المشروع في حال مخالفة العميل لأي من الشروط أو عدم التزامه بالمتطلبات أو السداد.</p>' +
-                    '<p><strong>21. احتساب الأعمال:</strong> يتم احتساب قيمة الأعمال المنفذة بناءً على نسبة الإنجاز الفعلية حتى تاريخ الإيقاف.</p>' +
-                    '<p><strong>22. الرسوم الإدارية:</strong> تُضاف رسوم تشغيلية وإدارية بنسبة 20% على قيمة الأعمال المنفذة.</p>' +
-                '</div>' +
-            '</div>' +
-        '</div>' +
-        window.buildFooter(pageNum, totalPages) +
-    '</div>';
+    return `
+        <div class="page">
+            ${window.buildHeader('الشروط والأحكام')}
+            <div class="terms-container">
+                <div class="legal-notice">
+                    <strong>إقرار مسؤولية البيانات والمعلومات:</strong><br>
+                    <span>يقر العميل ويوافق على أن جميع المعلومات والبيانات المقدمة صحيحة ودقيقة، ويتحمل كامل المسؤولية عنها.</span>
+                </div>
+                <div class="terms-section terms-section-1">
+                    <div class="terms-section-header"><span class="terms-section-icon">📋</span><h4>أولاً: صلاحية العرض والتنفيذ</h4></div>
+                    <div class="terms-section-content">
+                        <p><strong>1. مدة صلاحية العرض:</strong> يكون عرض السعر صالحًا لمدة ثلاثة أيام عمل من تاريخ إصداره.</p>
+                        <p><strong>2. بدء التنفيذ:</strong> تبدأ أعمال التنفيذ بعد استلام الدفعة المقدمة.</p>
+                    </div>
+                </div>
+                <div class="terms-section terms-section-2">
+                    <div class="terms-section-header"><span class="terms-section-icon">💰</span><h4>ثانياً: التكاليف والمسؤوليات المالية</h4></div>
+                    <div class="terms-section-content">
+                        <p><strong>6. الرسوم الخارجية:</strong> لا تشمل الفاتورة رسوم السيرفرات أو النطاقات أو التراخيص.</p>
+                        <p><strong>10. الضريبة:</strong> جميع الأسعار لا تشمل ضريبة القيمة المضافة.</p>
+                    </div>
+                </div>
+            </div>
+            ${window.buildFooter(pageNum, totalPages)}
+        </div>
+    `;
 }
 
 function buildTermsPage2(pageNum, totalPages) {
-    return '<div class="page">' +
-        window.buildHeader("الشروط والأحكام") +
-        '<div class="terms-container">' +
-
-            '<div class="terms-section terms-section-5">' +
-                '<div class="terms-section-header">' +
-                    '<span class="terms-section-icon">🛡️</span>' +
-                    '<h4>خامساً: الضمان</h4>' +
-                '</div>' +
-                '<div class="terms-section-content">' +
-                    '<p><strong>23. الضمان:</strong> يتم تحديد الضمان إن وجد وفق الخطة التشغيلية للمشروع وطبيعته.</p>' +
-                    '<p><strong>24. نطاق الضمان:</strong> يقتصر الضمان على الأخطاء الفنية الناتجة عن مقدم الخدمة فقط.</p>' +
-                    '<p><strong>25. الاستثناءات:</strong> لا يشمل الضمان أي مشاكل ناتجة عن عوامل خارجية أو سوء استخدام أو تعديلات من طرف العميل أو طرف ثالث.</p>' +
-                '</div>' +
-            '</div>' +
-
-            '<div class="terms-section terms-section-6">' +
-                '<div class="terms-section-header">' +
-                    '<span class="terms-section-icon">🔚</span>' +
-                    '<h4>سادساً: انتهاء العلاقة والمسؤولية</h4>' +
-                '</div>' +
-                '<div class="terms-section-content">' +
-                    '<p><strong>26. انتهاء العلاقة:</strong> تنتهي العلاقة التعاقدية بين الطرفين فور تسليم المشروع وفق النطاق المتفق عليه.</p>' +
-                    '<p><strong>27. المسؤولية بعد التسليم:</strong> لا يتحمل مقدم الخدمة أي مسؤولية لاحقة عن المشروع بعد التسليم.</p>' +
-                    '<p><strong>28. التشغيل:</strong> يتحمل العميل المسؤولية الكاملة عن تشغيل المشروع وإدارته.</p>' +
-                    '<p><strong>29. البيانات:</strong> يتحمل العميل مسؤولية حفظ النسخ الاحتياطية للبيانات.</p>' +
-                    '<p><strong>30. براءة الذمة:</strong> لا يتحمل مقدم الخدمة أي مسؤولية عن أي خدمات مقدمة من أطراف ثالثة أو توقفها.</p>' +
-                '</div>' +
-            '</div>' +
-
-            '<div class="terms-section terms-section-7">' +
-                '<div class="terms-section-header">' +
-                    '<span class="terms-section-icon">📞</span>' +
-                    '<h4>سابعاً: التواصل والتنفيذ</h4>' +
-                '</div>' +
-                '<div class="terms-section-content">' +
-                    '<p><strong>31. وسائل التواصل:</strong> تُعتمد وسائل التواصل الرسمية المسجلة فقط كقنوات معتمدة بين الطرفين.</p>' +
-                    '<p><strong>32. التفويض:</strong> يلتزم العميل بإشعار مقدم الخدمة رسميًا في حال تفويض أي شخص للتواصل نيابة عنه.</p>' +
-                    '<p><strong>33. النسخ الإلكترونية:</strong> تُعتبر جميع النسخ الإلكترونية من هذا عرض السعر / الفاتورة بما في ذلك المرسلة عبر البريد الإلكتروني أو وسائل التواصل نسخًا معتمدة ولها نفس القوة القانونية.</p>' +
-                '</div>' +
-            '</div>' +
-
-            '<div class="terms-section terms-section-8">' +
-                '<div class="terms-section-header">' +
-                    '<span class="terms-section-icon">⚖️</span>' +
-                    '<h4>ثامناً: البنود القانونية</h4>' +
-                '</div>' +
-                '<div class="terms-section-content">' +
-                    '<p><strong>34. طبيعة العلاقة:</strong> تُعد العلاقة بين الطرفين علاقة تعاقدية مستقلة ولا تُنشئ أي شراكة أو وكالة أو تمثيل قانوني.</p>' +
-                    '<p><strong>35. كامل الاتفاق:</strong> يمثل هذا المستند كامل الاتفاق بين الطرفين ويلغي أي اتفاقات أو تفاهمات سابقة سواء كانت شفهية أو مكتوبة.</p>' +
-                    '<p><strong>36. الأخطاء غير المقصودة:</strong> في حال وجود أي خطأ غير مقصود في الصياغة فإنه لا يؤثر على صحة باقي البنود وتبقى سارية وملزمة.</p>' +
-                    '<p><strong>37. عدم التنازل:</strong> عدم استخدام مقدم الخدمة لأي من حقوقه لا يُعد تنازلًا عنها ويحتفظ بحقه في استخدامها في أي وقت لاحق.</p>' +
-                    '<p><strong>38. اللغة المعتمدة:</strong> في حال ترجمة هذا المستند إلى أي لغة أخرى تُعتمد النسخة العربية في التفسير.</p>' +
-                '</div>' +
-            '</div>' +
-
-            '<div class="terms-section terms-section-9">' +
-                '<div class="terms-section-header">' +
-                    '<span class="terms-section-icon">🏛️</span>' +
-                    '<h4>تاسعاً: النزاعات</h4>' +
-                '</div>' +
-                '<div class="terms-section-content">' +
-                    '<p><strong>39. حل النزاعات:</strong> يتم السعي لحل أي نزاع ينشأ بين الطرفين بشكل ودي خلال مدة مناسبة من تاريخ الإشعار.</p>' +
-                    '<p><strong>40. الجهة المختصة:</strong> في حال عدم التوصل إلى حل يحق لمقدم الخدمة تحديد الجهة القضائية أو التحكيمية المختصة.</p>' +
-                '</div>' +
-            '</div>' +
-
-            '<div class="terms-section terms-section-10">' +
-                '<div class="terms-section-header">' +
-                    '<span class="terms-section-icon">🌪️</span>' +
-                    '<h4>عاشراً: البنود المتقدمة</h4>' +
-                '</div>' +
-                '<div class="terms-section-content">' +
-                    '<p><strong>41. القوة القاهرة:</strong> لا يتحمل مقدم الخدمة أي مسؤولية عن التأخير أو عدم التنفيذ الناتج عن ظروف خارجة عن الإرادة.</p>' +
-                    '<p><strong>42. السرية:</strong> يلتزم الطرفان بالمحافظة على سرية المعلومات وعدم الإفصاح عنها لأي طرف ثالث دون موافقة خطية.</p>' +
-                    '<p><strong>43. التعديلات خارج النطاق:</strong> أي طلبات أو تعديلات خارج نطاق هذا المستند يتم تنفيذها بموجب عرض وسعر مستقل.</p>' +
-                    '<p><strong>44. التوقف المؤقت:</strong> يحق لمقدم الخدمة إيقاف المشروع مؤقتًا في حال عدم تجاوب العميل أو عدم توفير المتطلبات.</p>' +
-                    '<p><strong>45. الاستلام الحكمي:</strong> يُعد المشروع مستلمًا ومقبولًا من قبل العميل بعد مضي سبعة أيام من تاريخ تسليمه في حال عدم تقديم اعتراض رسمي.</p>' +
-                    '<p><strong>46. الاعتراض:</strong> يجب على العميل تقديم أي اعتراض بشكل مكتوب وواضح خلال مدة سبعة أيام من تاريخ التسليم.</p>' +
-                '</div>' +
-            '</div>' +
-        '</div>' +
-        window.buildFooter(pageNum, totalPages) +
-    '</div>';
+    return `
+        <div class="page">
+            ${window.buildHeader('الشروط والأحكام (تابع)')}
+            <div class="terms-container">
+                <div class="terms-section terms-section-5">
+                    <div class="terms-section-header"><span class="terms-section-icon">🛡️</span><h4>خامساً: الضمان</h4></div>
+                    <div class="terms-section-content">
+                        <p><strong>23. الضمان:</strong> يتم تحديد الضمان وفق الخطة التشغيلية للمشروع.</p>
+                        <p><strong>24. نطاق الضمان:</strong> يقتصر على الأخطاء الفنية الناتجة عن مقدم الخدمة فقط.</p>
+                    </div>
+                </div>
+                <div class="terms-section terms-section-6">
+                    <div class="terms-section-header"><span class="terms-section-icon">🔚</span><h4>سادساً: انتهاء العلاقة</h4></div>
+                    <div class="terms-section-content">
+                        <p><strong>26. انتهاء العلاقة:</strong> تنتهي العلاقة بعد تسليم المشروع.</p>
+                        <p><strong>27. المسؤولية بعد التسليم:</strong> لا يتحمل مقدم الخدمة مسؤولية لاحقة.</p>
+                    </div>
+                </div>
+            </div>
+            ${window.buildFooter(pageNum, totalPages)}
+        </div>
+    `;
 }
 
 function buildTermsPage3(order, pageNum, totalPages) {
-    var dateStr = (order.orderDate ? window.formatDate(order.orderDate) : '') + ' - ' + (order.orderTime ? window.formatTime(order.orderTime) : '');
-    
-    return '<div class="page">' +
-        window.buildHeader("الشروط والأحكام") +
-        '<div class="terms-container">' +
-
-            '<div class="terms-section terms-section-11">' +
-                '<div class="terms-section-header">' +
-                    '<span class="terms-section-icon">📊</span>' +
-                    '<h4>حادي عشر: البنود المالية والقانونية المتقدمة</h4>' +
-                '</div>' +
-                '<div class="terms-section-content">' +
-                    '<p><strong>47. المدفوعات الخارجية:</strong> لا تُعد أي مبالغ تُدفع لجهات خارجية مستحقة لمقدم الخدمة ولا يحق المطالبة بها أو استرجاعها.</p>' +
-                    '<p><strong>48. المدفوعات بالنيابة:</strong> تُحتسب أي مدفوعات يقوم بها مقدم الخدمة نيابة عن العميل ضمن تكاليف المشروع ويلتزم العميل بسدادها.</p>' +
-                    '<p><strong>49. تفسير البنود:</strong> يتم تفسير بنود هذا المستند بما يحقق الغرض منها وبما يحفظ حقوق مقدم الخدمة.</p>' +
-                    '<p><strong>50. حق رفض الخدمة:</strong> يحتفظ مقدم الخدمة بحقه في رفض تقديم الخدمة أو إيقافها في أي مرحلة مع احتساب الأعمال المنفذة.</p>' +
-                '</div>' +
-            '</div>' +
-
-            '<div class="terms-section terms-section-12">' +
-                '<div class="terms-section-header">' +
-                    '<span class="terms-section-icon">🔒</span>' +
-                    '<h4>ثاني عشر: الحماية القانونية</h4>' +
-                '</div>' +
-                '<div class="terms-section-content">' +
-                    '<p><strong>51. التنازل عن المطالبات:</strong> يتنازل العميل عن أي مطالبات أو تعويضات تتجاوز قيمة هذا عرض السعر / الفاتورة.</p>' +
-                    '<p><strong>52. حدود المسؤولية:</strong> لا تتجاوز مسؤولية مقدم الخدمة في جميع الأحوال إجمالي المبلغ المدفوع من قبل العميل.</p>' +
-                    '<p><strong>53. الاستخدام غير المشروع:</strong> لا يتحمل مقدم الخدمة أي مسؤولية عن استخدام العميل للمخرجات بشكل مخالف للأنظمة.</p>' +
-                    '<p><strong>54. الملكية الفكرية:</strong> تبقى جميع حقوق الملكية الفكرية محفوظة لمقدم الخدمة ما لم يتم الاتفاق على نقلها بشكل مكتوب.</p>' +
-                    '<p><strong>55. تحديث الشروط:</strong> يحق لمقدم الخدمة تحديث أو تعديل هذه الشروط مستقبلاً وتسري على الأعمال الجديدة.</p>' +
-                    '<p><strong>56. استقلالية البنود:</strong> يتم تفسير كل بند من بنود هذا المستند بشكل مستقل دون التأثير على بقية البنود.</p>' +
-                '</div>' +
-            '</div>' +
-
-            '<div class="terms-section terms-section-13">' +
-                '<div class="terms-section-header">' +
-                    '<span class="terms-section-icon">📎</span>' +
-                    '<h4>الشروط الإضافية والملحقات</h4>' +
-                '</div>' +
-                '<div class="terms-section-content">' +
-                    '<p><strong>57. الشروط الإضافية والملحقات:</strong> في حال وجود أي شروط أو طلبات أو متطلبات إضافية من قبل العميل سواء كانت فنية أو تشغيلية أو مالية أو تنظيمية ولم تكن ضمن نطاق هذا عرض السعر / الفاتورة فإنه يتم توثيقها حصراً في ملحق اتفاق مستقل يتم إعداده واعتماده من قبل الطرفين بشكل خطي ورسمي، ولا تُعد تلك الشروط أو الطلبات الإضافية جزءًا من هذا المستند ولا يترتب عليها أي تعديل أو تأثير على أي من بنوده ما لم يتم النص على ذلك صراحةً وبشكل مكتوب في ذلك الملحق، كما لا يُعتد بأي اتفاقات أو تفاهمات أو مراسلات سواء كانت شفهية أو غير موثقة ما لم يتم تضمينها في ملحق رسمي معتمد.</p>' +
-                '</div>' +
-            '</div>' +
-
-            '<div class="declaration">' +
-                '<div class="declaration-header">' +
-                    '<span class="declaration-icon">📝</span>' +
-                    '<p>الإقرار</p>' +
-                '</div>' +
-                '<p class="declaration-text">أقر أنا العميل بالاطلاع على جميع الشروط والأحكام أعلاه وأوافق عليها بالكامل وأتعهد بالالتزام بها دون أي استثناء.</p>' +
-            '</div>' +
-
-            '<div class="signature-area">' +
-                '<div class="signature-row">' +
-                    '<span class="signature-icon">👤</span>' +
-                    '<span class="signature-label">اسم العميل:</span>' +
-                    '<span class="signature-value">' + window.escapeHtml(order.customerName) + '</span>' +
-                '</div>' +
-                '<div class="signature-row">' +
-                    '<span class="signature-icon">📅</span>' +
-                    '<span class="signature-label">التاريخ:</span>' +
-                    '<span class="signature-value">' + dateStr + '</span>' +
-                '</div>' +
-                '<div class="signature-line">' +
-                    '<span class="signature-icon">✍️</span>' +
-                    '<span class="signature-label">التوقيع:</span>' +
-                    '<span class="signature-placeholder"></span>' +
-                '</div>' +
-            '</div>' +
-        '</div>' +
-        window.buildFooter(pageNum, totalPages) +
-    '</div>';
+    return `
+        <div class="page">
+            ${window.buildHeader('الإقرار والتوقيع')}
+            <div class="terms-container">
+                <div class="declaration">
+                    <p>أقر أنا العميل بالاطلاع على جميع الشروط والأحكام وأوافق عليها.</p>
+                </div>
+                <div class="signature-area">
+                    <div class="signature-row"><span>اسم العميل:</span> <span>${window.escapeHtml(order.customerName)}</span></div>
+                    <div class="signature-row"><span>التاريخ:</span> <span>${window.formatDate(order.orderDate)} - ${window.formatTime(order.orderTime)}</span></div>
+                    <div class="signature-row"><span>التوقيع:</span> <span class="signature-placeholder"></span></div>
+                </div>
+            </div>
+            ${window.buildFooter(pageNum, totalPages)}
+        </div>
+    `;
 }
 
-// تصدير الدوال
 window.buildTermsPage1 = buildTermsPage1;
 window.buildTermsPage2 = buildTermsPage2;
 window.buildTermsPage3 = buildTermsPage3;
