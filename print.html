@@ -53,16 +53,21 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // دالة لتحويل المسار النسبي إلى مطلق
+        // صورة افتراضية (تأكد من وجود هذا الملف في المسار المحدد)
+        const PLACEHOLDER_IMAGE = window.location.origin + '/fi-khidmatik/admin/images/default-product.png';
+        
+        // دالة قوية لتحويل أي مسار إلى رابط مطلق صالح
         function toAbsoluteUrl(url) {
-            if (!url) return '';
+            if (!url || url === '') return PLACEHOLDER_IMAGE;
+            // إذا كان already data URL أو رابط كامل
             if (url.startsWith('data:') || url.startsWith('http://') || url.startsWith('https://')) {
                 return url;
             }
+            // إذا كان يبدأ بـ / (من جذر الموقع)
             if (url.startsWith('/')) {
                 return window.location.origin + url;
             }
-            // افتراض أن المشروع في مجلد fi-khidmatik
+            // افتراض أنه مسار نسبي من مجلد fi-khidmatik
             return window.location.origin + '/fi-khidmatik/' + url;
         }
 
@@ -99,7 +104,7 @@
             } else {
                 const customer = order.customerId ? await loadCustomer(order.customerId) : null;
                 
-                // تحويل بيانات الطلب مع معالجة صور المنتجات
+                // تحويل بيانات الطلب مع معالجة صور المنتجات بشكل آمن
                 const orderData = {
                     orderNumber: order.orderNumber || 'بدون رقم',
                     orderDate: order.orderDate || new Date().toISOString().split('T')[0],
@@ -119,7 +124,6 @@
                     items: (order.items || []).map(item => ({
                         name: item.name || 'منتج',
                         description: item.description || '',
-                        // تحويل مسار الصورة إلى مطلق
                         image: toAbsoluteUrl(item.image || ''),
                         quantity: item.quantity || 1,
                         price: item.price || 0
@@ -146,7 +150,7 @@
                 
                 document.getElementById('printContent').innerHTML = html;
                 
-                // إنشاء QR Codes
+                // إنشاء QR Codes بعد تحميل DOM
                 setTimeout(() => {
                     try {
                         const zatcaDiv = document.getElementById('zatcaQR');
@@ -167,6 +171,7 @@
                     } catch(e) { console.warn("QR Code error:", e); }
                 }, 300);
                 
+                // الطباعة التلقائية إذا طلب
                 if (params.get('auto') === 'print') {
                     setTimeout(() => window.print(), 800);
                 }
