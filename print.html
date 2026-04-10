@@ -42,15 +42,14 @@
         const CORS_BLOCKED_DOMAINS = ['cdn.salla.sa', 'cdn.salla.com.sa', 'salla.sa'];
         const CORS_PROXY = "https://api.allorigins.win/raw?url=";
         
-        // صورة افتراضية
-        const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='45' height='45' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='2' width='20' height='20' rx='2.18' ry='2.18'%3E%3C/rect%3E%3Cpath d='M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5'%3E%3C/path%3E%3C/svg%3E";
+        // صورة افتراضية (تم تعديلها: علامات تنصيص مزدوجة بدلاً من المفردة)
+        const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"45\" height=\"45\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"%23999\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"%3E%3Crect x=\"2\" y=\"2\" width=\"20\" height=\"20\" rx=\"2.18\" ry=\"2.18\"%3E%3C/rect%3E%3Cpath d=\"M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5\"%3E%3C/path%3E%3C/svg%3E";
         
         // دالة لتحويل المسار النسبي إلى مطلق ومعالجة CORS
         function getFinalImageUrl(url) {
             if (!url) return PLACEHOLDER_IMAGE;
-            // إذا كان رابط بيانات أو رابط وكيل أو رابط مطلق عادي
             if (url.startsWith('data:')) return url;
-            if (url.startsWith(CORS_PROXY)) return url; // منع التكرار
+            if (url.startsWith(CORS_PROXY)) return url;
             
             let absoluteUrl = url;
             if (!url.startsWith('http://') && !url.startsWith('https://')) {
@@ -58,7 +57,6 @@
                 else absoluteUrl = window.location.origin + '/fi-khidmatik/' + url;
             }
             
-            // التحقق من النطاقات المحظورة
             try {
                 const urlObj = new URL(absoluteUrl);
                 if (CORS_BLOCKED_DOMAINS.some(domain => urlObj.hostname.includes(domain))) {
@@ -179,10 +177,13 @@
             for (let i=0; i<items.length; i++) {
                 const item = items[i];
                 const finalImageUrl = getFinalImageUrl(item.image);
+                const safeImageUrl = finalImageUrl.replace(/"/g, '&quot;');
+                // إصلاح onerror: تجنب تداخل علامات التنصيص المفردة
+                const safePlaceholder = PLACEHOLDER_IMAGE.replace(/'/g, "\\'");
                 itemsHtml += `
                     <tr>
                         <td style="text-align:center">${i+1}</td>
-                        <td style="text-align:center"><img src="${finalImageUrl}" class="product-img" style="width:45px;height:45px;object-fit:cover;" onerror="this.src='${PLACEHOLDER_IMAGE}'"></td>
+                        <td style="text-align:center"><img src="${safeImageUrl}" class="product-img" style="width:45px;height:45px;object-fit:cover;" onerror="this.src='${safePlaceholder}'"></td>
                         <td style="text-align:right"><strong>${escape(cleanText(item.name))}</strong><br><small>${escape(cleanText(item.description))}</small></td>
                         <td style="text-align:center">${item.quantity}</td>
                         <td style="text-align:center;direction:ltr">${(item.price||0).toFixed(2)} ريال</td>
