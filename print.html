@@ -53,6 +53,19 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // دالة لتحويل المسار النسبي إلى مطلق
+        function toAbsoluteUrl(url) {
+            if (!url) return '';
+            if (url.startsWith('data:') || url.startsWith('http://') || url.startsWith('https://')) {
+                return url;
+            }
+            if (url.startsWith('/')) {
+                return window.location.origin + url;
+            }
+            // افتراض أن المشروع في مجلد fi-khidmatik
+            return window.location.origin + '/fi-khidmatik/' + url;
+        }
+
         async function loadOrder(orderId) {
             try {
                 const snap = await getDoc(doc(db, "orders", orderId));
@@ -86,7 +99,7 @@
             } else {
                 const customer = order.customerId ? await loadCustomer(order.customerId) : null;
                 
-                // تحويل بيانات الطلب إلى الصيغة المطلوبة بواسطة invoice.js
+                // تحويل بيانات الطلب مع معالجة صور المنتجات
                 const orderData = {
                     orderNumber: order.orderNumber || 'بدون رقم',
                     orderDate: order.orderDate || new Date().toISOString().split('T')[0],
@@ -106,7 +119,8 @@
                     items: (order.items || []).map(item => ({
                         name: item.name || 'منتج',
                         description: item.description || '',
-                        image: item.image || '',
+                        // تحويل مسار الصورة إلى مطلق
+                        image: toAbsoluteUrl(item.image || ''),
                         quantity: item.quantity || 1,
                         price: item.price || 0
                     })),
@@ -125,7 +139,6 @@
                         html += window.buildTermsPage3(orderData, 4, 4);
                     }
                 } else {
-                    // صفحات احتياطية إذا كانت دوال الشروط غير موجودة
                     for(let i=2; i<=4; i++) {
                         html += `<div class="page terms-page">${window.buildHeader('شروط وأحكام')}<p style="padding:50px;text-align:center;">شروط وأحكام الخدمة متاحة على الموقع الإلكتروني.</p>${window.buildFooter(i,4)}</div>`;
                     }
@@ -133,7 +146,7 @@
                 
                 document.getElementById('printContent').innerHTML = html;
                 
-                // إنشاء QR Codes بعد تحميل الصفحة
+                // إنشاء QR Codes
                 setTimeout(() => {
                     try {
                         const zatcaDiv = document.getElementById('zatcaQR');
@@ -154,7 +167,6 @@
                     } catch(e) { console.warn("QR Code error:", e); }
                 }, 300);
                 
-                // الطباعة التلقائية إذا أضيف auto=print
                 if (params.get('auto') === 'print') {
                     setTimeout(() => window.print(), 800);
                 }
