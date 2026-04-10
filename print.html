@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>الفاتورة الإلكترونية - في خدمتك</title>
+    <link rel="icon" href="data:,">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
@@ -45,8 +46,8 @@
         .grand-total { border-top: 2px solid #1e3a5f; margin-top: 5px; padding-top: 10px; font-weight: 800; color: #1e3a5f; font-size: 16px; }
 
         .barcodes { display: flex; justify-content: space-around; margin-top: 30px; padding-top: 20px; border-top: 1px dashed #ccc; }
-        .qr-item { text-align: center; font-size: 10px; color: #777; }
-        .qr-code { width: 100px; height: 100px; margin-bottom: 5px; }
+        .qr-item { text-align: center; font-size: 10px; color: #777; width: 120px; }
+        .qr-code { width: 110px; height: 110px; margin: 0 auto 5px; }
 
         .footer { margin-top: auto; background: #1e3a5f; color: white; padding: 10px; border-radius: 5px; display: flex; justify-content: space-between; font-size: 11px; }
 
@@ -86,32 +87,39 @@
         const sellerData = {
             name: "في خدمتك",
             taxNumber: "312495447600003",
-            license: "FL-765735204",
             address: "حائل - حي النقرة - شارع سعد المشاط",
             phone: "+966 534051317"
         };
 
-        // --- 2. دالة توليد الـ QR المصلحة (علاج الـ Overflow) ---
+        // --- 2. دالة توليد الـ QR المحدثة لحل مشكلة الـ Overflow ---
         function generateQR(id, text) {
             const container = document.getElementById(id);
             if (!container) return;
             container.innerHTML = "";
-            new QRCode(container, {
-                text: text,
-                width: 100,
-                height: 100,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.M, // مستوى تصحيح متوسط للبيانات الطويلة
-                version: 0 // اختيار النسخة تلقائياً
-            });
+            
+            try {
+                new QRCode(container, {
+                    text: text,
+                    width: 110,
+                    height: 110,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    // تقليل مستوى التصحيح لزيادة سعة البيانات
+                    correctLevel: QRCode.CorrectLevel.L, 
+                    // رفع النسخة (Version) لدعم البيانات الكبيرة (1000+ حرف)
+                    version: 15 
+                });
+            } catch (e) {
+                console.error("خطأ في الباركود:", e);
+                container.innerHTML = "<small style='color:red'>خطأ في البيانات</small>";
+            }
         }
 
         // --- 3. بناء واجهة الفاتورة ---
         function renderInvoice(order) {
-            const subtotal = order.subtotal || 0;
-            const tax = order.tax || (subtotal * 0.15);
-            const total = order.total || (subtotal + tax);
+            const subtotal = Number(order.subtotal) || 0;
+            const tax = Number(order.tax) || (subtotal * 0.15);
+            const total = Number(order.total) || (subtotal + tax);
 
             const html = `
                 <div class="page">
@@ -124,7 +132,7 @@
                     </div>
 
                     <div class="info-grid">
-                        <div class="info-item"><label>رقم الفاتورة</label><span>${order.orderNumber || order.id}</span></div>
+                        <div class="info-item"><label>رقم الفاتورة</label><span>${order.orderNumber || order.id.substring(0,8)}</span></div>
                         <div class="info-item"><label>التاريخ</label><span>${order.orderDate || new Date().toLocaleDateString('ar-SA')}</span></div>
                         <div class="info-item"><label>الحالة</label><span>${order.status || 'مكتمل'}</span></div>
                     </div>
@@ -163,12 +171,12 @@
                     </div>
 
                     <div class="barcodes">
-                        <div class="qr-item"><div id="zatcaQR" class="qr-code"></div>باركود هيئة الزكاة</div>
-                        <div class="qr-item"><div id="verifyQR" class="qr-code"></div>التحقق من الفاتورة</div>
+                        <div class="qr-item"><div id="zatcaQR" class="qr-code"></div>باركود الزكاة</div>
+                        <div class="qr-item"><div id="verifyQR" class="qr-code"></div>رابط الفاتورة</div>
                     </div>
 
                     <div class="footer">
-                        <span>صدرت هذه الفاتورة إلكترونياً وهي ملزمة قانونياً</span>
+                        <span>صدرت إلكترونياً - في خدمتك</span>
                         <span>www.fi-khidmatik.com.sa</span>
                     </div>
                 </div>
@@ -176,19 +184,21 @@
 
             document.getElementById('printContent').innerHTML = html;
 
-            // توليد الباركودات بعد إضافة الـ HTML
-            const qrText = `Seller:${sellerData.name}|VAT:${sellerData.taxNumber}|Date:${order.orderDate}|Total:${total}`;
-            generateQR("zatcaQR", qrText);
+            // توليد الباركودات ببيانات مختصرة لتجنب أي تعليق
+            const shortDate = order.orderDate || new Date().toISOString();
+            const qrZatca = `S:${sellerData.name}|V:${sellerData.taxNumber}|D:${shortDate}|T:${total.toFixed(2)}`;
+            
+            generateQR("zatcaQR", qrZatca);
             generateQR("verifyQR", window.location.href);
         }
 
-        // --- 4. جلب البيانات من Firebase عند التحميل ---
+        // --- 4. جلب البيانات من Firebase ---
         async function init() {
             const urlParams = new URLSearchParams(window.location.search);
             const docId = urlParams.get('id');
 
             if (!docId) {
-                document.getElementById('printContent').innerHTML = "<div style='color:red; text-align:center; padding:50px;'>خطأ: لم يتم تزويد رقم مستند صحيح في الرابط (?id=...)</div>";
+                document.getElementById('printContent').innerHTML = "<div style='color:red; text-align:center; padding:50px;'>يرجى تزويد ID الفاتورة</div>";
                 return;
             }
 
@@ -197,15 +207,15 @@
                 if (doc.exists) {
                     renderInvoice({ id: doc.id, ...doc.data() });
                 } else {
-                    document.getElementById('printContent').innerHTML = "<div style='text-align:center; padding:50px;'>الفاتورة غير موجودة في قاعدة البيانات.</div>";
+                    document.getElementById('printContent').innerHTML = "<div style='text-align:center; padding:50px;'>المستند غير موجود.</div>";
                 }
             } catch (error) {
-                console.error(error);
-                document.getElementById('printContent').innerHTML = "حدث خطأ أثناء الاتصال بقاعدة البيانات.";
+                console.error("Firebase Error:", error);
+                document.getElementById('printContent').innerHTML = "خطأ في الاتصال بقاعدة البيانات.";
             }
         }
 
-        // --- 5. وظيفة التصدير لـ PDF ---
+        // --- 5. تصدير PDF ---
         async function exportToPDF() {
             const element = document.querySelector(".page");
             const canvas = await html2canvas(element, { scale: 2 });
