@@ -1,185 +1,159 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html dir="rtl" lang="ar">
 <head>
-<meta charset="UTF-8">
-<title>طباعة الفاتورة</title>
-
-<!-- حل favicon -->
-<link rel="icon" href="data:,">
-
-<style>
-body{font-family:tahoma;background:#f5f7fa;margin:0}
-.page{
-  width:210mm;min-height:297mm;margin:auto;
-  background:#fff;padding:15mm;box-sizing:border-box;
-}
-.header{display:flex;justify-content:space-between;border-bottom:2px solid #eee}
-.info{margin-top:10px}
-table{width:100%;border-collapse:collapse;margin-top:20px}
-th{background:#2c3e50;color:#fff;padding:10px}
-td{padding:8px;border-bottom:1px solid #eee;text-align:center}
-.totals{margin-top:20px}
-#qr{margin-top:20px}
-.actions{text-align:center;margin:10px}
-@media print {.actions{display:none}}
-</style>
-
+    <meta charset="UTF-8">
+    <title>الفاتورة الإلكترونية - في خدمتك</title>
+    <link rel="icon" href="/fi-khidmatik/images/logo.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    
+    <style>
+        /* التنسيقات العامة كما هي في الكود الأصلي */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #e9ecef; padding: 20px; font-family: 'Tajawal', sans-serif; font-size: 14px; }
+        .page { width: 210mm; min-height: 297mm; margin: 0 auto 20px; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; padding: 15mm; }
+        
+        /* تنسيقات الجدول والباركود */
+        .products-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        .products-table th, .products-table td { border: 1px solid #dee2e6; padding: 8px; text-align: center; }
+        .products-table th { background: #1e3a5f; color: white; }
+        .barcodes { display: flex; justify-content: space-around; padding: 20px 0; }
+        .qr-code img { margin: 0 auto; }
+        
+        .preview-buttons { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; background: rgba(255,255,255,0.9); padding: 10px 20px; border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .preview-buttons button { padding: 10px 20px; margin: 0 5px; border: none; border-radius: 5px; cursor: pointer; font-family: 'Tajawal'; }
+        .btn-print { background: #1e3a5f; color: white; }
+        
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; padding: 0; }
+            .page { box-shadow: none; margin: 0; width: 100%; }
+        }
+    </style>
 </head>
 <body>
 
-<div class="actions">
-  <button onclick="window.print()">🖨️ طباعة</button>
-</div>
+    <div id="printContent">
+        </div>
 
-<div class="page">
+    <div class="preview-buttons no-print">
+        <button class="btn-print" onclick="window.print()">🖨️ طباعة</button>
+        <button class="btn-pdf" style="background:#dc2626; color:white" onclick="exportToPDF()">📄 PDF</button>
+        <button class="btn-close" style="background:#6c757d; color:white" onclick="window.close()">✖️ إغلاق</button>
+    </div>
 
-<div class="header">
-  <div>
-    <h2>فاتورة إلكترونية</h2>
-    رقم: <span id="invoiceNumber"></span><br>
-    التاريخ: <span id="date"></span><br>
-    الحالة: <span id="status"></span>
-  </div>
+    <script>
+        // بيانات تجريبية (يجب ربطها ببياناتك الفعلية من Firebase أو السلة)
+        const orderData = {
+            orderNumber: "INV-2026-001",
+            orderDate: new Date().toISOString(),
+            orderTime: "10:30",
+            status: "مكتمل",
+            customerName: "عميل تجريبي",
+            customerPhone: "0500000000",
+            customerEmail: "customer@example.com",
+            paymentMethod: "mada",
+            shippingMethod: "noship",
+            subtotal: 1000,
+            discount: 50,
+            tax: 142.5,
+            total: 1092.5,
+            items: [
+                { name: "خدمة تصميم متجر", description: "تصميم احترافي", quantity: 1, price: 1000, image: "" }
+            ]
+        };
 
-  <div>
-    منصة في خدمتك<br>
-    الرقم الضريبي: 312495447600003
-  </div>
-</div>
+        const sellerData = {
+            name: "في خدمتك",
+            licenseNumber: "FL-765735204",
+            taxNumber: "312495447600003",
+            address: "حائل - حي النقرة",
+            phone: "+966 534051317",
+            website: "https://fi-khidmatik.com.sa"
+        };
 
-<div class="info">
-  العميل: <span id="clientName"></span><br>
-  الجوال: <span id="phone"></span>
-</div>
+        // دالة بناء الصفحة
+        function renderInvoice() {
+            const container = document.getElementById('printContent');
+            
+            // صفحة الفاتورة
+            let html = `
+                <div class="page">
+                    <h2 style="color:#1e3a5f; border-bottom:2px solid #1e3a5f; padding-bottom:10px">فاتورة ضريبية مبسطة</h2>
+                    <div style="display:flex; justify-content:space-between; margin-top:20px">
+                        <div>
+                            <p><strong>البائع:</strong> ${sellerData.name}</p>
+                            <p><strong>الرقم الضريبي:</strong> ${sellerData.taxNumber}</p>
+                        </div>
+                        <div style="text-align:left">
+                            <p><strong>رقم الفاتورة:</strong> ${orderData.orderNumber}</p>
+                            <p><strong>التاريخ:</strong> ${new Date(orderData.orderDate).toLocaleDateString('ar-SA')}</p>
+                        </div>
+                    </div>
+                    
+                    <table class="products-table">
+                        <thead>
+                            <tr>
+                                <th>المنتج</th>
+                                <th>الكمية</th>
+                                <th>السعر</th>
+                                <th>الإجمالي</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${orderData.items.map(item => `
+                                <tr>
+                                    <td>${item.name}</td>
+                                    <td>${item.quantity}</td>
+                                    <td>${item.price} ريال</td>
+                                    <td>${item.price * item.quantity} ريال</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
 
-<table>
-<thead>
-<tr>
-<th>#</th>
-<th>المنتج</th>
-<th>الكمية</th>
-<th>السعر</th>
-</tr>
-</thead>
-<tbody id="items"></tbody>
-</table>
+                    <div style="margin-right:auto; width:200px; text-align:left">
+                        <p>المجموع: ${orderData.subtotal} ريال</p>
+                        <p>الضريبة (15%): ${orderData.tax} ريال</p>
+                        <h3 style="color:#1e3a5f">الإجمالي: ${orderData.total} ريال</h3>
+                    </div>
 
-<div class="totals">
-  <div>المجموع: <span id="subtotal"></span></div>
-  <div>الضريبة: <span id="tax"></span></div>
-  <div><strong>الإجمالي: <span id="total"></span></strong></div>
-</div>
+                    <div class="barcodes">
+                        <div id="zatcaQR" class="qr-code"></div>
+                    </div>
+                    
+                    <div style="margin-top:auto; font-size:12px; text-align:center; color:#666; border-top:1px solid #eee; padding-top:10px">
+                        هذه فاتورة إلكترونية معتمدة من منصة "في خدمتك"
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
 
-<div id="qr"></div>
+            // توليد الـ QR بعد حقن الـ HTML
+            new QRCode(document.getElementById("zatcaQR"), {
+                text: `Seller:${sellerData.name}|VAT:${sellerData.taxNumber}|Total:${orderData.total}`,
+                width: 128,
+                height: 128
+            });
+        }
 
-</div>
+        async function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const element = document.querySelector(".page");
+            const canvas = await html2canvas(element, { scale: 2 });
+            const imgData = canvas.toDataURL("image/png");
+            const pdf = new jsPDF("p", "mm", "a4");
+            const imgProps = pdf.getImageProperties(imgData);
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+            pdf.save("invoice.pdf");
+        }
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
-<!-- QR -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-
-<script>
-// ================= Firebase =================
-const firebaseConfig = {
-  apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
-  authDomain: "msjt301-974bb.firebaseapp.com",
-  projectId: "msjt301-974bb"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-// ================= ID =================
-const id = new URLSearchParams(window.location.search).get("id");
-
-// ================= تشغيل =================
-window.onload = loadData;
-
-// ================= تحميل =================
-async function loadData(){
-
-if(!id){
-  return error("لا يوجد رقم");
-}
-
-// نحاول أولاً orders (نظامك)
-let snap = await db.collection("orders").doc(id).get();
-
-let data = null;
-let isOrder = false;
-
-if(snap.exists){
-  data = snap.data();
-  isOrder = true;
-}else{
-  snap = await db.collection("invoices").doc(id).get();
-  if(snap.exists){
-    data = snap.data();
-  }else{
-    return error("غير موجود");
-  }
-}
-
-// ================= تعبئة =================
-set("invoiceNumber", data.orderNumber || data.invoiceNumber);
-set("date", data.createdAt || data.date);
-set("status", data.status || "-");
-
-// العميل
-if(isOrder){
-  set("clientName", data.customerName || "عميل");
-  set("phone", data.customerPhone || "-");
-}else{
-  set("clientName", data.clientName);
-  set("phone", data.phone || "-");
-}
-
-// ================= المنتجات =================
-let subtotal = 0;
-document.getElementById("items").innerHTML = "";
-
-(data.items || []).forEach((item,i)=>{
-
-  const price = item.price || 0;
-  const qty = item.quantity || item.qty || 1;
-
-  const total = price * qty;
-  subtotal += total;
-
-  document.getElementById("items").innerHTML += `
-  <tr>
-    <td>${i+1}</td>
-    <td>${item.productName || item.name}</td>
-    <td>${qty}</td>
-    <td>${total.toFixed(2)} ريال</td>
-  </tr>`;
-});
-
-// ================= الحساب =================
-const tax = subtotal * 0.15;
-const total = subtotal + tax;
-
-set("subtotal", subtotal.toFixed(2)+" ريال");
-set("tax", tax.toFixed(2)+" ريال");
-set("total", total.toFixed(2)+" ريال");
-
-// ================= QR =================
-QRCode.toCanvas(document.getElementById("qr"),
-`Total:${total} Tax:${tax} Date:${data.createdAt || data.date}`);
-}
-
-// ================= أدوات =================
-function set(id,val){
-document.getElementById(id).innerText = val || "-";
-}
-
-function error(msg){
-document.body.innerHTML = `<h2 style="text-align:center">${msg}</h2>`;
-}
-</script>
-
+        window.onload = renderInvoice;
+    </script>
 </body>
 </html>
