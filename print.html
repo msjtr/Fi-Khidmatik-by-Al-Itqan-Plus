@@ -2,95 +2,86 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>فاتورة إلكترونية</title>
-<link rel="stylesheet" href="css/invoice.css">
-</head>
+<title>فاتورة</title>
 
+<style>
+body{font-family:tahoma;background:#f5f7fa;margin:0}
+.page{
+  width:210mm;min-height:297mm;margin:auto;
+  background:#fff;padding:15mm;box-sizing:border-box;
+}
+.header{display:flex;justify-content:space-between;border-bottom:2px solid #eee}
+.info{margin-top:10px}
+table{width:100%;border-collapse:collapse;margin-top:20px}
+th{background:#2c3e50;color:#fff;padding:10px}
+td{padding:8px;border-bottom:1px solid #eee;text-align:center}
+.totals{margin-top:20px}
+#qr{margin-top:20px}
+.terms{margin-top:30px}
+.actions{text-align:center;margin:10px}
+@media print {.actions{display:none}}
+</style>
+
+</head>
 <body>
+
+<div class="actions">
+  <button onclick="window.print()">🖨️ طباعة</button>
+</div>
 
 <div class="page">
 
-<!-- 🔷 الهيدر -->
 <div class="header">
-  <div class="logo">
-    <img src="images/logo.svg" height="60">
+  <div>
+    <h2>فاتورة إلكترونية</h2>
+    رقم الفاتورة: <span id="invoiceNumber"></span><br>
+    التاريخ: <span id="date"></span><br>
+    الوقت: <span id="time"></span><br>
+    الحالة: <span id="status"></span>
   </div>
 
-  <div class="title">
-    <h2>فاتورة إلكترونية</h2>
-    رقم شهادة العمل الحر: FL-765735204<br>
+  <div>
+    منصة في خدمتك<br>
     الرقم الضريبي: 312495447600003
   </div>
 </div>
 
-<!-- 🔷 بيانات الفاتورة -->
-<div class="invoice-meta">
-  رقم الفاتورة: <span id="invoiceNumber"></span><br>
-  التاريخ: <span id="date"></span> |
-  الوقت: <span id="time"></span><br>
-  حالة الطلب: <span id="status"></span>
-</div>
-
-<!-- 🔷 صادر / وارد -->
-<div class="two-cols">
-
-<div class="box">
-  <strong>مصدرة من</strong><br>
-  منصة في خدمتك<br>
-  المملكة العربية السعودية<br>
-  حائل - حي النقرة - شارع سعد المشاط<br>
-  رقم المبنى: 3085<br>
-  الرمز البريدي: 55431
-</div>
-
-<div class="box">
-  <strong>مصدرة إلى</strong><br>
+<div class="info">
   الاسم: <span id="clientName"></span><br>
   المدينة: <span id="city"></span><br>
   الجوال: <span id="phone"></span><br>
   البريد: <span id="email"></span>
 </div>
 
+<div class="info">
+  الدفع: <span id="paymentMethod"></span><br>
+  الاستلام: <span id="deliveryMethod"></span>
 </div>
 
-<!-- 🔷 الدفع -->
-<div class="payment">
-  طريقة الدفع: <span id="paymentMethod"></span><br>
-  طريقة الاستلام: <span id="deliveryMethod"></span>
-</div>
-
-<!-- 🔷 الجدول -->
 <table>
 <thead>
 <tr>
 <th>#</th>
-<th>الصورة</th>
 <th>المنتج</th>
-<th>الوصف</th>
 <th>الكمية</th>
-<th>سعر الوحدة</th>
+<th>السعر</th>
 </tr>
 </thead>
 <tbody id="items"></tbody>
 </table>
 
-<!-- 🔷 الإجماليات -->
 <div class="totals">
-  <div>المجموع الفرعي: <span id="subtotal"></span></div>
-  <div>إجمالي الخصم: <span id="discount"></span></div>
-  <div>ضريبة القيمة المضافة (15%): <span id="tax"></span></div>
-  <div class="final">الإجمالي النهائي: <span id="total"></span></div>
+  <div>المجموع: <span id="subtotal"></span></div>
+  <div>الخصم: <span id="discount"></span></div>
+  <div>الضريبة: <span id="tax"></span></div>
+  <div><strong>الإجمالي: <span id="total"></span></strong></div>
 </div>
 
-<!-- 🔷 QR -->
 <div id="qr"></div>
 
-<!-- 🔷 التذييل -->
-<div class="footer">
-  تخضع هذه الفاتورة لكامل الشروط والأحكام<br>
-  شكراً لتسوقكم معنا<br>
-  info@fi-khidmatik.com | www.khidmatik.com<br>
-  هذه فاتورة إلكترونية - نسخة معتمدة
+<div class="terms">
+<h3>الشروط والأحكام</h3>
+<div id="termsContent"></div>
 </div>
 
 </div>
@@ -99,10 +90,101 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-<script src="js/firebase.js"></script>
+<!-- QR -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
-<script type="module" src="js/print.js"></script>
+<script>
+// 🔥 Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
+  authDomain: "msjt301-974bb.firebaseapp.com",
+  projectId: "msjt301-974bb"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// 📌 ID
+const id = new URLSearchParams(window.location.search).get("id");
+
+window.onload = loadInvoice;
+
+async function loadInvoice(){
+
+if(!id){
+  return error("لا يوجد رقم فاتورة");
+}
+
+const snap = await db.collection("invoices").doc(id).get();
+
+if(!snap.exists){
+  return error("الفاتورة غير موجودة");
+}
+
+const d = snap.data();
+
+// بيانات
+set("invoiceNumber", d.invoiceNumber);
+set("date", d.date);
+set("time", d.time || "-");
+set("status", d.status || "-");
+
+set("clientName", d.clientName);
+set("city", d.city);
+set("phone", d.phone || "-");
+set("email", d.email || "-");
+
+set("paymentMethod", d.paymentMethod || "-");
+set("deliveryMethod", d.deliveryMethod || "-");
+
+// منتجات
+let subtotal = 0;
+document.getElementById("items").innerHTML = "";
+
+(d.items||[]).forEach((item,i)=>{
+  const total = item.qty * item.price;
+  subtotal += total;
+
+  document.getElementById("items").innerHTML += `
+  <tr>
+    <td>${i+1}</td>
+    <td>${item.name}</td>
+    <td>${item.qty}</td>
+    <td>${total} ريال</td>
+  </tr>`;
+});
+
+// حساب
+const discount = d.discount || 0;
+const after = subtotal - discount;
+const tax = after * 0.15;
+const total = after + tax;
+
+set("subtotal", subtotal + " ريال");
+set("discount", discount + " ريال");
+set("tax", tax.toFixed(2) + " ريال");
+set("total", total.toFixed(2) + " ريال");
+
+// QR
+QRCode.toCanvas(document.getElementById("qr"),
+`Total:${total} Tax:${tax} Date:${d.date}`);
+
+// شروط
+document.getElementById("termsContent").innerHTML = `
+يتحمل العميل مسؤولية البيانات.<br>
+لا يوجد استرجاع بعد التنفيذ.<br>
+تطبق ضريبة القيمة المضافة.
+`;
+}
+
+function set(id,val){
+document.getElementById(id).innerText = val || "-";
+}
+
+function error(msg){
+document.body.innerHTML = `<h2 style="text-align:center">${msg}</h2>`;
+}
+</script>
 
 </body>
 </html>
