@@ -1,5 +1,5 @@
 // ========================================
-// print.js - دوال الطباعة المتقدمة (نهائي - مع معالجة CORS)
+// print.js - دوال الطباعة المتقدمة (مع معالجة CORS وانتظار الصور)
 // ========================================
 
 let printCurrentOrder = null;
@@ -117,7 +117,20 @@ function printInvoice() {
     }
 }
 
-// معاينة الطباعة
+// ========== دالة انتظار تحميل الصور ==========
+async function waitForImages(element) {
+    const imgs = Array.from(element.querySelectorAll('img'));
+    const promises = imgs.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise((resolve) => {
+            img.onload = resolve;
+            img.onerror = () => resolve(); // تجاهل الخطأ ومتابعة
+        });
+    });
+    await Promise.all(promises);
+}
+
+// ========== معاينة الطباعة (مع تحويل المسارات النسبية) ==========
 function previewPrint() {
     try {
         let pages = document.querySelectorAll('.page');
@@ -125,13 +138,31 @@ function previewPrint() {
             printShowToast('لا توجد صفحات للطباعة!', true);
             return;
         }
+        
+        // تحويل جميع روابط الصور إلى مسار مطلق قبل النسخ
+        pages.forEach(page => {
+            let imgs = page.querySelectorAll('img');
+            imgs.forEach(img => {
+                let src = img.getAttribute('src');
+                if (src && !src.startsWith('http') && !src.startsWith('data:')) {
+                    if (src.startsWith('/')) {
+                        img.src = window.location.origin + src;
+                    } else {
+                        img.src = window.location.origin + '/fi-khidmatik/' + src;
+                    }
+                }
+            });
+        });
+        
         let printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,toolbar=yes');
         if (!printWindow) {
             printShowToast('الرجاء السماح بالنوافذ المنبثقة', true);
             return;
         }
+        
         let pagesContent = '';
         pages.forEach(page => { pagesContent += page.outerHTML; });
+        
         let printContent = `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>معاينة الفاتورة</title>
             <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -158,6 +189,7 @@ function previewPrint() {
             <button class="btn-png" onclick="window.exportToPNG()">🖼️ PNG</button>
             <button class="btn-close" onclick="window.close()">✖️ إغلاق</button>
         </div></body></html>`;
+        
         printWindow.document.write(printContent);
         printWindow.document.close();
         printShowToast('تم فتح معاينة الطباعة', false);
@@ -167,7 +199,7 @@ function previewPrint() {
     }
 }
 
-// تصدير PDF (مع معالجة أخطاء CORS)
+// ========== تصدير PDF ==========
 async function exportToPDF() {
     let pages = document.querySelectorAll('.page');
     if (!pages.length) {
@@ -183,7 +215,6 @@ async function exportToPDF() {
     let buttons = document.querySelector('.action-buttons');
     if (buttons) buttons.style.display = 'none';
     
-    // تخزين الأخطاء
     let corsErrors = false;
     
     try {
@@ -192,10 +223,10 @@ async function exportToPDF() {
         
         for (let i = 0; i < pages.length; i++) {
             try {
-                // محاولة الرسم مع تجاهل الأخطاء
+                await waitForImages(pages[i]);
                 let canvas = await html2canvas(pages[i], { 
-                    scale: 3,          // دقة عالية ولكن أقل من 4 لتجنب مشاكل الذاكرة
-                    useCORS: true,     // محاولة تحميل الصور عبر CORS
+                    scale: 3,
+                    useCORS: true,
                     backgroundColor: '#ffffff', 
                     logging: false,
                     allowTaint: false
@@ -208,7 +239,6 @@ async function exportToPDF() {
             } catch(pageError) {
                 console.warn('خطأ في معالجة الصفحة:', pageError);
                 corsErrors = true;
-                // إذا فشلت صفحة، نضيف صفحة فارغة
                 if (i !== 0) pdf.addPage();
             }
         }
@@ -249,7 +279,7 @@ async function exportToPDF() {
     }
 }
 
-// تصدير PNG (مع معالجة CORS)
+// ========== تصدير PNG ==========
 async function exportToPNG() {
     let pages = document.querySelectorAll('.page');
     if (!pages.length) {
@@ -265,6 +295,7 @@ async function exportToPNG() {
     try {
         for (let i = 0; i < pages.length; i++) {
             try {
+                await waitForImages(pages[i]);
                 let canvas = await html2canvas(pages[i], { 
                     scale: 3, 
                     useCORS: true, 
