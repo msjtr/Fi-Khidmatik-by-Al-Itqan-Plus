@@ -10,11 +10,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <!-- Firebase (global) -->
-    <script src="https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js"></script>
+    <!-- استخدام Firebase v8 (النسخة المتوافقة مع global variable) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
-        /* نفس الأنماط السابقة */
         body { background: #e9ecef; padding: 20px; margin: 0; font-family: 'Tajawal', sans-serif; }
         .page { margin: 0 auto 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); background: white; }
         @media print { body { background: white; padding: 0; } .page { margin: 0; box-shadow: none; } }
@@ -53,7 +52,7 @@
             website: "https://fi-khidmatik.com.sa"
         };
         
-        // صورة افتراضية
+        // صورة افتراضية (SVG)
         const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='45' height='45' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='2' width='20' height='20' rx='2.18' ry='2.18'%3E%3C/rect%3E%3Cpath d='M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5'%3E%3C/path%3E%3C/svg%3E";
         
         // تحويل المسار النسبي إلى مطلق
@@ -225,12 +224,12 @@
             }
         };
         
-        // دوال الشروط المبسطة (صفحات فارغة لتجنب الأخطاء)
+        // دوال الشروط المبسطة
         window.buildTermsPage1 = function(p,t) { return `<div class="page">${buildInvoiceHeader('الشروط والأحكام')}<p style="padding:20px">شروط وأحكام الخدمة متاحة على الموقع.</p>${buildInvoiceFooter(p,t)}</div>`; };
         window.buildTermsPage2 = function(p,t) { return `<div class="page">${buildInvoiceHeader('الشروط والأحكام (تابع)')}<p style="padding:20px">البنود المالية والقانونية.</p>${buildInvoiceFooter(p,t)}</div>`; };
         window.buildTermsPage3 = function(order,p,t) { return `<div class="page">${buildInvoiceHeader('الإقرار والتوقيع')}<p style="padding:20px">أقر أنا العميل بصحة البيانات.</p>${buildInvoiceFooter(p,t)}</div>`; };
         
-        // ========== تحميل البيانات من Firebase ==========
+        // ========== تهيئة Firebase v8 ==========
         const firebaseConfig = {
             apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
             authDomain: "msjt301-974bb.firebaseapp.com",
@@ -240,9 +239,13 @@
             appId: "1:186209858482:web:186ca610780799ef562aab"
         };
         
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        // تأكد من تحميل Firebase v8 بشكل صحيح
+        if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const db = firebase.firestore();
         
+        // ========== تحميل البيانات ==========
         (async function() {
             const params = new URLSearchParams(location.search);
             const orderId = params.get('id');
@@ -255,7 +258,7 @@
             try {
                 const docSnap = await db.collection('orders').doc(orderId).get();
                 if (docSnap.exists) order = { id: docSnap.id, ...docSnap.data() };
-            } catch(e) { console.error(e); }
+            } catch(e) { console.error("خطأ في جلب الطلب:", e); }
             
             if (!order) {
                 document.getElementById('printContent').innerHTML = '<div class="error-message">⚠️ الطلب غير موجود</div>';
@@ -266,7 +269,7 @@
                 try {
                     const custSnap = await db.collection('customers').doc(order.customerId).get();
                     if (custSnap.exists) customer = custSnap.data();
-                } catch(e) { console.error(e); }
+                } catch(e) { console.error("خطأ في جلب العميل:", e); }
             }
             
             const orderData = {
