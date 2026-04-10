@@ -10,7 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <!-- استخدام Firebase v8 (النسخة المتوافقة مع global variable) -->
+    <!-- Firebase v8 (متوافق مع الاستخدام العادي) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
@@ -25,7 +25,7 @@
         .btn-close { background: #6c757d; color: white; }
         .loading-spinner { border: 4px solid #f3f3f3; border-top: 4px solid #1e3a5f; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 50px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .error-message { text-align: center; color: red; margin-top: 50px; font-size: 18px; }
+        .error-message { text-align: center; color: red; margin-top: 50px; font-size: 18px; background: white; padding: 20px; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -38,7 +38,30 @@
     </div>
 
     <script>
-        // ========== دوال مساعدة (لتحل محل print.js و invoice.js و terms.js) ==========
+        // ========== دوال مساعدة أساسية ==========
+        window.formatDate = function(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+        };
+        window.formatTime = function(time24) {
+            if (!time24) return '';
+            let [h, m] = time24.split(':');
+            let hour = parseInt(h);
+            let ampm = hour >= 12 ? 'مساءً' : 'صباحاً';
+            hour = hour % 12 || 12;
+            return `${hour.toString().padStart(2, '0')}:${m} ${ampm}`;
+        };
+        window.escapeHtml = function(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        };
         
         // بيانات البائع
         const sellerData = {
@@ -123,9 +146,9 @@
         }
         
         function buildInvoicePage(order, pageNum, totalPages) {
-            const formatDate = window.formatDate || ((d) => d);
-            const formatTime = window.formatTime || ((t) => t);
-            const escape = window.escapeHtml || ((s) => s);
+            const formatDate = window.formatDate;
+            const formatTime = window.formatTime;
+            const escape = window.escapeHtml;
             
             const items = order.items || [];
             const subtotal = order.subtotal || items.reduce((s, i) => s + (i.price||0)*(i.quantity||1), 0);
@@ -175,7 +198,7 @@
                         <div class="payment-card"><i class="fas fa-check-circle"></i> <strong>رمز الموافقة</strong><br>${order.approvalCode || 'غير مطلوب'}</div>
                         <div class="payment-card"><i class="fas fa-truck"></i> <strong>طريقة الاستلام</strong><br>${getShippingText(order.shippingMethod)}</div>
                     </div>
-                    <table class="products-table"><thead><tr><th>#</th><th>الصورة</th><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${itemsHtml}</tbody></table>
+                    <table class="products-table"><thead><tr><th>#</th><th>الصورة</th><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${itemsHtml}</tbody>能有
                     <div class="totals-box">
                         <div class="totals-row"><span>المجموع الفرعي</span><span>${subtotal.toFixed(2)} ريال</span></div>
                         ${discount>0?`<div class="totals-row"><span>الخصم</span><span>- ${discount.toFixed(2)} ريال</span></div>`:''}
@@ -192,7 +215,7 @@
             `;
         }
         
-        // دوال الطباعة (مبسطة)
+        // دوال الطباعة
         async function waitForImages(element, timeout=5000) {
             const imgs = Array.from(element.querySelectorAll('img'));
             await Promise.all(imgs.map(img => img.complete ? Promise.resolve() : Promise.race([new Promise(r=>{img.onload=r;img.onerror=r}), new Promise(r=>setTimeout(r,timeout))])));
@@ -200,7 +223,7 @@
         
         window.exportToPDF = async function() {
             const pages = document.querySelectorAll('.page');
-            if (!pages.length) return alert("لا توجد صفحات");
+            if (!pages.length) return alert("لا توجد صفحات للتصدير");
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF('p', 'mm', 'a4');
             for (let i=0; i<pages.length; i++) {
@@ -239,18 +262,34 @@
             appId: "1:186209858482:web:186ca610780799ef562aab"
         };
         
-        // تأكد من تحميل Firebase v8 بشكل صحيح
-        if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
+        // انتظر تحميل Firebase
+        function initFirebase() {
+            if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+                return firebase.firestore();
+            } else if (typeof firebase !== 'undefined') {
+                return firebase.firestore();
+            } else {
+                throw new Error("Firebase not loaded");
+            }
         }
-        const db = firebase.firestore();
         
-        // ========== تحميل البيانات ==========
-        (async function() {
+        // تنفيذ الكود الرئيسي بعد تحميل الصفحة
+        window.addEventListener('DOMContentLoaded', async () => {
+            const container = document.getElementById('printContent');
             const params = new URLSearchParams(location.search);
             const orderId = params.get('id');
+            
             if (!orderId) {
-                document.getElementById('printContent').innerHTML = '<div class="error-message">❌ لم يتم تحديد رقم الطلب</div>';
+                container.innerHTML = '<div class="error-message">❌ لم يتم تحديد رقم الطلب</div>';
+                return;
+            }
+            
+            let db;
+            try {
+                db = initFirebase();
+            } catch(e) {
+                container.innerHTML = '<div class="error-message">⚠️ فشل تحميل Firebase. تأكد من اتصال الإنترنت.</div>';
                 return;
             }
             
@@ -258,10 +297,14 @@
             try {
                 const docSnap = await db.collection('orders').doc(orderId).get();
                 if (docSnap.exists) order = { id: docSnap.id, ...docSnap.data() };
-            } catch(e) { console.error("خطأ في جلب الطلب:", e); }
+            } catch(e) {
+                console.error(e);
+                container.innerHTML = '<div class="error-message">⚠️ خطأ في جلب الطلب: ' + e.message + '</div>';
+                return;
+            }
             
             if (!order) {
-                document.getElementById('printContent').innerHTML = '<div class="error-message">⚠️ الطلب غير موجود</div>';
+                container.innerHTML = '<div class="error-message">⚠️ الطلب غير موجود (ID: ' + orderId + ')</div>';
                 return;
             }
             
@@ -269,7 +312,7 @@
                 try {
                     const custSnap = await db.collection('customers').doc(order.customerId).get();
                     if (custSnap.exists) customer = custSnap.data();
-                } catch(e) { console.error("خطأ في جلب العميل:", e); }
+                } catch(e) { console.error(e); }
             }
             
             const orderData = {
@@ -307,8 +350,9 @@
                 html += window.buildTermsPage2(3, 4);
                 if (typeof window.buildTermsPage3 === 'function') html += window.buildTermsPage3(orderData, 4, 4);
             }
-            document.getElementById('printContent').innerHTML = html;
+            container.innerHTML = html;
             
+            // إنشاء QR codes بعد ظهور DOM
             setTimeout(() => {
                 try {
                     const zatcaDiv = document.getElementById('zatcaQR');
@@ -317,11 +361,11 @@
                     if (websiteDiv && typeof QRCode !== 'undefined') new QRCode(websiteDiv, { text: "https://linktr.ee/fikhidmatik", width:90, height:90 });
                     const downloadDiv = document.getElementById('downloadQR');
                     if (downloadDiv && typeof QRCode !== 'undefined') new QRCode(downloadDiv, { text: window.location.href, width:90, height:90 });
-                } catch(e) { console.warn(e); }
+                } catch(e) { console.warn("QR error", e); }
             }, 300);
             
             if (params.get('auto') === 'print') setTimeout(() => window.print(), 800);
-        })();
+        });
     </script>
 </body>
 </html>
