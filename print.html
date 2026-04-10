@@ -262,7 +262,6 @@
             appId: "1:186209858482:web:186ca610780799ef562aab"
         };
         
-        // انتظر تحميل Firebase
         function initFirebase() {
             if (typeof firebase !== 'undefined' && !firebase.apps.length) {
                 firebase.initializeApp(firebaseConfig);
@@ -274,7 +273,6 @@
             }
         }
         
-        // تنفيذ الكود الرئيسي بعد تحميل الصفحة
         window.addEventListener('DOMContentLoaded', async () => {
             const container = document.getElementById('printContent');
             const params = new URLSearchParams(location.search);
@@ -352,7 +350,6 @@
             }
             container.innerHTML = html;
             
-            // إنشاء QR codes بعد ظهور DOM
             setTimeout(() => {
                 try {
                     const zatcaDiv = document.getElementById('zatcaQR');
