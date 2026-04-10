@@ -13,325 +13,59 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            background: #e9ecef;
-            padding: 20px;
-            font-family: 'Tajawal', sans-serif;
-        }
-        .page {
-            width: 210mm;
-            min-height: 297mm;
-            margin: 0 auto 20px;
-            background: white;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            page-break-after: always;
-            position: relative;
-        }
-        /* توحيد الهوامش للمعاينة والطباعة */
-        @media print {
-            body {
-                background: white;
-                padding: 0;
-                margin: 0;
-            }
-            .page {
-                margin: 0;
-                box-shadow: none;
-                page-break-after: always;
-            }
-            .no-print {
-                display: none;
-            }
-            @page {
-                size: A4;
-                margin: 1.5cm;
-            }
-        }
-        /* رأس الصفحة */
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            border-bottom: 2px solid #1e3a5f;
-            background: #f8f9fa;
-            flex-wrap: wrap;
-        }
-        .header-right .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .logo-img {
-            height: 50px;
-            width: auto;
-        }
-        .logo-text .platform-name {
-            font-size: 20px;
-            font-weight: 800;
-            color: #1e3a5f;
-        }
-        .logo-text .platform-slogan {
-            font-size: 11px;
-            color: #6c757d;
-        }
-        .header-center .page-title {
-            font-size: 22px;
-            font-weight: 800;
-            color: #1e3a5f;
-            background: #e9ecef;
-            padding: 6px 18px;
-            border-radius: 40px;
-        }
-        .header-left .legal-numbers div {
-            font-size: 12px;
-            margin-bottom: 4px;
-            direction: ltr;
-        }
-        /* المعلومات الأساسية */
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(3,1fr);
-            gap: 15px;
-            padding: 15px 20px;
-            background: #f1f3f5;
-            margin: 15px 20px;
-            border-radius: 12px;
-        }
-        .info-item {
-            text-align: center;
-        }
-        .info-label {
-            font-size: 13px;
-            color: #6c757d;
-            margin-bottom: 6px;
-        }
-        .info-value {
-            font-size: 16px;
-            font-weight: 700;
-            color: #1e3a5f;
-        }
-        .status-badge {
-            background: #10b981;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            display: inline-block;
-        }
-        /* العناوين */
-        .addresses {
-            display: flex;
-            gap: 25px;
-            padding: 0 20px;
-            margin-bottom: 20px;
-        }
-        .address-card {
-            flex: 1;
-            background: #f8f9fa;
-            padding: 12px;
-            border-radius: 12px;
-            font-size: 13px;
-            line-height: 1.6;
-        }
-        .address-card p {
-            margin: 5px 0;
-        }
-        .address-card i {
-            width: 22px;
-            color: #1e3a5f;
-        }
-        /* طرق الدفع */
-        .payment-grid {
-            display: grid;
-            grid-template-columns: repeat(3,1fr);
-            gap: 15px;
-            padding: 0 20px;
-            margin-bottom: 20px;
-        }
-        .payment-card {
-            background: #e9ecef;
-            padding: 10px;
-            border-radius: 12px;
-            text-align: center;
-            font-size: 13px;
-        }
-        .payment-card i {
-            font-size: 18px;
-            color: #1e3a5f;
-            margin-bottom: 5px;
-            display: inline-block;
-        }
-        /* جدول المنتجات */
-        .products-table {
-            width: calc(100% - 40px);
-            margin: 0 20px 20px;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-        .products-table th, .products-table td {
-            border: 1px solid #dee2e6;
-            padding: 8px 6px;
-            vertical-align: middle;
-        }
-        .products-table th {
-            background: #1e3a5f;
-            color: white;
-            font-weight: 600;
-        }
-        /* الإجماليات */
-        .totals-box {
-            width: 280px;
-            margin: 0 20px 20px auto;
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 12px;
-            border: 1px solid #dee2e6;
-        }
-        .totals-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-            font-size: 13px;
-        }
-        .grand-total {
-            font-weight: 800;
-            font-size: 16px;
-            color: #1e3a5f;
-            border-top: 2px solid #1e3a5f;
-            margin-top: 5px;
-            padding-top: 8px;
-        }
-        /* الباركودات */
-        .barcodes {
-            display: flex;
-            justify-content: center;
-            gap: 25px;
-            margin: 20px 20px;
-            flex-wrap: wrap;
-        }
-        .barcode-item {
-            text-align: center;
-        }
-        .barcode-item .qr-code {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto;
-        }
-        .barcode-item p {
-            font-size: 10px;
-            color: #6c757d;
-            margin-top: 6px;
-        }
-        /* تذييل الصفحة */
-        .page-footer {
-            background: #1e3a5f;
-            color: white;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 11px;
-            flex-wrap: wrap;
-            margin-top: auto;
-        }
-        .contact-info span {
-            margin-left: 12px;
-            display: inline-block;
-        }
-        .contact-info i {
-            margin-left: 4px;
-        }
-        .legal-footer {
-            font-size: 10px;
-            opacity: 0.8;
-        }
-        .page-number {
-            font-size: 10px;
-        }
-        /* محتوى الشروط والأحكام */
-        .terms-content {
-            padding: 20px 25px;
-            line-height: 1.7;
-            font-size: 14px;
-            text-align: justify;
-            flex: 1;
-        }
-        .terms-content h3 {
-            color: #1e3a5f;
-            margin: 15px 0 8px;
-            font-size: 18px;
-        }
-        .terms-content p {
-            margin: 6px 0;
-        }
-        .terms-content .clause {
-            margin-right: 20px;
-            margin-bottom: 8px;
-        }
-        .signature-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        .signature-table td, .signature-table th {
-            border: 1px solid #dee2e6;
-            padding: 8px;
-            text-align: center;
-        }
-        /* أزرار الطباعة */
-        .preview-buttons {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            text-align: center;
-            padding: 12px;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            z-index: 1000;
-        }
-        .preview-buttons button {
-            padding: 8px 16px;
-            margin: 0 5px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #e9ecef; padding: 20px; font-family: 'Tajawal', sans-serif; }
+        .page { width: 210mm; min-height: 297mm; margin: 0 auto 20px; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: space-between; page-break-after: always; position: relative; }
+        @media print { body { background: white; padding: 0; margin: 0; } .page { margin: 0; box-shadow: none; page-break-after: always; } .no-print { display: none; } @page { size: A4; margin: 1.5cm; } }
+        .page-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 2px solid #1e3a5f; background: #f8f9fa; flex-wrap: wrap; }
+        .header-right .logo-area { display: flex; align-items: center; gap: 12px; }
+        .logo-img { height: 50px; width: auto; }
+        .logo-text .platform-name { font-size: 20px; font-weight: 800; color: #1e3a5f; }
+        .logo-text .platform-slogan { font-size: 11px; color: #6c757d; }
+        .header-center .page-title { font-size: 22px; font-weight: 800; color: #1e3a5f; background: #e9ecef; padding: 6px 18px; border-radius: 40px; }
+        .header-left .legal-numbers div { font-size: 12px; margin-bottom: 4px; direction: ltr; }
+        .info-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 15px; padding: 15px 20px; background: #f1f3f5; margin: 15px 20px; border-radius: 12px; }
+        .info-item { text-align: center; }
+        .info-label { font-size: 13px; color: #6c757d; margin-bottom: 6px; }
+        .info-value { font-size: 16px; font-weight: 700; color: #1e3a5f; }
+        .status-badge { background: #10b981; color: white; padding: 4px 12px; border-radius: 20px; font-size: 14px; display: inline-block; }
+        .addresses { display: flex; gap: 25px; padding: 0 20px; margin-bottom: 20px; }
+        .address-card { flex: 1; background: #f8f9fa; padding: 12px; border-radius: 12px; font-size: 13px; line-height: 1.6; }
+        .address-card p { margin: 5px 0; }
+        .address-card i { width: 22px; color: #1e3a5f; }
+        .payment-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 15px; padding: 0 20px; margin-bottom: 20px; }
+        .payment-card { background: #e9ecef; padding: 10px; border-radius: 12px; text-align: center; font-size: 13px; }
+        .payment-card i { font-size: 18px; color: #1e3a5f; margin-bottom: 5px; display: inline-block; }
+        .products-table { width: calc(100% - 40px); margin: 0 20px 20px; border-collapse: collapse; font-size: 13px; }
+        .products-table th, .products-table td { border: 1px solid #dee2e6; padding: 8px 6px; vertical-align: middle; }
+        .products-table th { background: #1e3a5f; color: white; font-weight: 600; }
+        .totals-box { width: 280px; margin: 0 20px 20px auto; background: #f8f9fa; border-radius: 12px; padding: 12px; border: 1px solid #dee2e6; }
+        .totals-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; }
+        .grand-total { font-weight: 800; font-size: 16px; color: #1e3a5f; border-top: 2px solid #1e3a5f; margin-top: 5px; padding-top: 8px; }
+        .barcodes { display: flex; justify-content: center; gap: 25px; margin: 20px 20px; flex-wrap: wrap; }
+        .barcode-item { text-align: center; }
+        .barcode-item .qr-code { width: 80px; height: 80px; margin: 0 auto; }
+        .barcode-item p { font-size: 10px; color: #6c757d; margin-top: 6px; }
+        .page-footer { background: #1e3a5f; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; flex-wrap: wrap; margin-top: auto; }
+        .contact-info span { margin-left: 12px; display: inline-block; }
+        .contact-info i { margin-left: 4px; }
+        .legal-footer { font-size: 10px; opacity: 0.8; }
+        .page-number { font-size: 10px; }
+        .terms-content { padding: 20px 25px; line-height: 1.7; font-size: 14px; text-align: justify; flex: 1; }
+        .terms-content h3 { color: #1e3a5f; margin: 15px 0 8px; font-size: 18px; }
+        .terms-content p { margin: 6px 0; }
+        .terms-content .clause { margin-right: 20px; margin-bottom: 8px; }
+        .signature-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .signature-table td, .signature-table th { border: 1px solid #dee2e6; padding: 8px; text-align: center; }
+        .preview-buttons { position: fixed; bottom: 0; left: 0; right: 0; background: white; text-align: center; padding: 12px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 1000; }
+        .preview-buttons button { padding: 8px 16px; margin: 0 5px; border: none; border-radius: 6px; cursor: pointer; }
         .btn-print { background: #1e3a5f; color: white; }
         .btn-pdf { background: #dc2626; color: white; }
         .btn-png { background: #16a34a; color: white; }
         .btn-close { background: #6c757d; color: white; }
-        .loading-spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #1e3a5f;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 50px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .error-message {
-            text-align: center;
-            color: red;
-            margin-top: 50px;
-            font-size: 18px;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-        }
+        .loading-spinner { border: 4px solid #f3f3f3; border-top: 4px solid #1e3a5f; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 50px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .error-message { text-align: center; color: red; margin-top: 50px; font-size: 18px; background: white; padding: 20px; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -384,7 +118,6 @@
             });
         };
         
-        // تنظيف النص (للمنتجات)
         function cleanText(text) {
             if (!text) return '';
             return String(text).replace(/[^\u0600-\u06FF\s0-9a-zA-Z\.\-\_\,]/g, ' ').trim();
@@ -394,7 +127,6 @@
             return String(text).replace(/[^\u0600-\u06FF\u0660-\u0669\s]/g, ' ').replace(/\s+/g, ' ').trim();
         }
         
-        // بيانات البائع (النص أولاً ثم الرقم)
         const sellerData = {
             name: "في خدمتك",
             licenseNumberText: "شهادة العمل الحر:",
@@ -407,7 +139,6 @@
             email: "info@fi-khidmatik.com",
             website: "https://fi-khidmatik.com.sa"
         };
-        
         const PLACEHOLDER_RAW = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='45' height='45' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='2' width='20' height='20' rx='2.18' ry='2.18'%3E%3C/rect%3E%3Cpath d='M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5'%3E%3C/path%3E%3C/svg%3E";
         
         function getStatusText(status) {
@@ -542,7 +273,6 @@
             `;
         }
         
-        // ========== صفحات الشروط والأحكام الكاملة (من المستند) ==========
         function buildTermsPage(pageNum, totalPages, title, contentHtml) {
             return `
                 <div class="page">
@@ -555,15 +285,9 @@
             `;
         }
         
-        // إقرار مسؤولية البيانات
-        const disclaimerHtml = `
-            <p style="font-weight:bold; margin-bottom:10px;">إقرار مسؤولية البيانات والمعلومات:</p>
-            <p>يقر العميل ويوافق على أن جميع المعلومات والبيانات والمستندات التي قام بتزويد مقدم الخدمة بها أو تم إدراجها في هذا المستند صحيحة ودقيقة ومكتملة، ويتحمل وحده كامل المسؤولية عنها، كما يتحمل كافة الآثار القانونية والمالية والفنية المترتبة على أي خطأ أو نقص أو عدم دقة فيها، ويلتزم بتعويض مقدم الخدمة تعويضًا كاملاً عن أي أضرار أو خسائر أو مطالبات تنشأ نتيجة لذلك، دون أدنى مسؤولية على مقدم الخدمة.</p>
-            <p>يُعد هذا المستند (عرض سعر / فاتورة) اتفاقًا ملزمًا قانونيًا بين الطرفين، ويُعتبر اعتماد العميل أو سداد أي دفعة أو بدء التنفيذ إقرارًا صريحًا ونهائيًا بالموافقة على جميع ما ورد فيه من شروط وأحكام دون أي تحفظ، كما يتحمل العميل مسؤولية عدم الاطلاع أو عدم الفهم لأي من البنود.</p>
-            <hr/>
-        `;
+        // محتوى الشروط (كما هو مفصل من المستند)
+        const disclaimerHtml = `<p style="font-weight:bold; margin-bottom:10px;">إقرار مسؤولية البيانات والمعلومات:</p><p>يقر العميل ويوافق على أن جميع المعلومات والبيانات والمستندات التي قام بتزويد مقدم الخدمة بها أو تم إدراجها في هذا المستند صحيحة ودقيقة ومكتملة، ويتحمل وحده كامل المسؤولية عنها، كما يتحمل كافة الآثار القانونية والمالية والفنية المترتبة على أي خطأ أو نقص أو عدم دقة فيها، ويلتزم بتعويض مقدم الخدمة تعويضًا كاملاً عن أي أضرار أو خسائر أو مطالبات تنشأ نتيجة لذلك، دون أدنى مسؤولية على مقدم الخدمة.</p><p>يُعد هذا المستند (عرض سعر / فاتورة) اتفاقًا ملزمًا قانونيًا بين الطرفين، ويُعتبر اعتماد العميل أو سداد أي دفعة أو بدء التنفيذ إقرارًا صريحًا ونهائيًا بالموافقة على جميع ما ورد فيه من شروط وأحكام دون أي تحفظ، كما يتحمل العميل مسؤولية عدم الاطلاع أو عدم الفهم لأي من البنود.</p><hr/>`;
         
-        // الشروط من 1 إلى 57
         const termsHtml = `
             <h3>أولاً: صلاحية العرض والتنفيذ</h3>
             <div class="clause"><strong>1. مدة صلاحية العرض:</strong> يكون هذا عرض السعر / الفاتورة صالحًا لمدة ثلاثة (3) أيام عمل فقط من تاريخ إصداره، ويُعد لاغيًا تلقائيًا بعد انتهاء هذه المدة دون الحاجة إلى إشعار مسبق، ولا يترتب على مقدم الخدمة أي التزام بعد ذلك.</div>
@@ -571,14 +295,12 @@
             <div class="clause"><strong>3. مدة التنفيذ:</strong> تُحتسب مدة التنفيذ من تاريخ اكتمال استلام جميع المتطلبات، ولا يُعتد بأي مدة يترتب عليها تأخير بسبب العميل أو أي طرف خارجي.</div>
             <div class="clause"><strong>4. التأخير:</strong> لا يتحمل مقدم الخدمة أي مسؤولية عن أي تأخير ناتج عن ظروف خارجة عن إرادته، أو عن أطراف ثالثة، أو عن تأخر العميل في تزويد المتطلبات.</div>
             <div class="clause"><strong>5. الموافقات الخارجية:</strong> تخضع جميع الموافقات أو التراخيص الصادرة من الجهات الحكومية أو الجهات الخارجية لسياسات تلك الجهات، ولا يضمن مقدم الخدمة الحصول عليها بأي حال من الأحوال.</div>
-            
             <h3>ثانياً: التكاليف والمسؤوليات المالية</h3>
             <div class="clause"><strong>6. الرسوم الخارجية:</strong> لا تشمل قيمة هذا عرض السعر / الفاتورة أي رسوم أو تكاليف خاصة بالجهات الخارجية مثل السيرفرات أو النطاقات أو التراخيص أو الرسوم الحكومية أو بوابات الدفع أو أي مزود خدمة طرف ثالث، ما لم يتم النص على خلاف ذلك بشكل صريح.</div>
             <div class="clause"><strong>7. خدمات الطرف الثالث:</strong> أي خدمات يتم تقديمها من خلال أطراف ثالثة تخضع لسياسات تلك الجهات، ولا يتحمل مقدم الخدمة أي مسؤولية عن أدائها أو جودتها أو توقفها أو تعديل سياساتها.</div>
             <div class="clause"><strong>8. المدفوعات الخارجية:</strong> جميع المبالغ التي يتم دفعها إلى جهات خارجية سواء بشكل مباشر من قبل العميل أو من خلال مقدم الخدمة لا يمكن استرجاعها تحت أي ظرف.</div>
             <div class="clause"><strong>9. الدفع نيابة عن العميل:</strong> في حال قيام مقدم الخدمة بسداد أي مبالغ نيابة عن العميل فإن تلك المبالغ تُعد دينًا مستحقًا على العميل ويلتزم بسدادها عند الطلب ولا تدخل ضمن أي تسوية أو استرجاع.</div>
             <div class="clause"><strong>10. الضريبة:</strong> جميع الأسعار المذكورة لا تشمل ضريبة القيمة المضافة ويتم إضافتها وفق الأنظمة المعمول بها.</div>
-            
             <h3>ثالثاً: التسليم والملكية</h3>
             <div class="clause"><strong>11. نطاق التسليم:</strong> يتم تنفيذ وتسليم الأعمال وفق النطاق المحدد في هذا عرض السعر / الفاتورة فقط ولا يشمل أي أعمال إضافية غير مذكورة.</div>
             <div class="clause"><strong>12. المنتج النهائي:</strong> يقتصر التسليم على المنتج النهائي الجاهز للاستخدام ولا يشمل الملفات المفتوحة أو الكود المصدري أو أي مواد إنتاج داخلية.</div>
@@ -586,7 +308,6 @@
             <div class="clause"><strong>14. نقل الملكية:</strong> لا يتم نقل ملكية أي من الأعمال أو المواد أو المخرجات إلا بعد اتفاق مكتوب وصريح وسداد كامل المقابل المالي الخاص بنقل الملكية.</div>
             <div class="clause"><strong>15. عدم طلب التسليم:</strong> في حال عدم طلب العميل نقل الملكية أو تسليم المخرجات وفق ما سبق لا يلتزم مقدم الخدمة بتسليم أي أعمال أو ملفات.</div>
             <div class="clause"><strong>16. حق إعادة الاستخدام:</strong> يحتفظ مقدم الخدمة بحقه الكامل في إعادة استخدام أو تطوير أو الاستفادة من الأعمال المنفذة بأي شكل من الأشكال ما لم يتم الاتفاق على خلاف ذلك كتابةً.</div>
-            
             <h3>رابعاً: الدفعات والاسترجاع</h3>
             <div class="clause"><strong>17. نظام الدفع:</strong> يتم سداد قيمة هذا عرض السعر / الفاتورة وفق الآلية المتفق عليها بين الطرفين سواء دفعة واحدة أو على دفعات.</div>
             <div class="clause"><strong>18. تأخر السداد:</strong> يحق لمقدم الخدمة إيقاف العمل بشكل فوري في حال تأخر العميل عن سداد أي دفعة مستحقة.</div>
@@ -594,35 +315,29 @@
             <div class="clause"><strong>20. إيقاف المشروع من مقدم الخدمة:</strong> يحق لمقدم الخدمة إيقاف المشروع في حال مخالفة العميل لأي من الشروط أو عدم التزامه بالمتطلبات أو السداد.</div>
             <div class="clause"><strong>21. احتساب الأعمال:</strong> يتم احتساب قيمة الأعمال المنفذة بناءً على نسبة الإنجاز الفعلية حتى تاريخ الإيقاف.</div>
             <div class="clause"><strong>22. الرسوم الإدارية:</strong> تُضاف رسوم تشغيلية وإدارية بنسبة 20% على قيمة الأعمال المنفذة.</div>
-            
             <h3>خامساً: الضمان</h3>
             <div class="clause"><strong>23. الضمان:</strong> يتم تحديد الضمان إن وجد وفق الخطة التشغيلية للمشروع وطبيعته.</div>
             <div class="clause"><strong>24. نطاق الضمان:</strong> يقتصر الضمان على الأخطاء الفنية الناتجة عن مقدم الخدمة فقط.</div>
             <div class="clause"><strong>25. الاستثناءات:</strong> لا يشمل الضمان أي مشاكل ناتجة عن عوامل خارجية أو سوء استخدام أو تعديلات من طرف العميل أو طرف ثالث.</div>
-            
             <h3>سادساً: انتهاء العلاقة والمسؤولية</h3>
             <div class="clause"><strong>26. انتهاء العلاقة:</strong> تنتهي العلاقة التعاقدية بين الطرفين فور تسليم المشروع وفق النطاق المتفق عليه.</div>
             <div class="clause"><strong>27. المسؤولية بعد التسليم:</strong> لا يتحمل مقدم الخدمة أي مسؤولية لاحقة عن المشروع بعد التسليم.</div>
             <div class="clause"><strong>28. التشغيل:</strong> يتحمل العميل المسؤولية الكاملة عن تشغيل المشروع وإدارته.</div>
             <div class="clause"><strong>29. البيانات:</strong> يتحمل العميل مسؤولية حفظ النسخ الاحتياطية للبيانات.</div>
             <div class="clause"><strong>30. براءة الذمة:</strong> لا يتحمل مقدم الخدمة أي مسؤولية عن أي خدمات مقدمة من أطراف ثالثة أو توقفها.</div>
-            
             <h3>سابعاً: التواصل والتنفيذ</h3>
             <div class="clause"><strong>31. وسائل التواصل:</strong> تُعتمد وسائل التواصل الرسمية المسجلة فقط كقنوات معتمدة بين الطرفين.</div>
             <div class="clause"><strong>32. التفويض:</strong> يلتزم العميل بإشعار مقدم الخدمة رسميًا في حال تفويض أي شخص للتواصل نيابة عنه.</div>
             <div class="clause"><strong>33. النسخ الإلكترونية:</strong> تُعتبر جميع النسخ الإلكترونية من هذا عرض السعر / الفاتورة بما في ذلك المرسلة عبر البريد الإلكتروني أو وسائل التواصل نسخًا معتمدة ولها نفس القوة القانونية.</div>
-            
             <h3>ثامناً: البنود القانونية</h3>
             <div class="clause"><strong>34. طبيعة العلاقة:</strong> تُعد العلاقة بين الطرفين علاقة تعاقدية مستقلة ولا تُنشئ أي شراكة أو وكالة أو تمثيل قانوني.</div>
             <div class="clause"><strong>35. كامل الاتفاق:</strong> يمثل هذا المستند كامل الاتفاق بين الطرفين ويلغي أي اتفاقات أو تفاهمات سابقة سواء كانت شفهية أو مكتوبة.</div>
             <div class="clause"><strong>36. الأخطاء غير المقصودة:</strong> في حال وجود أي خطأ غير مقصود في الصياغة فإنه لا يؤثر على صحة باقي البنود وتبقى سارية وملزمة.</div>
             <div class="clause"><strong>37. عدم التنازل:</strong> عدم استخدام مقدم الخدمة لأي من حقوقه لا يُعد تنازلًا عنها ويحتفظ بحقه في استخدامها في أي وقت لاحق.</div>
             <div class="clause"><strong>38. اللغة المعتمدة:</strong> في حال ترجمة هذا المستند إلى أي لغة أخرى تُعتمد النسخة العربية في التفسير.</div>
-            
             <h3>تاسعاً: النزاعات</h3>
             <div class="clause"><strong>39. حل النزاعات:</strong> يتم السعي لحل أي نزاع ينشأ بين الطرفين بشكل ودي خلال مدة مناسبة من تاريخ الإشعار.</div>
             <div class="clause"><strong>40. الجهة المختصة:</strong> في حال عدم التوصل إلى حل يحق لمقدم الخدمة تحديد الجهة القضائية أو التحكيمية المختصة.</div>
-            
             <h3>عاشراً: البنود المتقدمة</h3>
             <div class="clause"><strong>41. القوة القاهرة:</strong> لا يتحمل مقدم الخدمة أي مسؤولية عن التأخير أو عدم التنفيذ الناتج عن ظروف خارجة عن الإرادة.</div>
             <div class="clause"><strong>42. السرية:</strong> يلتزم الطرفان بالمحافظة على سرية المعلومات وعدم الإفصاح عنها لأي طرف ثالث دون موافقة خطية.</div>
@@ -630,13 +345,11 @@
             <div class="clause"><strong>44. التوقف المؤقت:</strong> يحق لمقدم الخدمة إيقاف المشروع مؤقتًا في حال عدم تجاوب العميل أو عدم توفير المتطلبات.</div>
             <div class="clause"><strong>45. الاستلام الحكمي:</strong> يُعد المشروع مستلمًا ومقبولًا من قبل العميل بعد مضي سبعة أيام من تاريخ تسليمه في حال عدم تقديم اعتراض رسمي.</div>
             <div class="clause"><strong>46. الاعتراض:</strong> يجب على العميل تقديم أي اعتراض بشكل مكتوب وواضح خلال مدة سبعة أيام من تاريخ التسليم.</div>
-            
             <h3>حادي عشر: البنود المالية والقانونية المتقدمة</h3>
             <div class="clause"><strong>47. المدفوعات الخارجية:</strong> لا تُعد أي مبالغ تُدفع لجهات خارجية مستحقة لمقدم الخدمة ولا يحق المطالبة بها أو استرجاعها.</div>
             <div class="clause"><strong>48. المدفوعات بالنيابة:</strong> تُحتسب أي مدفوعات يقوم بها مقدم الخدمة نيابة عن العميل ضمن تكاليف المشروع ويلتزم العميل بسدادها.</div>
             <div class="clause"><strong>49. تفسير البنود:</strong> يتم تفسير بنود هذا المستند بما يحقق الغرض منها وبما يحفظ حقوق مقدم الخدمة.</div>
             <div class="clause"><strong>50. حق رفض الخدمة:</strong> يحتفظ مقدم الخدمة بحقه في رفض تقديم الخدمة أو إيقافها في أي مرحلة مع احتساب الأعمال المنفذة.</div>
-            
             <h3>ثاني عشر: الحماية القانونية</h3>
             <div class="clause"><strong>51. التنازل عن المطالبات:</strong> يتنازل العميل عن أي مطالبات أو تعويضات تتجاوز قيمة هذا عرض السعر / الفاتورة.</div>
             <div class="clause"><strong>52. حدود المسؤولية:</strong> لا تتجاوز مسؤولية مقدم الخدمة في جميع الأحوال إجمالي المبلغ المدفوع من قبل العميل.</div>
@@ -647,25 +360,10 @@
             <div class="clause"><strong>57. الشروط الإضافية والملحقات:</strong> في حال وجود أي شروط أو طلبات أو متطلبات إضافية من قبل العميل سواء كانت فنية أو تشغيلية أو مالية أو تنظيمية ولم تكن ضمن نطاق هذا عرض السعر / الفاتورة فإنه يتم توثيقها حصراً في ملحق اتفاق مستقل يتم إعداده واعتماده من قبل الطرفين بشكل خطي ورسمي، ولا تُعد تلك الشروط أو الطلبات الإضافية جزءًا من هذا المستند ولا يترتب عليها أي تعديل أو تأثير على أي من بنوده ما لم يتم النص على ذلك صراحةً وبشكل مكتوب في ذلك الملحق، كما لا يُعتد بأي اتفاقات أو تفاهمات أو مراسلات سواء كانت شفهية أو غير موثقة ما لم يتم تضمينها في ملحق رسمي معتمد.</div>
         `;
         
-        // الإقرار وجدول التوقيع
-        const signatureHtml = `
-            <div style="margin-top: 20px;">
-                <p style="font-weight:bold;">الإقرار:</p>
-                <p>أقر أنا العميل بالاطلاع على جميع الشروط والأحكام أعلاه وأوافق عليها بالكامل وأتعهد بالالتزام بها دون أي استثناء.</p>
-                <table class="signature-table">
-                    <tr>
-                        <td style="width:50%"><strong>الاسم:</strong> <span id="customerNameSignature">${window.customerNameForSignature || '.................'}</span></td>
-                        <td style="width:50%"><strong>التاريخ:</strong> <span id="signatureDate">${window.formatDate(new Date())}</span></td>
-                    </tr>
-                    <tr>
-                        <td colspan="2"><strong>التوقيع:</strong> .................</td>
-                    </tr>
-                </table>
-            </div>
-        `;
+        const signatureHtml = `<div style="margin-top:20px;"><p style="font-weight:bold;">الإقرار:</p><p>أقر أنا العميل بالاطلاع على جميع الشروط والأحكام أعلاه وأوافق عليها بالكامل وأتعهد بالالتزام بها دون أي استثناء.</p><table class="signature-table"><tr><td style="width:50%"><strong>الاسم:</strong> <span id="customerNameSignature"></span></td><td style="width:50%"><strong>التاريخ:</strong> <span id="signatureDate"></span></td></tr><tr><td colspan="2"><strong>التوقيع:</strong> .................</td></tr></table></div>`;
         
-        // ========== دوال الطباعة والتصدير ==========
-        async function waitForImages(element, timeout = 8000) {
+        // ========== دوال الطباعة والتصدير المحسنة ==========
+        async function waitForImages(element, timeout = 4000) {
             const imgs = Array.from(element.querySelectorAll('img'));
             await Promise.all(imgs.map(img => {
                 if (img.complete) return Promise.resolve();
@@ -680,25 +378,84 @@
         
         window.exportToPDF = async function() {
             const pages = document.querySelectorAll('.page');
-            if (!pages.length) return alert("لا توجد صفحات");
+            if (!pages.length) return alert("لا توجد صفحات للتصدير");
+            
+            // جلب بيانات العميل ورقم الطلب والتاريخ من المتغير العام
+            let customerName = "عميل";
+            let orderNumber = "فاتورة";
+            let orderDate = "";
+            if (window.currentOrderData) {
+                customerName = window.currentOrderData.customerName || "عميل";
+                orderNumber = window.currentOrderData.orderNumber || "فاتورة";
+                orderDate = window.currentOrderData.orderDate || "";
+            } else {
+                // محاولة استخراج من DOM كاحتياطي
+                const nameElem = document.querySelector('.address-card:last-child p:first-child');
+                if (nameElem) {
+                    const match = nameElem.innerText.match(/:(.+)/);
+                    if (match) customerName = match[1].trim();
+                }
+                const numElem = document.querySelector('.info-value');
+                if (numElem) orderNumber = numElem.innerText.trim();
+                const dateElem = document.querySelector('.info-item:nth-child(2) .info-value');
+                if (dateElem) orderDate = dateElem.innerText.split(' - ')[0].trim();
+            }
+            // تنظيف الأحرف غير المسموحة
+            const cleanName = customerName.replace(/[\\/*?:"<>|]/g, '').trim();
+            const cleanOrder = orderNumber.replace(/[\\/*?:"<>|]/g, '').trim();
+            const cleanDate = orderDate.replace(/[\\/*?:"<>|]/g, '').trim();
+            let fileName = `${cleanName} - ${cleanOrder}`;
+            if (cleanDate) fileName += ` - ${cleanDate}`;
+            fileName += '.pdf';
+            
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF('p', 'mm', 'a4');
-            for (let i = 0; i < pages.length; i++) {
-                await waitForImages(pages[i]);
-                const canvas = await html2canvas(pages[i], { scale: 2, useCORS: true, allowTaint: false, backgroundColor: '#ffffff' });
+            
+            // معالجة الصفحات بالتوازي
+            const canvasPromises = Array.from(pages).map(async (page, idx) => {
+                try {
+                    await waitForImages(page, 4000);
+                    const canvas = await html2canvas(page, {
+                        scale: 1.5,
+                        useCORS: true,
+                        logging: false,
+                        allowTaint: false,
+                        backgroundColor: '#ffffff'
+                    });
+                    return { canvas, index: idx };
+                } catch (err) {
+                    console.warn(`Page ${idx+1} error:`, err);
+                    return null;
+                }
+            });
+            
+            const results = await Promise.all(canvasPromises);
+            const sorted = results.filter(r => r !== null).sort((a,b) => a.index - b.index);
+            
+            for (let i = 0; i < sorted.length; i++) {
+                const { canvas } = sorted[i];
                 if (i !== 0) pdf.addPage();
-                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 210, (canvas.height * 210) / canvas.width);
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 210;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
             }
-            pdf.save("invoice.pdf");
+            pdf.save(fileName);
         };
         
         window.exportToPNG = async function() {
             const pages = document.querySelectorAll('.page');
             for (let i = 0; i < pages.length; i++) {
-                await waitForImages(pages[i]);
-                const canvas = await html2canvas(pages[i], { scale: 2, useCORS: true, allowTaint: false, backgroundColor: '#ffffff' });
+                await waitForImages(pages[i], 4000);
+                const canvas = await html2canvas(pages[i], { scale: 1.5, useCORS: true, logging: false, backgroundColor: '#ffffff' });
                 const link = document.createElement('a');
-                link.download = `page_${i+1}.png`;
+                let name = `page_${i+1}.png`;
+                if (window.currentOrderData && i === 0) {
+                    const cust = window.currentOrderData.customerName?.replace(/[\\/*?:"<>|]/g, '') || 'عميل';
+                    const ord = window.currentOrderData.orderNumber?.replace(/[\\/*?:"<>|]/g, '') || '';
+                    name = `${cust} - ${ord} - page${i+1}.png`;
+                }
+                link.download = name;
                 link.href = canvas.toDataURL();
                 link.click();
             }
@@ -717,6 +474,8 @@
             if (typeof firebase !== 'undefined' && !firebase.apps.length) firebase.initializeApp(firebaseConfig);
             return { db: firebase.firestore(), storage: firebase.storage() };
         }
+        
+        window.currentOrderData = null; // متغير عام لتخزين بيانات الطلب
         
         window.addEventListener('DOMContentLoaded', async () => {
             const container = document.getElementById('printContent');
@@ -749,7 +508,6 @@
                 price: item.price || 0
             }));
             
-            // جلب وصف الخدمة من products
             for (let i = 0; i < items.length; i++) {
                 const it = items[i];
                 if (it.productId) {
@@ -793,22 +551,20 @@
                 total: order.total || 0
             };
             
-            // تعيين اسم العميل للتوقيع
-            window.customerNameForSignature = orderData.customerName;
+            window.currentOrderData = orderData; // تخزين البيانات للاستخدام في التصدير
             
-            // بناء الفاتورة (صفحة واحدة) + صفحات الشروط (3 صفحات)
             let html = buildInvoicePage(orderData, 1, 4);
-            // الصفحة الثانية: الشروط (الأولى)
             html += buildTermsPage(2, 4, 'الشروط والأحكام', disclaimerHtml + termsHtml);
-            // الصفحة الثالثة: استكمال الشروط (إذا احتاجت مساحة أكبر، لكننا وضعنا كل الشروط في صفحة واحدة. حسب طول المحتوى قد يحتاج صفحتين، هنا سنكتفي بصفحتين للشروط)
-            // نضيف صفحة ثالثة للإقرار والتوقيع
             html += buildTermsPage(3, 4, 'الإقرار والتوقيع', signatureHtml);
-            // الصفحة الرابعة فارغة أو يمكن إضافة ملاحظات (نتركها فارغة لتتناسب مع footer)
             html += buildTermsPage(4, 4, 'ملاحظات', '<p style="text-align:center;">شكراً لثقتكم بنا</p>');
-            
             container.innerHTML = html;
             
-            // إنشاء QR codes
+            // تحديث اسم العميل والتاريخ في صفحة الإقرار
+            const nameSpan = document.getElementById('customerNameSignature');
+            const dateSpan = document.getElementById('signatureDate');
+            if (nameSpan) nameSpan.textContent = orderData.customerName;
+            if (dateSpan) dateSpan.textContent = window.formatDate(new Date());
+            
             setTimeout(() => {
                 try {
                     const zatcaDiv = document.getElementById('zatcaQR');
