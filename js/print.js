@@ -2,9 +2,63 @@ import { TERMS_DATA } from './terms.js';
 import { OrderManager } from './order.js';
 import { BarcodeManager } from './barcodes.js';
 
+/**
+ * 1. تهيئة النظام والاتصال بقاعدة البيانات
+ */
+const firebaseConfig = {
+    apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
+    authDomain: "msjt301-974bb.firebaseapp.com",
+    projectId: "msjt301-974bb",
+    storageBucket: "msjt301-974bb.firebasestorage.app",
+    messagingSenderId: "186209858482",
+    appId: "1:186209858482:web:186ca610780799ef562aab"
+};
+
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+window.db = firebase.firestore();
+
+/**
+ * 2. الدوال المساعدة لبناء المكونات (Components)
+ */
+const UI = {
+    header: (title, seller) => `
+        <div class="header-main">
+            <img src="${seller.logo}" class="main-logo">
+            <div class="doc-label">${title}</div>
+            <div class="header-left-group">
+                <div>رقم شهادة العمل الحر: ${seller.licenseNumber}</div>
+                <div>الرقم الضريبي: ${seller.taxNumber}</div>
+            </div>
+        </div>`,
+
+    footer: (current, total, seller) => `
+        <div class="final-footer">
+            <div class="contact-strip">${seller.phone} | ${seller.email} | ${seller.website}</div>
+            <div class="page-number">صفحة ${current} من ${total}</div>
+        </div>`,
+
+    orderMeta: (order, customer, date, time, seller) => `
+        <div class="order-meta-row">
+            <span><b>رقم الفاتورة:</b> ${order.orderNumber || order.id}</span>
+            <span><b>التاريخ:</b> ${date} | ${time}</span>
+        </div>
+        <div class="dual-columns">
+            <div class="address-card">
+                <div class="card-head">المورد</div>
+                <div class="card-body"><b>${seller.name}</b><br>${seller.address}</div>
+            </div>
+            <div class="address-card">
+                <div class="card-head">العميل</div>
+                <div class="card-body"><b>${customer.name}</b><br>${customer.phone}</div>
+            </div>
+        </div>`
+};
+
+/**
+ * 3. المحرك الرئيسي عند تحميل الصفحة
+ */
 window.onload = async () => {
-    const params = new URLSearchParams(window.location.search);
-    const orderId = params.get('id');
+    const orderId = new URLSearchParams(window.location.search).get('id');
     if (!orderId) return;
 
     try {
@@ -12,122 +66,88 @@ window.onload = async () => {
         if (!data) return;
 
         const { order, customer } = data;
-        const seller = window.invoiceSettings; // مستدعى من invoice.js في ملف HTML
+        const seller = window.invoiceSettings;
         const { date, time } = OrderManager.formatDateTime(order.createdAt);
 
-        // إعدادات التقسيم
         const itemsPerPage = 6;
         const termsPerPage = 12;
-        const invoicePagesCount = Math.ceil((order.items?.length || 1) / itemsPerPage);
-        const totalPagesCount = invoicePagesCount + Math.ceil(TERMS_DATA.length / termsPerPage);
+        const invPages = Math.ceil((order.items?.length || 1) / itemsPerPage);
+        const totalPages = invPages + Math.ceil(TERMS_DATA.length / termsPerPage);
 
-        let finalHtml = '';
+        let html = '';
 
-        // 1. توليد صفحات الفاتورة باستخدام المكونات
-        for (let i = 0; i < invoicePagesCount; i++) {
+        // بناء صفحات الفاتورة
+        for (let i = 0; i < invPages; i++) {
             const pageItems = (order.items || []).slice(i * itemsPerPage, (i + 1) * itemsPerPage);
-            
-            finalHtml += `
+            html += `
                 <div class="page">
-                    ${renderHeader("فاتورة إلكترونية", seller)}
-                    ${i === 0 ? renderOrderMeta(order, customer, date, time, seller) : ''}
-                    ${renderItemsTable(pageItems, i * itemsPerPage)}
-                    ${i === invoicePagesCount - 1 ? renderFinancials(order) : ''}
-                    ${renderFooter(i + 1, totalPagesCount, seller)}
+                    ${UI.header("فاتورة ضريبية", seller)}
+                    ${i === 0 ? UI.orderMeta(order, customer, date, time, seller) : ''}
+                    <table class="main-table">
+                        <thead><tr><th>#</th><th>المنتج</th><th>الوصف</th><th>الصورة</th><th>الكمية</th><th>السعر</th></tr></thead>
+                        <tbody>
+                            ${pageItems.map((item, idx) => `
+                                <tr>
+                                    <td>${(i * itemsPerPage) + idx + 1}</td>
+                                    <td><b>${item.name}</b></td>
+                                    <td class="small-text">${item.description || '-'}</td>
+                                    <td><img src="${item.image}" class="product-img-print"></td>
+                                    <td>${item.qty}</td>
+                                    <td>${item.price} ر.س</td>
+                                </tr>`).join('')}
+                        </tbody>
+                    </table>
+                    ${i === invPages - 1 ? renderFinancials(order) : ''}
+                    ${UI.footer(i + 1, totalPages, seller)}
                 </div>`;
         }
 
-        // 2. توليد صفحات الشروط باستخدام المكونات
+        // بناء صفحات الشروط
         for (let j = 0; j < TERMS_DATA.length; j += termsPerPage) {
             const pageTerms = TERMS_DATA.slice(j, j + termsPerPage);
-            const currentPage = invoicePagesCount + Math.floor(j / termsPerPage) + 1;
-
-            finalHtml += `
+            const pageNum = invPages + (j / termsPerPage) + 1;
+            html += `
                 <div class="page page-terms">
-                    ${renderHeader("الشروط والأحكام", seller)}
+                    ${UI.header("الشروط والأحكام", seller)}
                     <div class="terms-grid">
-                        ${pageTerms.map((t, idx) => `<div class="term-item"><span class="term-num">${j + idx + 1}</span><p>${t}</p></div>`).join('')}
+                        ${pageTerms.map((t, idx) => `
+                            <div class="term-item"><span class="term-num">${j + idx + 1}</span><p>${t}</p></div>
+                        `).join('')}
                     </div>
-                    ${renderFooter(currentPage, totalPagesCount, seller)}
+                    ${UI.footer(pageNum, totalPages, seller)}
                 </div>`;
         }
 
-        document.getElementById('print-app').innerHTML = finalHtml;
+        document.getElementById('print-app').innerHTML = html;
         BarcodeManager.init(orderId, seller, order);
         document.getElementById('loader').style.display = 'none';
 
     } catch (e) {
-        console.error("Print Error:", e);
+        console.error("Critical Error:", e);
     }
 };
 
-// --- الدوال المساعدة (Components) للحفاظ على نظافة الكود ---
+/**
+ * 4. إدارة الأزرار (PDF والطباعة)
+ */
+document.getElementById('downloadPDF').onclick = () => {
+    const element = document.getElementById('print-app');
+    html2pdf().set({
+        margin: 0, filename: 'invoice.pdf',
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(element).save();
+};
 
-function renderHeader(title, seller) {
-    return `
-    <div class="header-main">
-        <img src="${seller.logo}" class="main-logo">
-        <div class="doc-label">${title}</div>
-        <div class="header-left-group">
-            <div>رقم شهادة العمل الحر: ${seller.licenseNumber}</div>
-            <div>الرقم الضريبي: ${seller.taxNumber}</div>
-        </div>
-    </div>`;
-}
-
-function renderOrderMeta(order, customer, date, time, seller) {
-    return `
-    <div class="order-meta-row">
-        <span><b>رقم الفاتورة:</b> ${order.orderNumber || order.id}</span>
-        <span><b>التاريخ:</b> ${date} | ${time}</span>
-        <span><b>حالة الطلب:</b> تم التنفيذ</span>
-    </div>
-    <div class="dual-columns">
-        <div class="address-card">
-            <div class="card-head">مصدرة من</div>
-            <div class="card-body"><b>${seller.name}</b><br>${seller.address}<br>${seller.phone}</div>
-        </div>
-        <div class="address-card">
-            <div class="card-head">مصدرة إلى</div>
-            <div class="card-body"><b>${customer.name}</b><br>${customer.city || 'المملكة العربية السعودية'}<br>${customer.phone}</div>
-        </div>
-    </div>`;
-}
-
-function renderItemsTable(items, startIdx) {
-    return `
-    <table class="main-table">
-        <thead><tr><th>#</th><th>المنتج</th><th>الوصف</th><th>الصورة</th><th>الكمية</th><th>السعر</th></tr></thead>
-        <tbody>
-            ${items.map((item, idx) => `
-                <tr>
-                    <td>${startIdx + idx + 1}</td>
-                    <td><b>${item.name}</b></td>
-                    <td class="small-text">${item.description || '-'}</td>
-                    <td><img src="${item.image}" class="product-img-print"></td>
-                    <td>${item.qty}</td>
-                    <td>${item.price} ر.س</td>
-                </tr>`).join('')}
-        </tbody>
-    </table>`;
-}
+document.getElementById('printPage').onclick = () => window.print();
 
 function renderFinancials(order) {
     return `
     <div class="financial-section">
         <div class="summary-box-final">
-            <div class="s-line"><span>المجموع الفرعي:</span> <span>${order.subtotal} ر.س</span></div>
-            <div class="s-line"><span>الضريبة (15%):</span> <span>${(order.total - order.subtotal).toFixed(2)} ر.س</span></div>
-            <div class="s-line grand-total-line"><span>الإجمالي:</span> <span>${order.total} ر.س</span></div>
+            <div class="s-line"><span>المجموع:</span> <span>${order.subtotal} ر.س</span></div>
+            <div class="s-line grand-total-line"><span>الإجمالي النهائي:</span> <span>${order.total} ر.س</span></div>
         </div>
         <div class="barcode-group-print"><div id="zatcaQR"></div><div id="websiteQR"></div><div id="downloadQR"></div></div>
-    </div>`;
-}
-
-function renderFooter(current, total, seller) {
-    return `
-    <div class="final-footer">
-        <div class="contact-strip">${seller.phone} | ${seller.email} | ${seller.website}</div>
-        <div class="page-number">صفحة ${current} من ${total}</div>
     </div>`;
 }
