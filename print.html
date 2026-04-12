@@ -2,57 +2,47 @@
 <html dir="rtl" lang="ar">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة في خدمتك - نظام الطباعة الاحترافي</title>
-    
+    <title>منصة في خدمتك - نظام الطباعة</title>
     <link rel="stylesheet" href="css/invoice.css">
-    
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/gh/ushelp/EasyQRCodeJS@master/dist/easy.qrcode.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
 <body>
 
-    <div id="loader" class="no-print" style="text-align:center; padding:100px; font-family:'Tajawal';">
-        <h2 style="color:#1e3a5f;">جاري تجهيز بيانات الفاتورة والبنود الـ 57...</h2>
+    <div id="loader" style="text-align:center; padding:100px; font-family:'Tajawal';">
+        <h2 style="color:#1e3a5f;">جاري جلب البيانات والبنود الـ 57...</h2>
     </div>
 
     <div id="print-app"></div>
 
-    <div class="no-print" style="position:fixed; bottom:30px; left:30px; display:flex; gap:10px;">
-        <button onclick="window.print()" style="padding:15px 30px; background:#1e3a5f; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold; font-family:'Tajawal'; box-shadow:0 4px 15px rgba(0,0,0,0.2);">
-            طباعة المستند (PDF)
-        </button>
-    </div>
+    <button class="no-print" onclick="window.print()" style="position:fixed; bottom:20px; left:20px; padding:15px 30px; background:#1e3a5f; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:800; font-family:'Tajawal';">
+        طباعة المستند
+    </button>
 
     <script type="module">
         import { TERMS_DATA } from './js/terms.js';
         import { generateAllQRs } from './js/zatca.js';
         import { db } from './js/firebase.js';
 
-        const SOURCE_INFO = {
+        const SOURCE = {
             name: "منصة في خدمتك",
             taxId: "312495447600003",
-            license: "FL-765735204",
-            website: "https://khidmatik.com",
-            address: "حائل، حي النقرة، شارع سعد المشاط",
-            building: "3085",
-            postal: "55431"
+            lic: "FL-765735204",
+            site: "https://khidmatik.com"
         };
 
-        async function initPrint() {
+        async function init() {
             const urlParams = new URLSearchParams(window.location.search);
             const orderId = urlParams.get('id');
 
             if (!orderId) {
-                document.getElementById('loader').innerHTML = "خطأ: لم يتم تحديد رقم الطلب.";
+                document.getElementById('loader').innerText = "خطأ: رقم الطلب غير موجود";
                 return;
             }
 
             try {
-                // جلب بيانات الطلب والعميل من Firebase
                 const orderDoc = await db.collection("orders").doc(orderId).get();
                 if (!orderDoc.exists) throw new Error("الطلب غير موجود");
                 
@@ -61,47 +51,43 @@
                 const customerData = customerDoc.data();
 
                 render(orderData, customerData);
-            } catch (error) {
-                console.error(error);
-                document.getElementById('loader').innerHTML = "حدث خطأ أثناء جلب البيانات.";
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loader').innerText = "فشل تحميل البيانات من السحابة";
             }
         }
 
         function render(order, customer) {
-            const app = document.getElementById('print-app');
             document.getElementById('loader').style.display = 'none';
+            let html = "";
 
-            let finalHtml = "";
-
-            // 1. إنشاء الصفحة الأولى (الفاتورة)
-            finalHtml += `
+            // الصفحة 1: الفاتورة
+            html += `
             <div class="page">
                 <div class="header">
-                    <div class="logo"><img src="images/logo.svg" alt="Logo"></div>
+                    <div class="logo"><img src="images/logo.svg" onerror="this.src='https://via.placeholder.com/150'"></div>
                     <div class="doc-label">فاتورة ضريبية مبسطة</div>
-                    <div class="header-meta">الرقم الضريبي: ${SOURCE_INFO.taxId}<br>العمل الحر: ${SOURCE_INFO.license}</div>
+                    <div class="header-meta">الرقم الضريبي: ${SOURCE.taxId}<br>العمل الحر: ${SOURCE.lic}</div>
                 </div>
                 <div class="grid-2">
                     <div class="card">
                         <div class="card-h">مصدرة من:</div>
-                        <div class="card-b"><b>${SOURCE_INFO.name}</b><br>${SOURCE_INFO.address}<br>مبنى: ${SOURCE_INFO.building} | بريد: ${SOURCE_INFO.postal}</div>
+                        <div class="card-b"><b>${SOURCE.name}</b><br>حائل، حي النقرة، شارع سعد المشاط<br>مبنى: 3085 | بريد: 55431</div>
                     </div>
                     <div class="card">
                         <div class="card-h">مصدرة إلى:</div>
-                        <div class="card-b"><b>${customer.name}</b><br>الجوال: ${customer.phone || '---'}<br>العنوان: ${customer.address || 'المملكة العربية السعودية'}</div>
+                        <div class="card-b"><b>${customer.name || 'عميل كرام'}</b><br>الجوال: ${customer.phone || '---'}<br>العنوان: ${customer.address || 'المملكة العربية السعودية'}</div>
                     </div>
                 </div>
                 <table>
-                    <thead>
-                        <tr><th>المنتج / الخدمة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr>
-                    </thead>
+                    <thead><tr><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead>
                     <tbody>
                         ${(order.items || []).map(item => `
                             <tr>
-                                <td style="text-align:right;"><b>${item.name}</b></td>
-                                <td>${item.quantity || 1}</td>
+                                <td><b>${item.name}</b></td>
+                                <td>${item.qty || 1}</td>
                                 <td>${item.price} ر.س</td>
-                                <td>${(item.price * (item.quantity || 1)).toFixed(2)} ر.س</td>
+                                <td>${(item.price * (item.qty || 1)).toFixed(2)} ر.س</td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -114,65 +100,42 @@
                 </div>
                 <div style="display:flex; justify-content:space-around; margin-top:auto; padding-bottom:50px;">
                     <div id="zatca-qr"></div>
-                    <div style="text-align:center;">
-                        <div id="web-qr"></div>
-                        <small style="font-size:9px; font-weight:bold; display:block; margin-top:5px;">رابط الموقع الرسمي</small>
-                    </div>
+                    <div style="text-align:center;"><div id="web-qr"></div><small style="font-size:9px;">رابط الموقع الرسمي</small></div>
                 </div>
-                <div class="footer">
-                    <span>${SOURCE_INFO.website}</span>
-                    <span class="page-counter">صفحة 1 من 4</span>
-                </div>
+                <div class="footer"><span>${SOURCE.site}</span><span class="page-counter">صفحة 1 من 4</span></div>
             </div>`;
 
-            // 2. توزيع الـ 57 بنداً على 3 صفحات (20 بند، 20 بند، 17 بند)
-            const chunks = [
-                TERMS_DATA.slice(0, 20),
-                TERMS_DATA.slice(20, 40),
-                TERMS_DATA.slice(40, 57)
-            ];
-
-            chunks.forEach((chunk, index) => {
-                const pageNum = index + 2;
-                finalHtml += `
+            // تقسيم الـ 57 بنداً على الصفحات 2، 3، 4
+            const parts = [TERMS_DATA.slice(0, 20), TERMS_DATA.slice(20, 40), TERMS_DATA.slice(40, 57)];
+            
+            parts.forEach((part, idx) => {
+                html += `
                 <div class="page">
                     <div class="header">
                         <div class="logo"><img src="images/logo.svg"></div>
-                        <div class="doc-label">الشروط والأحكام (${index + 1}/3)</div>
+                        <div class="doc-label">الشروط والأحكام (${idx+1}/3)</div>
                     </div>
                     <div class="terms-section">
-                        ${chunk.map(clause => `
-                            <div class="clause">
-                                <span class="c-num">${clause.id}.</span>
-                                <div><b>${clause.t}:</b> ${clause.c}</div>
+                        ${part.map(c => `<div class="clause"><span class="c-num">${c.id}.</span><div><b>${c.t}:</b> ${c.c}</div></div>`).join('')}
+                        ${idx === 2 ? `
+                        <div style="margin-top:20px; border:2px solid #1e3a5f; padding:15px; border-radius:8px; background:#fffcf5;">
+                            <h4 style="text-align:center; color:#1e3a5f;">إقرار واعتماد العميل</h4>
+                            <p style="font-size:10px;">أقر أنا العميل (<b>${customer.name}</b>) بموافقتي التامة على كافة البنود الـ 57 أعلاه.</p>
+                            <div style="display:flex; justify-content:space-between; margin-top:25px; font-weight:bold;">
+                                <span>توقيع العميل: ...................</span>
+                                <span>التاريخ: ${new Date().toLocaleDateString('ar-SA')}</span>
                             </div>
-                        `).join('')}
-                        
-                        ${pageNum === 4 ? `
-                            <div style="margin-top:25px; border:2px solid #1e3a5f; padding:20px; border-radius:10px; background:#fffcf5;">
-                                <h4 style="text-align:center; color:#1e3a5f; margin-bottom:10px;">إقرار واعتماد العميل</h4>
-                                <p style="font-size:10px;">أقر أنا العميل (<b>${customer.name}</b>) بأنني اطلعت على كافة البنود الـ 57 المذكورة أعلاه وأوافق عليها موافقة تامة لا رجعة فيها، ويعتبر سداد الفاتورة توقيعاً إلكترونياً معتمداً.</p>
-                                <div style="display:flex; justify-content:space-between; margin-top:30px; font-weight:bold;">
-                                    <span>توقيع العميل: ...........................</span>
-                                    <span>التاريخ: ${new Date().toLocaleDateString('ar-SA')}</span>
-                                </div>
-                            </div>
-                        ` : ''}
+                        </div>` : ''}
                     </div>
-                    <div class="footer">
-                        <span>${SOURCE_INFO.website}</span>
-                        <span class="page-counter">صفحة ${pageNum} من 4</span>
-                    </div>
+                    <div class="footer"><span>${SOURCE.site}</span><span class="page-counter">صفحة ${idx+2} من 4</span></div>
                 </div>`;
             });
 
-            app.innerHTML = finalHtml;
-
-            // توليد الأكواد بعد الرسم
-            generateAllQRs(order.total, SOURCE_INFO.name, SOURCE_INFO.taxId, SOURCE_INFO.website);
+            document.getElementById('print-app').innerHTML = html;
+            generateAllQRs(order.total, SOURCE.name, SOURCE.taxId, SOURCE.site);
         }
 
-        initPrint();
+        init();
     </script>
 </body>
 </html>
