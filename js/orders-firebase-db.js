@@ -1,6 +1,6 @@
 // js/orders-firebase-db.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, collection } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
@@ -14,22 +14,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 
-// جعل قاعدة البيانات متاحة عالمياً (اختياري)
-window.db = db;
-
-// تحديث وظيفة getDocument للعمل مع النظام الجديد
-window.getDocument = async (col, id) => {
-    try {
-        const docRef = doc(db, col, id);
-        const snap = await getDoc(docRef);
-        
-        if (snap.exists()) {
-            return { id: snap.id, ...snap.data(), success: true };
-        } else {
-            return { success: false, error: "Document not found" };
-        }
-    } catch (e) {
-        console.error("Error fetching document:", e);
-        return { success: false, error: e.message };
-    }
+// وظائف مساعدة متاحة عالمياً
+window.getDocument = async (colName, id) => {
+    const snap = await getDoc(doc(db, colName, id));
+    return snap.exists() ? { id: snap.id, ...snap.data(), success: true } : { success: false };
 };
