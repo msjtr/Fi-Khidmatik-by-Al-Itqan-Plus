@@ -26,7 +26,6 @@ const UI = {
         </div>`,
 
     orderMeta: (order, customer, date, time, seller) => {
-        // التحقق من الحقول بمسميات مختلفة لضمان جلب البيانات من Firebase
         const bldg = customer.buildingNumber || customer.building_number || customer.building || '---';
         const addl = customer.additionalNumber || customer.additional_number || customer.additional || '---';
         const post = customer.postalCode || customer.postal_code || customer.zipCode || '---';
@@ -111,4 +110,81 @@ window.onload = async () => {
             html += `
                 <div class="page">
                     ${UI.header("فاتورة إلكترونية ضريبية", seller)}
-                    ${UI.order
+                    ${UI.orderMeta(order, customer, date, time, seller)}
+                    <table class="main-table">
+                        <thead><tr><th>#</th><th>المنتج</th><th>الوصف</th><th>الصورة</th><th>الكمية</th><th>السعر</th></tr></thead>
+                        <tbody>
+                            ${pageItems.map((item, idx) => `
+                                <tr>
+                                    <td>${(i * itemsPerPage) + idx + 1}</td>
+                                    <td><b>${item.name}</b></td>
+                                    <td class="small-text">${item.description || '-'}</td>
+                                    <td><img src="${item.image || 'images/placeholder.png'}" class="product-img-print"></td>
+                                    <td>${item.qty}</td>
+                                    <td>${(item.price || 0).toLocaleString()} ر.س</td>
+                                </tr>`).join('')}
+                        </tbody>
+                    </table>
+                    ${i === invPages - 1 ? renderFinancials(order) : ''}
+                    ${UI.footer(i + 1, totalPages, seller)}
+                </div>`;
+        }
+
+        for (let j = 0; j < termsArray.length; j += termsPerPage) {
+            const pageTerms = termsArray.slice(j, j + termsPerPage);
+            const pageNum = invPages + Math.floor(j / termsPerPage) + 1;
+            
+            const termsHtml = pageTerms.map((text) => {
+                const isTitle = /^(أولاً|ثانياً|ثالثاً|رابعاً|خامساً|سادساً|سابعاً|ثامناً|تاسعاً|عاشراً|حادي عشر|ثاني عشر)/.test(text);
+                const cls = isTitle ? 'term-row-print term-title-style' : 'term-row-print';
+                return `<div class="${cls}"><p class="term-content-print">${text}</p></div>`;
+            }).join('');
+
+            html += `
+                <div class="page page-terms">
+                    ${UI.header("الشروط والأحكام العامة", seller)}
+                    <div class="terms-container-print">
+                        ${termsHtml}
+                    </div>
+                    ${UI.footer(pageNum, totalPages, seller)}
+                </div>`;
+        }
+
+        document.getElementById('print-app').innerHTML = html;
+        BarcodeManager.init(orderId, seller, order);
+        document.getElementById('loader').style.display = 'none';
+
+    } catch (e) {
+        console.error(e);
+    }
+};
+
+function renderFinancials(order) {
+    const subtotal = order.subtotal || 0;
+    const total = order.total || 0;
+    const tax = total - subtotal;
+    return `
+    <div class="financial-section">
+        <div class="summary-box-final">
+            <div class="s-line"><span>المجموع:</span> <span>${subtotal.toLocaleString()} ر.س</span></div>
+            <div class="s-line"><span>الضريبة (15%):</span> <span>${tax.toLocaleString()} ر.س</span></div>
+            <div class="s-line grand-total-line"><span>الإجمالي النهائي:</span> <span>${total.toLocaleString()} ر.س</span></div>
+        </div>
+        <div class="barcode-group-print">
+            <div id="zatcaQR"></div>
+            <div id="websiteQR"></div>
+            <div id="downloadQR"></div>
+        </div>
+    </div>`;
+}
+
+document.getElementById('downloadPDF').onclick = () => {
+    const element = document.getElementById('print-app');
+    html2pdf().set({
+        margin: 0, filename: `Invoice.pdf`,
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(element).save();
+};
+
+document.getElementById('printPage').onclick = () => window.print();
