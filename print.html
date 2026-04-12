@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>طباعة الفاتورة - في خدمتك</title>
+    <title>نظام الطباعة الذكي - في خدمتك</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     
@@ -12,74 +12,112 @@
     <link rel="stylesheet" href="css/invoice.css">
 
     <style>
-        /* تنسيقات إضافية لزر التحميل والتحكم */
-        .no-print-zone {
+        /* تنسيقات واجهة التحكم - لا تظهر في الطباعة */
+        .control-panel {
             position: fixed;
             top: 20px;
             left: 20px;
-            z-index: 9999;
+            z-index: 1000;
             display: flex;
-            gap: 10px;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            backdrop-filter: blur(4px);
+            border: 1px solid #eee;
         }
 
-        .btn-download {
-            background-color: #1a1a1a;
-            color: #fff;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
+        .btn-action {
             font-family: 'Tajawal', sans-serif;
-            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            font-weight: 700;
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: 0.3s;
+            transition: all 0.3s ease;
         }
 
-        .btn-download:hover {
-            background-color: #d4af37; /* لون ذهبي عند التحويم */
-            transform: translateY(-2px);
-        }
+        .btn-pdf { background: #1a1a1a; color: white; }
+        .btn-pdf:hover { background: #d4af37; transform: translateY(-2px); }
 
+        .btn-print { background: #f0f0f0; color: #333; }
+        .btn-print:hover { background: #e0e0e0; }
+
+        /* شاشة التحميل */
         #loader {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            inset: 0;
             background: #fff;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 10000;
+            z-index: 9999;
             font-family: 'Tajawal', sans-serif;
         }
 
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #d4af37;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* إخفاء عناصر التحكم عند الطباعة */
         @media print {
-            .no-print-zone { display: none !important; }
+            .control-panel { display: none !important; }
+            body { background: white; padding: 0; }
         }
     </style>
 </head>
 <body>
 
-    <div id="loader">
-        <div class="spinner">جاري تجهيز الفاتورة...</div>
+    <div class="control-panel">
+        <button class="btn-action btn-pdf" onclick="window.downloadPDF()">
+            <span>📄</span> حفظ PDF عالي الجودة
+        </button>
+        <button class="btn-action btn-print" onclick="window.print()">
+            <span>🖨️</span> طباعة ورقية
+        </button>
     </div>
 
-    <div class="no-print-zone">
-        <button class="btn-download" onclick="window.downloadPDF()">
-            <span>📥</span> تحميل PDF عالي الجودة
-        </button>
-        <button class="btn-download" style="background-color: #444;" onclick="window.print()">
-            <span>🖨️</span> طباعة فورية
-        </button>
+    <div id="loader">
+        <div class="spinner"></div>
+        <div style="font-weight: 600; color: #444;">جاري جلب بيانات الطلب وتجهيز المستندات...</div>
     </div>
 
     <div id="print-app"></div>
 
-    <script type="module" src="js/terms.js"></script>
-    <script type="module" src="js/order.js"></script>
+    <script type="module">
+        import { OrderManager } from './js/order.js';
+        import { TERMS_DATA } from './js/terms.js';
+        
+        // ربط الدوال بالنطاق العام (window) لتتمكن الأزرار من رؤيتها
+        window.TERMS_DATA = TERMS_DATA;
+        window.OrderManager = OrderManager;
+    </script>
+
     <script type="module" src="js/zatca.js"></script>
     <script type="module" src="js/print.js"></script>
+
+    <script>
+        // كود سريع لمنع أخطاء التحميل قبل اكتمال الموديولات
+        window.onerror = function(msg, url, line) {
+            if (msg.includes('getDocument')) {
+                console.error("خطأ: لم يتم العثور على دالة اتصال قاعدة البيانات. تأكد من استدعاء ملف Firebase أو ملف الإعدادات قبل print.js");
+            }
+            return false;
+        };
+    </script>
 
 </body>
 </html>
