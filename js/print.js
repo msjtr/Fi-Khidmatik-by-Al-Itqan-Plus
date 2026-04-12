@@ -60,7 +60,7 @@ const UI = {
             <span><b>رمز الموافقة على الطلب:</b> ${order.approvalCode || '---'}</span>
             <span><b>طريقة استلام المنتج:</b> ${order.deliveryMethod || 'تحميل رقمي'}</span>
         </div>`;
-    },
+  
 
     footer: (current, total, seller) => `
         <div class="final-footer">
