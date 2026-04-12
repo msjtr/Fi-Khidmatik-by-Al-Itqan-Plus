@@ -1,15 +1,27 @@
 /**
- * مدير الطلبات - موديول جلب البيانات المحدث
+ * مدير الطلبات - موديول جلب البيانات من Firestore
  */
 export const OrderManager = {
-    // جلب تفاصيل الطلب والعميل معاً
+    // دالة داخلية للجلب تضمن عدم الاعتماد على ملفات خارجية
+    async fetchDoc(col, id) {
+        if (!window.db) return { success: false };
+        try {
+            const snap = await window.db.collection(col).doc(id).get();
+            return snap.exists ? { id: snap.id, ...snap.data(), success: true } : { success: false };
+        } catch (e) {
+            console.error("Fetch Error:", e);
+            return { success: false };
+        }
+    },
+
+    // جلب تفاصيل الطلب والعميل
     async getOrderFullDetails(orderId) {
         try {
-            // استخدام الدالة التي عرفتها أنت في window
-            const orderRes = await window.getDocument('orders', orderId);
+            const orderRes = await this.fetchDoc('orders', orderId);
             if (!orderRes.success) return null;
 
-            const customerRes = await window.getDocument('customers', orderRes.customerId);
+            // جلب بيانات العميل
+            const customerRes = await this.fetchDoc('customers', orderRes.customerId);
             
             return {
                 order: orderRes,
@@ -19,7 +31,7 @@ export const OrderManager = {
                 }
             };
         } catch (error) {
-            console.error("خطأ حرج:", error);
+            console.error("خطأ حرج في الموديول:", error);
             return null;
         }
     },
@@ -29,7 +41,7 @@ export const OrderManager = {
         const d = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
         return {
             date: d.toLocaleDateString('en-GB'),
-            time: d.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })
+            time: d.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', hour12: true })
         };
     }
 };
