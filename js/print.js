@@ -7,25 +7,33 @@ window.onload = async () => {
     if (!orderId) return;
 
     try {
-        // جلب البيانات مع التأكد من الحقول
+        // جلب البيانات الأساسية
         const order = await window.getDocument("orders", orderId);
         const customer = await window.getDocument("customers", order.customerId);
         const seller = window.invoiceSettings;
 
-        // معالجة التاريخ والوقت
+        // تنسيق التاريخ والوقت من بيانات الطلب
         const orderDate = new Date(order.createdAt);
         const formattedDate = orderDate.toLocaleDateString('ar-SA');
-        const formattedTime = orderDate.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', hour12: true }).replace("ص", "صباحاً").replace("م", "مساءً");
+        const formattedTime = orderDate.toLocaleTimeString('ar-SA', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            hour12: true 
+        }).replace("ص", "صباحاً").replace("م", "مساءً");
 
-        // تقسيم المنتجات
+        const fallbackImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+
+        // تقسيم المنتجات (8 لكل صفحة)
         const items = order.items || [];
         const itemsPerPage = 8;
         const invoicePagesCount = Math.ceil(items.length / itemsPerPage) || 1;
-        const totalPagesCount = invoicePagesCount + 3; // فاتورة + 3 صفحات شروط
+        const totalPagesCount = invoicePagesCount + 3; // صفحات الفاتورة + 3 صفحات للشروط
 
         let html = '';
 
-        // 1. توليد صفحات الفاتورة
+        // ---------------------------------------------------------
+        // 1. توليد صفحات الفاتورة (Invoice Pages)
+        // ---------------------------------------------------------
         for (let i = 0; i < items.length || (i === 0 && items.length === 0); i += itemsPerPage) {
             const pageIndex = Math.floor(i / itemsPerPage);
             const pageItems = items.slice(i, i + itemsPerPage);
@@ -36,7 +44,7 @@ window.onload = async () => {
             <div class="page">
                 <div class="header-main">
                     <div class="header-right-group">
-                        <img src="images/logo.svg" class="main-logo">
+                        <img src="images/logo.svg" class="main-logo" onerror="this.src='${fallbackImg}'">
                         <div class="brand-info">
                             <div class="brand-name">في خدمتك</div>
                             <div class="brand-slogan">من الإتقان بلس</div>
@@ -79,9 +87,9 @@ window.onload = async () => {
                 </div>
 
                 <div class="single-row-payment">
-                    <div class="p-item"><b>طريقة الدفع:</b> ${window.getPaymentName ? window.getPaymentName(order.paymentMethod) : (order.paymentMethod || '---')}</div>
+                    <div class="p-item"><b>طريقة الدفع:</b> ${order.paymentMethod || 'إلكتروني'}</div>
                     <div class="p-item"><b>رمز الموافقة:</b> ${order.approvalCode || order.paymentId || '---'}</div>
-                    <div class="p-item"><b>طريقة الاستلام:</b> ${order.deliveryMethod || 'استلام إلكتروني'}</div>
+                    <div class="p-item"><b>طريقة الاستلام:</b> ${order.deliveryMethod || 'تفعيل مباشر'}</div>
                 </div>
                 ` : ''}
 
@@ -90,10 +98,10 @@ window.onload = async () => {
                         <tr>
                             <th>#</th>
                             <th>اسم المنتج</th>
-                            <th>الوصف</th>
+                            <th>وصف المنتج</th>
                             <th>الصورة</th>
                             <th>الكمية</th>
-                            <th>السعر</th>
+                            <th>سعر الوحدة</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -101,8 +109,8 @@ window.onload = async () => {
                         <tr>
                             <td>${i + idx + 1}</td>
                             <td><b>${item.name || '---'}</b></td>
-                            <td class="text-small">${item.description || '---'}</td>
-                            <td><img src="${item.image || 'images/placeholder.png'}" class="table-img" onerror="this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='"></td>
+                            <td class="text-small">${item.description || 'حجم مناسب و كبير'}</td>
+                            <td><img src="${item.image || fallbackImg}" class="table-img" onerror="this.src='${fallbackImg}'"></td>
                             <td>${item.qty || 1}</td>
                             <td>${(item.price || 0).toLocaleString()} ريال</td>
                         </tr>`).join('')}
@@ -114,12 +122,13 @@ window.onload = async () => {
                     <div class="summary-box-final">
                         <div class="s-line"><span>المجموع الفرعي:</span> <span>${(order.subtotal || 0).toLocaleString()} ريال</span></div>
                         <div class="s-line"><span>إجمالي الخصم:</span> <span>${(order.discount || 0).toLocaleString()} - ريال</span></div>
-                        <div class="s-line"><span>الضريبة (15%):</span> <span>${(order.tax || 0).toLocaleString()} ريال</span></div>
+                        <div class="s-line"><span>ضريبة القيمة المضافة (15%):</span> <span>${(order.tax || 0).toLocaleString()} ريال</span></div>
                         <div class="s-line grand-total-line"><span>الإجمالي النهائي:</span> <span>${(order.total || 0).toLocaleString()} ريال</span></div>
                     </div>
                 </div>
+
                 <div style="display:flex; gap:20px; justify-content:center; margin-top:30px">
-                    <div class="barcode-item"><div id="zatcaQR" class="qr-code"></div><p>🔍 هيئة الزكاة</p></div>
+                    <div class="barcode-item"><div id="zatcaQR" class="qr-code"></div><p>🔍 هيئة الزكاة والضريبة</p></div>
                     <div class="barcode-item"><div id="websiteQR" class="qr-code"></div><p>🌐 الموقع الرسمي</p></div>
                     <div class="barcode-item"><div id="downloadQR" class="qr-code"></div><p>📄 تحميل الفاتورة</p></div>
                 </div>
@@ -137,47 +146,59 @@ window.onload = async () => {
             </div>`;
         }
 
-        // 2. ربط صفحات الشروط والأحكام بالكامل (استدعاء جميع البنود من 1 إلى 57)
+        // ---------------------------------------------------------
+        // 2. توليد صفحات الشروط والأحكام (Terms Pages)
+        // ---------------------------------------------------------
         const termsKeys = Object.keys(TERMS_DATA);
-        const termsPages = [
-            { title: "أولاً إلى ثالثاً", keys: termsKeys.filter(k => k.startsWith('section1') || k.startsWith('section2') || k.startsWith('section3') || k.startsWith('intro')) },
-            { title: "رابعاً إلى ثامناً", keys: termsKeys.filter(k => k.startsWith('section4') || k.startsWith('section5') || k.startsWith('section6') || k.startsWith('section7') || k.startsWith('section8')) },
-            { title: "تاسعاً إلى ثاني عشر", keys: termsKeys.filter(k => k.startsWith('section9') || k.startsWith('section10') || k.startsWith('section11') || k.startsWith('section12')) }
+        const termsChunks = [
+            termsKeys.filter(k => k.startsWith('intro') || k.startsWith('section1') || k.startsWith('section2') || k.startsWith('section3') || k.startsWith('section4')),
+            termsKeys.filter(k => k.startsWith('section5') || k.startsWith('section6') || k.startsWith('section7') || k.startsWith('section8') || k.startsWith('section9')),
+            termsKeys.filter(k => k.startsWith('section10') || k.startsWith('section11') || k.startsWith('section12'))
         ];
 
-        termsPages.forEach((tPage, idx) => {
+        termsChunks.forEach((chunk, idx) => {
             const pageNum = invoicePagesCount + idx + 1;
             html += `
             <div class="page">
                 <div class="header-main">
                     <div class="header-right-group">
-                        <img src="images/logo.svg" class="main-logo">
-                        <div class="brand-info"><div class="brand-name">في خدمتك</div></div>
+                        <img src="images/logo.svg" class="main-logo" onerror="this.src='${fallbackImg}'">
+                        <div class="brand-info">
+                            <div class="brand-name">في خدمتك</div>
+                            <div class="brand-slogan">من الإتقان بلس</div>
+                        </div>
                     </div>
                     <div class="header-center-title"><div class="doc-label">الشروط والأحكام</div></div>
                     <div class="header-left-group">
                         <div>رقم شهادة العمل الحر: FL-765735204</div>
+                        <div>الرقم الضريبي: 312495447600003</div>
                     </div>
                 </div>
-                <div class="terms-content">
-                    ${tPage.keys.map(key => `<p class="term-text">${TERMS_DATA[key]}</p>`).join('')}
-                    
+
+                <div class="terms-container-styled">
+                    ${chunk.map(key => {
+                        if (key.startsWith('intro')) return `<div class="terms-intro-box">${TERMS_DATA[key]}</div>`;
+                        return `<div class="term-row">${TERMS_DATA[key]}</div>`;
+                    }).join('')}
+
                     ${idx === 2 ? `
-                    <div class="legal-acknowledgment">
-                        <h4>الإقرار والتوقيع</h4>
-                        <p>أقر أنا العميل (${customer.name}) بالموافقة على كافة البنود أعلاه.</p>
-                        <div class="signature-box">
-                            <div><b>الاسم:</b> ${customer.name}</div>
-                            <div><b>التاريخ:</b> ${formattedDate}</div>
-                            <div class="sig-line"><b>التوقيع:</b> .......................</div>
+                    <div class="legal-acknowledgment-luxury">
+                        <div class="ack-title">إقرار وتعهد العميل</div>
+                        <p>أقر أنا العميل الموضح بياناتي أدناه، بأنني اطلعت على كامل الشروط والأحكام وأوافق عليها.</p>
+                        <div class="signature-area">
+                            <div class="sig-block"><b>الاسم:</b> <span>${customer.name || '---'}</span></div>
+                            <div class="sig-block"><b>التاريخ:</b> <span>${formattedDate}</span></div>
+                            <div class="sig-block"><b>التوقيع:</b> <span class="sig-line"></span></div>
                         </div>
                     </div>
                     ` : ''}
                 </div>
+
                 <div class="final-footer">
                     <div class="contact-strip">
+                        <span>الهاتف: 966534051317+</span>
+                        <span>الواتس: 966545312021+</span>
                         <span>info@fi-khidmatik.com</span>
-                        <span>www.khidmatik.com</span>
                     </div>
                     <div class="page-number">صفحة ${pageNum} من ${totalPagesCount}</div>
                 </div>
@@ -188,5 +209,8 @@ window.onload = async () => {
         generateAllInvoiceQRs(order, seller, ["zatcaQR", "websiteQR", "downloadQR"]);
         document.getElementById('loader').style.display = 'none';
 
-    } catch (e) { console.error("Print Error:", e); }
+    } catch (e) { 
+        console.error("Print Engine Error:", e);
+        document.getElementById('loader').innerHTML = "حدث خطأ أثناء تحميل البيانات";
+    }
 };
