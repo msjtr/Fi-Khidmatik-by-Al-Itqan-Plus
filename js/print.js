@@ -11,26 +11,33 @@ window.onload = async () => {
         const customer = await window.getDocument("customers", order.customerId);
         const seller = window.invoiceSettings;
 
-        // صورة شفافة بديلة في حال تعذر تحميل صورة المنتج
+        // معالجة التاريخ والوقت تلقائياً من الطلب
+        const orderDate = new Date(order.createdAt);
+        const formattedDate = orderDate.toLocaleDateString('ar-SA');
+        const formattedTime = orderDate.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', hour12: true }).replace("ص", "صباحاً").replace("م", "مساءً");
+
         const fallbackImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 
+        // منطق تقسيم المنتجات للفاتورة
         const items = order.items || [];
-        const itemsPerPage = 8; 
-        const pages = [];
+        const itemsPerPage = 8;
+        const invoicePages = [];
         for (let i = 0; i < items.length; i += itemsPerPage) {
-            pages.push(items.slice(i, i + itemsPerPage));
+            invoicePages.push(items.slice(i, i + itemsPerPage));
         }
 
         let html = '';
-        pages.forEach((pageItems, index) => {
+
+        // 1. توليد صفحات الفاتورة الإلكترونية
+        invoicePages.forEach((pageItems, index) => {
             const isFirstPage = index === 0;
-            const isLastPage = index === pages.length - 1;
+            const isLastPage = index === invoicePages.length - 1;
 
             html += `
             <div class="page">
                 <div class="header-main">
                     <div class="header-right-group">
-                        <img src="images/logo.svg" class="main-logo" onerror="this.src='${fallbackImg}'">
+                        <img src="images/logo.svg" class="main-logo">
                         <div class="brand-info">
                             <div class="brand-name">في خدمتك</div>
                             <div class="brand-slogan">من الإتقان بلس</div>
@@ -45,8 +52,9 @@ window.onload = async () => {
 
                 ${isFirstPage ? `
                 <div class="order-meta-row">
-                    <span><b>رقم الطلب:</b> ${order.orderNumber || order.id || orderId}</span>
-                    <span><b>التاريخ:</b> ${new Date(order.createdAt).toLocaleDateString('ar-SA')}</span>
+                    <span><b>رقم الفاتورة:</b> ${order.orderNumber || order.id}</span>
+                    <span><b>التاريخ:</b> ${formattedDate}</span>
+                    <span><b>الوقت:</b> ${formattedTime}</span>
                     <span><b>حالة الطلب:</b> ${order.status || 'تم التنفيذ'}</span>
                 </div>
 
@@ -64,30 +72,23 @@ window.onload = async () => {
                         <div class="card-head">مصدرة إلى</div>
                         <div class="card-body">
                             <p><b>اسم العميل:</b> ${customer.name || '---'}</p>
-                            <p><b>المدينة:</b> ${customer.city || '---'}</p>
+                            <p><b>المدينة:</b> ${customer.city || '---'} | <b>الحي:</b> ${customer.district || '---'}</p>
                             <p><b>الجوال:</b> ${customer.phone || '---'}</p>
+                            <p><b>البريد:</b> ${customer.email || '---'}</p>
                         </div>
                     </div>
                 </div>
-
-                <div class="single-row-payment">
-                    <div class="p-item"><b>طريقة الدفع:</b> ${window.getPaymentName(order.paymentMethod)}</div>
-                    <div class="p-item"><b>رمز الموافقة:</b> ${order.approvalCode || '---'}</div>
-                    <div class="p-item"><b>طريقة الاستلام:</b> ${order.deliveryMethod || 'استلام إلكتروني'}</div>
-                </div>
                 ` : ''}
-
-                <div class="section-title-bar">تفاصيل المنتجات والخدمات</div>
 
                 <table class="main-table">
                     <thead>
                         <tr>
-                            <th style="width:5%">#</th>
-                            <th style="width:25%">اسم المنتج</th>
-                            <th style="width:35%">وصف المنتج / الخدمة</th>
-                            <th style="width:15%">صورة المنتج</th>
-                            <th style="width:10%">الكمية</th>
-                            <th style="width:10%">سعر الأفرادي</th>
+                            <th>#</th>
+                            <th>اسم المنتج</th>
+                            <th>وصف المنتج</th>
+                            <th>صورة المنتج</th>
+                            <th>الكمية</th>
+                            <th>سعر الوحدة</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -95,10 +96,10 @@ window.onload = async () => {
                         <tr>
                             <td>${(index * itemsPerPage) + i + 1}</td>
                             <td><b>${item.name || '---'}</b></td>
-                            <td class="text-small">${item.description || 'لا يوجد وصف متاح'}</td>
-                            <td><img src="${item.image ? window.getFinalImageUrl(item.image) : fallbackImg}" class="table-img" onerror="this.src='${fallbackImg}'"></td>
+                            <td class="text-small">${item.description || 'حجم مناسب و كبير'}</td>
+                            <td><img src="${item.image || fallbackImg}" class="table-img" onerror="this.src='${fallbackImg}'"></td>
                             <td>${item.qty || 1}</td>
-                            <td>${item.price || 0} ريال</td>
+                            <td>${(item.price || 0).toLocaleString()} ريال</td>
                         </tr>`).join('')}
                     </tbody>
                 </table>
@@ -106,63 +107,63 @@ window.onload = async () => {
                 ${isLastPage ? `
                 <div class="financial-section">
                     <div class="summary-box-final">
-                        <div class="s-line"><span>المجموع الفرعي:</span> <span>${(order.subtotal || 0).toFixed(2)} ريال</span></div>
-                        <div class="s-line"><span>إجمالي الخصم:</span> <span>${(order.discount || 0).toFixed(2)} - ريال</span></div>
-                        <div class="s-line"><span>الضريبة (15%):</span> <span>${(order.tax || 0).toFixed(2)} ريال</span></div>
-                        <div class="s-line grand-total-line"><span>الإجمالي النهائي شامل الضريبة:</span> <span>${(order.total || 0).toFixed(2)} ريال</span></div>
+                        <div class="s-line"><span>المجموع الفرعي:</span> <span>${(order.subtotal || 0).toLocaleString()} ريال</span></div>
+                        <div class="s-line"><span>إجمالي الخصم:</span> <span>${(order.discount || 0).toLocaleString()} - ريال</span></div>
+                        <div class="s-line"><span>ضريبة القيمة المضافة (15%):</span> <span>${(order.tax || 0).toLocaleString()} ريال</span></div>
+                        <div class="s-line grand-total-line"><span>الإجمالي النهائي شامل الضريبة:</span> <span>${(order.total || 0).toLocaleString()} ريال</span></div>
                     </div>
                 </div>
 
-                <div style="display:flex; gap:20px; justify-content:center; margin-top:30px; border-top:1px dashed #ccc; padding-top:20px;">
-                    <div class="barcode-item">
-                        <div id="zatcaQR" class="qr-code"></div>
-                        <p>
-                            🔍 التحقق من التسجيل الضريبي – هيئة الزكاة والضريبة والجمارك<br>
-                            <a href="https://zatca.gov.sa/ar/eServices/Pages/TaxpayerLookup.aspx" target="_blank">zatca.gov.sa</a>
-                        </p>
-                    </div>
-
-                    <div class="barcode-item">
-                        <div id="websiteQR" class="qr-code"></div>
-                        <p>
-                            🌐 زيارة الموقع الرسمي لمنصة في خدمتك<br>
-                            <a href="https://linktr.ee/fikhidmatik" target="_blank">linktr.ee/fikhidmatik</a>
-                        </p>
-                    </div>
-
-                    <div class="barcode-item">
-                        <div id="downloadQR" class="qr-code"></div>
-                        <p>
-                            📄 عرض وتحميل الفاتورة الإلكترونية<br>
-                            <a id="invoiceLink" target="_blank">رابط الفاتورة</a>
-                        </p>
-                    </div>
+                <div style="display:flex; gap:20px; justify-content:center; margin-top:30px">
+                    <div class="barcode-item"><div id="zatcaQR" class="qr-code"></div><p>🔍 هيئة الزكاة والضريبة</p></div>
+                    <div class="barcode-item"><div id="websiteQR" class="qr-code"></div><p>🌐 الموقع الرسمي</p></div>
+                    <div class="barcode-item"><div id="downloadQR" class="qr-code"></div><p>📄 تحميل الفاتورة</p></div>
                 </div>
                 ` : ''}
 
                 <div class="final-footer">
-                    ${isLastPage ? `<div class="thanks-msg">شكراً لتسوقكم معنا</div>` : ''}
                     <div class="contact-strip">
                         <span>الهاتف: 966534051317+</span>
                         <span>الواتس اب: 966545312021+</span>
                         <span>info@fi-khidmatik.com</span>
-                        <span>www.khidmatik.com</span>
                     </div>
                     <div class="legal-stamp">هذه الفاتورة إلكترونية - نسخة معتمدة قانونياً</div>
-                    <div class="page-number">صفحة ${index + 1} من ${pages.length}</div>
                 </div>
             </div>`;
         });
 
-        document.getElementById('print-app').innerHTML = html;
-        
-        // ربط رابط الفاتورة
-        const invLink = document.getElementById('invoiceLink');
-        if(invLink) invLink.href = window.location.href;
+        // 2. توليد صفحات الشروط والأحكام بالكامل من ملف TERMS_DATA [cite: 9, 10, 11, 12]
+        html += `
+        <div class="page">
+            <div class="header-main">
+                <div class="header-right-group">
+                    <img src="images/logo.svg" class="main-logo">
+                    <div class="brand-info"><div class="brand-name">في خدمتك</div></div>
+                </div>
+                <div class="header-center-title"><div class="doc-label">الشروط والأحكام</div></div>
+            </div>
+            <div class="terms-content">
+                <div class="terms-intro"><p>${TERMS_DATA.intro_responsibility}</p></div>
+                <div class="terms-section">
+                    <h3>أولاً: صلاحية العرض والتنفيذ</h3>
+                    <p>1. ${TERMS_DATA.section1_1}</p>
+                    <p>2. ${TERMS_DATA.section1_2}</p>
+                </div>
+                <div class="legal-acknowledgment">
+                    <h4>الإقرار</h4>
+                    <p>أقر أنا العميل بالاطلاع على جميع الشروط والأحكام أعلاه وأوافق عليها بالكامل.</p>
+                    <div class="signature-box">
+                        <div><b>الاسم:</b> ${customer.name}</div>
+                        <div><b>التاريخ:</b> ${formattedDate}</div>
+                        <div class="sig-line"><b>التوقيع:</b></div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
 
-        // توليد الباركودات (تأكد من أن مكتبة الـ QR مدعومة في generateAllInvoiceQRs)
+        document.getElementById('print-app').innerHTML = html;
         generateAllInvoiceQRs(order, seller, ["zatcaQR", "websiteQR", "downloadQR"]);
-        
         document.getElementById('loader').style.display = 'none';
+
     } catch (e) { console.error(e); }
 };
