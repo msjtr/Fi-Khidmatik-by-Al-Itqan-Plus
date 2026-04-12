@@ -11,18 +11,18 @@ window.onload = async () => {
     }
 
     try {
-        // 1. جلب البيانات
+        // 1. جلب البيانات من Firebase
         const order = await window.getDocument("orders", orderId);
         if (!order || !order.success) throw new Error("Order not found");
 
         const customer = await window.getDocument("customers", order.customerId);
         const seller = window.invoiceSettings;
 
-        // 2. التحقق من وجود البيانات لتجنب Uncaught TypeError
+        // 2. التحقق من وجود البيانات
         const customerName = customer && customer.name ? customer.name : "عميل كرام";
         const customerPhone = customer && customer.phone ? customer.phone : "---";
 
-        // 3. بناء صفحات الطباعة (تأكد من استخدام علامة ` في البداية والنهاية)
+        // 3. بناء الواجهة - انتبه لعلامة ` في البداية والنهاية
         let html = `
         <div class="page">
             <div class="header">
@@ -90,7 +90,7 @@ window.onload = async () => {
             </div>
         </div>`;
 
-        // 4. تقسيم وإضافة صفحات الشروط (57 بنداً)
+        // 4. إضافة صفحات الشروط (57 بنداً)
         const chunks = [TERMS_DATA.slice(0, 20), TERMS_DATA.slice(20, 40), TERMS_DATA.slice(40, 57)];
         
         chunks.forEach((chunk, index) => {
@@ -115,11 +115,13 @@ window.onload = async () => {
             </div>`;
         });
 
-        // 5. حقن الكود وتوليد الباركود
+        // 5. حقن الكود النهائي وتوليد الباركود
         document.getElementById('print-app').innerHTML = html;
         
         // استدعاء دالة الباركود من zatca.js
-        generateAllInvoiceQRs(order, seller);
+        if (typeof generateAllInvoiceQRs === "function") {
+            generateAllInvoiceQRs(order, seller);
+        }
 
         // إخفاء شاشة التحميل
         document.getElementById('loader').style.display = 'none';
