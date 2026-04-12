@@ -11,120 +11,121 @@ window.onload = async () => {
         const customer = await window.getDocument("customers", order.customerId);
         const seller = window.invoiceSettings;
 
-        // بناء محتوى الفاتورة بناءً على القيم الثابتة في ملف 2222.pdf
         let html = `
-        <div class="page invoice-page">
+        <div class="page">
             <div class="header-main">
-                <div class="header-right">رقم شهادة العمل الحر: 765735204-FL</div>
-                <div class="header-center"><img src="images/logo.svg" alt="شعار المنصة"></div>
-                <div class="header-left">الرقم الضريبي: 312495447600003</div>
+                <div class="header-right-group">
+                    <img src="images/logo.svg" class="main-logo">
+                    <div class="brand-info">
+                        <div class="brand-name">في خدمتك</div>
+                        <div class="brand-slogan">من الإتقان بلس</div>
+                    </div>
+                </div>
+                <div class="header-center-title">
+                    <div class="doc-label">فاتورة إلكترونية</div>
+                </div>
+                <div class="header-left-group">
+                    <div>رقم شهادة العمل الحر: FL-765735204</div>
+                    <div>الرقم الضريبي: 312495447600003</div>
+                </div>
             </div>
 
-            <h2 class="doc-title-box">فاتورة إلكترونية</h2>
-
-            <div class="meta-section">
-                <span><b>رقم الفاتورة:</b> KF-2603290287</span>
-                <span><b>التاريخ:</b> 29/03/2026 <b>الوقت:</b> 03:21 صباحاً</span>
+            <div class="single-row-meta">
+                <span><b>رقم الطلب:</b> KF-2603290287</span>
+                <span><b>التاريخ والوقت:</b> 29/03/2026 - 03:21 صباحاً</span>
                 <span><b>حالة الطلب:</b> تم التنفيذ</span>
             </div>
 
-            <div class="dual-grid">
+            <div class="dual-columns">
                 <div class="address-card">
-                    <div class="card-head">مصدرة من [cite: 157]</div>
+                    <div class="card-head">مصدرة من</div>
                     <div class="card-body">
-                        <p><b>منصة في خدمتك</b> [cite: 159]</p>
-                        <p>المملكة العربية السعودية [cite: 160]</p>
-                        <p>حائل : حي النقرة : شارع : سعد المشاط [cite: 161]</p>
-                        <p>رقم المبنى: 3085 | الإضافي : 7718 | الرمز البريدي 55431 [cite: 162]</p>
+                        <p><b>منصة في خدمتك</b></p>
+                        <p>المملكة العربية السعودية - حائل</p>
+                        <p>حي النقرة : شارع سعد المشاط</p>
+                        <p>مبنى: 3085 | إضافي: 7718 | بريد: 55431</p>
                     </div>
                 </div>
                 <div class="address-card">
-                    <div class="card-head">مصدرة إلى [cite: 158]</div>
+                    <div class="card-head">مصدرة إلى</div>
                     <div class="card-body">
-                        <p><b>اسم العميل:</b> ${customer.name || 'محمد صالح جميعان الشمري'}</p>
-                        <p>الدولة: المملكة العربية السعودية</p>
-                        <p>المدينة: ${customer.city || 'حائل'}</p>
-                        <p>العنوان: ${customer.address || ''}</p>
-                        <p>الجوال: ${customer.phone || '966597771565'}</p>
+                        <p><b>اسم العميل:</b> ${customer.name || '---'}</p>
+                        <p><b>المدينة:</b> ${customer.city || '---'}</p>
+                        <p><b>الجوال:</b> ${customer.phone || '---'}</p>
+                        <p><b>البريد:</b> ${customer.email || '---'}</p>
                     </div>
                 </div>
             </div>
 
-            <div class="info-grid">
-                <div class="info-item"><b>طريقة الدفع:</b> ${order.paymentMethod || 'mada'}</div>
-                <div class="info-item"><b>رمز الموافقة:</b> ${order.approvalCode || '---'}</div>
-                <div class="info-item"><b>طريقة الاستلام:</b> استلام إلكتروني</div>
+            <div class="single-row-payment">
+                <div class="p-item"><b>طريقة الدفع:</b> ${window.getPaymentName(order.paymentMethod)}</div>
+                <div class="p-item"><b>رمز الموافقة:</b> ${order.approvalCode || '---'}</div>
+                <div class="p-item"><b>طريقة الاستلام:</b> ${order.deliveryMethod || 'استلام إلكتروني'}</div>
             </div>
+
+            <div class="section-title-bar">تفاصيل المنتجات والخدمات</div>
 
             <table class="main-table">
                 <thead>
                     <tr>
                         <th>#</th>
+                        <th>اسم المنتج</th>
+                        <th>وصف المنتج / الخدمة</th>
                         <th>صورة المنتج</th>
-                        <th>اسم المنتج ووصفه</th>
                         <th>الكمية</th>
-                        <th>السعر</th>
-                        <th>الوحدة</th>
+                        <th>سعر الأفرادي</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${(order.items || []).map((item, i) => `
                     <tr>
                         <td>${i + 1}</td>
-                        <td><img src="${item.image}" class="table-img"></td>
-                        <td class="text-right"><b>${item.name}</b><br><small>${item.description || ''}</small></td>
-                        <td>${item.qty || 1}</td>
+                        <td style="text-align:right"><b>${item.name}</b></td>
+                        <td style="text-align:right; font-size: 10px;">${item.description || '---'}</td>
+                        <td><img src="${window.getFinalImageUrl(item.image)}" class="table-img"></td>
+                        <td>${item.qty}</td>
                         <td>${item.price} ريال</td>
-                        <td>قطعة</td>
                     </tr>`).join('')}
                 </tbody>
             </table>
 
-            <div class="summary-wrapper">
-                <div class="summary-box">
+            <div class="financial-section">
+                <div class="summary-box-final">
                     <div class="s-line"><span>المجموع الفرعي:</span> <span>19282.00 ريال</span></div>
                     <div class="s-line"><span>إجمالي الخصم:</span> <span>5784.60 - ريال</span></div>
                     <div class="s-line"><span>ضريبة القيمة المضافة (15%):</span> <span>2024.61 ريال</span></div>
-                    <div class="s-line total"><span>الإجمالي النهائي شامل الضريبة:</span> <span>15522.01 ريال</span></div>
+                    <div class="s-line grand-total-line"><span>الإجمالي النهائي شامل الضريبة:</span> <span>15522.01 ريال</span></div>
                 </div>
             </div>
 
-            <div class="qr-footer-section">
-                <div id="zatcaQR" class="big-qr"></div>
-                <p>باركود التحقق</p>
+            <div class="instruction-qr-area">
+                <div class="instructions">
+                    <p><b>تعليمات الفاتورة:</b></p>
+                    <p>تخضع هذه الفاتورة لكامل الشروط والأحكام المرفقة</p>
+                </div>
+                <div class="triple-qr-wrapper">
+                    <div class="qr-item"><div id="zatcaQR1"></div><span>باركود الفاتورة</span></div>
+                    <div class="qr-item"><div id="zatcaQR2"></div><span>باركود التحقق</span></div>
+                    <div class="qr-item"><div id="zatcaQR3"></div><span>باركود المنصة</span></div>
+                </div>
             </div>
 
-            <div class="footer-bottom">
-                <p><b>تعليمات الفاتورة:</b> تخضع هذه الفاتورة لكامل الشروط والأحكام المرفقة</p>
-                <p>شكراً لتسوقكم معنا</p>
-                <p>www.khidmatik.com | info@fi-khidmatik.com | +966545312021</p>
-                <p class="legal-tag">هذه الفاتورة إلكترونية - نسخة معتمدة قانونياً</p>
+            <div class="final-footer">
+                <div class="thanks-msg">شكراً لتسوقكم معنا</div>
+                <div class="contact-strip">
+                    <span>الهاتف: 966534051317+</span>
+                    <span>الواتس اب: 966545312021+</span>
+                    <span>info@fi-khidmatik.com</span>
+                    <span>www.khidmatik.com</span>
+                </div>
+                <div class="legal-stamp">هذه الفاتورة إلكترونية - نسخة معتمدة قانونياً</div>
+                <div class="page-number">صفحة 1 من 4</div>
             </div>
         </div>`;
 
-        // توليد صفحات الشروط (3 صفحات إضافية) بنفس الهيدر والتذييل
-        const chunks = [TERMS_DATA.slice(0, 20), TERMS_DATA.slice(20, 40), TERMS_DATA.slice(40, 57)];
-        chunks.forEach((chunk, index) => {
-            html += `
-            <div class="page terms-page">
-                <div class="header-main">
-                    <div>رقم شهادة العمل الحر: 765735204-FL</div>
-                    <div><img src="images/logo.svg"></div>
-                    <div>الرقم الضريبي: 312495447600003</div>
-                </div>
-                <h2 class="doc-title-box">الشروط والأحكام</h2>
-                <div class="terms-container">
-                    ${chunk.map(term => `<div class="term-row"><b>${term.id}. ${term.t}:</b> ${term.c}</div>`).join('')}
-                </div>
-                <div class="footer-bottom">
-                    <p>www.khidmatik.com | info@fi-khidmatik.com | صفحة ${index + 2} من 4</p>
-                    <p class="legal-tag">هذه الفاتورة إلكترونية والشروط والأحكام - نسخة معتمدة قانونياً</p>
-                </div>
-            </div>`;
-        });
-
         document.getElementById('print-app').innerHTML = html;
-        generateAllInvoiceQRs(order, seller);
+        // توليد الباركودات الثلاثة بشكل موحد
+        generateAllInvoiceQRs(order, seller, ["zatcaQR1", "zatcaQR2", "zatcaQR3"]);
         document.getElementById('loader').style.display = 'none';
     } catch (e) { console.error(e); }
 };
