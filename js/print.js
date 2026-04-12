@@ -47,10 +47,10 @@ const UI = {
     footer: (current, total, seller) => `
         <div class="final-footer">
             <div class="contact-info-strip">
-                <div class="contact-item"><span>الهاتف:</span> <span class="num-dir">966534051317+</span></div>
-                <div class="contact-item"><span>الواتس اب:</span> <span class="num-dir">966545312021+</span></div>
-                <div class="contact-item">info@fi-khidmatik.com</div>
-                <div class="contact-item">www.khidmatik.com</div>
+                <div class="contact-item"><span>الهاتف:</span><span class="num-dir">966534051317+</span></div>
+                <div class="contact-item"><span>الواتس اب:</span><span class="num-dir">966545312021+</span></div>
+                <div class="contact-item"><span>info@fi-khidmatik.com</span></div>
+                <div class="contact-item"><span>www.khidmatik.com</span></div>
             </div>
             <div class="footer-legal-notice">
                 هذه الفاتورة إلكترونية - نسخة معتمدة قانونياً
