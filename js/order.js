@@ -3,21 +3,24 @@
  */
 
 export const OrderManager = {
-    // جلب بيانات الطلب والعميل
     async getOrderFullDetails(orderId) {
         try {
-            // التحقق من وجود الدالة أو استخدام البديل
-            const fetchDoc = window.getDocument || (async (coll, id) => {
-                console.warn(`الدالة getDocument غير معرفة للمجموعة ${coll}`);
-                return null; 
-            });
+            // محاولة العثور على الدالة في النطاق العام للموقع
+            const fetchDoc = window.getDocument || (window.parent && window.parent.getDocument);
 
-            const order = await fetchDoc("orders", orderId);
-            if (!order) {
-                console.error("الطلب غير موجود في قاعدة البيانات");
+            if (!fetchDoc) {
+                console.error("خطأ حرج: دالة getDocument غير معرفة في window. تأكد من تحميل ملفات قاعدة البيانات قبل هذا الملف.");
                 return null;
             }
 
+            // جلب بيانات الطلب
+            const order = await fetchDoc("orders", orderId);
+            if (!order) {
+                console.warn(`الطلب رقم ${orderId} غير موجود في مجموعة orders`);
+                return null;
+            }
+
+            // جلب بيانات العميل
             const customer = await fetchDoc("customers", order.customerId);
             
             return {
@@ -25,18 +28,17 @@ export const OrderManager = {
                 customer: customer || { name: "عميل كريم" }
             };
         } catch (error) {
-            console.error("خطأ تقني في جلب البيانات:", error);
+            console.error("حدث خطأ أثناء محاولة الاتصال بقاعدة البيانات:", error);
             return null;
         }
     },
 
     formatDateTime(createdAt) {
+        if (!createdAt) return { date: "---", time: "---" };
         const dateObj = new Date(createdAt);
         const date = dateObj.toLocaleDateString('ar-SA');
         const time = dateObj.toLocaleTimeString('ar-SA', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
+            hour: '2-digit', minute: '2-digit', hour12: true
         }).replace("ص", "صباحاً").replace("م", "مساءً");
         return { date, time };
     },
@@ -44,8 +46,8 @@ export const OrderManager = {
     getLogisticDetails(order) {
         return {
             paymentMethod: order.paymentMethod || "دفع إلكتروني",
-            approvalCode: order.approvalCode || order.paymentId || "تم الاعتماد",
-            deliveryMethod: order.deliveryMethod || "تفعيل رقمي"
+            approvalCode: order.approvalCode || order.paymentId || "مكتمل",
+            deliveryMethod: order.deliveryMethod || "توصيل رقمي"
         };
     }
 };
