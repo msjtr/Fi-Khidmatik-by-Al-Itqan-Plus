@@ -296,3 +296,58 @@ body {
     direction: ltr !important; /* الحفاظ على تنسيق الرقم +966 */
     unicode-bidi: isolate;
 }
+
+/* تنسيق السطر الواحد لمعلومات الطلب */
+.order-info-line {
+    display: flex;
+    justify-content: space-between;
+    background: #f8f9fa;
+    padding: 8px 15px;
+    border: 1px solid #eee;
+    margin-bottom: 15px;
+    font-size: 11px;
+    border-radius: 4px;
+}
+
+.payment-line {
+    margin-top: -10px;
+    margin-bottom: 20px;
+    background: #fff;
+    border-top: none;
+}
+
+.status-badge {
+    color: green;
+    font-weight: bold;
+}
+
+.company-name {
+    font-size: 14px;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin-bottom: 5px !important;
+}
+
+/* تعديل الأعمدة */
+.dual-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.card-head {
+    background: #1a1a1a;
+    color: white;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.card-body {
+    padding: 10px;
+    font-size: 10.5px;
+    line-height: 1.6;
+    border: 1px solid #eee;
+    border-top: none;
+}
