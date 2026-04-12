@@ -1,84 +1,131 @@
-// داخل ملف js/print.js وتحديداً داخل دالة window.onload
-
-// ... (بعد جلب order و customer و seller)
-
-// التصحيح هنا: استخدمنا seller.name بدلاً من seller.sellerName
-let html = `
-<div class="page">
-    <div class="header">// js/print.js
 import { TERMS_DATA } from './terms.js';
 import { generateAllInvoiceQRs } from './zatca.js';
 
 window.onload = async () => {
-    const id = new URLSearchParams(window.location.search).get('id');
-    if (!id) return;
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get('id');
+
+    if (!orderId) {
+        document.getElementById('loader').innerHTML = "<h1>خطأ: معرف الطلب مفقود</h1>";
+        return;
+    }
 
     try {
-        // 1. جلب البيانات من Firebase
-        const order = await window.getDocument("orders", id);
+        // 1. جلب البيانات
+        const order = await window.getDocument("orders", orderId);
+        if (!order || !order.success) throw new Error("Order not found");
+
         const customer = await window.getDocument("customers", order.customerId);
-        
-        // 2. تعريف seller (تأكد أن السطر أدناه موجود قبل استخدامه)
-        const seller = window.invoiceSettings; 
+        const seller = window.invoiceSettings;
 
-        if (!seller) {
-            console.error("خطأ: لم يتم العثور على إعدادات البائع في window.invoiceSettings");
-            return;
-        }
+        // 2. التحقق من وجود البيانات لتجنب Uncaught TypeError
+        const customerName = customer && customer.name ? customer.name : "عميل كرام";
+        const customerPhone = customer && customer.phone ? customer.phone : "---";
 
-        // 3. بناء واجهة الطباعة (الآن يمكنك استخدام seller بأمان)
+        // 3. بناء صفحات الطباعة (تأكد من استخدام علامة ` في البداية والنهاية)
         let html = `
         <div class="page">
             <div class="header">
                 <div class="logo">
                     <img src="images/logo.svg" onerror="this.src='https://via.placeholder.com/150'">
-                    <div style="font-weight:800; color:#1e3a5f;">
+                    <div style="font-weight:800; color:#1e3a5f; margin-top:5px;">
                         ${seller.name} <br>
                         <small>${seller.slogan || ''}</small>
                     </div>
                 </div>
                 <div class="doc-label">فاتورة إلكترونية</div>
             </div>
-            </div>`;
 
-        // ... تكملة الكود
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-h">بيانات مصدر الفاتورة</div>
+                    <div class="card-b">
+                        ${seller.address} <br>
+                        التواصل: ${seller.phone}
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-h">بيانات العميل</div>
+                    <div class="card-b">
+                        <b>${customerName}</b> <br>
+                        الجوال: ${customerPhone}
+                    </div>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>المنتج</th>
+                        <th>الكمية</th>
+                        <th>السعر</th>
+                        <th>الإجمالي</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${(order.items || []).map(item => `
+                        <tr>
+                            <td style="text-align:right;">${item.name}</td>
+                            <td>${item.qty || 1}</td>
+                            <td>${item.price} ر.س</td>
+                            <td>${(parseFloat(item.price) * parseInt(item.qty || 1)).toFixed(2)} ر.س</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+
+            <div class="total-box">
+                الإجمالي النهائي: ${order.total} ريال
+            </div>
+
+            <div class="barcodes" style="display:flex; justify-content:space-around; margin-top:auto; padding:20px 0; border-top:1px solid #eee;">
+                <div style="text-align:center;"><div id="zatcaQR"></div><small>هيئة الزكاة</small></div>
+                <div style="text-align:center;"><div id="websiteQR"></div><small>موقعنا</small></div>
+                <div style="text-align:center;"><div id="downloadQR"></div><small>تحميل الفاتورة</small></div>
+            </div>
+            
+            <div class="footer">
+                <span>${seller.website}</span>
+                <span>صفحة 1 من 4</span>
+            </div>
+        </div>`;
+
+        // 4. تقسيم وإضافة صفحات الشروط (57 بنداً)
+        const chunks = [TERMS_DATA.slice(0, 20), TERMS_DATA.slice(20, 40), TERMS_DATA.slice(40, 57)];
+        
+        chunks.forEach((chunk, index) => {
+            html += `
+            <div class="page">
+                <div class="header">
+                    <div class="logo"><img src="images/logo.svg" style="height:40px;"></div>
+                    <div class="doc-label" style="font-size:12px;">الشروط والأحكام (${index + 1}/3)</div>
+                </div>
+                <div class="terms-section">
+                    ${chunk.map(c => `
+                        <div class="clause">
+                            <span class="c-num">${c.id}.</span>
+                            <div><b>${c.t}:</b> ${c.c}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="footer">
+                    <span>${seller.email}</span>
+                    <span>صفحة ${index + 2} من 4</span>
+                </div>
+            </div>`;
+        });
+
+        // 5. حقن الكود وتوليد الباركود
         document.getElementById('print-app').innerHTML = html;
+        
+        // استدعاء دالة الباركود من zatca.js
         generateAllInvoiceQRs(order, seller);
+
+        // إخفاء شاشة التحميل
         document.getElementById('loader').style.display = 'none';
 
-    } catch (e) {
-        console.error("Print Error:", e);
+    } catch (error) {
+        console.error("Print Error:", error);
+        document.getElementById('loader').innerHTML = "<h1>حدث خطأ أثناء تحميل الصفحة</h1>";
     }
 };
-        <div class="logo">
-            <img src="images/logo.svg" onerror="this.src='https://via.placeholder.com/150'">
-            <div style="font-weight:800; color:#1e3a5f; margin-top:5px;">
-                ${seller.name} <br> 
-                <small>${seller.slogan || ''}</small>
-            </div>
-        </div>
-        <div class="doc-label">فاتورة إلكترونية</div>
-        <div class="header-meta">
-            الرقم الضريبي: ${seller.taxNumber} <br>
-            العمل الحر: ${seller.licenseNumber}
-        </div>
-    </div>
-
-    <div class="grid-2">
-        <div class="card">
-            <div class="card-h">بيانات المتجر (المصدر)</div>
-            <div class="card-b">
-                ${seller.address} <br>
-                التواصل: ${seller.phone}
-            </div>
-        </div>
-        <div class="card">
-            <div class="card-h">بيانات العميل (المستلم)</div>
-            <div class="card-b">
-                <b>${customer.name || 'عميل كرام'}</b> <br>
-                الجوال: ${customer.phone || '---'}
-            </div>
-        </div>
-    </div>
-    
-    `;
