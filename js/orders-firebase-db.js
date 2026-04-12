@@ -14,8 +14,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 
-// وظائف مساعدة متاحة عالمياً
+// وظائف مساعدة متاحة عالمياً مع معالجة الأخطاء
 window.getDocument = async (colName, id) => {
-    const snap = await getDoc(doc(db, colName, id));
-    return snap.exists() ? { id: snap.id, ...snap.data(), success: true } : { success: false };
+    try {
+        const snap = await getDoc(doc(db, colName, id));
+        if (snap.exists()) {
+            return { id: snap.id, ...snap.data(), success: true };
+        } else {
+            console.warn(`الوثيقة المطلوبة غير موجودة في ${colName}`);
+            return { success: false, error: "not-found" };
+        }
+    } catch (error) {
+        console.error("خطأ في جلب البيانات:", error);
+        return { success: false, error: error.message };
+    }
 };
