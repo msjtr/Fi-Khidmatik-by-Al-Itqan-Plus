@@ -13,20 +13,22 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <link rel="stylesheet" href="css/invoice.css">
+    <script src="js/invoice.js"></script>
 </head>
 <body>
 
     <div class="control-panel">
-        <button class="btn-action btn-pdf" id="downloadBtn">📥 حفظ PDF</button>
-        <button class="btn-action" onclick="window.print()">🖨️ طباعة</button>
+        <button class="btn-action btn-pdf" id="downloadPDF">📥 حفظ PDF</button>
+        <button class="btn-action" id="printPage">🖨️ طباعة</button>
     </div>
 
     <div id="loader">
         <div class="spinner"></div>
-        <p id="loader-text">جاري معالجة بيانات الفاتورة...</p>
+        <p>جاري معالجة بيانات الفاتورة والعميل...</p>
     </div>
 
     <div id="print-app"></div>
 
-    <script src="js/invoice.js"></script> <script type="module" src="js/print.js"></script> </body>
+    <script type="module" src="js/print.js"></script>
+</body>
 </html>
