@@ -1,105 +1,277 @@
-/* Invoice CSS - منصة في خدمتك 
-    إصدار 2026 - نظام الطباعة المتطور
-*/
-
-:root {
-    --primary-color: #1a1a1a;
-    --accent-color: #d4af37;
-    --text-color: #333;
-    --border-color: #eee;
-    --page-width: 210mm;
-    --page-height: 297mm;
-}
-
-* {
-    box-sizing: border-box;
-    -webkit-print-color-adjust: exact;
+/* الإعدادات الأساسية للطباعة */
+@media print {
+    @page {
+        size: A4;
+        margin: 0;
+    }
+    body {
+        background: none;
+        -webkit-print-color-adjust: exact;
+    }
+    .no-print {
+        display: none !important;
+    }
 }
 
 body {
-    background: #f0f0f0;
-    font-family: 'Tajawal', sans-serif;
+    font-family: 'Cairo', sans-serif;
+    direction: rtl;
+    background-color: #f0f2f5;
     margin: 0;
     padding: 0;
-    direction: rtl;
-    color: var(--text-color);
 }
 
-/* إعدادات الصفحة للطباعة */
+/* حاوية الصفحة */
 .page {
-    width: var(--page-width);
-    min-height: var(--page-height);
+    width: 210mm;
+    min-height: 297mm;
     padding: 15mm;
     margin: 10mm auto;
     background: white;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
     position: relative;
-    display: flex;
-    flex-direction: column;
+    box-sizing: border-box;
+    page-break-after: always;
+    overflow: hidden;
 }
 
-@media print {
-    body { background: none; }
-    .page { 
-        margin: 0; 
-        box-shadow: none; 
-        page-break-after: always;
-    }
-}
-
-/* الترويسة الثابتة */
+/* الهيدر الرئيسي */
 .header-main {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 3px solid var(--primary-color);
+    border-bottom: 2px solid #1a1a1a;
     padding-bottom: 10px;
     margin-bottom: 20px;
 }
 
 .main-logo {
-    height: 70px;
+    height: 60px;
     width: auto;
+    object-fit: contain;
 }
 
 .doc-label {
-    background: var(--primary-color);
-    color: white;
-    padding: 8px 25px;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 800;
-    border-radius: 4px;
+    color: #1a1a1a;
+    border: 2px solid #1a1a1a;
+    padding: 5px 20px;
 }
 
 .header-left-group {
     font-size: 11px;
-    line-height: 1.8;
     text-align: left;
+    line-height: 1.6;
 }
 
-/* بيانات الفاتورة العلوية */
+/* معلومات الفاتورة والعملاء */
 .order-meta-row {
     display: flex;
     justify-content: space-between;
-    background: #f9f9f9;
-    padding: 10px 15px;
-    border-radius: 5px;
-    font-size: 13px;
-    margin-bottom: 20px;
+    background: #f8f9fa;
+    padding: 10px;
+    margin-bottom: 15px;
+    font-size: 12px;
 }
 
-/* نظام الأعمدة المتساوية */
 .dual-columns {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 15px;
     margin-bottom: 20px;
 }
 
 .address-card {
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    overflow: hidden;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
 }
 
-.card
+.card-head {
+    background: #1a1a1a;
+    color: white;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.card-body {
+    padding: 10px;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.card-body p { margin: 0; }
+
+/* الجدول الرئيسي */
+.main-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.main-table th {
+    background: #f4f4f4;
+    color: #333;
+    padding: 10px;
+    font-size: 12px;
+    border: 1px solid #ddd;
+}
+
+.main-table td {
+    padding: 10px;
+    border: 1px solid #eee;
+    font-size: 11px;
+    text-align: center;
+}
+
+.product-img-print {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+/* القسم المالي والباركود */
+.financial-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 20px;
+}
+
+.summary-box-final {
+    width: 250px;
+}
+
+.s-line {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.grand-total-line {
+    border-bottom: none;
+    font-weight: 800;
+    font-size: 14px;
+    color: #000;
+    padding-top: 10px;
+}
+
+.barcode-group-print {
+    display: flex;
+    gap: 15px;
+}
+
+.barcode-group-print div {
+    text-align: center;
+}
+
+/* تنسيق الشروط والأحكام */
+.page-terms {
+    padding-bottom: 45mm !important; /* مساحة إضافية للتذييل */
+}
+
+.terms-container-print {
+    margin-top: 10px;
+}
+
+.term-row-print {
+    margin-bottom: 5px;
+    padding: 4px 0;
+    border-bottom: 1px solid #f9f9f9;
+}
+
+.term-title-style {
+    background-color: #f5f5f5;
+    padding: 6px 10px;
+    border-right: 4px solid #1a1a1a;
+    font-weight: bold;
+    font-size: 12px;
+    margin-top: 12px;
+    color: #000;
+}
+
+.term-content-print {
+    font-size: 9.5px;
+    line-height: 1.5;
+    margin: 0;
+    text-align: justify;
+    color: #333;
+}
+
+/* التذييل الجديد (Footer) */
+.final-footer {
+    position: absolute;
+    bottom: 10mm;
+    left: 10mm;
+    right: 10mm;
+    border-top: 1px solid #e0e0e0;
+    padding-top: 10px;
+    text-align: center;
+}
+
+.contact-info-strip {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+    direction: ltr; /* لضبط عرض أرقام الهواتف والروابط */
+}
+
+.contact-item {
+    font-size: 10px;
+    color: #333;
+    font-weight: 600;
+}
+
+.contact-item span {
+    direction: rtl;
+    display: inline-block;
+    margin-left: 4px;
+}
+
+.footer-legal-notice {
+    font-size: 11px;
+    font-weight: bold;
+    color: #1a1a1a;
+    margin-bottom: 6px;
+    background: #f9f9f9;
+    display: inline-block;
+    padding: 3px 20px;
+    border-radius: 4px;
+    border: 1px solid #eee;
+}
+
+.page-number-box {
+    font-size: 9px;
+    color: #999;
+}
+
+/* أزرار التحكم (تختفي عند الطباعة) */
+.print-controls {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 15px;
+    z-index: 9999;
+}
+
+.btn-print {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 50px;
+    background: #1a1a1a;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.btn-print.secondary {
+    background: #007bff;
+}
