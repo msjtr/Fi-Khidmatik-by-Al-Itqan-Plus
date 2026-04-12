@@ -14,7 +14,7 @@ export const OrderManager = {
         }
     },
 
-    // جلب تفاصيل الطلب والعميل
+    // جلب تفاصيل الطلب والعميل مع معالجة حقول العنوان
     async getOrderFullDetails(orderId) {
         try {
             const orderRes = await this.fetchDoc('orders', orderId);
@@ -23,12 +23,22 @@ export const OrderManager = {
             // جلب بيانات العميل
             const customerRes = await this.fetchDoc('customers', orderRes.customerId);
             
+            // دمج ذكي: نأخذ بيانات العميل ونعوض النقص من بيانات الطلب (مهم جداً للعملاء الزوار)
+            const finalCustomer = {
+                name: customerRes.name || orderRes.customerName || "عميل زائر",
+                phone: customerRes.phone || orderRes.customerPhone || "---",
+                email: customerRes.email || orderRes.customerEmail || "---",
+                city: customerRes.city || orderRes.city || "---",
+                district: customerRes.district || orderRes.district || "---",
+                // جلب الحقول التفصيلية بأي مسمى موجود في أي من الملفين
+                buildingNumber: customerRes.buildingNumber || orderRes.buildingNumber || customerRes.building_number || orderRes.building_number || "---",
+                additionalNumber: customerRes.additionalNumber || orderRes.additionalNumber || customerRes.additional_number || orderRes.additional_number || "---",
+                postalCode: customerRes.postalCode || orderRes.postalCode || customerRes.postal_code || orderRes.postal_code || "---"
+            };
+
             return {
                 order: orderRes,
-                customer: customerRes.success ? customerRes : { 
-                    name: "عميل زائر", 
-                    phone: orderRes.customerPhone || "---" 
-                }
+                customer: finalCustomer
             };
         } catch (error) {
             console.error("خطأ حرج في الموديول:", error);
@@ -38,10 +48,14 @@ export const OrderManager = {
 
     formatDateTime(timestamp) {
         if (!timestamp) return { date: '---', time: '---' };
-        const d = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-        return {
-            date: d.toLocaleDateString('en-GB'),
-            time: d.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', hour12: true })
-        };
+        try {
+            const d = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            return {
+                date: d.toLocaleDateString('en-GB'), // 12/04/2026
+                time: d.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', hour12: true })
+            };
+        } catch (e) {
+            return { date: '---', time: '---' };
+        }
     }
 };
