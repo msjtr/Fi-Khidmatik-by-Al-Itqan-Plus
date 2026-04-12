@@ -87,7 +87,6 @@ window.onload = async () => {
         const { date, time } = OrderManager.formatDateTime(order.createdAt);
 
         const termsArray = Object.values(TERMS_DATA);
-
         const itemsPerPage = 6;
         const termsPerPage = 10; 
         const invPages = Math.ceil((order.items?.length || 1) / itemsPerPage);
@@ -95,7 +94,6 @@ window.onload = async () => {
 
         let html = '';
 
-        // صفحات الفاتورة
         for (let i = 0; i < invPages; i++) {
             const pageItems = (order.items || []).slice(i * itemsPerPage, (i + 1) * itemsPerPage);
             html += `
@@ -121,7 +119,6 @@ window.onload = async () => {
                 </div>`;
         }
 
-        // صفحات الشروط
         for (let j = 0; j < termsArray.length; j += termsPerPage) {
             const pageTerms = termsArray.slice(j, j + termsPerPage);
             const pageNum = invPages + Math.floor(j / termsPerPage) + 1;
@@ -161,7 +158,11 @@ function renderFinancials(order) {
             <div class="s-line"><span>الضريبة (15%):</span> <span>${tax.toLocaleString()} ر.س</span></div>
             <div class="s-line grand-total-line"><span>الإجمالي النهائي:</span> <span>${total.toLocaleString()} ر.س</span></div>
         </div>
-        <div class="barcode-group-print"><div id="zatcaQR"></div><div id="websiteQR"></div><div id="downloadQR"></div></div>
+        <div class="barcode-group-print">
+            <div id="zatcaQR"></div>
+            <div id="websiteQR"></div>
+            <div id="downloadQR"></div>
+        </div>
     </div>`;
 }
 
@@ -173,4 +174,5 @@ document.getElementById('downloadPDF').onclick = () => {
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     }).from(element).save();
 };
+
 document.getElementById('printPage').onclick = () => window.print();
