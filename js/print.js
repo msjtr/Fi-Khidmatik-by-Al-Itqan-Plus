@@ -127,14 +127,18 @@ window.onload = async () => {
         for (let j = 0; j < termsArray.length; j += termsPerPage) {
             const pageTerms = termsArray.slice(j, j + termsPerPage);
             const pageNum = invPages + Math.floor(j / termsPerPage) + 1;
+            
+            const termsHtml = pageTerms.map((text) => {
+                const isTitle = /^(أولاً|ثانياً|ثالثاً|رابعاً|خامساً|سادساً|سابعاً|ثامناً|تاسعاً|عاشراً|حادي عشر|ثاني عشر)/.test(text);
+                const styleClass = isTitle ? 'term-row-print term-title-style' : 'term-row-print';
+                return `<div class="${styleClass}"><p class="term-content-print">${text}</p></div>`;
+            }).join('');
+
             html += `
                 <div class="page page-terms">
                     ${UI.header("الشروط والأحكام العامة", seller)}
                     <div class="terms-container-print">
-                        ${pageTerms.map((text) => {
-                            const isTitle = /^(أولاً|ثانياً|ثالثاً|رابعاً|خامساً|سادساً|سابعاً|ثامناً|تاسعاً|عاشراً|حادي عشر|ثاني عشر)/.test(text);
-                            return `<div class="term-row-print ${isTitle ? 'term-title-style' : ''}"><p class="term-content-print">${text}</p></div>`;
-                        }).join('')}
+                        ${termsHtml}
                     </div>
                     ${UI.footer(pageNum, totalPages, seller)}
                 </div>`;
