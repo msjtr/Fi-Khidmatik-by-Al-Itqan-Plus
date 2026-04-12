@@ -25,8 +25,7 @@ const UI = {
             </div>
         </div>`,
 
-    orderMeta: (order, customer, date, time, seller) => {
-        return `
+    orderMeta: (order, customer, date, time, seller) => `
         <div class="order-info-line">
             <span><b>رقم الفاتورة:</b> ${order.orderNumber || order.id}</span>
             <span><b>التاريخ:</b> ${date}</span>
@@ -60,8 +59,7 @@ const UI = {
             <span><b>طريقة الدفع:</b> ${order.paymentMethod || 'إلكتروني'}</span>
             <span><b>رمز الموافقة على الطلب:</b> ${order.approvalCode || '---'}</span>
             <span><b>طريقة استلام المنتج:</b> ${order.deliveryMethod || 'تحميل رقمي'}</span>
-        </div>`;
-    },
+        </div>`,
 
     footer: (current, total, seller) => `
         <div class="final-footer">
@@ -97,6 +95,7 @@ window.onload = async () => {
 
         let html = '';
 
+        // صفحات الفاتورة
         for (let i = 0; i < invPages; i++) {
             const pageItems = (order.items || []).slice(i * itemsPerPage, (i + 1) * itemsPerPage);
             html += `
@@ -122,6 +121,7 @@ window.onload = async () => {
                 </div>`;
         }
 
+        // صفحات الشروط
         for (let j = 0; j < termsArray.length; j += termsPerPage) {
             const pageTerms = termsArray.slice(j, j + termsPerPage);
             const pageNum = invPages + Math.floor(j / termsPerPage) + 1;
@@ -154,3 +154,23 @@ function renderFinancials(order) {
     const subtotal = order.subtotal || 0;
     const total = order.total || 0;
     const tax = total - subtotal;
+    return `
+    <div class="financial-section">
+        <div class="summary-box-final">
+            <div class="s-line"><span>المجموع:</span> <span>${subtotal.toLocaleString()} ر.س</span></div>
+            <div class="s-line"><span>الضريبة (15%):</span> <span>${tax.toLocaleString()} ر.س</span></div>
+            <div class="s-line grand-total-line"><span>الإجمالي النهائي:</span> <span>${total.toLocaleString()} ر.س</span></div>
+        </div>
+        <div class="barcode-group-print"><div id="zatcaQR"></div><div id="websiteQR"></div><div id="downloadQR"></div></div>
+    </div>`;
+}
+
+document.getElementById('downloadPDF').onclick = () => {
+    const element = document.getElementById('print-app');
+    html2pdf().set({
+        margin: 0, filename: `Invoice.pdf`,
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(element).save();
+};
+document.getElementById('printPage').onclick = () => window.print();
