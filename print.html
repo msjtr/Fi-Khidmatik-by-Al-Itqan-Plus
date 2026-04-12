@@ -1,96 +1,85 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>طباعة الفاتورة | في خدمتك</title>
-
-    <link rel="icon" href="data:,">
-
-    <link rel="stylesheet" href="css/invoice.css">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <title>طباعة الفاتورة - في خدمتك</title>
     
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
-    <script src="https://cdn.jsdelivr.net/gh/ushelp/EasyQRCodeJS@master/dist/easy.qrcode.min.js"></script>
-
-    <script src="js/firebase.js"></script>
-    <script src="js/invoice.js"></script> <script src="js/order.js"></script>
-    <script type="module" src="js/print.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <link rel="stylesheet" href="css/invoice.css">
 
     <style>
-        /* إعدادات الطباعة الأساسية لضمان توزيع الصفحات  */
-        @media print {
-            .no-print { display: none !important; }
-            .page { 
-                margin: 0; 
-                box-shadow: none; 
-                page-break-after: always; 
-            }
-        }
-
-        body {
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 0;
-            font-family: 'Tajawal', sans-serif;
-        }
-
-        /* حاوية التحميل */
-        #loader {
+        /* تنسيقات إضافية لزر التحميل والتحكم */
+        .no-print-zone {
             position: fixed;
-            inset: 0;
-            background: white;
+            top: 20px;
+            left: 20px;
+            z-index: 9999;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
+            gap: 10px;
         }
 
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #1e3a5f;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* زر الطباعة العائم */
-        .print-fab {
-            position: fixed;
-            bottom: 30px;
-            left: 30px;
-            background: #1e3a5f;
-            color: white;
+        .btn-download {
+            background-color: #1a1a1a;
+            color: #fff;
             border: none;
-            padding: 15px 30px;
-            border-radius: 50px;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-family: 'Tajawal', sans-serif;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            z-index: 9999;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s;
+        }
+
+        .btn-download:hover {
+            background-color: #d4af37; /* لون ذهبي عند التحويم */
+            transform: translateY(-2px);
+        }
+
+        #loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
             font-family: 'Tajawal', sans-serif;
+        }
+
+        @media print {
+            .no-print-zone { display: none !important; }
         }
     </style>
 </head>
 <body>
 
-    <div id="loader" class="no-print">
-        <div class="spinner"></div>
-        <h2 style="color: #1e3a5f; margin-top: 20px;">جاري تجهيز الفاتورة الإلكترونية...</h2>
-        <p>يتم الآن دمج الشروط والأحكام وتوليد الباركود المعتمد </p>
+    <div id="loader">
+        <div class="spinner">جاري تجهيز الفاتورة...</div>
+    </div>
+
+    <div class="no-print-zone">
+        <button class="btn-download" onclick="window.downloadPDF()">
+            <span>📥</span> تحميل PDF عالي الجودة
+        </button>
+        <button class="btn-download" style="background-color: #444;" onclick="window.print()">
+            <span>🖨️</span> طباعة فورية
+        </button>
     </div>
 
     <div id="print-app"></div>
 
-    <button class="print-fab no-print" onclick="window.print()">
-        📑 طباعة المستند بالكامل
-    </button>
+    <script type="module" src="js/terms.js"></script>
+    <script type="module" src="js/order.js"></script>
+    <script type="module" src="js/zatca.js"></script>
+    <script type="module" src="js/print.js"></script>
 
 </body>
 </html>
