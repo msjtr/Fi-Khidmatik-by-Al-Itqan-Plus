@@ -26,9 +26,10 @@ const UI = {
         </div>`,
 
     orderMeta: (order, customer, date, time, seller) => {
-        const bldg = customer.buildingNumber || customer.building_number || customer.building || '---';
-        const addl = customer.additionalNumber || customer.additional_number || customer.additional || '---';
-        const post = customer.postalCode || customer.postal_code || customer.zipCode || '---';
+        // جلب البيانات مع دعم المسميات المختلفة من قاعدة البيانات
+        const bldg = customer.buildingNumber || customer.building_number || "---";
+        const addl = customer.additionalNumber || customer.additional_number || "---";
+        const post = customer.postalCode || customer.postal_code || "---";
 
         return `
         <div class="order-info-line">
@@ -53,7 +54,7 @@ const UI = {
                 <div class="card-body">
                     <p><b>اسم العميل:</b> ${customer.name || '---'}</p>
                     <p><b>الدولة:</b> المملكة العربية السعودية</p>
-                    <p><b>المدينة:</b> ${customer.city || '---'} | <b>الحي:</b> ${customer.district || '---'} | <b>الشارع:</b> ${customer.street || '---'}</p>
+                    <p><b>العنوان:</b> ${customer.city || '---'} : ${customer.district || '---'} : ${customer.street || '---'}</p>
                     <p>
                         <b>رقم المبنى:</b> ${bldg} | 
                         <b>الرقم الإضافي:</b> ${addl} | 
@@ -155,7 +156,7 @@ window.onload = async () => {
         document.getElementById('loader').style.display = 'none';
 
     } catch (e) {
-        console.error(e);
+        console.error("خطأ في التحميل:", e);
     }
 };
 
