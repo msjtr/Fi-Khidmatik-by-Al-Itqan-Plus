@@ -2,42 +2,27 @@
 import { db } from './orders-firebase-db.js';
 import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-// حساب إجمالي الطلب لعمليات منصة تيرا
-export function calculateTotals(products, discount = 0, type = 'fixed') {
-    const subtotal = products.reduce((acc, p) => acc + (p.price * p.quantity), 0);
-    const discountAmount = type === 'percent' ? (subtotal * discount / 100) : discount;
-    const tax = (subtotal - discountAmount) * 0.15; // الضريبة المعتمدة 15%
-    return {
-        subtotal,
-        tax,
-        total: (subtotal - discountAmount) + tax
-    };
-}
-
-// جلب الطلبات مع معالجة الأخطاء
+// جلب الطلبات من مجموعة customers (كما في الصورة)
 export async function getOrders() {
     try {
-        const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
+        // نحاول الجلب مع الترتيب حسب الأحدث
+        const q = query(collection(db, "customers"), orderBy("createdAt", "desc"));
         const snap = await getDocs(q);
         return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
-        console.error("فشل جلب الطلبات:", error);
-        return [];
+        console.warn("جاري الجلب بدون ترتيب (قد تحتاج لتفعيل Index في Firebase):", error);
+        // إذا فشل الترتيب، نجلب البيانات بدون ترتيب لضمان ظهورها
+        const snap = await getDocs(collection(db, "customers"));
+        return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
 }
 
-// إظهار تنبيه يتوافق مع تصميم CSS الخاص بنا
+// دالة التنبيهات
 export function toast(msg, type = 'success') {
     const t = document.getElementById('toast');
     if (!t) return;
-
     t.textContent = msg;
-    // إضافة الكلاسات اللازمة للتنسيق والظهور
-    t.className = `shadow-2xl transition-all duration-300 transform ${type}`;
+    t.className = `fixed bottom-6 left-6 z-50 px-6 py-3 rounded-xl text-white font-bold transition-all shadow-2 dark:bg-gray-800 ${type === 'error' ? 'bg-red-500' : 'bg-green-500'}`;
     t.style.display = 'block';
-    
-    // إخفاء التنبيه بعد 3 ثوانٍ
-    setTimeout(() => {
-        t.style.display = 'none';
-    }, 3000);
+    setTimeout(() => t.style.display = 'none', 3000);
 }
