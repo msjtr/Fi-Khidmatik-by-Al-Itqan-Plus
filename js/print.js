@@ -12,6 +12,7 @@ const firebaseConfig = {
     appId: "1:186209858482:web:186ca610780799ef562aab"
 };
 
+// تهيئة Firebase لبيئة Firestore (SDK v8 Compatibility)
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
@@ -28,26 +29,6 @@ const UI = {
         </div>`,
 
     orderMeta: (order, customer, date, time) => {
-        // دالة ذكية للبحث عن الحقول بمسميات مختلفة (حساسية الأحرف)
-        const findVal = (obj, keys) => {
-            if (!obj) return null;
-            for (let key of keys) {
-                if (obj[key]) return obj[key];
-                const found = Object.keys(obj).find(k => k.toLowerCase() === key.toLowerCase());
-                if (found) return obj[found];
-            }
-            return null;
-        };
-
-        const bldgKeys = ['buildingNumber', 'building_number', 'buildingNo', 'building'];
-        const addlKeys = ['additionalNumber', 'additional_number', 'extraNumber', 'additional'];
-        const postKeys = ['postalCode', 'postal_code', 'zipCode', 'postCode'];
-
-        // البحث في الطلب أولاً ثم في بيانات العميل
-        const bldg = findVal(order, bldgKeys) || findVal(customer, bldgKeys) || "---";
-        const addl = findVal(order, addlKeys) || findVal(customer, addlKeys) || "---";
-        const post = findVal(order, postKeys) || findVal(customer, postKeys) || "---";
-
         return `
         <div class="order-info-line">
             <span><b>رقم الفاتورة:</b> ${order.orderNumber || order.id}</span>
@@ -71,7 +52,8 @@ const UI = {
                 <div class="card-body">
                     <p><b>اسم العميل:</b> ${customer.name || '---'}</p>
                     <p><b>المدينة:</b> ${customer.city || '---'} | <b>الحي:</b> ${customer.district || '---'}</p>
-                    <p><b>رقم المبنى:</b> ${bldg} | <b>الرقم الإضافي:</b> ${addl} | <b>الرمز البريدي:</b> ${post}</p>
+                    <p><b>الشارع:</b> ${customer.street || '---'}</p>
+                    <p><b>رقم المبنى:</b> ${customer.buildingNumber || '---'} | <b>الرقم الإضافي:</b> ${customer.additionalNumber || '---'} | <b>الرمز البريدي:</b> ${customer.postalCode || '---'}</p>
                     <p><b>الجوال:</b> ${customer.phone || '---'}</p>
                 </div>
             </div>
@@ -79,7 +61,7 @@ const UI = {
 
         <div class="order-info-line payment-line">
             <span><b>طريقة الدفع:</b> ${order.paymentMethod || 'إلكتروني'}</span>
-            <span><b>طريقة الاستلام:</b> ${order.deliveryMethod || 'تحميل رقمي'}</span>
+            <span><b>طريقة الاستلام:</b> ${order.deliveryMethod || order.shippingMethod || 'تحميل رقمي'}</span>
         </div>`;
     },
 
@@ -101,22 +83,18 @@ window.onload = async () => {
     if (!orderId) return;
 
     try {
-        const orderSnap = await db.collection('orders').doc(orderId).get();
-        if (!orderSnap.exists) throw new Error("الطلب غير موجود");
+        // استخدام OrderManager لجلب البيانات الموحدة
+        // تأكد أن OrderManager.js يحتوي على دالة getOrderFullDetails المحدثة
+        const fullDetails = await OrderManager.getOrderFullDetails(orderId);
         
-        const orderData = { id: orderSnap.id, ...orderSnap.data() };
-        let customerData = {};
+        if (!fullDetails) throw new Error("تعذر جلب بيانات الطلب");
 
-        if (orderData.customerId) {
-            const custSnap = await db.collection('customers').doc(orderData.customerId).get();
-            if (custSnap.exists) customerData = custSnap.data();
-        }
-
+        const { order, customer } = fullDetails;
         const seller = window.invoiceSettings || {};
-        const { date, time } = OrderManager.formatDateTime(orderData.createdAt);
+        const { date, time } = OrderManager.formatDateTime(order.createdAt);
         const termsArray = Object.values(TERMS_DATA);
 
-        const items = orderData.items || [];
+        const items = order.items || [];
         const itemsPerPage = 6;
         const termsPerPage = 10;
         const invPagesCount = Math.ceil(items.length / itemsPerPage) || 1;
@@ -131,7 +109,7 @@ window.onload = async () => {
             html += `
                 <div class="page">
                     ${UI.header(seller)}
-                    ${UI.orderMeta(orderData, customerData, date, time)}
+                    ${UI.orderMeta(order, customer, date, time)}
                     <table class="main-table">
                         <thead><tr><th>#</th><th>المنتج</th><th>الكمية</th><th>السعر</th></tr></thead>
                         <tbody>
@@ -139,12 +117,12 @@ window.onload = async () => {
                                 <tr>
                                     <td>${(i * itemsPerPage) + idx + 1}</td>
                                     <td><b>${item.name}</b><br><small>${item.description || ''}</small></td>
-                                    <td>${item.qty}</td>
+                                    <td>${item.qty || item.quantity}</td>
                                     <td>${(item.price || 0).toLocaleString()} ر.س</td>
                                 </tr>`).join('')}
                         </tbody>
                     </table>
-                    ${i === invPagesCount - 1 ? renderFinancials(orderData) : ''}
+                    ${i === invPagesCount - 1 ? renderFinancials(order) : ''}
                     ${UI.footer(i + 1, totalPages)}
                 </div>`;
         }
@@ -167,13 +145,14 @@ window.onload = async () => {
         printApp.innerHTML = html;
         if (loader) loader.style.display = 'none';
 
+        // تشغيل الباركود بعد الرندر
         if (typeof BarcodeManager !== 'undefined') {
-            BarcodeManager.init(orderId, seller, orderData);
+            BarcodeManager.init(order.id, seller, order);
         }
 
     } catch (error) {
-        console.error("Error:", error);
-        if (loader) loader.innerHTML = "حدث خطأ: " + error.message;
+        console.error("Print Error:", error);
+        if (loader) loader.innerHTML = `<div class="p-10 text-red-600">حدث خطأ أثناء تحميل الفاتورة: ${error.message}</div>`;
     }
 };
 
@@ -199,7 +178,7 @@ function renderFinancials(order) {
 document.getElementById('downloadPDF').onclick = () => {
     const element = document.getElementById('print-app');
     html2pdf().set({
-        margin: 0, filename: `Invoice.pdf`,
+        margin: 0, filename: `Invoice_${new Date().getTime()}.pdf`,
         html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     }).from(element).save();
