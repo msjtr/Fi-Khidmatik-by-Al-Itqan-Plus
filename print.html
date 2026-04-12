@@ -4,10 +4,15 @@
     <meta charset="UTF-8">
     <title>منصة في خدمتك - نظام الطباعة</title>
     <link rel="stylesheet" href="css/invoice.css">
+    <link rel="icon" href="data:,">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/gh/ushelp/EasyQRCodeJS@master/dist/easy.qrcode.min.js"></script>
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/gh/ushelp/EasyQRCodeJS@master/dist/easy.qrcode.min.js"></script>
+    
+    <script src="js/firebase.js"></script>
 </head>
 <body>
 
@@ -17,14 +22,14 @@
 
     <div id="print-app"></div>
 
-    <button class="no-print" onclick="window.print()" style="position:fixed; bottom:20px; left:20px; padding:15px 30px; background:#1e3a5f; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:800; font-family:'Tajawal';">
+    <button class="no-print" onclick="window.print()" style="position:fixed; bottom:20px; left:20px; padding:15px 30px; background:#1e3a5f; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:800; font-family:'Tajawal'; z-index:9999;">
         طباعة المستند
     </button>
 
     <script type="module">
+        // استيراد الشروط والباركود فقط كموديولات
         import { TERMS_DATA } from './js/terms.js';
         import { generateAllQRs } from './js/zatca.js';
-        import { db } from './js/firebase.js';
 
         const SOURCE = {
             name: "منصة في خدمتك",
@@ -38,22 +43,24 @@
             const orderId = urlParams.get('id');
 
             if (!orderId) {
-                document.getElementById('loader').innerText = "خطأ: رقم الطلب غير موجود";
+                document.getElementById('loader').innerHTML = "<h2>خطأ: لم يتم تحديد رقم الطلب</h2>";
                 return;
             }
 
             try {
-                const orderDoc = await db.collection("orders").doc(orderId).get();
-                if (!orderDoc.exists) throw new Error("الطلب غير موجود");
+                // استخدام window.getDocument المعرفة في firebase.js
+                const result = await window.getDocument("orders", orderId);
                 
-                const orderData = orderDoc.data();
-                const customerDoc = await db.collection("customers").doc(orderData.customerId).get();
-                const customerData = customerDoc.data();
+                if (!result.success) throw new Error("الطلب غير موجود");
+                
+                const orderData = result;
+                const customerResult = await window.getDocument("customers", orderData.customerId);
+                const customerData = customerResult.success ? customerResult : { name: "عميل كرام" };
 
                 render(orderData, customerData);
             } catch (err) {
                 console.error(err);
-                document.getElementById('loader').innerText = "فشل تحميل البيانات من السحابة";
+                document.getElementById('loader').innerHTML = "<h2>فشل تحميل البيانات</h2>";
             }
         }
 
@@ -76,7 +83,7 @@
                     </div>
                     <div class="card">
                         <div class="card-h">مصدرة إلى:</div>
-                        <div class="card-b"><b>${customer.name || 'عميل كرام'}</b><br>الجوال: ${customer.phone || '---'}<br>العنوان: ${customer.address || 'المملكة العربية السعودية'}</div>
+                        <div class="card-b"><b>${customer.name}</b><br>الجوال: ${customer.phone || '---'}<br>العنوان: ${customer.address || 'المملكة العربية السعودية'}</div>
                     </div>
                 </div>
                 <table>
@@ -84,7 +91,7 @@
                     <tbody>
                         ${(order.items || []).map(item => `
                             <tr>
-                                <td><b>${item.name}</b></td>
+                                <td style="text-align:right;"><b>${item.name}</b></td>
                                 <td>${item.qty || 1}</td>
                                 <td>${item.price} ر.س</td>
                                 <td>${(item.price * (item.qty || 1)).toFixed(2)} ر.س</td>
@@ -100,23 +107,20 @@
                 </div>
                 <div style="display:flex; justify-content:space-around; margin-top:auto; padding-bottom:50px;">
                     <div id="zatca-qr"></div>
-                    <div style="text-align:center;"><div id="web-qr"></div><small style="font-size:9px;">رابط الموقع الرسمي</small></div>
+                    <div style="text-align:center;"><div id="web-qr"></div><small style="font-size:9px; font-weight:bold;">رابط الموقع الرسمي</small></div>
                 </div>
                 <div class="footer"><span>${SOURCE.site}</span><span class="page-counter">صفحة 1 من 4</span></div>
             </div>`;
 
-            // تقسيم الـ 57 بنداً على الصفحات 2، 3، 4
-            const parts = [TERMS_DATA.slice(0, 20), TERMS_DATA.slice(20, 40), TERMS_DATA.slice(40, 57)];
+            // تقسيم الـ 57 بنداً
+            const chunks = [TERMS_DATA.slice(0, 20), TERMS_DATA.slice(20, 40), TERMS_DATA.slice(40, 57)];
             
-            parts.forEach((part, idx) => {
+            chunks.forEach((chunk, idx) => {
                 html += `
                 <div class="page">
-                    <div class="header">
-                        <div class="logo"><img src="images/logo.svg"></div>
-                        <div class="doc-label">الشروط والأحكام (${idx+1}/3)</div>
-                    </div>
+                    <div class="header"><div class="logo"><img src="images/logo.svg"></div><div class="doc-label">الشروط والأحكام (${idx+1}/3)</div></div>
                     <div class="terms-section">
-                        ${part.map(c => `<div class="clause"><span class="c-num">${c.id}.</span><div><b>${c.t}:</b> ${c.c}</div></div>`).join('')}
+                        ${chunk.map(c => `<div class="clause"><span class="c-num">${c.id}.</span><div><b>${c.t}:</b> ${c.c}</div></div>`).join('')}
                         ${idx === 2 ? `
                         <div style="margin-top:20px; border:2px solid #1e3a5f; padding:15px; border-radius:8px; background:#fffcf5;">
                             <h4 style="text-align:center; color:#1e3a5f;">إقرار واعتماد العميل</h4>
@@ -135,6 +139,7 @@
             generateAllQRs(order.total, SOURCE.name, SOURCE.taxId, SOURCE.site);
         }
 
+        // تشغيل العملية
         init();
     </script>
 </body>
