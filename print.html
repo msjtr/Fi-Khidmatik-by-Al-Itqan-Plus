@@ -6,13 +6,18 @@
     <title>طباعة الفاتورة - منصة في خدمتك</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
     <link rel="stylesheet" href="css/invoice.css">
 
     <style>
         .control-panel { position: fixed; top: 20px; left: 20px; z-index: 1000; display: flex; gap: 10px; }
         .btn-action { font-family: 'Tajawal'; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
-        .btn-pdf { background: #1a1a1a; color: white; }
+        .btn-pdf { background: #1a1a1a; color: white; transition: 0.3s; }
+        .btn-pdf:hover { background: #d4af37; }
         #loader { position: fixed; inset: 0; background: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; font-family: 'Tajawal'; }
         .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #d4af37; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -28,7 +33,7 @@
 
     <div id="loader">
         <div class="spinner"></div>
-        <p id="loader-text">جاري تحميل المكتبات الأساسية...</p>
+        <p id="loader-text">جاري الاتصال بقاعدة البيانات...</p>
     </div>
 
     <div id="print-app"></div>
@@ -37,10 +42,10 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-        // دالة لانتظار تحميل Firebase قبل البدء
         function initializeSystem() {
-            if (typeof firebase !== 'undefined') {
-                console.log("Firebase Ready ✅");
+            if (typeof firebase !== 'undefined' && typeof QRCode !== 'undefined') {
+                console.log("System Ready: Firebase & QRCode ✅");
+                
                 const firebaseConfig = {
                     apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
                     authDomain: "msjt301-974bb.firebaseapp.com",
@@ -54,22 +59,18 @@
                 const db = firebase.firestore();
                 window.db = db;
 
-                // تعريف الدالة المطلوبة عالمياً
                 window.getDocument = async (col, id) => {
                     try {
                         const snap = await db.collection(col).doc(id).get();
                         return snap.exists ? { id: snap.id, ...snap.data(), success: true } : { success: false };
                     } catch (e) {
-                        console.error("خطأ في جلب البيانات:", e);
                         return { success: false, error: e.message };
                     }
                 };
 
-                // إطلاق محرك الطباعة بعد التأكد من جاهزية الدالة
                 startPrintEngine();
             } else {
-                console.log("Waiting for Firebase...");
-                setTimeout(initializeSystem, 100); // محاولة مرة أخرى بعد 100 ملي ثانية
+                setTimeout(initializeSystem, 100);
             }
         }
 
@@ -78,10 +79,9 @@
             script.type = 'module';
             script.src = 'js/print.js';
             document.body.appendChild(script);
-            document.getElementById('loader-text').innerText = "جاري جلب بيانات الطلب...";
+            document.getElementById('loader-text').innerText = "جاري عرض الفاتورة...";
         }
 
-        // بدء عملية الفحص
         initializeSystem();
     </script>
 </body>
