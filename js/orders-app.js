@@ -1,77 +1,62 @@
 import { db } from './orders-firebase-db.js';
-import { getOrders, getStock, deleteOrder, toast } from './orders-logic.js';
-import { collection, addDoc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getOrders, deleteOrder, toast } from './orders-logic.js';
 
 const container = document.getElementById('ordersContainer');
 
-// دالة المعاينة والطباعة الشاملة
+// دالة المعاينة والطباعة (نفس منطق كودك القديم)
 window.openPreview = function(order) {
     const area = document.getElementById('printArea');
     area.innerHTML = `
-        <div style="direction: rtl; text-align: right; font-family: Arial, sans-serif; padding: 30px; border: 2px solid #2563eb; border-radius: 15px;">
-            <div style="text-align: center; margin-bottom: 20px;">
-                <h1 style="color: #2563eb; margin: 0;">منصة تيرا | TERA</h1>
-                <p>فاتورة مبيعات رقم: ${order.orderNumber}</p>
-            </div>
-            <hr>
-            <div style="margin: 20px 0;">
-                <p><strong>اسم العميل:</strong> ${order.customerName}</p>
-                <p><strong>رقم الجوال:</strong> ${order.phone}</p>
-                <p><strong>الباقة/المنتج:</strong> ${order.packageName}</p>
-                <p><strong>طريقة الدفع:</strong> ${order.paymentMethod}</p>
-            </div>
-            <div style="text-align: center; border-top: 2px solid #2563eb; padding-top: 15px; margin-top: 20px;">
-                <h2 style="margin: 0;">الإجمالي: ${order.price} ريال</h2>
+        <div style="direction: rtl; padding: 20px; border: 1px solid #eee;">
+            <h2 style="color: #2563eb; text-align: center;">فاتورة طلب رقم: ${order.orderNumber || order.id}</h2>
+            <hr style="margin: 20px 0;">
+            <p><strong>العميل:</strong> ${order.customerName || 'غير مسجل'}</p>
+            <p><strong>المنتج:</strong> ${order.packageName || order.product || 'باقة خدمات'}</p>
+            <p><strong>التاريخ:</strong> ${new Date().toLocaleDateString('ar-SA')}</p>
+            <p><strong>طريقة الدفع:</strong> ${order.paymentMethod || 'مدى'}</p>
+            <div style="margin-top: 30px; font-size: 1.2rem; font-bold; text-align: center; background: #f8fafc; padding: 10px;">
+                الإجمالي: ${order.price || 0} ريال
             </div>
         </div>
     `;
     document.getElementById('previewModal').classList.remove('hidden');
     document.getElementById('previewModal').classList.add('flex');
-
-    // تفعيل زر PDF
-    document.getElementById('downloadPdfBtn').onclick = () => {
-        const opt = { margin: 1, filename: `Tera-${order.customerName}.pdf`, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
-        html2pdf().from(area).set(opt).save();
-    };
-    // تفعيل زر الطباعة
-    document.getElementById('directPrintBtn').onclick = () => window.print();
 };
 
 async function render() {
-    container.innerHTML = '<p class="col-span-full text-center py-10">جاري استدعاء كافة الملفات من المجموعات الثلاث...</p>';
+    container.innerHTML = '<p class="col-span-full text-center py-10">جاري تحميل الطلبات...</p>';
     const orders = await getOrders();
     container.innerHTML = '';
 
     orders.forEach(order => {
-        const div = document.createElement('div');
-        div.className = "bg-white p-6 rounded-2xl shadow-md border border-gray-100 transform transition hover:scale-105";
-        div.innerHTML = `
-            <div class="flex justify-between mb-3 text-xs font-bold text-blue-600">
-                <span>${order.orderNumber}</span>
-                <button class="del-btn text-red-300 hover:text-red-600 transition"><i class="fas fa-trash"></i></button>
+        const card = document.createElement('div');
+        card.className = "order-card p-6 rounded-2xl shadow-sm border border-gray-100 relative";
+        card.innerHTML = `
+            <div class="flex justify-between items-start mb-4">
+                <span class="status-badge status-new">جديد</span>
+                <button class="text-red-300 hover:text-red-500 del-btn"><i class="fas fa-trash"></i></button>
             </div>
-            <h4 class="font-extrabold text-xl mb-1">${order.customerName}</h4>
-            <p class="text-sm text-gray-500 mb-4">${order.packageName}</p>
+            <h3 class="font-bold text-xl mb-1">${order.customerName || 'عميل تيرا'}</h3>
+            <p class="text-gray-500 text-sm mb-4">${order.packageName || 'طلب باقة سawa'}</p>
             <div class="flex justify-between items-center border-t pt-4">
-                <span class="font-bold text-blue-600 text-lg">${order.price} ريال</span>
-                <button class="view-btn bg-blue-600 text-white px-5 py-2 rounded-xl text-xs font-bold shadow-md hover:bg-blue-700">معاينة وطباعة</button>
+                <span class="text-blue-600 font-bold text-lg">${order.price} ريال</span>
+                <button class="view-btn bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-600 hover:text-white transition">معاينة والطباعة</button>
             </div>
         `;
-        div.querySelector('.del-btn').onclick = async () => { if(await deleteOrder(order.id)) render(); };
-        div.querySelector('.view-btn').onclick = () => openPreview(order);
-        container.appendChild(div);
+        
+        card.querySelector('.view-btn').onclick = () => openPreview(order);
+        card.querySelector('.del-btn').onclick = async () => {
+            if(await deleteOrder(order.id)) {
+                toast("تم حذف الطلب بنجاح");
+                render();
+            }
+        };
+        container.appendChild(card);
     });
-
-    // تعبئة قائمة المنتجات من مجموعة products
-    const products = await getStock();
-    const stockSelect = document.getElementById('stockSelect');
-    if(stockSelect) {
-        stockSelect.innerHTML = products.map(p => `<option value="${p.price}">${p.name} - ${p.price} ريال</option>`).join('');
-    }
 }
 
-// إغلاق المعاينة
-const closePreview = document.getElementById('closePreviewBtn');
-if(closePreview) closePreview.onclick = () => document.getElementById('previewModal').classList.add('hidden');
+// أزرار المودال
+document.getElementById('closePreviewBtn').onclick = () => document.getElementById('previewModal').classList.add('hidden');
+document.getElementById('newOrderBtn').onclick = () => alert("سيتم تفعيل مودال الإضافة في التحديث القادم");
 
 window.addEventListener('DOMContentLoaded', render);
