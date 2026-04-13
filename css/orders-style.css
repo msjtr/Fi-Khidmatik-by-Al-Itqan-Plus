@@ -14,3 +14,19 @@
 #toast { position: fixed; bottom: 20px; left: 20px; padding: 12px 24px; border-radius: 8px; z-index: 1000; display: none; }
 .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+* { transition: all 0.2s ease; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+.status-badge { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; }
+.status-new { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1e40af; }
+.status-completed { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #065f46; }
+.status-cancelled { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #b91c1c; }
+
+/* تحسين محرر النصوص ليدعم العربية */
+.ql-editor { min-height: 150px; direction: rtl; text-align: right; font-size: 14px; background: white; border-radius: 0 0 12px 12px; }
+.ql-toolbar { background: #f8fafc; border-radius: 12px 12px 0 0; border-color: #e2e8f0 !important; }
+
+.product-row { border: 1px solid #e2e8f0; margin-bottom: 12px; padding: 15px; border-radius: 16px; background: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.payment-btn.active { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border-color: #3b82f6; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+
+/* أنيميشن التحميل */
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
