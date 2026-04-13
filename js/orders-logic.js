@@ -1,7 +1,9 @@
 import { db } from './firebase.js';
-import { collection, addDoc, getDocs, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { 
+    collection, addDoc, getDocs, query, orderBy, serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// 1. توليد بيانات الطلب التلقائية
+// --- 1. توليد بيانات الطلب الجديد تلقائياً ---
 export const generateOrderMeta = () => {
     const sequence = Math.floor(1000 + Math.random() * 9000);
     return {
@@ -11,34 +13,39 @@ export const generateOrderMeta = () => {
     };
 };
 
-// 2. توليد باركود تلقائي للمنتج
-export const generateBarcode = () => 'BR-' + Math.random().toString(36).substr(2, 9).toUpperCase();
-
-// 3. جلب البيانات من المجموعات (Customers, Products, Orders)
-export const fetchCollection = async (collectionName) => {
+// --- 2. جلب كافة الطلبات (القديمة والجديدة) ---
+export const fetchAllOrders = async () => {
     try {
-        const q = query(collection(db, collectionName));
+        const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
         const snap = await getDocs(q);
-        return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        return snap.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                // توفيق المسميات (يتعامل مع الأسماء القديمة والجديدة في قاعدة بياناتك)
+                orderNo: data.orderNo || data.order_no || "N/A",
+                customerName: data.customerName || data.client_name || "عميل غير مسجل",
+                total: data.total || data.amount || "0.00",
+                status: data.status || "مكتمل",
+                createdAt: data.createdAt?.toDate() || new Date()
+            };
+        });
     } catch (e) {
-        console.error("خطأ في جلب البيانات:", e);
+        console.error("خطأ في جلب الطلبات:", e);
         return [];
     }
 };
 
-// 4. حسابات الفاتورة (الضريبة 15%)
-export const calculateFinalTotals = (items, discount = 0) => {
-    const subtotal = items.reduce((sum, item) => sum + (item.price * item.qty), 0);
-    const taxBase = subtotal - discount;
-    const vat = taxBase * 0.15;
-    return {
-        subtotal: subtotal.toFixed(2),
-        vat: vat.toFixed(2),
-        total: (taxBase + vat).toFixed(2)
-    };
+// --- 3. جلب العملاء للقائمة المنسدلة ---
+export const fetchCustomers = async () => {
+    const snap = await getDocs(collection(db, "customers"));
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 
-// 5. حفظ الطلب في Firebase
-export const saveOrderToFirebase = async (orderData) => {
-    return await addDoc(collection(db, "orders"), orderData);
+// --- 4. حفظ الطلب الجديد ---
+export const saveOrder = async (orderData) => {
+    return await addDoc(collection(db, "orders"), {
+        ...orderData,
+        createdAt: serverTimestamp() // إضافة ختم زمني للترتيب
+    });
 };
