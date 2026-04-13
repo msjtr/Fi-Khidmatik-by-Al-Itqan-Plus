@@ -1,8 +1,15 @@
-// js/orders-firebase-db.js
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, doc, getDoc, collection } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+/**
+ * fi-khidmatik/js/orders-firebase-db.js
+ * إدارة قاعدة بيانات الطلبات - Firebase Firestore
+ */
 
-// إعدادات مشروعك msjt301 - متطابقة مع الصور
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { 
+    getFirestore, collection, addDoc, doc, getDocs, 
+    updateDoc, deleteDoc, query, orderBy, serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+// إعدادات Firebase الخاصة بك
 const firebaseConfig = {
     apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
     authDomain: "msjt301-974bb.firebaseapp.com",
@@ -14,30 +21,70 @@ const firebaseConfig = {
 
 // تهيئة Firebase
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+const db = getFirestore(app);
+const ordersRef = collection(db, "orders");
 
-/**
- * وظائف مساعدة لجلب البيانات القديمة
- * صُممت لتعمل مع المجموعات الثلاث: orders, customers, products
- */
-window.getDocument = async (colName, id) => {
+// --- 1. جلب جميع الطلبات ---
+export const fetchAllOrders = async () => {
     try {
-        const snap = await getDoc(doc(db, colName, id));
-        if (snap.exists()) {
-            return { id: snap.id, ...snap.data(), success: true };
-        } else {
-            console.warn(`الوثيقة ${id} غير موجودة في مجموعة ${colName}`);
-            return { success: false, error: "not-found" };
-        }
+        const q = query(ordersRef, orderBy("createdAt", "desc"));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
-        console.error("خطأ تقني في جلب الوثيقة:", error);
-        return { success: false, error: error.message };
+        console.error("Error fetching orders:", error);
+        throw error;
     }
 };
 
-// تصدير أسماء المجموعات لتوحيدها في كامل المشروع
-export const COLS = {
-    ORDERS: "orders",
-    CUSTOMERS: "customers",
-    PRODUCTS: "products"
+// --- 2. إضافة طلب جديد ---
+export const createOrder = async (orderData) => {
+    try {
+        const docRef = await addDoc(ordersRef, {
+            ...orderData,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        });
+        return docRef.id;
+    } catch (error) {
+        console.error("Error creating order:", error);
+        throw error;
+    }
+};
+
+// --- 3. تحديث طلب موجود ---
+export const updateExistingOrder = async (orderId, updatedData) => {
+    try {
+        const docIdRef = doc(db, "orders", orderId);
+        await updateDoc(docIdRef, {
+            ...updatedData,
+            updatedAt: serverTimestamp()
+        });
+        return true;
+    } catch (error) {
+        console.error("Error updating order:", error);
+        throw error;
+    }
+};
+
+// --- 4. حذف طلب ---
+export const removeOrder = async (orderId) => {
+    try {
+        const docIdRef = doc(db, "orders", orderId);
+        await deleteDoc(docIdRef);
+        return true;
+    } catch (error) {
+        console.error("Error deleting order:", error);
+        throw error;
+    }
+};
+
+// --- 5. جلب بيانات العملاء (اختياري إذا كانت في نفس الـ DB) ---
+export const fetchCustomersList = async () => {
+    try {
+        const customersRef = collection(db, "customers");
+        const snapshot = await getDocs(customersRef);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        return [];
+    }
 };
