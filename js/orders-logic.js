@@ -1,28 +1,39 @@
-// js/orders-logic.js
 import { db } from './orders-firebase-db.js';
-import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { collection, getDocs, query, orderBy, where, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-// جلب الطلبات من مجموعة customers (كما في الصورة)
-export async function getOrders() {
+// جلب الطلبات من مجموعة customers كما طلبت
+export async function getOrders(statusFilter = 'الكل') {
     try {
-        // نحاول الجلب مع الترتيب حسب الأحدث
-        const q = query(collection(db, "customers"), orderBy("createdAt", "desc"));
+        const colRef = collection(db, "customers");
+        let q = (statusFilter === 'الكل') ? 
+                query(colRef, orderBy("createdAt", "desc")) : 
+                query(colRef, where("status", "==", statusFilter), orderBy("createdAt", "desc"));
         const snap = await getDocs(q);
         return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    } catch (error) {
-        console.warn("جاري الجلب بدون ترتيب (قد تحتاج لتفعيل Index في Firebase):", error);
-        // إذا فشل الترتيب، نجلب البيانات بدون ترتيب لضمان ظهورها
+    } catch (e) {
         const snap = await getDocs(collection(db, "customers"));
         return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
 }
 
-// دالة التنبيهات
+// جلب المخزون من مجموعة products
+export async function getStock() {
+    const snap = await getDocs(collection(db, "products"));
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+export async function deleteOrder(id) {
+    if(confirm("هل أنت متأكد من حذف هذا العميل؟")) {
+        await deleteDoc(doc(db, "customers", id));
+        return true;
+    }
+    return false;
+}
+
 export function toast(msg, type = 'success') {
     const t = document.getElementById('toast');
-    if (!t) return;
     t.textContent = msg;
-    t.className = `fixed bottom-6 left-6 z-50 px-6 py-3 rounded-xl text-white font-bold transition-all shadow-2 dark:bg-gray-800 ${type === 'error' ? 'bg-red-500' : 'bg-green-500'}`;
+    t.className = `fixed bottom-6 left-6 z-50 px-6 py-3 rounded-xl text-white font-bold transition-all ${type === 'error' ? 'bg-red-500' : 'bg-green-600'}`;
     t.style.display = 'block';
     setTimeout(() => t.style.display = 'none', 3000);
 }
