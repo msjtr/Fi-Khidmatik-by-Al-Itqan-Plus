@@ -1,16 +1,17 @@
 // --- 5. وظائف إدارة الطلبات (تعديل وحذف) ---
 
-// دالة جلب العملاء للقائمة المنسدلة (إضافة إذا لم تكن موجودة)
+// دالة جلب العملاء للقائمة المنسدلة
 async function loadCustomerDropdown() {
     const customerSelect = document.getElementById('customerSelect');
     if (!customerSelect) return;
     
     try {
+        // افترضنا وجود مجموعة باسم customers في Firebase
         const snapshot = await getDocs(collection(db, "customers"));
-        customerSelect.innerHTML = '<option value="">اختر عميل...</option>';
+        customerSelect.innerHTML = '<option value="">-- اختر العميل --</option>';
         snapshot.forEach(doc => {
             const data = doc.data();
-            customerSelect.innerHTML += `<option value="${doc.id}">${data.name || 'بدون اسم'}</option>`;
+            customerSelect.innerHTML += `<option value="${doc.id}">${data.name || 'عميل غير مسمى'}</option>`;
         });
     } catch (error) {
         console.error("خطأ في جلب العملاء:", error);
@@ -23,44 +24,63 @@ window.editOrder = async (id) => {
     if (!order) return;
 
     currentOrderId = id;
-    document.getElementById('modalTitle').innerText = "تعديل الطلب #" + order.orderNumber;
+    document.getElementById('modalTitle').innerText = "تعديل سجل الطلب #" + order.orderNumber;
     
-    // تعبئة البيانات
+    // تعبئة البيانات الأساسية
     document.getElementById('orderNumber').value = order.orderNumber;
     document.getElementById('orderDate').value = order.date;
     document.getElementById('orderStatus').value = order.status;
     document.getElementById('customerSelect').value = order.customerId;
+    document.getElementById('discountValue').value = order.discount || 0;
     
-    // تعبئة المنتجات
-    orderProducts = [...order.products];
-    renderProductRows();
+    // تحديث وسيلة الدفع في الواجهة (CSS)
+    selectedPaymentMethod = order.paymentMethod || 'mada';
+    document.querySelectorAll('.payment-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.payment === selectedPaymentMethod);
+    });
+
+    // هام: مزامنة المنتجات مع ملف المنطق (Logic)
+    import('./orders-logic.js').then(logic => {
+        logic.setCurrentItems([...order.products]);
+        logic.renderProductList('productsContainer', window.updateTotalDisplay);
+    });
     
     openModal('orderModal');
 };
 
-// حذف طلب
+// حذف طلب من القاعدة
 window.deleteOrder = async (id) => {
-    if (confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
+    // استخدام تأكيد بتصميم بسيط
+    if (confirm('تنبيه: هل تريد حقاً حذف هذا السجل نهائياً؟')) {
         try {
             await deleteDoc(doc(db, "orders", id));
-            showToast("تم حذف الطلب");
-            loadOrders();
+            showToast("تم مسح السجل بنجاح", "success");
+            await loadOrders(); // إعادة تحميل القائمة
         } catch (error) {
-            showToast("خطأ في الحذف", "error");
+            console.error(error);
+            showToast("فشل الحذف، تحقق من الاتصال", "error");
         }
     }
 };
 
 // --- 6. أدوات مساعدة (Helpers) ---
 
+// تحديث بيانات المنتج من داخل الجدول
 window.updateProduct = (index, field, value) => {
-    orderProducts[index][field] = field === 'name' ? value : parseFloat(value);
-    updateTotals();
+    import('./orders-logic.js').then(logic => {
+        const items = logic.getCurrentItems();
+        if (items[index]) {
+            items[index][field] = field === 'name' ? value : parseFloat(value);
+            logic.renderProductList('productsContainer', window.updateTotalDisplay);
+        }
+    });
 };
 
+// حذف سطر منتج واحد
 window.removeProductRow = (index) => {
-    orderProducts.splice(index, 1);
-    renderProductRows();
+    import('./orders-logic.js').then(logic => {
+        const items = logic.getCurrentItems();
+        items.splice(index, 1);
+        logic.renderProductList('productsContainer', window.updateTotalDisplay);
+    });
 };
-
-// استكمال باقي الدوال (generateOrderNumber, openModal, closeModal, etc.) كما هي في كودك الأصلي...
