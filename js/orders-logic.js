@@ -1,22 +1,32 @@
 /**
  * fi-khidmatik/js/orders-logic.js
- * المنطق البرمجي لإدارة العمليات والحسابات
+ * المنطق البرمجي لإدارة العمليات والحسابات - النسخة المعتمدة
  */
 
 let currentOrderItems = [];
 
-// --- 1. حسابات الفاتورة ---
+// --- 1. حسابات الفاتورة (مع معالجة الكسور) ---
 export const calculateFinance = (discount = 0) => {
-    const subtotal = currentOrderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const taxRate = 0.15; // الضريبة 15%
-    const taxableAmount = Math.max(0, subtotal - discount);
+    // حساب المجموع الفرعي مع التقريب لضمان الدقة
+    const subtotal = currentOrderItems.reduce((sum, item) => {
+        return sum + (item.price * item.quantity);
+    }, 0);
+
+    const taxRate = 0.15; // ضريبة القيمة المضافة 15%
+    
+    // الخصم لا يمكن أن يتجاوز قيمة المجموع الفرعي
+    const validDiscount = Math.min(discount, subtotal);
+    const taxableAmount = Math.max(0, subtotal - validDiscount);
+    
+    // حساب الضريبة والإجمالي
     const tax = taxableAmount * taxRate;
     const total = taxableAmount + tax;
 
     return {
         subtotal: subtotal.toFixed(2),
         tax: tax.toFixed(2),
-        total: total.toFixed(2)
+        total: total.toFixed(2),
+        discount: validDiscount.toFixed(2)
     };
 };
 
@@ -26,40 +36,56 @@ export const renderProductList = (containerId, updateCallback) => {
     if (!container) return;
 
     if (currentOrderItems.length === 0) {
-        container.innerHTML = '<p class="text-center text-gray-400 py-4 text-sm">لم يتم إضافة منتجات بعد</p>';
+        container.innerHTML = `
+            <div class="text-center py-10 opacity-50">
+                <i class="fas fa-box-open text-3xl mb-2 block"></i>
+                <p class="text-sm">السلة فارغة، ابدأ بإضافة المنتجات</p>
+            </div>`;
+        
+        // تحديث المبالغ لتصبح أصفاراً
+        if (typeof window.updateTotalDisplay === 'function') window.updateTotalDisplay();
         return;
     }
 
     container.innerHTML = currentOrderItems.map((item, index) => `
-        <div class="flex items-center justify-between bg-gray-50 p-3 rounded-xl mb-2 border border-gray-100 animate-fade-in">
+        <div class="flex items-center justify-between bg-white p-4 rounded-2xl mb-3 border border-slate-100 shadow-sm animate-fade-in group hover:border-blue-200 transition-all">
             <div class="flex-1">
-                <h4 class="font-bold text-gray-700 text-sm">${item.name}</h4>
-                <p class="text-xs text-blue-600">${item.price} ريال</p>
-            </div>
-            <div class="flex items-center gap-3">
-                <div class="flex items-center border rounded-lg bg-white overflow-hidden">
-                    <button type="button" onclick="window.changeQty(${index}, -1)" class="px-2 py-1 hover:bg-gray-100 text-gray-500">-</button>
-                    <span class="px-3 text-sm font-medium">${item.quantity}</span>
-                    <button type="button" onclick="window.changeQty(${index}, 1)" class="px-2 py-1 hover:bg-gray-100 text-gray-500">+</button>
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                    <h4 class="font-bold text-slate-700 text-sm">${item.name}</h4>
                 </div>
-                <button type="button" onclick="window.removeItem(${index})" class="text-red-400 hover:text-red-600 p-1">
-                    <i class="fas fa-trash-alt text-xs"></i>
+                <p class="text-[11px] text-blue-600 font-bold mt-1">${item.price.toFixed(2)} ريال</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center bg-slate-50 rounded-xl p-1 border border-slate-100">
+                    <button type="button" onclick="window.changeQty(${index}, -1)" class="w-8 h-8 flex items-center justify-center hover:bg-white hover:shadow-sm rounded-lg text-slate-500 transition-all">-</button>
+                    <span class="px-3 text-xs font-black text-slate-700 w-8 text-center">${item.quantity}</span>
+                    <button type="button" onclick="window.changeQty(${index}, 1)" class="w-8 h-8 flex items-center justify-center hover:bg-white hover:shadow-sm rounded-lg text-slate-500 transition-all">+</button>
+                </div>
+                <button type="button" onclick="window.removeItem(${index})" class="w-8 h-8 text-slate-300 hover:text-red-500 transition-colors">
+                    <i class="fas fa-trash-alt text-sm"></i>
                 </button>
             </div>
         </div>
     `).join('');
 
-    // تحديث المجموع عند أي تغيير في القائمة
+    // تحديث المجموع تلقائياً
     if (typeof window.updateTotalDisplay === 'function') {
         window.updateTotalDisplay();
     }
 };
 
-// --- 3. وظائف التعديل (Global لسهولة الوصول من HTML) ---
+// --- 3. وظائف التعديل (Global) ---
 window.changeQty = (index, delta) => {
-    if (currentOrderItems[index] && currentOrderItems[index].quantity + delta > 0) {
-        currentOrderItems[index].quantity += delta;
-        renderProductList('productsContainer');
+    if (currentOrderItems[index]) {
+        const newQty = currentOrderItems[index].quantity + delta;
+        if (newQty > 0) {
+            currentOrderItems[index].quantity = newQty;
+            renderProductList('productsContainer');
+        } else {
+            // إذا وصلت الكمية لصفر، نقوم بالحذف بعد التأكيد أو مباشرة
+            window.removeItem(index);
+        }
     }
 };
 
@@ -74,21 +100,26 @@ export const resetLogic = () => {
 };
 
 export const addItem = (product) => {
-    const existing = currentOrderItems.find(item => item.id === product.id);
+    // التحقق من صحة البيانات قبل الإضافة
+    const price = parseFloat(product.price) || 0;
+    const name = product.name || "منتج غير مسمى";
+    const id = product.id || Date.now();
+
+    const existing = currentOrderItems.find(item => item.id === id);
     if (existing) {
         existing.quantity += 1;
     } else {
-        currentOrderItems.push({
-            id: product.id || Date.now(),
-            name: product.name,
-            price: parseFloat(product.price) || 0,
-            quantity: 1
-        });
+        currentOrderItems.push({ id, name, price, quantity: 1 });
     }
     renderProductList('productsContainer');
 };
 
 export const getCurrentItems = () => currentOrderItems;
+
 export const setCurrentItems = (items) => { 
-    currentOrderItems = Array.isArray(items) ? items : []; 
+    currentOrderItems = Array.isArray(items) ? items.map(item => ({
+        ...item,
+        price: parseFloat(item.price) || 0,
+        quantity: parseInt(item.quantity) || 1
+    })) : []; 
 };
