@@ -1,100 +1,66 @@
-// --- 5. وظائف إدارة الطلبات (تعديل وحذف) ---
+import { db } from './orders-firebase-db.js';
+import { getOrders, getStock, deleteOrder, toast } from './orders-logic.js';
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-// دالة جلب العملاء للقائمة المنسدلة
-async function loadCustomerDropdown() {
-    const customerSelect = document.getElementById('customerSelect');
-    if (!customerSelect) return;
-    
-    try {
-        // تأكد أن المسار المرتد ../../js/ صحيح بالنسبة لمكان تواجد هذا الملف
-        const { fetchCustomersList } = await import('../../js/orders-firebase-db.js');
-        const customers = await fetchCustomersList();
-        
-        customerSelect.innerHTML = '<option value="">-- اختر العميل --</option>';
-        if (customers.length === 0) {
-            customerSelect.innerHTML = '<option value="">لا يوجد عملاء مسجلين</option>';
-            return;
-        }
+const container = document.getElementById('ordersContainer');
 
-        customers.forEach(customer => {
-            customerSelect.innerHTML += `<option value="${customer.id}">${customer.name || 'عميل غير مسمى'}</option>`;
-        });
-    } catch (error) {
-        console.error("خطأ في جلب العملاء:", error);
-        customerSelect.innerHTML = '<option value="">فشل تحميل العملاء</option>';
-    }
-}
+// دالة المعاينة والطباعة
+window.openPreview = function(order) {
+    const area = document.getElementById('printArea');
+    area.innerHTML = `
+        <div style="direction: rtl; text-align: right; padding: 25px; border: 2px solid #2563eb; border-radius: 15px; font-family: sans-serif;">
+            <h2 style="text-align: center; color: #2563eb;">منصة تيرا | TERA</h2>
+            <hr>
+            <p><b>رقم الطلب:</b> ${order.orderNumber}</p>
+            <p><b>العميل:</b> ${order.customerName}</p>
+            <p><b>الجوال:</b> ${order.phone}</p>
+            <p><b>الباقة:</b> ${order.packageName}</p>
+            <div style="text-align: center; border-top: 2px solid #2563eb; margin-top: 20px; padding-top: 15px;">
+                <h3 style="margin: 0;">الإجمالي: ${order.price} ريال</h3>
+            </div>
+        </div>
+    `;
+    document.getElementById('previewModal').classList.remove('hidden');
+    document.getElementById('previewModal').classList.add('flex');
 
-// تعديل طلب موجود
-window.editOrder = async (id) => {
-    // ملاحظة: تأكد أن مصفوفة allOrders معرفة في النطاق العام لملف app.js
-    const order = allOrders.find(o => o.id === id); 
-    if (!order) return;
+    // تفعيل الطباعة و PDF
+    document.getElementById('downloadPdfBtn').onclick = () => {
+        const opt = { margin: 1, filename: `Tera-${order.customerName}.pdf`, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
+        html2pdf().from(area).set(opt).save();
+    };
+    document.getElementById('directPrintBtn').onclick = () => window.print();
+};
 
-    currentOrderId = id;
-    document.getElementById('modalTitle').innerText = "تعديل سجل الطلب #" + order.orderNumber;
-    
-    // تعبئة البيانات
-    document.getElementById('orderNumber').value = order.orderNumber;
-    document.getElementById('orderDate').value = order.date;
-    if(document.getElementById('orderStatus')) document.getElementById('orderStatus').value = order.status;
-    document.getElementById('customerSelect').value = order.customerId;
-    document.getElementById('discountValue').value = order.discount || 0;
-    
-    // تحديث وسيلة الدفع
-    selectedPaymentMethod = order.paymentMethod || 'mada';
-    document.getElementById('paymentMethod').value = selectedPaymentMethod;
-    document.querySelectorAll('.payment-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.payment === selectedPaymentMethod);
+async function render() {
+    container.innerHTML = '<p class="col-span-full text-center py-10">جاري استدعاء كافة سجلاتك القديمة...</p>';
+    const orders = await getOrders();
+    container.innerHTML = '';
+
+    orders.forEach(order => {
+        const div = document.createElement('div');
+        div.className = "bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition";
+        div.innerHTML = `
+            <div class="flex justify-between mb-2 text-xs font-bold text-blue-600">
+                <span>${order.orderNumber}</span>
+                <button class="del-btn text-red-300 hover:text-red-500"><i class="fas fa-trash"></i></button>
+            </div>
+            <h4 class="font-bold text-lg">${order.customerName}</h4>
+            <div class="flex justify-between items-center border-t mt-4 pt-4">
+                <span class="font-bold text-blue-600">${order.price} ريال</span>
+                <button class="preview-btn bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:bg-blue-700">معاينة وطباعة</button>
+            </div>
+        `;
+        div.querySelector('.del-btn').onclick = async () => { if(await deleteOrder(order.id)) render(); };
+        div.querySelector('.preview-btn').onclick = () => openPreview(order);
+        container.appendChild(div);
     });
 
-    // استدعاء منطق الحسابات
-    const logic = await import('../../js/orders-logic.js');
-    logic.setCurrentItems([...order.products]);
-    logic.renderProductList('productsContainer');
-    
-    // تحديث الأرقام النهائية في المودال
-    if (window.updateTotalDisplay) window.updateTotalDisplay();
-    
-    openModal('orderModal');
-};
+    // تعبئة المنتجات من مجموعة products
+    const products = await getStock();
+    const select = document.getElementById('stockSelect');
+    if(select) select.innerHTML = products.map(p => `<option value="${p.price}">${p.name}</option>`).join('');
+}
 
-// حذف طلب
-window.deleteOrder = async (id) => {
-    if (confirm('تنبيه: هل تريد حقاً حذف هذا السجل نهائياً؟')) {
-        try {
-            const { removeOrder } = await import('../../js/orders-firebase-db.js');
-            await removeOrder(id);
-            
-            // إظهار التنبيه (Toast)
-            if (typeof showToast === 'function') {
-                showToast("تم مسح السجل بنجاح", "success");
-            } else {
-                alert("تم الحذف بنجاح");
-            }
-            
-            await loadOrders(); // إعادة تحميل القائمة (تأكد من وجود هذه الدالة في app.js)
-        } catch (error) {
-            console.error(error);
-            alert("فشل الحذف، تحقق من الاتصال");
-        }
-    }
-};
+document.getElementById('closePreviewBtn').onclick = () => document.getElementById('previewModal').classList.add('hidden');
 
-// --- 6. أدوات مساعدة للجدول الفوري ---
-
-window.updateProduct = async (index, field, value) => {
-    const logic = await import('../../js/orders-logic.js');
-    const items = logic.getCurrentItems();
-    if (items[index]) {
-        items[index][field] = field === 'name' ? value : parseFloat(value);
-        logic.renderProductList('productsContainer');
-    }
-};
-
-window.removeProductRow = async (index) => {
-    const logic = await import('../../js/orders-logic.js');
-    const items = logic.getCurrentItems();
-    items.splice(index, 1);
-    logic.renderProductList('productsContainer');
-};
+window.addEventListener('DOMContentLoaded', render);
