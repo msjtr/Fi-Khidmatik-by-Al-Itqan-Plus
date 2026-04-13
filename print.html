@@ -3,31 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>طباعة الفاتورة - منصة في خدمتك</title>
+    <title>فاتورة إلكترونية - تيرة</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-    <link rel="stylesheet" href="css/invoice.css">
-    <script src="js/invoice.js"></script>
+    <link rel="stylesheet" href="css/invoice.css"> 
+    <style>
+        @media print { .control-panel { display: none; } body { background: white; p-0; } }
+        .invoice-box { max-width: 800px; margin: auto; padding: 30px; border: 1px solid #eee; background: #fff; }
+        .control-panel { position: fixed; top: 20px; left: 20px; display: flex; gap: 10px; z-index: 100; }
+        .btn-action { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
+        .btn-pdf { background: #e11d48; color: white; }
+    </style>
 </head>
 <body>
 
     <div class="control-panel">
         <button class="btn-action btn-pdf" id="downloadPDF">📥 حفظ PDF</button>
-        <button class="btn-action" id="printPage">🖨️ طباعة</button>
+        <button class="btn-action" onclick="window.print()">🖨️ طباعة</button>
     </div>
 
-    <div id="loader">
-        <div class="spinner"></div>
-        <p>جاري معالجة بيانات الفاتورة والعميل...</p>
+    <div id="loader" class="text-center py-20">
+        <p>جاري جلب بيانات العميل والطلب...</p>
     </div>
 
-    <div id="print-app"></div>
+    <div id="print-app" class="invoice-box shadow-lg my-10 hidden">
+        </div>
 
     <script type="module" src="js/print.js"></script>
 </body>
