@@ -8,29 +8,105 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <link rel="stylesheet" href="css/invoice.css"> 
     <style>
-        @media print { .control-panel { display: none; } body { background: white; p-0; } }
-        .invoice-box { max-width: 800px; margin: auto; padding: 30px; border: 1px solid #eee; background: #fff; }
+        body { font-family: 'Tajawal', sans-serif; background-color: #f8fafc; }
+        @media print { 
+            .control-panel { display: none; } 
+            body { background: white; padding: 0; }
+            .invoice-box { box-shadow: none; border: none; max-width: 100%; margin: 0; }
+        }
+        .invoice-box { max-width: 850px; margin: 40px auto; padding: 40px; border: 1px solid #e2e8f0; background: #fff; border-radius: 24px; }
         .control-panel { position: fixed; top: 20px; left: 20px; display: flex; gap: 10px; z-index: 100; }
-        .btn-action { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
-        .btn-pdf { background: #e11d48; color: white; }
+        .btn-action { padding: 12px 24px; border-radius: 12px; border: none; cursor: pointer; font-weight: 800; transition: all 0.2s; }
+        .btn-pdf { background: #e11d48; color: white; box-shadow: 0 4px 12px rgba(225, 29, 72, 0.2); }
+        .btn-print { background: #1e293b; color: white; }
     </style>
 </head>
 <body>
 
     <div class="control-panel">
         <button class="btn-action btn-pdf" id="downloadPDF">📥 حفظ PDF</button>
-        <button class="btn-action" onclick="window.print()">🖨️ طباعة</button>
+        <button class="btn-action btn-print" onclick="window.print()">🖨️ طباعة</button>
     </div>
 
-    <div id="loader" class="text-center py-20">
-        <p>جاري جلب بيانات العميل والطلب...</p>
+    <div id="loader" class="flex flex-col items-center justify-center min-h-screen text-slate-500">
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
+        <p>جاري جلب بيانات العميل والطلب من منصة تيرة...</p>
     </div>
 
-    <div id="print-app" class="invoice-box shadow-lg my-10 hidden">
+    <div id="print-app" class="invoice-box shadow-2xl hidden">
+        <div class="flex justify-between items-center border-b pb-8 mb-8">
+            <div>
+                <h1 class="text-3xl font-black text-blue-600 tracking-tighter">TERA</h1>
+                <p class="text-slate-400 text-xs mt-1">فاتورة ضريبية مبسطة</p>
+            </div>
+            <div class="text-left">
+                <p class="text-lg font-bold text-slate-800">رقم الطلب: <span id="inv-number">---</span></p>
+                <p class="text-slate-500 text-sm"><span id="inv-date">---</span> | <span id="inv-time">---</span></p>
+            </div>
         </div>
+
+        <div class="grid grid-cols-2 gap-6 mb-10">
+            <div class="bg-slate-50 p-5 rounded-2xl">
+                <h3 class="font-bold text-blue-600 mb-3">العميل</h3>
+                <div class="text-sm space-y-1 text-slate-700">
+                    <p class="font-black" id="cust-name">---</p>
+                    <p id="cust-phone">---</p>
+                    <p id="cust-email" class="text-xs text-slate-400">---</p>
+                </div>
+            </div>
+            <div class="bg-slate-50 p-5 rounded-2xl">
+                <h3 class="font-bold text-blue-600 mb-3 text-left">عنوان الشحن</h3>
+                <div class="text-sm space-y-1 text-slate-700 text-left">
+                    <p id="cust-address">---</p>
+                    <p>الرمز البريدي: <span id="cust-postal">---</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-10 overflow-hidden">
+            <div class="bg-slate-800 text-white flex p-4 rounded-t-xl font-bold text-sm">
+                <div class="flex-1">المنتج</div>
+                <div class="w-20 text-center">الكمية</div>
+                <div class="w-32 text-left">الإجمالي</div>
+            </div>
+            <div id="items-container" class="border-x border-b rounded-b-xl divide-y">
+                </div>
+        </div>
+
+        <div class="flex justify-between items-end">
+            <div class="flex items-center gap-4">
+                <div id="qrcode" class="p-2 border rounded-xl bg-white"></div>
+                <div class="text-[10px] text-slate-400 leading-relaxed">
+                    <p>طريقة الدفع: <span id="inv-pay-method" class="text-slate-800 font-bold">---</span></p>
+                    <p>نوع الاستلام: <span id="inv-shipping" class="text-slate-800 font-bold">---</span></p>
+                </div>
+            </div>
+            
+            <div class="w-64 space-y-2">
+                <div class="flex justify-between text-sm text-slate-500">
+                    <span>المجموع الفرعي:</span>
+                    <span id="inv-subtotal">0.00</span>
+                </div>
+                <div class="flex justify-between text-sm text-slate-500 pb-2 border-b">
+                    <span>الضريبة (15%):</span>
+                    <span id="inv-tax">0.00</span>
+                </div>
+                <div class="flex justify-between text-xl font-black text-blue-600 pt-2">
+                    <span>الإجمالي:</span>
+                    <span id="inv-total">0.00</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-12 text-center text-[10px] text-slate-300">
+            شكراً لثقتكم بمنصة تيرة - المملكة العربية السعودية
+        </div>
+    </div>
 
     <script type="module" src="js/print.js"></script>
 </body>
