@@ -1,170 +1,188 @@
 <!DOCTYPE html>
-<html dir="rtl">
+<html dir="rtl" lang="ar">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة الطلبات - نظام متكامل</title>
+    <title>إدارة الطلبات - منصة في خدمتك</title>
+    
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.quilljs.com/1.3.7/quill.js"></script>
+    
+    <link rel="stylesheet" href="css/orders-style.css">
+    
     <style>
-        * { transition: all 0.2s ease; }
-        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; display: inline-block; }
-        .status-new { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1e40af; }
-        .status-processing { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #b45309; }
-        .status-completed { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #065f46; }
-        .status-review { background: linear-gradient(135deg, #e9d5ff, #d8b4fe); color: #6b21a5; }
-        .status-refund { background: linear-gradient(135deg, #fed7aa, #fdba74); color: #9a3412; }
-        .status-cancelled { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #b91c1c; }
-        .ql-editor { min-height: 120px; direction: rtl; text-align: right; font-size: 14px; }
-        .product-row { border: 1px solid #e5e7eb; margin-bottom: 12px; padding: 12px; border-radius: 12px; background: white; transition: all 0.3s ease; }
-        .product-row:hover { border-color: #3b82f6; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
-        .payment-btn.active { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border-color: #3b82f6; transform: scale(1.02); }
-        .btn-icon { display: inline-flex; align-items: center; gap: 8px; }
-        .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 1.5rem; }
-        #toast { position: fixed; bottom: 20px; left: 20px; background: #1f2937; color: white; padding: 12px 24px; border-radius: 8px; z-index: 1000; display: none; animation: slideIn 0.3s ease; }
-        #toast.success { background: #10b981; }
-        #toast.error { background: #ef4444; }
-        @keyframes slideIn {
-            from { transform: translateX(-100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .shipping-fields { background: linear-gradient(135deg, #f0fdf4, #dcfce7); padding: 15px; border-radius: 12px; margin-top: 10px; border: 1px solid #bbf7d0; }
-        .pickup-fields { background: linear-gradient(135deg, #fef3c7, #fde68a); padding: 15px; border-radius: 12px; margin-top: 10px; border: 1px solid #fcd34d; }
-        .no-shipping-fields { background: linear-gradient(135deg, #e0e7ff, #c7d2fe); padding: 15px; border-radius: 12px; margin-top: 10px; border: 1px solid #a5b4fc; }
-        .shipping-option { cursor: pointer; transition: all 0.3s ease; }
-        .shipping-option:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .order-card { transition: all 0.3s ease; background: white; }
-        .order-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
-        .product-image-preview { width: 60px; height: 60px; object-fit: cover; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; }
-        .product-image-preview:hover { opacity: 0.8; transform: scale(1.05); }
-        .form-section { background: #f9fafb; border-radius: 16px; padding: 20px; margin-bottom: 20px; border: 1px solid #e5e7eb; transition: all 0.3s ease; }
-        .form-section:hover { border-color: #3b82f6; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .form-section-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #1f2937; border-right: 4px solid #3b82f6; padding-right: 12px; display: flex; align-items: center; gap: 8px; }
-        .action-btn { transition: all 0.2s ease; }
-        .action-btn:hover { transform: scale(1.05); }
-        .ql-toolbar.ql-snow { border-radius: 12px 12px 0 0; }
-        .ql-container.ql-snow { border-radius: 0 0 12px 12px; min-height: 120px; }
-        .modal { transition: opacity 0.3s ease; }
-        .product-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; }
+        /* إضافة التنسيقات الخاصة بالخلفية المتدرجة والتحسينات السريعة */
+        body { background: radial-gradient(circle at top right, #f8fafc, #f1f5f9); min-height: 100vh; }
+        .form-section { background: #ffffff; border: 1px solid #eef2f6; border-radius: 20px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .form-section-title { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 15px; border-right: 4px solid #2563eb; padding-right: 12px; }
     </style>
 </head>
-<body class="bg-gradient-to-br from-gray-50 to-gray-100 p-6 font-sans">
+<body class="p-4 md:p-8">
 
-<div id="toast"></div>
+    <div id="toast" style="display: none;"></div>
 
-<div class="max-w-7xl mx-auto">
-    <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-        <div class="flex items-center gap-3">
-            <div class="bg-gradient-to-br from-blue-600 to-blue-700 w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg">
-                <i class="fas fa-shopping-cart text-white text-xl"></i>
+    <div class="max-w-7xl mx-auto">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
+            <div class="flex items-center gap-4">
+                <div class="bg-blue-600 w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-200">
+                    <i class="fas fa-file-invoice text-white text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-black text-slate-800">إدارة الطلبات</h1>
+                    <p class="text-slate-500 font-medium">نظام "في خدمتك" المتكامل للعمليات</p>
+                </div>
             </div>
-            <div>
-                <h1 class="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">إدارة الطلبات</h1>
-                <p class="text-gray-500 text-sm">إدارة الطلبات، المبيعات، والعملاء</p>
+            <button id="newOrderBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-2xl shadow-lg shadow-blue-100 flex items-center gap-3 transition-all transform hover:scale-105 active:scale-95 font-bold">
+                <i class="fas fa-plus-circle"></i> طلب جديد
+            </button>
+        </div>
+
+        <div class="bg-white/80 backdrop-blur-md rounded-3xl border border-white shadow-sm p-6 mb-8">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div>
+                    <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">حالة الطلب</label>
+                    <select id="filterStatus" class="w-full bg-slate-50 border-none rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500">
+                        <option value="">الكل</option>
+                        <option value="جديد">جديد</option>
+                        <option value="تحت التنفيذ">تحت التنفيذ</option>
+                        <option value="تم التنفيذ">تم التنفيذ</option>
+                        <option value="ملغي">ملغي</option>
+                    </select>
+                </div>
+                <div class="col-span-1 md:col-span-2">
+                    <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">البحث عن عميل</label>
+                    <input type="text" id="filterCustomer" placeholder="ادخل اسم العميل..." class="w-full bg-slate-50 border-none rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex items-end gap-2 col-span-2 md:col-span-2">
+                    <button id="applyFilters" class="flex-1 bg-slate-800 text-white rounded-xl py-2.5 hover:bg-slate-900 transition font-bold text-sm">تطبيق الفلتر</button>
+                    <button id="resetFilters" class="px-4 bg-slate-100 text-slate-500 rounded-xl py-2.5 hover:bg-slate-200 transition"><i class="fas fa-undo"></i></button>
+                </div>
             </div>
         </div>
-        <button id="newOrderBtn" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-xl shadow-lg btn-icon transition-all duration-200 transform hover:scale-105">
-            <i class="fas fa-plus-circle"></i> طلب جديد
-        </button>
-    </div>
 
-    <div class="bg-white rounded-2xl shadow-lg p-5 mb-8">
-        <div class="flex flex-wrap gap-3 items-end">
-            <div class="flex-1 min-w-[150px]">
-                <label class="text-xs text-gray-500 mb-1 block"><i class="fas fa-tag ml-1"></i>حالة الطلب</label>
-                <select id="filterStatus" class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-500">
-                    <option value="">جميع الحالات</option>
-                    <option value="جديد">🆕 جديد</option>
-                    <option value="تحت التنفيذ">⚙️ تحت التنفيذ</option>
-                    <option value="تم التنفيذ">✅ تم التنفيذ</option>
-                    <option value="تحت المراجعة">🔍 تحت المراجعة</option>
-                    <option value="مسترجع">↩️ مسترجع</option>
-                    <option value="ملغي">❌ ملغي</option>
-                </select>
-            </div>
-            <div class="flex-1 min-w-[150px]">
-                <label class="text-xs text-gray-500 mb-1 block"><i class="fas fa-user ml-1"></i>اسم العميل</label>
-                <input type="text" id="filterCustomer" placeholder="بحث..." class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div class="flex-1 min-w-[150px]">
-                <label class="text-xs text-gray-500 mb-1 block"><i class="fas fa-truck ml-1"></i>طريقة الاستلام</label>
-                <select id="filterShippingMethod" class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-500">
-                    <option value="">الكل</option>
-                    <option value="pickup">🏪 استلام من المقر</option>
-                    <option value="delivery">🚚 شحن منزلي</option>
-                    <option value="noship">📥 لا يتطلب شحن</option>
-                </select>
-            </div>
-            <div class="flex-1 min-w-[150px]">
-                <label class="text-xs text-gray-500 mb-1 block"><i class="fas fa-calendar ml-1"></i>من تاريخ</label>
-                <input type="date" id="filterDateFrom" class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div class="flex-1 min-w-[150px]">
-                <label class="text-xs text-gray-500 mb-1 block"><i class="fas fa-calendar-check ml-1"></i>إلى تاريخ</label>
-                <input type="date" id="filterDateTo" class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div class="flex gap-2">
-                <button id="applyFilters" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition transform hover:scale-105"><i class="fas fa-search"></i></button>
-                <button id="resetFilters" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition transform hover:scale-105"><i class="fas fa-undo"></i></button>
-                <button id="viewListBtn" class="bg-gray-200 p-2 rounded-lg hover:bg-gray-300 transition"><i class="fas fa-list"></i></button>
-                <button id="viewGridBtn" class="bg-gray-200 p-2 rounded-lg hover:bg-gray-300 transition"><i class="fas fa-th-large"></i></button>
+        <div id="ordersContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-full py-20 text-center">
+                <div class="loading-spinner mb-4"></div>
+                <p class="text-slate-400">جاري تحميل البيانات من السحابة...</p>
             </div>
         </div>
     </div>
 
-    <div id="ordersContainer" class="space-y-4"></div>
-</div>
-
-<div id="orderModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50 overflow-y-auto modal">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[95vh] overflow-y-auto">
-        <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10">
-            <div class="flex items-center gap-3">
-                <i class="fas fa-clipboard-list text-blue-600 text-2xl"></i>
-                <h2 id="modalTitle" class="text-2xl font-bold">إضافة طلب جديد</h2>
+    <div id="orderModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50 overflow-y-auto">
+        <div class="bg-white rounded-[2rem] shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto animate-fade-in">
+            <div class="sticky top-0 bg-white/90 backdrop-blur px-8 py-6 border-b border-slate-100 flex justify-between items-center z-20">
+                <h2 id="modalTitle" class="text-2xl font-black text-slate-800">إضافة طلب جديد</h2>
+                <button id="closeModalBtn" class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all">&times;</button>
             </div>
-            <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600 text-3xl transition transform hover:scale-110">&times;</button>
+
+            <form id="orderForm" class="p-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="form-section">
+                        <div class="form-section-title">بيانات السجل</div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs font-bold text-slate-400 mb-1 block">رقم الطلب</label>
+                                <input type="text" id="orderNumber" readonly class="w-full bg-slate-50 border-none rounded-xl px-4 py-2 font-mono text-blue-600">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-400 mb-1 block">تاريخ العملية</label>
+                                <input type="date" id="orderDate" class="w-full bg-slate-50 border-none rounded-xl px-4 py-2">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-400 mb-1 block">حالة المعاملة</label>
+                                <select id="orderStatus" class="w-full bg-slate-50 border-none rounded-xl px-4 py-2">
+                                    <option value="جديد">جديد</option>
+                                    <option value="تحت التنفيذ">تحت التنفيذ</option>
+                                    <option value="تم التنفيذ">تم التنفيذ</option>
+                                    <option value="ملغي">ملغي</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section col-span-2">
+                        <div class="form-section-title">بيانات العميل والتوريد</div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="col-span-2">
+                                <label class="text-xs font-bold text-slate-400 mb-1 block">اختيار العميل</label>
+                                <select id="customerSelect" class="w-full bg-slate-50 border-none rounded-xl px-4 py-2">
+                                    <option value="">تحميل العملاء...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-400 mb-1 block">طريقة التسليم</label>
+                                <div class="flex gap-2">
+                                    <label class="flex-1 text-center py-2 bg-slate-50 rounded-xl cursor-pointer border-2 border-transparent transition has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                                        <input type="radio" name="shippingMethod" value="pickup" class="hidden" checked> 
+                                        <span class="text-sm font-bold text-slate-600">استلام</span>
+                                    </label>
+                                    <label class="flex-1 text-center py-2 bg-slate-50 rounded-xl cursor-pointer border-2 border-transparent transition has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                                        <input type="radio" name="shippingMethod" value="delivery" class="hidden"> 
+                                        <span class="text-sm font-bold text-slate-600">شحن</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-400 mb-1 block">وسيلة الدفع</label>
+                                <div class="flex gap-2">
+                                    <button type="button" class="payment-btn active flex-1 py-2 bg-slate-50 rounded-xl text-sm font-bold" data-payment="mada">مدى</button>
+                                    <button type="button" class="payment-btn flex-1 py-2 bg-slate-50 rounded-xl text-sm font-bold" data-payment="cash">كاش</button>
+                                    <input type="hidden" id="paymentMethod" value="mada">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section mb-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="form-section-title mb-0">قائمة البضائع / الخدمات</div>
+                        <button type="button" id="addNewProductBtn" class="bg-slate-100 hover:bg-blue-600 hover:text-white text-blue-600 px-4 py-2 rounded-xl text-xs font-bold transition-all">
+                            <i class="fas fa-plus ml-1"></i> إضافة منتج
+                        </button>
+                    </div>
+                    
+                    <div id="productsContainer" class="space-y-4 min-h-[100px]">
+                        </div>
+                </div>
+
+                <div class="bg-slate-900 rounded-[2rem] p-8 text-white flex flex-col md:flex-row justify-between items-center gap-6 shadow-2xl">
+                    <div class="grid grid-cols-3 gap-8 w-full md:w-auto text-center md:text-right">
+                        <div>
+                            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">المجموع الصافي</p>
+                            <p id="subtotalDisplay" class="text-xl font-bold">0.00 ريال</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">الضريبة (15%)</p>
+                            <p id="taxDisplay" class="text-xl font-bold">0.00 ريال</p>
+                        </div>
+                        <div>
+                            <p class="text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-1">الخصم الإضافي</p>
+                            <input type="number" id="discountValue" value="0" class="bg-slate-800 border-none rounded-lg w-20 px-2 py-1 text-center font-bold text-white focus:ring-1 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    <div class="bg-white/10 w-full md:w-px h-px md:h-12"></div>
+                    <div class="text-center md:text-left">
+                        <p class="text-blue-400 text-[11px] font-black uppercase tracking-[0.2em] mb-1">الإجمالي المستحق</p>
+                        <p id="totalDisplay" class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">0.00 ريال</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-4 mt-10">
+                    <button type="button" id="cancelOrderBtn" class="px-8 py-3 text-slate-400 font-bold hover:text-slate-600 transition">إلغاء</button>
+                    <button type="submit" class="px-10 py-3 bg-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all transform hover:scale-105 active:scale-95">
+                        حفظ ومعالجة الطلب
+                    </button>
+                </div>
+            </form>
         </div>
-        
-        <form id="orderForm" class="p-6">
-            <div class="flex justify-end gap-3 pt-4 border-t">
-                <button type="button" id="cancelOrderBtn" class="px-6 py-2 border rounded-xl hover:bg-gray-50 transition">إلغاء</button>
-                <button type="submit" class="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition shadow-md transform hover:scale-105"><i class="fas fa-save ml-2"></i> حفظ الطلب</button>
-            </div>
-        </form>
     </div>
-</div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, doc, getDocs, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+    <script type="module" src="js/orders-logic.js"></script>
+    <script type="module" src="js/orders-firebase-db.js"></script>
+    <script type="module" src="js/orders-app.js"></script>
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
-        authDomain: "msjt301-974bb.firebaseapp.com",
-        projectId: "msjt301-974bb",
-        storageBucket: "msjt301-974bb.firebasestorage.app",
-        messagingSenderId: "186209858482",
-        appId: "1:186209858482:web:186ca610780799ef562aab"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // الدوال الأساسية (Load, Add, Update, Delete)
-    async function loadOrders() {
-        const ordersRef = collection(db, "orders");
-        const q = query(ordersRef, orderBy("createdAt", "desc"));
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    }
-
-    // منطق العرض والتحكم (UI Logic)
-    // ... يتم إضافة مستمعي الأحداث Buttons, Modals, Forms هنا ...
-</script>
 </body>
 </html>
