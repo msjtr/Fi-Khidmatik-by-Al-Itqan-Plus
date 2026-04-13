@@ -1,40 +1,90 @@
-import { db } from './orders-firebase-db.js';
-import { collection, getDocs, doc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+/**
+ * fi-khidmatik/js/orders-logic.js
+ * المنطق البرمجي لإدارة العمليات والحسابات
+ */
 
-export async function getOrders() {
-    try {
-        const q = query(collection(db, "orders"));
-        const snap = await getDocs(q);
-        return snap.docs.map(doc => {
-            const data = doc.data();
-            return {
-                id: doc.id,
-                // الحفاظ على الحقول القديمة والجديدة
-                customerName: data.customerName || data.name || data.client_name || "بدون اسم",
-                price: data.price || data.amount || data.total || 0,
-                packageName: data.packageName || data.product || data.package || "باقة تيرا",
-                orderNumber: data.orderNumber || "KF-" + doc.id.substring(0,5),
-                ...data
-            };
-        });
-    } catch (e) {
-        console.error("Error:", e);
-        return [];
+// مصفوفة المنتجات داخل الطلب الحالي
+let currentOrderItems = [];
+
+// --- 1. حسابات الفاتورة ---
+export const calculateFinance = (discount = 0) => {
+    const subtotal = currentOrderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const taxRate = 0.15; // الضريبة في السعودية 15%
+    const taxableAmount = Math.max(0, subtotal - discount);
+    const tax = taxableAmount * taxRate;
+    const total = taxableAmount + tax;
+
+    return {
+        subtotal: subtotal.toFixed(2),
+        tax: tax.toFixed(2),
+        total: total.toFixed(2)
+    };
+};
+
+// --- 2. إدارة قائمة المنتجات (UI) ---
+export const renderProductList = (containerId, updateCallback) => {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    if (currentOrderItems.length === 0) {
+        container.innerHTML = '<p class="text-center text-gray-400 py-4 text-sm">لم يتم إضافة منتجات بعد</p>';
+        return;
     }
-}
 
-export async function deleteOrder(id) {
-    if(!confirm("هل أنت متأكد من حذف هذا الطلب؟")) return false;
-    try {
-        await deleteDoc(doc(db, "orders", id));
-        return true;
-    } catch (e) { return false; }
-}
+    container.innerHTML = currentOrderItems.map((item, index) => `
+        <div class="flex items-center justify-between bg-gray-50 p-3 rounded-xl mb-2 border border-gray-100 animate-fade-in">
+            <div class="flex-1">
+                <h4 class="font-bold text-gray-700 text-sm">${item.name}</h4>
+                <p class="text-xs text-blue-600">${item.price} ريال</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center border rounded-lg bg-white overflow-hidden">
+                    <button type="button" onclick="changeQty(${index}, -1)" class="px-2 py-1 hover:bg-gray-100 text-gray-500">-</button>
+                    <span class="px-3 text-sm font-medium">${item.quantity}</span>
+                    <button type="button" onclick="changeQty(${index}, 1)" class="px-2 py-1 hover:bg-gray-100 text-gray-500">+</button>
+                </div>
+                <button type="button" onclick="removeItem(${index})" class="text-red-400 hover:text-red-600 p-1">
+                    <i class="fas fa-trash-alt text-xs"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
 
-export function toast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.style.display = 'block';
-    t.classList.add('bg-green-600');
-    setTimeout(() => t.style.display = 'none', 3000);
-}
+    if (updateCallback) updateCallback();
+};
+
+// --- 3. وظائف التعديل (Global لسهولة الوصول من HTML) ---
+window.changeQty = (index, delta) => {
+    if (currentOrderItems[index].quantity + delta > 0) {
+        currentOrderItems[index].quantity += delta;
+        renderProductList('productsContainer', window.updateTotalDisplay);
+    }
+};
+
+window.removeItem = (index) => {
+    currentOrderItems.splice(index, 1);
+    renderProductList('productsContainer', window.updateTotalDisplay);
+};
+
+// --- 4. أدوات مساعدة ---
+export const resetLogic = () => {
+    currentOrderItems = [];
+};
+
+export const addItem = (product) => {
+    // التحقق إذا كان المنتج موجود مسبقاً لزيادة الكمية فقط
+    const existing = currentOrderItems.find(item => item.id === product.id);
+    if (existing) {
+        existing.quantity += 1;
+    } else {
+        currentOrderItems.push({
+            id: product.id || Date.now(),
+            name: product.name,
+            price: parseFloat(product.price),
+            quantity: 1
+        });
+    }
+};
+
+export const getCurrentItems = () => currentOrderItems;
+export const setCurrentItems = (items) => { currentOrderItems = items; };
