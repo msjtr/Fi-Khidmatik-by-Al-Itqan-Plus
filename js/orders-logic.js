@@ -1,14 +1,12 @@
 // orders-logic.js
 import { db } from './firebase.js'; 
-// أضف السطر التالي لحل مشكلة استيراد db في ملف الـ HTML إذا كنت تستدعيه من هنا
-export { db }; 
+export { db }; // حل مشكلة استيراد db في ملف الـ HTML
 
 import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// 1. جلب كافة الطلبات
-export async function getOrders() {
+// 1. جلب كافة الطلبات (تم تغيير الاسم لـ loadOrders ليطابق طلب صفحة الـ HTML)
+export async function loadOrders() { 
     try {
-        // نصيحة: إذا أردت ترتيب الطلبات من الأحدث للأقدم أضف الترتيب هنا
         const ordersRef = collection(db, "orders");
         const snap = await getDocs(ordersRef);
         return snap.docs.map(doc => ({
