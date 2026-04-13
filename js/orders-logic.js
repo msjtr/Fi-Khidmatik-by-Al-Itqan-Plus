@@ -1,33 +1,47 @@
-// استيراد أدوات Firestore الضرورية
 import { db } from './firebase.js';
 import { collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// 1. دالة جلب البيانات (يجب أن تبدأ بـ export)
+/**
+ * جلب كافة الطلبات من Firestore مرتبة من الأحدث للأقدم
+ */
 export async function fetchFullData() {
     try {
-        const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
+        const ordersRef = collection(db, "orders");
+        const q = query(ordersRef, orderBy("createdAt", "desc"));
         const querySnapshot = await getDocs(q);
-        return querySnapshot.docs.map(doc => ({ 
-            id: doc.id, 
-            ...doc.data() 
+        
+        return querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
         }));
     } catch (error) {
-        console.error("Logic Error: fetchFullData failed", error);
-        return [];
+        console.error("خطأ أثناء جلب البيانات:", error);
+        return []; // إرجاع مصفوفة فارغة لتجنب تعطل التطبيق
     }
 }
 
-// 2. دالة حفظ البيانات
+/**
+ * حفظ طلب جديد في قاعدة البيانات
+ */
 export async function saveData(collName, data) {
-    return await addDoc(collection(db, collName), data);
+    try {
+        const docRef = await addDoc(collection(db, collName), data);
+        return docRef;
+    } catch (error) {
+        throw new Error("فشل حفظ البيانات في Firestore: " + error.message);
+    }
 }
 
-// 3. دالة توليد رقم الطلب
+/**
+ * توليد رقم طلب عشوائي يبدأ بـ TR
+ */
 export function generateOrderID() {
     return 'TR-' + Math.floor(Math.random() * 900000 + 100000);
 }
 
-// 4. دالة توليد SKU
+/**
+ * توليد SKU عشوائي للمنتجات
+ */
 export function generateSKU() {
     return 'SKU-' + Math.random().toString(36).substr(2, 9).toUpperCase();
 }
