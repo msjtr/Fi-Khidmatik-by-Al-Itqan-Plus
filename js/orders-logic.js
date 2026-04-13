@@ -1,24 +1,15 @@
 import { db } from './orders-firebase-db.js';
-import { collection, getDocs, query, orderBy, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { collection, getDocs, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-// جلب الطلبات من مجموعة orders لضمان ظهور بياناتك القديمة
+// جلب كافة بيانات الطلبات القديمة والجديدة
 export async function getOrders() {
     try {
-        const colRef = collection(db, "orders");
-        const snap = await getDocs(colRef);
+        const snap = await getDocs(collection(db, "orders"));
         return snap.docs.map(doc => ({
             id: doc.id,
-            customerName: doc.data().customerName || doc.data().name || "عميل سابق",
-            phone: doc.data().phone || "000",
-            price: doc.data().price || 0,
-            packageName: doc.data().packageName || "طلب سابق",
-            orderNumber: doc.data().orderNumber || "KF-000-P",
-            ...doc.data()
+            ...doc.data() // جلب كل شيء: رقم الطلب، السعر، الباقة، إلخ
         }));
-    } catch (e) {
-        console.error("خطأ في جلب الطلبات:", e);
-        return [];
-    }
+    } catch (e) { return []; }
 }
 
 // جلب المخزون من مجموعة products
@@ -27,9 +18,9 @@ export async function getStock() {
     return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 }
 
-// حذف طلب
+// حذف سجل
 export async function deleteOrder(id) {
-    if(confirm("هل تريد حذف هذا الطلب نهائياً؟")) {
+    if(confirm("هل تريد حذف هذا السجل من قاعدة البيانات؟")) {
         await deleteDoc(doc(db, "orders", id));
         return true;
     }
