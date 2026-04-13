@@ -1,62 +1,230 @@
-import { db } from './orders-firebase-db.js';
-import { getOrders, deleteOrder, toast } from './orders-logic.js';
+/**
+ * نظام إدارة الطلبات - منصة في خدمتك
+ * JavaScript Core Logic
+ */
 
-const container = document.getElementById('ordersContainer');
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { 
+    getFirestore, collection, addDoc, doc, getDocs, updateDoc, deleteDoc, 
+    query, where, orderBy, serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-// دالة المعاينة والطباعة (نفس منطق كودك القديم)
-window.openPreview = function(order) {
-    const area = document.getElementById('printArea');
-    area.innerHTML = `
-        <div style="direction: rtl; padding: 20px; border: 1px solid #eee;">
-            <h2 style="color: #2563eb; text-align: center;">فاتورة طلب رقم: ${order.orderNumber || order.id}</h2>
-            <hr style="margin: 20px 0;">
-            <p><strong>العميل:</strong> ${order.customerName || 'غير مسجل'}</p>
-            <p><strong>المنتج:</strong> ${order.packageName || order.product || 'باقة خدمات'}</p>
-            <p><strong>التاريخ:</strong> ${new Date().toLocaleDateString('ar-SA')}</p>
-            <p><strong>طريقة الدفع:</strong> ${order.paymentMethod || 'مدى'}</p>
-            <div style="margin-top: 30px; font-size: 1.2rem; font-bold; text-align: center; background: #f8fafc; padding: 10px;">
-                الإجمالي: ${order.price || 0} ريال
-            </div>
-        </div>
-    `;
-    document.getElementById('previewModal').classList.remove('hidden');
-    document.getElementById('previewModal').classList.add('flex');
+// إعدادات Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
+    authDomain: "msjt301-974bb.firebaseapp.com",
+    projectId: "msjt301-974bb",
+    storageBucket: "msjt301-974bb.firebasestorage.app",
+    messagingSenderId: "186209858482",
+    appId: "1:186209858482:web:186ca610780799ef562aab"
 };
 
-async function render() {
-    container.innerHTML = '<p class="col-span-full text-center py-10">جاري تحميل الطلبات...</p>';
-    const orders = await getOrders();
-    container.innerHTML = '';
+// تهيئة التطبيق
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    orders.forEach(order => {
-        const card = document.createElement('div');
-        card.className = "order-card p-6 rounded-2xl shadow-sm border border-gray-100 relative";
-        card.innerHTML = `
-            <div class="flex justify-between items-start mb-4">
-                <span class="status-badge status-new">جديد</span>
-                <button class="text-red-300 hover:text-red-500 del-btn"><i class="fas fa-trash"></i></button>
-            </div>
-            <h3 class="font-bold text-xl mb-1">${order.customerName || 'عميل تيرا'}</h3>
-            <p class="text-gray-500 text-sm mb-4">${order.packageName || 'طلب باقة سawa'}</p>
-            <div class="flex justify-between items-center border-t pt-4">
-                <span class="text-blue-600 font-bold text-lg">${order.price} ريال</span>
-                <button class="view-btn bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-600 hover:text-white transition">معاينة والطباعة</button>
-            </div>
-        `;
-        
-        card.querySelector('.view-btn').onclick = () => openPreview(order);
-        card.querySelector('.del-btn').onclick = async () => {
-            if(await deleteOrder(order.id)) {
-                toast("تم حذف الطلب بنجاح");
-                render();
-            }
-        };
-        container.appendChild(card);
+// المتغيرات العامة
+let orders = [];
+let orderProducts = [];
+let currentOrderId = null;
+let selectedPaymentMethod = 'mada';
+
+// --- 1. الوظائف الأساسية عند التشغيل ---
+document.addEventListener('DOMContentLoaded', async () => {
+    setupEventListeners();
+    await loadOrders();
+    await loadCustomerDropdown();
+});
+
+function setupEventListeners() {
+    // فتح مودال طلب جديد
+    document.getElementById('newOrderBtn')?.addEventListener('click', () => {
+        resetForm();
+        document.getElementById('modalTitle').innerText = "إضافة طلب جديد";
+        generateOrderNumber();
+        openModal('orderModal');
+    });
+
+    // إغلاق المودالات
+    document.getElementById('closeModalBtn')?.addEventListener('click', () => closeModal('orderModal'));
+    document.getElementById('cancelOrderBtn')?.addEventListener('click', () => closeModal('orderModal'));
+
+    // تغيير طريقة الشحن (إظهار/إخفاء الحقول)
+    document.querySelectorAll('input[name="shippingMethod"]').forEach(input => {
+        input.addEventListener('change', (e) => toggleShippingFields(e.target.value));
+    });
+
+    // اختيار وسيلة الدفع
+    document.querySelectorAll('.payment-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            selectedPaymentMethod = this.dataset.payment;
+            document.getElementById('paymentMethod').value = selectedPaymentMethod;
+        });
+    });
+
+    // حفظ الطلب
+    document.getElementById('orderForm')?.addEventListener('submit', handleOrderSubmit);
+
+    // إضافة منتج جديد يدوياً
+    document.getElementById('addNewProductBtn')?.addEventListener('click', () => {
+        const product = { name: "منتج جديد", price: 0, quantity: 1, tempId: Date.now() };
+        orderProducts.push(product);
+        renderProductRows();
     });
 }
 
-// أزرار المودال
-document.getElementById('closePreviewBtn').onclick = () => document.getElementById('previewModal').classList.add('hidden');
-document.getElementById('newOrderBtn').onclick = () => alert("سيتم تفعيل مودال الإضافة في التحديث القادم");
+// --- 2. العمليات على قاعدة البيانات (Firebase) ---
+async function loadOrders() {
+    const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
+    orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderOrdersTable();
+}
 
-window.addEventListener('DOMContentLoaded', render);
+async function handleOrderSubmit(e) {
+    e.preventDefault();
+    
+    const orderData = {
+        orderNumber: document.getElementById('orderNumber').value,
+        date: document.getElementById('orderDate').value,
+        status: document.getElementById('orderStatus').value,
+        customerId: document.getElementById('customerSelect').value,
+        customerName: document.getElementById('customerSelect').options[document.getElementById('customerSelect').selectedIndex]?.text || "عميل عام",
+        shippingMethod: document.querySelector('input[name="shippingMethod"]:checked').value,
+        paymentMethod: selectedPaymentMethod,
+        products: orderProducts,
+        subtotal: calculateSubtotal(),
+        discount: parseFloat(document.getElementById('discountValue').value) || 0,
+        tax: calculateTax(),
+        total: calculateTotal(),
+        updatedAt: serverTimestamp()
+    };
+
+    try {
+        if (currentOrderId) {
+            await updateDoc(doc(db, "orders", currentOrderId), orderData);
+            showToast("تم تحديث الطلب بنجاح");
+        } else {
+            orderData.createdAt = serverTimestamp();
+            await addDoc(collection(db, "orders"), orderData);
+            showToast("تم إضافة الطلب بنجاح");
+        }
+        closeModal('orderModal');
+        loadOrders();
+    } catch (error) {
+        console.error("Error saving order:", error);
+        showToast("حدث خطأ أثناء الحفظ", "error");
+    }
+}
+
+// --- 3. إدارة واجهة المستخدم ---
+function renderOrdersTable() {
+    const container = document.getElementById('ordersContainer');
+    if (!container) return;
+
+    container.innerHTML = orders.map(order => `
+        <div class="order-card p-4 border rounded-xl bg-white shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <div class="p-3 bg-blue-50 rounded-lg text-blue-600 font-bold">#${order.orderNumber}</div>
+                <div>
+                    <h4 class="font-bold text-gray-800">${order.customerName}</h4>
+                    <p class="text-xs text-gray-500">${order.date}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-6">
+                <div class="text-center">
+                    <p class="text-xs text-gray-400">الإجمالي</p>
+                    <p class="font-bold text-green-600">${order.total?.toFixed(2)} ريال</p>
+                </div>
+                <span class="status-badge ${getStatusColor(order.status)}">${order.status}</span>
+                <div class="flex gap-2">
+                    <button onclick="editOrder('${order.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><i class="fas fa-edit"></i></button>
+                    <button onclick="deleteOrder('${order.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderProductRows() {
+    const container = document.getElementById('productsContainer');
+    container.innerHTML = orderProducts.map((p, index) => `
+        <div class="product-row grid grid-cols-12 gap-2 items-center">
+            <div class="col-span-6"><input type="text" value="${p.name}" onchange="updateProduct(${index}, 'name', this.value)" class="w-full border rounded p-1 text-sm"></div>
+            <div class="col-span-2"><input type="number" value="${p.price}" onchange="updateProduct(${index}, 'price', this.value)" class="w-full border rounded p-1 text-sm"></div>
+            <div class="col-span-2"><input type="number" value="${p.quantity}" onchange="updateProduct(${index}, 'quantity', this.value)" class="w-full border rounded p-1 text-sm text-center"></div>
+            <div class="col-span-2 text-left"><button type="button" onclick="removeProductRow(${index})" class="text-red-500"><i class="fas fa-times"></i></button></div>
+        </div>
+    `).join('');
+    updateTotals();
+}
+
+// --- 4. وظائف الحسابات ---
+function calculateSubtotal() {
+    return orderProducts.reduce((sum, p) => sum + (p.price * p.quantity), 0);
+}
+
+function calculateTax() {
+    const discount = parseFloat(document.getElementById('discountValue').value) || 0;
+    return (calculateSubtotal() - discount) * 0.15;
+}
+
+function calculateTotal() {
+    const discount = parseFloat(document.getElementById('discountValue').value) || 0;
+    return (calculateSubtotal() - discount) + calculateTax();
+}
+
+function updateTotals() {
+    document.getElementById('subtotalDisplay').innerText = calculateSubtotal().toFixed(2) + " ريال";
+    document.getElementById('taxDisplay').innerText = calculateTax().toFixed(2) + " ريال";
+    document.getElementById('totalDisplay').innerText = calculateTotal().toFixed(2) + " ريال";
+}
+
+// --- 5. أدوات مساعدة (Helpers) ---
+window.updateProduct = (index, field, value) => {
+    orderProducts[index][field] = field === 'name' ? value : parseFloat(value);
+    updateTotals();
+};
+
+window.removeProductRow = (index) => {
+    orderProducts.splice(index, 1);
+    renderProductRows();
+};
+
+function generateOrderNumber() {
+    const rand = Math.floor(1000 + Math.random() * 9000);
+    document.getElementById('orderNumber').value = rand;
+}
+
+function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
+
+function showToast(msg, type = "success") {
+    const toast = document.getElementById('toast');
+    toast.innerText = msg;
+    toast.className = `fixed bottom-5 left-5 px-6 py-3 rounded-xl text-white shadow-lg z-50 ${type === 'success' ? 'bg-green-600' : 'bg-red-600'}`;
+    toast.style.display = 'block';
+    setTimeout(() => toast.style.display = 'none', 3000);
+}
+
+function getStatusColor(status) {
+    if (status === 'تم التنفيذ') return 'status-completed';
+    if (status === 'تحت التنفيذ') return 'status-processing';
+    if (status === 'ملغي') return 'status-cancelled';
+    return 'status-new';
+}
+
+function resetForm() {
+    document.getElementById('orderForm').reset();
+    orderProducts = [];
+    currentOrderId = null;
+    renderProductRows();
+}
+
+function toggleShippingFields(method) {
+    document.getElementById('pickupFields').classList.toggle('hidden', method !== 'pickup');
+    document.getElementById('deliveryFields').classList.toggle('hidden', method !== 'delivery');
+    document.getElementById('noShipFields').classList.toggle('hidden', method !== 'noship');
+}
