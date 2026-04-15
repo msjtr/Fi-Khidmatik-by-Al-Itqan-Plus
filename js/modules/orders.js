@@ -1,9 +1,9 @@
 // js/modules/orders.js
 
-// التعديل: استدعاء ملف firebase.js من نفس المجلد الحالي (بدون ../core/)
-import { db } from './firebase.js'; 
+// 1. الخروج من modules والدخول لـ core (المسار الصحيح)
+import { db } from '../core/firebase.js'; 
 
-// التعديل: الرابط الكامل للمكتبة (CDN) يبقى كما هو لأنه خارجي
+// 2. استخدام CDN لضمان التوافق مع المتصفح
 import { 
     collection, 
     getDocs, 
@@ -13,8 +13,8 @@ import {
     orderBy 
 } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
-// التعديل: استدعاء ملف formatter.js من نفس المجلد الحالي (بدون ../utils/)
-import { formatCurrency, formatDate } from './formatter.js';
+// 3. الخروج من modules والدخول لـ utils
+import { formatCurrency, formatDate } from '../utils/formatter.js';
 
 let currentOrders = [];
 
@@ -23,9 +23,8 @@ let currentOrders = [];
  */
 export async function initOrdersDashboard(container) {
     try {
-        // التعديل: بما أن الملفات بجانب بعضها، قد يكون المسار هو نفس مستوى admin.html
-        // جرب استخدام المسار المباشر للملف
-        const resp = await fetch('orders-dashboard.html'); 
+        // المسار الكامل لملف الواجهة
+        const resp = await fetch('./admin/modules/orders-dashboard.html'); 
         if (!resp.ok) throw new Error("Interface file not found");
         container.innerHTML = await resp.text();
 
@@ -41,9 +40,6 @@ export async function initOrdersDashboard(container) {
     }
 }
 
-/**
- * جلب الطلبات من Firestore
- */
 async function loadOrders() {
     const listContainer = document.getElementById('orders-list');
     if (listContainer) listContainer.innerHTML = '<p style="text-align:center; padding:20px;">جاري تحديث البيانات...</p>';
@@ -59,9 +55,6 @@ async function loadOrders() {
     }
 }
 
-/**
- * عرض الطلبات في الواجهة
- */
 function renderOrders(orders) {
     const container = document.getElementById('orders-list');
     if (!container) return;
@@ -75,28 +68,22 @@ function renderOrders(orders) {
         const dateVal = order.createdAt?.toDate ? order.createdAt.toDate() : order.createdAt;
         
         return `
-            <div class="order-card">
+            <div class="order-card" style="background:white; padding:15px; border-radius:12px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
                 <div class="card-info">
                     <div><strong>رقم الطلب:</strong> ${order.orderNumber || 'N/A'}</div>
                     <div><strong>العميل:</strong> ${order.customerName || 'غير محدد'}</div>
                     <div><strong>التاريخ:</strong> ${formatDate(dateVal)}</div>
                     <div><strong>الإجمالي:</strong> ${formatCurrency(order.total || 0)}</div>
-                    <div>
-                        <span class="order-status status-${order.status || 'pending'}">
+                    <div style="margin-top:5px;">
+                        <span class="status-badge ${order.status || 'pending'}">
                             ${translateStatus(order.status)}
                         </span>
                     </div>
                 </div>
                 <div class="order-actions" style="margin-top:15px; display:flex; gap:10px;">
-                    <button class="btn-icon" onclick="window.open('print.html?orderId=${order.id}', '_blank')">
-                        <i class="fas fa-print"></i>
-                    </button>
-                    <button class="btn-icon success" onclick="updateOrderStatus('${order.id}', 'completed')">
-                        <i class="fas fa-check-circle"></i>
-                    </button>
-                    <button class="btn-icon danger" onclick="updateOrderStatus('${order.id}', 'cancelled')">
-                        <i class="fas fa-ban"></i>
-                    </button>
+                    <button class="btn-icon" onclick="window.open('print.html?orderId=${order.id}', '_blank')"><i class="fas fa-print"></i></button>
+                    <button class="btn-icon success" onclick="updateOrderStatus('${order.id}', 'completed')"><i class="fas fa-check-circle"></i></button>
+                    <button class="btn-icon danger" onclick="updateOrderStatus('${order.id}', 'cancelled')"><i class="fas fa-ban"></i></button>
                 </div>
             </div>
         `;
@@ -109,12 +96,12 @@ function translateStatus(s) {
 }
 
 window.updateOrderStatus = async (orderId, status) => {
-    if(confirm('هل أنت متأكد؟')) {
+    if(confirm('هل أنت متأكد من تغيير حالة هذا الطلب؟')) {
         try {
             await updateDoc(doc(db, "orders", orderId), { status });
             await loadOrders();
         } catch (err) {
-            console.error("Update Status Error:", err);
+            console.error("Update Error:", err);
         }
     }
 };
