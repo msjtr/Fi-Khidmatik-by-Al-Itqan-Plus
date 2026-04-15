@@ -1,21 +1,31 @@
-/* تنسيق الأعمدة المتساوية للمصدر والمستلم */
-.billing-section {
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* عمودين متساويين جنب بعضهم  */
-    gap: 20px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 20px;
+.invoice-wrapper {
+    max-width: 800px;
+    margin: 20px auto;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    direction: rtl;
+    font-family: 'Tajawal', sans-serif;
+}
+
+.invoice-header {
+    text-align: center;
+    border-bottom: 2px solid #eee;
     margin-bottom: 20px;
 }
 
-/* تكرار الثوابت في الطباعة */
-@media print {
-    thead { display: table-header-group; } /* لضمان تكرار الهيدر في كل صفحة  */
-    tfoot { display: table-footer-group; } /* لضمان تكرار التذليل في كل صفحة  */
+.invoice-items table {
+    width: 100%;
+    border-collapse: collapse;
 }
 
-.invoice-header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.invoice-items th, .invoice-items td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+@media print {
+    body { margin: 0; padding: 0; }
+    .invoice-wrapper { margin: 0; box-shadow: none; }
 }
