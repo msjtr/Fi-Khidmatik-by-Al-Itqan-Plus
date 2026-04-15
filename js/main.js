@@ -1,12 +1,13 @@
 // js/main.js
 
-// التعديل الجوهري: إزالة كلمة "modules/" لأن الملفات تظهر في المتصفح في نفس المستوى
-import { initOrdersDashboard } from './orders.js';
-import { initCustomers } from './customers.js';
-import { initProducts } from './products.js';
-import { initSettings } from './settings.js';
-import { initOrderForm } from './order-form.js';
+// إضافة مجلد modules/ للمسارات لأن هذا هو المكان الذي وجد فيه المتصفح الملفات
+import { initOrdersDashboard } from './modules/orders.js';
+import { initCustomers } from './modules/customers.js';
+import { initProducts } from './modules/products.js';
+import { initSettings } from './modules/settings.js';
+import { initOrderForm } from './modules/order-form.js';
 
+// باقي الكود (loadComponent, init, switchModule) يبقى كما هو دون تغيير
 async function loadComponent(id, path) {
     try {
         // كسر الكاش لضمان تحميل التعديلات الجديدة فوراً
