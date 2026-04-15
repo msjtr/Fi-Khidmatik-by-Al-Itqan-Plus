@@ -1,1 +1,20 @@
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+}
 
+.data-table th, .data-table td {
+    border: 1px solid #e2e8f0;
+    padding: 10px;
+    text-align: center;
+}
+
+.data-table th {
+    background: #f8fafc;
+    font-weight: bold;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
