@@ -1,140 +1,17 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>الفاتورة الإلكترونية</title>
-    <link rel="icon" href="/fi-khidmatik/images/logo.svg">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="/fi-khidmatik/css/invoice.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script src="/fi-khidmatik/js/print.js"></script>
-    <script src="/fi-khidmatik/js/terms.js"></script>
-    <script src="/fi-khidmatik/js/invoice.js"></script>
-    <style>
-        body { background: #e9ecef; padding: 20px; }
-        .page { margin: 0 auto 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); background: white; }
-        @media print { body { background: white; padding: 0; } .page { margin: 0; box-shadow: none; } }
-        .preview-buttons { position: fixed; bottom: 0; left: 0; right: 0; background: white; text-align: center; padding: 12px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 1000; }
-        .preview-buttons button { padding: 8px 16px; margin: 0 5px; border: none; border-radius: 6px; cursor: pointer; }
-        .btn-print { background: #1e3a5f; color: white; }
-        .btn-pdf { background: #dc2626; color: white; }
-        .btn-png { background: #16a34a; color: white; }
-        .btn-close { background: #6c757d; color: white; }
-        .loading-spinner { border: 4px solid #f3f3f3; border-top: 4px solid #1e3a5f; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 50px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .error-message { text-align: center; color: red; margin-top: 50px; font-size: 18px; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>طباعة الفاتورة</title>
+    <link rel="stylesheet" href="css/invoice.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 </head>
 <body>
-    <div id="printContent"><div class="loading-spinner"></div></div>
-    <div class="preview-buttons no-print">
-        <button class="btn-print" onclick="window.print()">🖨️ طباعة</button>
-        <button class="btn-pdf" onclick="window.exportToPDF()">📄 PDF</button>
-        <button class="btn-png" onclick="window.exportToPNG()">🖼️ PNG</button>
-        <button class="btn-close" onclick="window.close()">✖️ إغلاق</button>
+    <div id="invoice-content" class="invoice-wrapper">
+        <!-- Invoice will be injected here -->
     </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
-            authDomain: "msjt301-974bb.firebaseapp.com",
-            projectId: "msjt301-974bb",
-            storageBucket: "msjt301-974bb.firebasestorage.app",
-            messagingSenderId: "186209858482",
-            appId: "1:186209858482:web:186ca610780799ef562aab"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        async function loadOrder(orderId) {
-            const snap = await getDoc(doc(db, "orders", orderId));
-            return snap.exists() ? { id: snap.id, ...snap.data() } : null;
-        }
-        async function loadCustomer(customerId) {
-            const snap = await getDoc(doc(db, "customers", customerId));
-            return snap.exists() ? snap.data() : null;
-        }
-
-        const params = new URLSearchParams(location.search);
-        const orderId = params.get('id');
-        if (!orderId) {
-            document.getElementById('printContent').innerHTML = '<div class="error-message">❌ لم يتم تحديد رقم الطلب</div>';
-        } else {
-            const order = await loadOrder(orderId);
-            if (!order) {
-                document.getElementById('printContent').innerHTML = '<div class="error-message">⚠️ الطلب غير موجود</div>';
-            } else {
-                const customer = order.customerId ? await loadCustomer(order.customerId) : null;
-                
-                const orderData = {
-                    orderNumber: order.orderNumber,
-                    orderDate: order.orderDate,
-                    orderTime: order.orderTime,
-                    status: order.status,
-                    customerName: customer?.name || 'غير معروف',
-                    customerPhone: customer?.phone || '',
-                    customerEmail: customer?.email || '',
-                    customerAddress: customer?.address || '',
-                    customerCity: customer?.city || '',
-                    customerStreet: customer?.street || '',
-                    customerAdditionalNo: customer?.additionalNo || '',
-                    customerPoBox: customer?.poBox || '',
-                    shippingMethod: order.shippingMethod,
-                    paymentMethod: order.paymentMethod,
-                    approvalCode: order.approvalCode,
-                    items: (order.items || []).map(item => ({
-                        name: item.name,
-                        description: item.description,
-                        image: item.image,   // الصورة كما هي من قاعدة البيانات
-                        quantity: item.quantity,
-                        price: item.price
-                    })),
-                    subtotal: order.subtotal,
-                    discount: order.discount,
-                    tax: order.tax,
-                    total: order.total
-                };
-                
-                let html = window.buildInvoicePage(orderData, 1, 4);
-                
-                if (typeof window.buildTermsPage1 === 'function') {
-                    html += window.buildTermsPage1(2, 4);
-                    html += window.buildTermsPage2(3, 4);
-                    if (typeof window.buildTermsPage3 === 'function') {
-                        html += window.buildTermsPage3(orderData, customer, window.formatDate(order.orderDate), window.formatTime(order.orderTime), 4, 4);
-                    }
-                }
-                
-                document.getElementById('printContent').innerHTML = html;
-                
-                setTimeout(() => {
-                    const zatcaDiv = document.getElementById('zatcaQR');
-                    if (zatcaDiv && typeof QRCode !== 'undefined') {
-                        zatcaDiv.innerHTML = '';
-                        new QRCode(zatcaDiv, { text: "https://zatca.gov.sa/ar/eServices/Pages/TaxpayerLookup.aspx", width: 90, height: 90 });
-                    }
-                    const websiteDiv = document.getElementById('websiteQR');
-                    if (websiteDiv && typeof QRCode !== 'undefined') {
-                        websiteDiv.innerHTML = '';
-                        new QRCode(websiteDiv, { text: "https://linktr.ee/fikhidmatik", width: 90, height: 90 });
-                    }
-                    const downloadDiv = document.getElementById('downloadQR');
-                    if (downloadDiv && typeof QRCode !== 'undefined') {
-                        downloadDiv.innerHTML = '';
-                        new QRCode(downloadDiv, { text: window.location.origin + window.location.pathname + '?id=' + orderId, width: 90, height: 90 });
-                    }
-                }, 300);
-                
-                if (params.get('auto') === 'print') setTimeout(() => window.print(), 500);
-            }
-        }
-    </script>
+    <script type="module" src="js/print.js"></script>
 </body>
 </html>
