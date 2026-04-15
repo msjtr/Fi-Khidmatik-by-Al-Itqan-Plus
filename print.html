@@ -1,113 +1,140 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html dir="rtl" lang="ar">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فاتورة إلكترونية - تيرة</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <link rel="stylesheet" href="css/invoice.css"> 
+    <title>الفاتورة الإلكترونية</title>
+    <link rel="icon" href="/fi-khidmatik/images/logo.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="/fi-khidmatik/css/invoice.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="/fi-khidmatik/js/print.js"></script>
+    <script src="/fi-khidmatik/js/terms.js"></script>
+    <script src="/fi-khidmatik/js/invoice.js"></script>
     <style>
-        body { font-family: 'Tajawal', sans-serif; background-color: #f8fafc; }
-        @media print { 
-            .control-panel { display: none; } 
-            body { background: white; padding: 0; }
-            .invoice-box { box-shadow: none; border: none; max-width: 100%; margin: 0; }
-        }
-        .invoice-box { max-width: 850px; margin: 40px auto; padding: 40px; border: 1px solid #e2e8f0; background: #fff; border-radius: 24px; }
-        .control-panel { position: fixed; top: 20px; left: 20px; display: flex; gap: 10px; z-index: 100; }
-        .btn-action { padding: 12px 24px; border-radius: 12px; border: none; cursor: pointer; font-weight: 800; transition: all 0.2s; }
-        .btn-pdf { background: #e11d48; color: white; box-shadow: 0 4px 12px rgba(225, 29, 72, 0.2); }
-        .btn-print { background: #1e293b; color: white; }
+        body { background: #e9ecef; padding: 20px; }
+        .page { margin: 0 auto 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); background: white; }
+        @media print { body { background: white; padding: 0; } .page { margin: 0; box-shadow: none; } }
+        .preview-buttons { position: fixed; bottom: 0; left: 0; right: 0; background: white; text-align: center; padding: 12px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 1000; }
+        .preview-buttons button { padding: 8px 16px; margin: 0 5px; border: none; border-radius: 6px; cursor: pointer; }
+        .btn-print { background: #1e3a5f; color: white; }
+        .btn-pdf { background: #dc2626; color: white; }
+        .btn-png { background: #16a34a; color: white; }
+        .btn-close { background: #6c757d; color: white; }
+        .loading-spinner { border: 4px solid #f3f3f3; border-top: 4px solid #1e3a5f; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 50px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .error-message { text-align: center; color: red; margin-top: 50px; font-size: 18px; }
     </style>
 </head>
 <body>
-
-    <div class="control-panel">
-        <button class="btn-action btn-pdf" id="downloadPDF">📥 حفظ PDF</button>
-        <button class="btn-action btn-print" onclick="window.print()">🖨️ طباعة</button>
+    <div id="printContent"><div class="loading-spinner"></div></div>
+    <div class="preview-buttons no-print">
+        <button class="btn-print" onclick="window.print()">🖨️ طباعة</button>
+        <button class="btn-pdf" onclick="window.exportToPDF()">📄 PDF</button>
+        <button class="btn-png" onclick="window.exportToPNG()">🖼️ PNG</button>
+        <button class="btn-close" onclick="window.close()">✖️ إغلاق</button>
     </div>
 
-    <div id="loader" class="flex flex-col items-center justify-center min-h-screen text-slate-500">
-        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
-        <p>جاري جلب بيانات العميل والطلب من منصة تيرة...</p>
-    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-    <div id="print-app" class="invoice-box shadow-2xl hidden">
-        <div class="flex justify-between items-center border-b pb-8 mb-8">
-            <div>
-                <h1 class="text-3xl font-black text-blue-600 tracking-tighter">TERA</h1>
-                <p class="text-slate-400 text-xs mt-1">فاتورة ضريبية مبسطة</p>
-            </div>
-            <div class="text-left">
-                <p class="text-lg font-bold text-slate-800">رقم الطلب: <span id="inv-number">---</span></p>
-                <p class="text-slate-500 text-sm"><span id="inv-date">---</span> | <span id="inv-time">---</span></p>
-            </div>
-        </div>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
+            authDomain: "msjt301-974bb.firebaseapp.com",
+            projectId: "msjt301-974bb",
+            storageBucket: "msjt301-974bb.firebasestorage.app",
+            messagingSenderId: "186209858482",
+            appId: "1:186209858482:web:186ca610780799ef562aab"
+        };
 
-        <div class="grid grid-cols-2 gap-6 mb-10">
-            <div class="bg-slate-50 p-5 rounded-2xl">
-                <h3 class="font-bold text-blue-600 mb-3">العميل</h3>
-                <div class="text-sm space-y-1 text-slate-700">
-                    <p class="font-black" id="cust-name">---</p>
-                    <p id="cust-phone">---</p>
-                    <p id="cust-email" class="text-xs text-slate-400">---</p>
-                </div>
-            </div>
-            <div class="bg-slate-50 p-5 rounded-2xl">
-                <h3 class="font-bold text-blue-600 mb-3 text-left">عنوان الشحن</h3>
-                <div class="text-sm space-y-1 text-slate-700 text-left">
-                    <p id="cust-address">---</p>
-                    <p>الرمز البريدي: <span id="cust-postal">---</span></p>
-                </div>
-            </div>
-        </div>
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-        <div class="mb-10 overflow-hidden">
-            <div class="bg-slate-800 text-white flex p-4 rounded-t-xl font-bold text-sm">
-                <div class="flex-1">المنتج</div>
-                <div class="w-20 text-center">الكمية</div>
-                <div class="w-32 text-left">الإجمالي</div>
-            </div>
-            <div id="items-container" class="border-x border-b rounded-b-xl divide-y">
-                </div>
-        </div>
+        async function loadOrder(orderId) {
+            const snap = await getDoc(doc(db, "orders", orderId));
+            return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+        }
+        async function loadCustomer(customerId) {
+            const snap = await getDoc(doc(db, "customers", customerId));
+            return snap.exists() ? snap.data() : null;
+        }
 
-        <div class="flex justify-between items-end">
-            <div class="flex items-center gap-4">
-                <div id="qrcode" class="p-2 border rounded-xl bg-white"></div>
-                <div class="text-[10px] text-slate-400 leading-relaxed">
-                    <p>طريقة الدفع: <span id="inv-pay-method" class="text-slate-800 font-bold">---</span></p>
-                    <p>نوع الاستلام: <span id="inv-shipping" class="text-slate-800 font-bold">---</span></p>
-                </div>
-            </div>
-            
-            <div class="w-64 space-y-2">
-                <div class="flex justify-between text-sm text-slate-500">
-                    <span>المجموع الفرعي:</span>
-                    <span id="inv-subtotal">0.00</span>
-                </div>
-                <div class="flex justify-between text-sm text-slate-500 pb-2 border-b">
-                    <span>الضريبة (15%):</span>
-                    <span id="inv-tax">0.00</span>
-                </div>
-                <div class="flex justify-between text-xl font-black text-blue-600 pt-2">
-                    <span>الإجمالي:</span>
-                    <span id="inv-total">0.00</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="mt-12 text-center text-[10px] text-slate-300">
-            شكراً لثقتكم بمنصة تيرة - المملكة العربية السعودية
-        </div>
-    </div>
-
-    <script type="module" src="js/print.js"></script>
+        const params = new URLSearchParams(location.search);
+        const orderId = params.get('id');
+        if (!orderId) {
+            document.getElementById('printContent').innerHTML = '<div class="error-message">❌ لم يتم تحديد رقم الطلب</div>';
+        } else {
+            const order = await loadOrder(orderId);
+            if (!order) {
+                document.getElementById('printContent').innerHTML = '<div class="error-message">⚠️ الطلب غير موجود</div>';
+            } else {
+                const customer = order.customerId ? await loadCustomer(order.customerId) : null;
+                
+                const orderData = {
+                    orderNumber: order.orderNumber,
+                    orderDate: order.orderDate,
+                    orderTime: order.orderTime,
+                    status: order.status,
+                    customerName: customer?.name || 'غير معروف',
+                    customerPhone: customer?.phone || '',
+                    customerEmail: customer?.email || '',
+                    customerAddress: customer?.address || '',
+                    customerCity: customer?.city || '',
+                    customerStreet: customer?.street || '',
+                    customerAdditionalNo: customer?.additionalNo || '',
+                    customerPoBox: customer?.poBox || '',
+                    shippingMethod: order.shippingMethod,
+                    paymentMethod: order.paymentMethod,
+                    approvalCode: order.approvalCode,
+                    items: (order.items || []).map(item => ({
+                        name: item.name,
+                        description: item.description,
+                        image: item.image,   // الصورة كما هي من قاعدة البيانات
+                        quantity: item.quantity,
+                        price: item.price
+                    })),
+                    subtotal: order.subtotal,
+                    discount: order.discount,
+                    tax: order.tax,
+                    total: order.total
+                };
+                
+                let html = window.buildInvoicePage(orderData, 1, 4);
+                
+                if (typeof window.buildTermsPage1 === 'function') {
+                    html += window.buildTermsPage1(2, 4);
+                    html += window.buildTermsPage2(3, 4);
+                    if (typeof window.buildTermsPage3 === 'function') {
+                        html += window.buildTermsPage3(orderData, customer, window.formatDate(order.orderDate), window.formatTime(order.orderTime), 4, 4);
+                    }
+                }
+                
+                document.getElementById('printContent').innerHTML = html;
+                
+                setTimeout(() => {
+                    const zatcaDiv = document.getElementById('zatcaQR');
+                    if (zatcaDiv && typeof QRCode !== 'undefined') {
+                        zatcaDiv.innerHTML = '';
+                        new QRCode(zatcaDiv, { text: "https://zatca.gov.sa/ar/eServices/Pages/TaxpayerLookup.aspx", width: 90, height: 90 });
+                    }
+                    const websiteDiv = document.getElementById('websiteQR');
+                    if (websiteDiv && typeof QRCode !== 'undefined') {
+                        websiteDiv.innerHTML = '';
+                        new QRCode(websiteDiv, { text: "https://linktr.ee/fikhidmatik", width: 90, height: 90 });
+                    }
+                    const downloadDiv = document.getElementById('downloadQR');
+                    if (downloadDiv && typeof QRCode !== 'undefined') {
+                        downloadDiv.innerHTML = '';
+                        new QRCode(downloadDiv, { text: window.location.origin + window.location.pathname + '?id=' + orderId, width: 90, height: 90 });
+                    }
+                }, 300);
+                
+                if (params.get('auto') === 'print') setTimeout(() => window.print(), 500);
+            }
+        }
+    </script>
 </body>
 </html>
