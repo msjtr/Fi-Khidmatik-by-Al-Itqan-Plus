@@ -1,1 +1,42 @@
-
+<div class="module-container">
+    <h2><i class="fas fa-shopping-cart"></i> طلب جديد</h2>
+    <div class="order-form-layout">
+        <div class="order-info">
+            <div class="form-group">
+                <label>رقم الطلب (تلقائي)</label>
+                <input type="text" id="order-number" readonly>
+            </div>
+            <div class="form-group">
+                <label>اختر العميل</label>
+                <select id="customer-select" class="form-control"></select>
+                <button id="add-customer-quick" class="btn-small"><i class="fas fa-user-plus"></i> عميل جديد</button>
+            </div>
+            <div class="form-group">
+                <label>تاريخ الطلب</label>
+                <input type="date" id="order-date">
+            </div>
+        </div>
+        <div class="products-section">
+            <h3>المنتجات</h3>
+            <div class="add-product-row">
+                <select id="product-select" class="form-control"></select>
+                <input type="number" id="product-qty" placeholder="الكمية" value="1" min="1">
+                <button id="add-product-btn" class="btn-primary">إضافة منتج</button>
+            </div>
+            <div class="table-responsive">
+                <table id="order-items-table" class="data-table">
+                    <thead>
+                        <tr><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th><th></th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="totals">
+                <div>المجموع: <span id="subtotal">0.00</span></div>
+                <div>الضريبة (%<span id="tax-rate">0</span>): <span id="tax-amount">0.00</span></div>
+                <div class="grand-total">الإجمالي النهائي: <span id="total">0.00</span></div>
+            </div>
+            <button id="save-order-btn" class="btn-success">حفظ الطلب</button>
+        </div>
+    </div>
+</div>
