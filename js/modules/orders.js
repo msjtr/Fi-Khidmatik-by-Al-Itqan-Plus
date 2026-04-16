@@ -1,38 +1,37 @@
 // js/modules/orders.js
-import { db } from '../core/firebase.js'; 
-import { collection, getDocs, updateDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
-import { formatCurrency, formatDate } from '../utils/formatter.js';
-
-let currentOrders = [];
+import { db } from '../core/firebase.js';
+import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 export async function initOrdersDashboard(container) {
-    try {
-        const resp = await fetch('./admin/modules/orders-dashboard.html'); 
-        if (!resp.ok) throw new Error("404");
-        container.innerHTML = await resp.text();
-        await loadOrders();
-    } catch (err) {
-        container.innerHTML = `<p style="color:red; text-align:center;">خطأ في تحميل الواجهة</p>`;
-    }
-}
+    container.innerHTML = `
+        <div style="padding:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="color:#2c3e50;"><i class="fas fa-box"></i> الطلبات الحالية</h2>
+                <button onclick="location.reload()" style="background:#3498db; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">تحديث</button>
+            </div>
+            <div id="orders-target" style="margin-top:20px;">جاري التحميل...</div>
+        </div>
+    `;
 
-async function loadOrders() {
+    const target = document.getElementById('orders-target');
     try {
         const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
-        const snapshot = await getDocs(q);
-        currentOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderOrders(currentOrders);
-    } catch (err) { console.error(err); }
-}
-
-function renderOrders(orders) {
-    const container = document.getElementById('orders-list');
-    if (!container) return;
-    container.innerHTML = orders.map(order => `
-        <div class="order-card" style="background:#fff; padding:15px; border-radius:10px; margin-bottom:10px; border-right:5px solid #2ecc71;">
-            <div><strong>العميل:</strong> ${order.customerName}</div>
-            <div><strong>الإجمالي:</strong> ${formatCurrency(order.total)}</div>
-            <div><strong>الحالة:</strong> ${order.status}</div>
-        </div>
-    `).join('');
+        const snap = await getDocs(q);
+        
+        target.innerHTML = snap.docs.map(doc => {
+            const o = doc.data();
+            return `
+                <div style="background:white; padding:15px; border-radius:12px; margin-bottom:12px; border-right:5px solid #2ecc71; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+                    <div style="display:flex; justify-content:space-between;">
+                        <strong>طلب رقم: ${o.orderNumber || '---'}</strong>
+                        <span style="background:#e8f8f5; color:#2ecc71; padding:2px 10px; border-radius:20px; font-size:0.8rem;">${o.status || 'معلق'}</span>
+                    </div>
+                    <div style="margin-top:8px; color:#555;">العميل: ${o.customerName || 'مجهول'}</div>
+                    <div style="margin-top:5px; font-weight:bold; color:#2c3e50;">المبلغ: ${o.total || 0} ريال</div>
+                </div>
+            `;
+        }).join('');
+    } catch (err) {
+        target.innerHTML = "خطأ في جلب الطلبات.";
+    }
 }
