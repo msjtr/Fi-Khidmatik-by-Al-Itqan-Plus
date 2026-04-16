@@ -3,56 +3,47 @@ import { initOrdersDashboard } from './modules/orders.js';
 import { initCustomers } from './modules/customers.js';
 
 async function loadComponent(id, path) {
+    const container = document.getElementById(id);
+    if (!container) return;
     try {
-        // إضافة ./ في البداية لضمان المسار النسبي الصحيح
-        const resp = await fetch(`./${path}?v=${Date.now()}`); 
-        if (!resp.ok) {
-            console.warn(`تنبيه: تعذر تحميل المكون من ${path} (خطأ 404). تأكد من وجود الملف في مجلد admin/components/`);
-            return;
-        }
-        const container = document.getElementById(id);
-        if (container) {
-            container.innerHTML = await resp.text();
-        }
-    } catch (e) {
-        console.error("خطأ في تحميل المكون:", e);
+        const response = await fetch(path);
+        if (!response.ok) throw new Error(`لم يتم العثور على الملف: ${path}`);
+        container.innerHTML = await response.text();
+    } catch (err) {
+        console.error("خطأ في المكونات:", err.message);
+        // في حال فشل الـ 404، لا تترك المكان فارغاً
+        container.innerHTML = `<div style="padding:10px; color:orange;">تنبيه: ملف ${path} غير موجود</div>`;
     }
 }
 
-async function switchModule(moduleName) {
+// تبديل الأقسام
+async function switchModule(module) {
     const main = document.getElementById('main-content');
     if (!main) return;
     
-    main.innerHTML = '<div style="text-align:center; padding:50px;">جاري تحميل القسم...</div>';
-    
+    // إخفاء الـ Loader
+    main.innerHTML = '<div class="loader">جاري جلب بيانات تيرا...</div>';
+
     try {
-        if (moduleName === 'orders-dashboard' || moduleName === 'orders') {
-            await initOrdersDashboard(main);
-        } else if (moduleName === 'customers') {
+        if (module === 'customers') {
             await initCustomers(main);
         } else {
-            main.innerHTML = '<h2 style="text-align:center; padding:50px;">القسم قيد التطوير</h2>';
+            await initOrdersDashboard(main); // الافتراضي هو الطلبات
         }
     } catch (err) {
-        console.error("خطأ أثناء تبديل القسم:", err);
-        main.innerHTML = `<div style="color:red; text-align:center; padding:50px;">فشل تحميل القسم. راجع الكونسول.</div>`;
+        main.innerHTML = `<div style="color:red; padding:20px;">خطأ فني: ${err.message}</div>`;
     }
 }
 
-// تشغيل النظام
-async function init() {
-    // تحميل الهيدر والسايدبار - تأكد من مطابقة هذه المسارات لمجلداتك في GitHub
-    await loadComponent('header-container', 'admin/components/header.html');
-    await loadComponent('sidebar-container', 'admin/components/sidebar.html');
+// البدء
+(async () => {
+    // حاول تغيير المسارات هنا إذا استمر الـ 404
+    await loadComponent('header-container', 'components/header.html'); 
+    await loadComponent('sidebar-container', 'components/sidebar.html');
     
-    // تحميل القسم الافتراضي
-    await switchModule('orders-dashboard');
-
-    // إعداد التنقل
+    await switchModule(window.location.hash.replace('#', ''));
+    
     window.addEventListener('hashchange', () => {
-        const module = window.location.hash.replace('#', '') || 'orders-dashboard';
-        switchModule(module);
+        switchModule(window.location.hash.replace('#', ''));
     });
-}
-
-init();
+})();
