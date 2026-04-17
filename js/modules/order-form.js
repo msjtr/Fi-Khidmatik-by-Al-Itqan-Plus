@@ -1,123 +1,163 @@
 // js/modules/order-form.js
 
 import { db } from '../core/firebase.js';
-import { collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+import { 
+    collection, addDoc, getDocs, serverTimestamp, query, orderBy 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+/**
+ * موديول إنشاء الطلبات الجديد - تيرا جيتواي
+ * يدعم: إضافة المنتجات، حساب الضريبة، وربط العملاء
+ */
 
 export async function initOrderForm(container) {
-    // التعديل: إضافة ./ لضمان المسار الصحيح في GitHub Pages
     try {
+        // تحميل الواجهة من المسار النسبي الصحيح
         const resp = await fetch('./admin/modules/order-form.html');
-        if (!resp.ok) throw new Error("File not found");
+        if (!resp.ok) throw new Error("تعذر تحميل ملف HTML الخاص بالنموذج");
         container.innerHTML = await resp.text();
-    } catch (err) {
-        console.error("Error loading order-form.html:", err);
-        container.innerHTML = '<p style="color:red; padding:20px;">خطأ في تحميل واجهة نموذج الطلب.</p>';
-        return;
-    }
-    
-    // جلب البيانات الأساسية (العملاء والمنتجات)
-    const customersSnap = await getDocs(collection(db, "customers"));
-    const productsSnap = await getDocs(collection(db, "products"));
-    
-    const customerSelect = document.getElementById('customer-select');
-    if (customerSelect) {
-        customerSelect.innerHTML = '<option value="">اختر عميل</option>' + 
-            customersSnap.docs.map(d => `<option value="${d.id}">${d.data().name}</option>`).join('');
-    }
-    
-    const productSelect = document.getElementById('product-select');
-    if (productSelect) {
-        productSelect.innerHTML = productsSnap.docs.map(d => 
-            `<option value="${d.id}" data-price="${d.data().price}">${d.data().name} - ${d.data().price}</option>`
-        ).join('');
-    }
-    
-    let items = [];
-    
-    // وظيفة إضافة منتج للجدول
-    window.addProductToTable = () => {
-        const prodId = productSelect.value;
-        const qtyInput = document.getElementById('product-qty');
-        const qty = parseInt(qtyInput.value) || 1;
         
-        if (!prodId) return alert('الرجاء اختيار منتج');
+        // تعيين تاريخ اليوم تلقائياً
+        const dateInput = document.getElementById('order-date');
+        if (dateInput) dateInput.valueAsDate = new Date();
         
-        const selectedOption = productSelect.options[productSelect.selectedIndex];
-        const price = parseFloat(selectedOption.dataset.price);
-        const name = selectedOption.text.split('-')[0].trim();
-        
-        // منع تكرار نفس المنتج، بدلاً من ذلك نزيد الكمية
-        const existingItem = items.find(i => i.productId === prodId);
-        if (existingItem) {
-            existingItem.quantity += qty;
-        } else {
-            items.push({ productId: prodId, name, quantity: qty, price });
-        }
-        
-        renderItemsTable();
-        qtyInput.value = 1; // إعادة تعيين الكمية
-    };
-    
-    function renderItemsTable() {
-        const tbody = document.querySelector('#order-items-table tbody');
-        if (!tbody) return;
+        // توليد رقم طلب أولي
+        const orderNumInput = document.getElementById('order-number');
+        if (orderNumInput) orderNumInput.value = 'TR-' + Math.floor(100000 + Math.random() * 900000);
 
-        tbody.innerHTML = items.map((item, idx) => `
-            <tr>
-                <td>${item.name}</td>
-                <td>${item.quantity}</td>
-                <td>${item.price}</td>
-                <td>${(item.quantity * item.price).toFixed(2)}</td>
-                <td><button class="btn-small danger" onclick="removeItem(${idx})"><i class="fas fa-trash"></i></button></td>
+        await setupOrderLogic();
+    } catch (err) {
+        console.error("Order Form Load Error:", err);
+        container.innerHTML = `<div style="color:red; padding:20px; text-align:center;">
+            <i class="fas fa-exclamation-triangle"></i> حدث خطأ في تحميل واجهة الطلبات. تأكد من وجود الملف في المسار الصحيح.
+        </div>`;
+    }
+}
+
+async function setupOrderLogic() {
+    const customerSelect = document.getElementById('customer-select');
+    const productSelect = document.getElementById('product-select');
+    const itemsTableBody = document.querySelector('#order-items-table tbody');
+    let orderItems = [];
+
+    // 1. جلب العملاء والمنتجات بالتوازي لتحسين السرعة
+    const [custSnap, prodSnap] = await Promise.all([
+        getDocs(query(collection(db, "customers"), orderBy("name"))),
+        getDocs(query(collection(db, "products"), orderBy("name")))
+    ]);
+
+    // تعبئة قائمة العملاء
+    customerSelect.innerHTML = '<option value="">-- اختر العميل --</option>';
+    custSnap.forEach(doc => {
+        const c = doc.data();
+        customerSelect.innerHTML += `<option value="${doc.id}">${c.name} (${c.phone})</option>`;
+    });
+
+    // تعبئة قائمة المنتجات مع تخزين السعر في data-price
+    productSelect.innerHTML = '<option value="">-- اختر المنتج لإضافته --</option>';
+    prodSnap.forEach(doc => {
+        const p = doc.data();
+        productSelect.innerHTML += `<option value="${doc.id}" data-price="${p.price}" data-name="${p.name}">${p.name} - ${p.price} ريال</option>`;
+    });
+
+    // 2. وظيفة إضافة منتج للجدول
+    window.addProductToTable = () => {
+        const selectedOpt = productSelect.options[productSelect.selectedIndex];
+        const qty = parseInt(document.getElementById('product-qty').value) || 1;
+
+        if (!selectedOpt.value) return alert("الرجاء اختيار منتج أولاً");
+
+        const productId = selectedOpt.value;
+        const name = selectedOpt.dataset.name;
+        const price = parseFloat(selectedOpt.dataset.price);
+
+        // إذا المنتج موجود مسبقاً، نزيد الكمية فقط
+        const existing = orderItems.find(item => item.productId === productId);
+        if (existing) {
+            existing.quantity += qty;
+        } else {
+            orderItems.push({ productId, name, price, quantity: qty });
+        }
+
+        renderTable();
+        document.getElementById('product-qty').value = 1; // تصغير الكمية للوضع الافتراضي
+    };
+
+    // 3. تحديث عرض الجدول والحسابات
+    function renderTable() {
+        if (!itemsTableBody) return;
+        
+        itemsTableBody.innerHTML = orderItems.map((item, index) => `
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding:10px;">${item.name}</td>
+                <td style="text-align:center;">${item.quantity}</td>
+                <td style="text-align:center;">${item.price.toFixed(2)}</td>
+                <td style="text-align:center; font-weight:bold;">${(item.quantity * item.price).toFixed(2)}</td>
+                <td style="text-align:center;">
+                    <button onclick="window.removeOrderItem(${index})" style="color:red; border:none; background:none; cursor:pointer;">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
             </tr>
         `).join('');
 
-        const subtotal = items.reduce((s, i) => s + (i.price * i.quantity), 0);
-        const taxRate = 15; // الضريبة في السعودية 15%
-        const tax = subtotal * taxRate / 100;
-        
-        document.getElementById('subtotal').innerText = subtotal.toFixed(2);
-        document.getElementById('tax-amount').innerText = tax.toFixed(2);
-        document.getElementById('total').innerText = (subtotal + tax).toFixed(2);
+        calculateTotals();
     }
-    
-    window.removeItem = (idx) => { 
-        items.splice(idx, 1); 
-        renderItemsTable(); 
+
+    function calculateTotals() {
+        const subtotal = orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+        const taxRate = 0.15; // 15% ضريبة القيمة المضافة
+        const taxAmount = subtotal * taxRate;
+        const total = subtotal + taxAmount;
+
+        document.getElementById('subtotal').innerText = subtotal.toFixed(2);
+        document.getElementById('tax-amount').innerText = taxAmount.toFixed(2);
+        document.getElementById('total').innerText = total.toFixed(2);
+    }
+
+    // 4. حذف منتج من القائمة
+    window.removeOrderItem = (index) => {
+        orderItems.splice(index, 1);
+        renderTable();
     };
-    
-    // ربط الأزرار بالأحداث
-    document.getElementById('add-product-btn').onclick = () => window.addProductToTable();
-    
+
+    // 5. حفظ الطلب النهائي في Firebase
     document.getElementById('save-order-btn').onclick = async () => {
         const customerId = customerSelect.value;
-        const customerName = customerSelect.options[customerSelect.selectedIndex]?.text || '';
-        
-        if (!customerId || items.length === 0) {
-            return alert('الرجاء اختيار عميل وإضافة منتج واحد على الأقل');
-        }
+        if (!customerId) return alert("الرجاء اختيار عميل");
+        if (orderItems.length === 0) return alert("قائمة الطلب فارغة! أضف منتجات أولاً");
 
-        const total = parseFloat(document.getElementById('total').innerText);
-        
+        const btn = document.getElementById('save-order-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+
         try {
-            await addDoc(collection(db, "orders"), {
-                orderNumber: 'ORD-' + Date.now().toString().slice(-6), // رقم طلب مختصر
-                customerId, 
-                customerName,
-                items: items,
-                total: total,
-                status: 'pending',
-                createdAt: new Date(),
-                paidAmount: 0
-            });
+            const orderData = {
+                orderNumber: document.getElementById('order-number').value,
+                orderDate: document.getElementById('order-date').value,
+                customerId: customerId,
+                customerName: customerSelect.options[customerSelect.selectedIndex].text,
+                items: orderItems,
+                subtotal: parseFloat(document.getElementById('subtotal').innerText),
+                tax: parseFloat(document.getElementById('tax-amount').innerText),
+                total: parseFloat(document.getElementById('total').innerText),
+                status: 'pending', // حالة أولية
+                createdAt: serverTimestamp()
+            };
+
+            await addDoc(collection(db, "orders"), orderData);
             
-            alert('تم حفظ الطلب بنجاح في نظام تيرا');
-            items = [];
-            renderItemsTable();
-            customerSelect.value = '';
+            alert("✅ تم حفظ الطلب بنجاح في قاعدة بيانات تيرا");
+            location.reload(); // إعادة تحميل لتصفير النموذج
         } catch (err) {
-            console.error("Save Order Error:", err);
-            alert('حدث خطأ أثناء حفظ الطلب');
+            console.error("Error saving order:", err);
+            alert("❌ حدث خطأ أثناء الحفظ، حاول مرة أخرى");
+            btn.disabled = false;
+            btn.innerText = "حفظ الطلب";
         }
     };
+
+    // ربط زر الإضافة السريع
+    const addBtn = document.getElementById('add-product-btn');
+    if (addBtn) addBtn.onclick = window.addProductToTable;
 }
