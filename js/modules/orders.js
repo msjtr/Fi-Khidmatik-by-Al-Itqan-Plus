@@ -1,37 +1,71 @@
 // js/modules/orders.js
 import { db } from '../core/firebase.js';
-import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { collection, getDocs, updateDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
 export async function initOrdersDashboard(container) {
     container.innerHTML = `
         <div style="padding:20px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h2 style="color:#2c3e50;"><i class="fas fa-box"></i> الطلبات الحالية</h2>
-                <button onclick="location.reload()" style="background:#3498db; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">تحديث</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2><i class="fas fa-box"></i> الطلبات الحالية</h2>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="order-search" placeholder="بحث برقم الطلب..." style="padding:8px; border-radius:5px; border:1px solid #ddd;">
+                    <button id="refresh-btn" class="btn-primary" style="padding:8px 15px; cursor:pointer;">تحديث <i class="fas fa-sync"></i></button>
+                </div>
             </div>
-            <div id="orders-target" style="margin-top:20px;">جاري التحميل...</div>
+            <div id="orders-list">جاري التحميل...</div>
         </div>
     `;
 
-    const target = document.getElementById('orders-target');
+    // ربط زر التحديث
+    document.getElementById('refresh-btn').onclick = () => loadOrders();
+    // ربط البحث
+    document.getElementById('order-search').oninput = (e) => filterOrders(e.target.value);
+
+    await loadOrders();
+}
+
+async function loadOrders() {
+    const list = document.getElementById('orders-list');
     try {
         const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
         const snap = await getDocs(q);
-        
-        target.innerHTML = snap.docs.map(doc => {
-            const o = doc.data();
-            return `
-                <div style="background:white; padding:15px; border-radius:12px; margin-bottom:12px; border-right:5px solid #2ecc71; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
-                    <div style="display:flex; justify-content:space-between;">
-                        <strong>طلب رقم: ${o.orderNumber || '---'}</strong>
-                        <span style="background:#e8f8f5; color:#2ecc71; padding:2px 10px; border-radius:20px; font-size:0.8rem;">${o.status || 'معلق'}</span>
-                    </div>
-                    <div style="margin-top:8px; color:#555;">العميل: ${o.customerName || 'مجهول'}</div>
-                    <div style="margin-top:5px; font-weight:bold; color:#2c3e50;">المبلغ: ${o.total || 0} ريال</div>
-                </div>
-            `;
-        }).join('');
-    } catch (err) {
-        target.innerHTML = "خطأ في جلب الطلبات.";
+        const orders = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        window.currentOrders = orders; // تخزين مؤقت للفلترة
+        renderOrders(orders);
+    } catch (e) {
+        list.innerHTML = "خطأ في جلب البيانات.";
     }
+}
+
+function renderOrders(orders) {
+    const list = document.getElementById('orders-list');
+    list.innerHTML = orders.map(o => `
+        <div class="order-card" style="background:#fff; padding:15px; border-radius:10px; margin-bottom:10px; border-right:5px solid #2ecc71; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+            <div style="display:flex; justify-content:space-between;">
+                <strong>${o.customerName || 'عميل'}</strong>
+                <span>${o.total || 0} ريال</span>
+            </div>
+            <div style="margin-top:10px; display:flex; gap:10px;">
+                <button onclick="changeStatus('${o.id}', 'completed')" style="color:green; border:none; background:none; cursor:pointer;"><i class="fas fa-check"></i> اكتمال</button>
+                <button onclick="window.open('print.html?id=${o.id}')" style="color:#3498db; border:none; background:none; cursor:pointer;"><i class="fas fa-print"></i> طباعة</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// جعل الدالة عامة ليراها المتصفح
+window.changeStatus = async (id, status) => {
+    if(confirm('تغيير حالة الطلب؟')) {
+        await updateDoc(doc(db, "orders", id), { status });
+        alert('تم التحديث');
+        loadOrders();
+    }
+};
+
+function filterOrders(term) {
+    const filtered = window.currentOrders.filter(o => 
+        (o.orderNumber || '').toString().includes(term) || 
+        (o.customerName || '').includes(term)
+    );
+    renderOrders(filtered);
 }
