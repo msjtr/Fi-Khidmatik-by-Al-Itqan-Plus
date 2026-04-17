@@ -1,18 +1,25 @@
 <div class="sidebar">
-    <div class="sidebar-menu">
+    <div class="sidebar-logo">
+        <img src="img/logo.png" alt="Tera Gateway" width="120">
+    </div>
+    <nav class="sidebar-nav">
         <a href="#orders" class="nav-item">
-            <i class="fas fa-box"></i>
-            <span>الطلبات</span>
+            <i class="fas fa-shopping-cart"></i>
+            <span>إدارة الطلبات</span>
         </a>
-        
         <a href="#customers" class="nav-item">
             <i class="fas fa-users"></i>
-            <span>العملاء</span>
+            <span>قاعدة العملاء</span>
         </a>
-        
         <a href="#products" class="nav-item">
-            <i class="fas fa-tags"></i>
+            <i class="fas fa-box"></i>
             <span>المنتجات</span>
         </a>
-    </div>
+    </nav>
 </div>
+
+<style>
+    .nav-item { display: flex; align-items: center; padding: 12px 20px; color: #fff; text-decoration: none; transition: 0.3s; }
+    .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.1); border-right: 4px solid #3498db; }
+    .nav-item i { margin-left: 10px; width: 20px; }
+</style>
