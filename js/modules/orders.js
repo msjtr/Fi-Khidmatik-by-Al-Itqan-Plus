@@ -1,148 +1,124 @@
 import { db } from '../core/firebase.js';
-import { doc, getDoc, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 export async function initOrdersDashboard(container) {
     container.innerHTML = `
-        <div class="orders-system" dir="rtl" style="font-family: 'Tajawal', sans-serif; padding:20px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h2 style="color:#2c3e50;"><i class="fas fa-file-invoice"></i> نظام إدارة المبيعات - تيرا</h2>
-            </div>
-            <div id="orders-list" style="display:grid; gap:15px;">
-                <p style="text-align:center;">جاري جلب الطلبات وربط البيانات...</p>
-            </div>
-        </div>
-
-        <div id="invoice-print-container" style="display:none;"></div>
-    `;
-    await renderOrders();
-}
-
-async function renderOrders() {
-    const list = document.getElementById('orders-list');
-    const snap = await getDocs(query(collection(db, "orders"), orderBy("createdAt", "desc")));
-    
-    if (snap.empty) {
-        list.innerHTML = "لا توجد طلبات.";
-        return;
-    }
-
-    list.innerHTML = '';
-    for (const d of snap.docs) {
-        const order = d.data();
-        let customerData = order.shippingAddress || {}; // Fallback الأول
-
-        // الربط الذكي: جلب بيانات العميل إذا كان مسجلاً
-        if (order.customerId) {
-            const cDoc = await getDoc(doc(db, "customers", order.customerId));
-            if (cDoc.exists()) {
-                customerData = { ...cDoc.data(), ...order.shippingAddress }; // دمج البيانات لضمان الاكتمال
-            }
-        }
-
-        const orderEl = createOrderCard(d.id, order, customerData);
-        list.appendChild(orderEl);
-    }
-}
-
-function createOrderCard(id, order, customer) {
-    const div = document.createElement('div');
-    div.className = 'order-card';
-    div.style = "background:white; padding:20px; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.05); border-right:5px solid #3498db; margin-bottom:15px;";
-    
-    // تجميع العنوان الكامل
-    const fullAddress = `${customer.city || ''}، ${customer.district || ''}، ${customer.street || ''}، ${customer.buildingNo || ''}`.replace(/،+/g, '،').trim();
-
-    div.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:start;">
-            <div>
-                <span style="font-weight:bold; color:#3498db;"># ${order.orderNumber}</span>
-                <h4 style="margin:5px 0;">${customer.name || 'عميل غير مسجل'}</h4>
-                <div style="font-size:0.85rem; color:#666;">
-                    <i class="fas fa-phone"></i> ${customer.phone || '---'} | 
-                    <i class="fas fa-map-marker-alt"></i> ${fullAddress}
-                </div>
-            </div>
-            <div style="text-align:left;">
-                <div style="font-size:1.2rem; font-weight:bold;">${order.total} ريال</div>
-                <button onclick="window.prepareAndPrint('${id}')" style="margin-top:10px; background:#2c3e50; color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer;">
-                    <i class="fas fa-print"></i> طباعة الفاتورة
+        <div style="padding:20px; font-family: 'Tajawal', sans-serif;" dir="rtl">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+                <h2 style="color:#2c3e50; margin:0;"><i class="fas fa-file-invoice"></i> نظام إدارة الطلبات</h2>
+                <button id="btn-create-new-order" style="background:#2ecc71; color:white; border:none; padding:12px 25px; border-radius:10px; cursor:pointer; font-weight:bold; box-shadow:0 4px 10px rgba(46,204,113,0.3);">
+                    <i class="fas fa-plus-circle"></i> إنشاء طلب جديد
                 </button>
             </div>
+
+            <div id="orders-list-target" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap:20px;">
+                <p style="text-align:center; grid-column:1/-1;">جاري جلب بيانات تيرا...</p>
+            </div>
+        </div>
+
+        <div id="order-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; overflow-y:auto; padding:20px;">
+            <div style="background:white; max-width:800px; margin:auto; border-radius:15px; padding:25px; position:relative;">
+                <span id="close-order-modal" style="position:absolute; left:20px; top:20px; font-size:25px; cursor:pointer;">&times;</span>
+                <h3 id="modal-title" style="color:#3498db; margin-top:0;">إنشاء طلب جديد</h3>
+                
+                <form id="order-form">
+                    <input type="hidden" id="edit-order-id">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                        <div><label>اسم العميل</label><input type="text" id="m-cust-name" required style="width:100%; padding:10px; margin-top:5px; border:1px solid #ddd; border-radius:8px;"></div>
+                        <div><label>رقم الجوال</label><input type="text" id="m-cust-phone" required style="width:100%; padding:10px; margin-top:5px; border:1px solid #ddd; border-radius:8px;"></div>
+                        <div style="grid-column: span 2;"><label>العنوان الكامل</label><input type="text" id="m-cust-addr" placeholder="حائل - الحي - الشارع" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ddd; border-radius:8px;"></div>
+                        <div><label>المبلغ الإجمالي</label><input type="number" id="m-total" required style="width:100%; padding:10px; margin-top:5px; border:1px solid #ddd; border-radius:8px;"></div>
+                        <div><label>طريقة الدفع</label>
+                            <select id="m-pay-method" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ddd; border-radius:8px;">
+                                <option>مدى</option><option>تمارا</option><option>تابي</option><option>تحويل بنكي</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" style="width:100%; background:#3498db; color:white; padding:15px; border:none; border-radius:10px; margin-top:20px; font-weight:bold; cursor:pointer;">حفظ البيانات</button>
+                </form>
+            </div>
         </div>
     `;
-    
-    // تخزين بيانات الفاتورة في الذاكرة للطباعة
-    div.dataset.invoice = JSON.stringify({ ...order, customer });
-    return div;
+
+    setupActions();
+    await loadOrders();
 }
 
-// حل مشكلة الطباعة (صفحة مستقلة افتراضية)
-window.prepareAndPrint = function(orderId) {
-    const card = document.querySelector(`[onclick="window.prepareAndPrint('${orderId}')"]`).closest('.order-card');
-    const data = JSON.parse(card.dataset.invoice);
+async function loadOrders() {
+    const target = document.getElementById('orders-list-target');
+    const snap = await getDocs(query(collection(db, "orders"), orderBy("createdAt", "desc")));
     
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-        <html dir="rtl">
-        <head>
-            <title>فاتورة رقم ${data.orderNumber}</title>
-            <style>
-                body { font-family: 'Tajawal', sans-serif; padding: 40px; color: #333; }
-                .header { display: flex; justify-content: space-between; border-bottom: 2px solid #eee; padding-bottom: 20px; }
-                table { width: 100%; border-collapse: collapse; margin-top: 30px; }
-                th, td { border: 1px solid #eee; padding: 12px; text-align: right; }
-                th { background: #f9f9f9; }
-                .totals { margin-top: 20px; text-align: left; }
-                @media print { .no-print { display: none; } }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <div>
-                    <h2>تيرا جيتواي (Tera Gateway)</h2>
-                    <p>رقم الفاتورة: ${data.orderNumber}</p>
-                    <p>التاريخ: ${data.orderDate} - ${data.orderTime}</p>
+    target.innerHTML = snap.docs.map(doc => {
+        const o = doc.data();
+        return `
+            <div class="order-card" style="background:white; padding:20px; border-radius:15px; box-shadow:0 4px 15px rgba(0,0,0,0.05); border-right:6px solid #3498db;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                    <span style="font-weight:bold; color:#3498db;"># ${o.orderNumber || '---'}</span>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="window.editOrder('${doc.id}')" style="color:#f39c12; border:none; background:none; cursor:pointer;" title="تعديل"><i class="fas fa-edit"></i></button>
+                        <button onclick="window.deleteOrder('${doc.id}')" style="color:#e74c3c; border:none; background:none; cursor:pointer;" title="حذف"><i class="fas fa-trash"></i></button>
+                    </div>
                 </div>
-                <div style="text-align:left;">
-                    <h3>بيانات العميل</h3>
-                    <p>${data.customer.name}</p>
-                    <p>${data.customer.phone}</p>
-                    <p>${data.customer.city} - ${data.customer.district}</p>
+                <h4 style="margin:0;">${o.customerName}</h4>
+                <p style="font-size:0.85rem; color:#666;"><i class="fas fa-map-marker-alt"></i> ${o.city || ''} ${o.district || ''}</p>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid #f1f1f1;">
+                    <span style="font-weight:bold; color:#2c3e50;">${o.total} ريال</span>
+                    <button onclick="window.printInvoice('${doc.id}')" style="background:#f1f2f6; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">
+                        <i class="fas fa-print"></i> طباعة الفاتورة
+                    </button>
                 </div>
             </div>
+        `;
+    }).join('');
+}
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>المنتج</th>
-                        <th>الكمية</th>
-                        <th>السعر</th>
-                        <th>الإجمالي</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${data.items.map((item, index) => `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${item.name}</td>
-                            <td>${item.quantity}</td>
-                            <td>${item.price}</td>
-                            <td>${(item.quantity * item.price).toFixed(2)}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
+function setupActions() {
+    const modal = document.getElementById('order-modal');
+    
+    // فتح نافذة الإنشاء
+    document.getElementById('btn-create-new-order').onclick = () => {
+        document.getElementById('order-form').reset();
+        document.getElementById('edit-order-id').value = '';
+        document.getElementById('modal-title').innerText = "إنشاء طلب جديد";
+        modal.style.display = 'block';
+    };
 
-            <div class="totals">
-                <p>السعر الفرعي: ${data.subtotal} ريال</p>
-                <p>الضريبة (15%): ${data.tax} ريال</p>
-                <p><strong>الإجمالي النهائي: ${data.total} ريال</strong></p>
-                <p>طريقة الدفع: ${data.paymentMethodName || data.paymentMethod} ${data.approvalCode ? `(رمز: ${data.approvalCode})` : ''}</p>
-            </div>
-            <script>window.onload = function() { window.print(); window.close(); }</script>
-        </body>
-        </html>
-    `);
-    printWindow.document.close();
+    // إغلاق النافذة
+    document.getElementById('close-order-modal').onclick = () => modal.style.display = 'none';
+
+    // حفظ البيانات (إنشاء أو تعديل)
+    document.getElementById('order-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const orderId = document.getElementById('edit-order-id').value;
+        const data = {
+            customerName: document.getElementById('m-cust-name').value,
+            total: document.getElementById('m-total').value,
+            paymentMethod: document.getElementById('m-pay-method').value,
+            createdAt: serverTimestamp()
+        };
+
+        if (orderId) {
+            await updateDoc(doc(db, "orders", orderId), data);
+            alert("تم التعديل بنجاح");
+        } else {
+            data.orderNumber = "TR-" + Math.floor(Math.random()*10000);
+            await addDoc(collection(db, "orders"), data);
+            alert("تم إنشاء الطلب بنجاح");
+        }
+        modal.style.display = 'none';
+        loadOrders();
+    };
+}
+
+// الوظائف العالمية
+window.deleteOrder = async (id) => {
+    if(confirm("هل أنت متأكد من حذف هذا الطلب؟")) {
+        await deleteDoc(doc(db, "orders", id));
+        location.reload();
+    }
+};
+
+window.printInvoice = (id) => {
+    // هنا نقوم بالطباعة
+    window.print();
 };
