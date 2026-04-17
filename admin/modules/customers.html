@@ -1,5 +1,63 @@
-<div class="module-container">
-    <h2><i class="fas fa-user-friends"></i> إدارة العملاء</h2>
-    <button id="new-customer-btn" class="btn-primary"><i class="fas fa-plus"></i> عميل جديد</button>
-    <div id="customers-table-container"></div>
+<div class="module-container" style="font-family: 'Tajawal', sans-serif;" dir="rtl">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
+        <h2 style="margin:0;"><i class="fas fa-user-friends" style="color:#3498db; margin-left:10px;"></i> قاعدة بيانات العملاء</h2>
+        
+        <button id="new-customer-btn" class="btn-primary" style="background:#3498db; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:bold; box-shadow:0 4px 10px rgba(52,152,219,0.2);">
+            <i class="fas fa-plus"></i> إضافة عميل جديد
+        </button>
+    </div>
+
+    <div style="margin-bottom: 20px; background:#f8f9fa; padding:15px; border-radius:12px; border: 1px solid #eee;">
+        <div style="position:relative;">
+            <i class="fas fa-search" style="position:absolute; right:15px; top:12px; color:#bdc3c7;"></i>
+            <input type="text" id="search-customer" placeholder="بحث باسم العميل، رقم الجوال، أو المدينة..." style="width:100%; padding:10px 40px 10px 10px; border:1px solid #ddd; border-radius:8px; font-size:0.95rem;">
+        </div>
+    </div>
+
+    <div id="customers-table-container" style="background:white; border-radius:12px; border:1px solid #eee; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
+        <table style="width:100%; border-collapse:collapse; text-align:right;">
+            <thead style="background:#f1f2f6; color:#2c3e50;">
+                <tr>
+                    <th style="padding:15px; border-bottom:1px solid #eee;">اسم العميل</th>
+                    <th style="padding:15px; border-bottom:1px solid #eee;">رقم الجوال</th>
+                    <th style="padding:15px; border-bottom:1px solid #eee;">العنوان (المدينة/الحي)</th>
+                    <th style="padding:15px; border-bottom:1px solid #eee;">تاريخ التسجيل</th>
+                    <th style="padding:15px; border-bottom:1px solid #eee;">الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="customers-list-body">
+                <tr>
+                    <td colspan="5" style="text-align:center; padding:30px; color:#95a5a6;">
+                        <i class="fas fa-spinner fa-spin"></i> جاري تحميل بيانات العملاء...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
+
+<style>
+    #customers-table-container table tr:hover {
+        background-color: #f9fbff;
+        transition: 0.2s;
+    }
+    #customers-table-container th {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    #customers-table-container td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #f1f1f1;
+        font-size: 0.9rem;
+        color: #34495e;
+    }
+    .btn-action {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.1rem;
+        margin: 0 5px;
+    }
+    .btn-edit { color: #f39c12; }
+    .btn-delete { color: #e74c3c; }
+</style>
