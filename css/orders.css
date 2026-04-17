@@ -11,29 +11,30 @@
     background: white;
     border-radius: 16px;
     padding: 20px;
-    border-right: 6px solid #e2e8f0; /* لون افتراضي رمادي هادئ */
-    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-    transition: all 0.3s ease;
-    position: relative;
+    /* تثبيت الحدود: نجعل الحد اليميني ملوناً والبقية شفافة أو خفيفة */
     border: 1px solid #f1f2f6;
+    border-right: 6px solid #e2e8f0; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 
 .order-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.08);
 }
 
-/* تلوين الحافة حسب حالة الطلب */
-.order-card.pending { border-right-color: #f39c12; }    /* انتظار */
-.order-card.completed { border-right-color: #2ecc71; }  /* مكتمل */
-.order-card.cancelled { border-right-color: #ff4757; }  /* ملغي */
-.order-card.processing { border-right-color: #e67e22; } /* معالجة - لون تيرا */
+/* تلوين الحافة حسب حالة الطلب - استخدام !important لضمان الأولوية */
+.order-card.pending { border-right-color: #f39c12 !important; }    /* انتظار */
+.order-card.completed { border-right-color: #2ecc71 !important; }  /* مكتمل */
+.order-card.cancelled { border-right-color: #ff4757 !important; }  /* ملغي */
+.order-card.processing { border-right-color: #e67e22 !important; } /* معالجة تيرا */
 
 /* تفاصيل الطلب */
 .order-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     margin-bottom: 15px;
     border-bottom: 1px dashed #f1f2f6;
     padding-bottom: 12px;
@@ -43,24 +44,25 @@
     font-weight: 800;
     color: #2c3e50;
     font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 /* حالات الطلب (Badges) */
 .order-status {
     display: inline-flex;
     align-items: center;
-    padding: 5px 14px;
+    padding: 6px 14px;
     border-radius: 50px;
     font-size: 0.75rem;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
 }
 
-.status-pending { background: #fff9f0; color: #f39c12; border: 1px solid #f39c12; }
-.status-completed { background: #f0fff4; color: #2ecc71; border: 1px solid #2ecc71; }
-.status-cancelled { background: #fff5f5; color: #ff4757; border: 1px solid #ff4757; }
-.status-processing { background: #fff8f3; color: #e67e22; border: 1px solid #e67e22; }
+.status-pending { background: #fff9f0; color: #f39c12; border: 1px solid #fde6c7; }
+.status-completed { background: #f0fff4; color: #2ecc71; border: 1px solid #c6f6d5; }
+.status-cancelled { background: #fff5f5; color: #ff4757; border: 1px solid #fed7d7; }
+.status-processing { background: #fff8f3; color: #e67e22; border: 1px solid #ffd8be; }
 
 /* بيانات العميل والسعر */
 .order-body {
@@ -71,23 +73,33 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     color: #5d6d7e;
     font-size: 0.95rem;
 }
 
-.order-total {
-    font-size: 1.2rem;
-    font-weight: 800;
-    color: #e67e22; /* سعر بلون تيرا */
-    margin-top: 10px;
+.customer-info i {
+    color: #cbd5e1;
+    width: 18px;
 }
+
+.order-total {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #e67e22;
+    margin-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.order-total span { font-size: 0.8rem; color: #94a3b8; font-weight: 400; }
 
 /* أزرار التحكم بالطلب */
 .order-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 12px;
+    gap: 10px;
     margin-top: 15px;
     padding-top: 15px;
     border-top: 1px solid #f8fafb;
@@ -95,9 +107,9 @@
 
 .order-actions button {
     background: #f8fafb;
-    border: none;
-    width: 38px;
-    height: 38px;
+    border: 1px solid #edf2f7;
+    width: 40px;
+    height: 40px;
     border-radius: 10px;
     cursor: pointer;
     color: #64748b;
@@ -107,7 +119,9 @@
     justify-content: center;
 }
 
-.btn-view:hover { background: #e0f2fe; color: #3498db; }
-.btn-edit:hover { background: #f0fdf4; color: #2ecc71; }
-.btn-delete:hover { background: #fff1f2; color: #ff4757; }
-.btn-print:hover { background: #f5f3ff; color: #8b5cf6; }
+.order-actions button i { font-size: 1rem; }
+
+.btn-view:hover { background: #e0f2fe; color: #3498db; border-color: #bae6fd; }
+.btn-edit:hover { background: #f0fdf4; color: #2ecc71; border-color: #bbf7d0; }
+.btn-delete:hover { background: #fff1f2; color: #ff4757; border-color: #fecaca; }
+.btn-print:hover { background: #f5f3ff; color: #8b5cf6; border-color: #ddd6fe; }
