@@ -1,41 +1,52 @@
 /**
  * js/modules/products.js
- * موديول إدارة المنتجات المطور - منصة تيرا
+ * موديول إدارة المنتجات - منصة تيرا
  */
 
-// 1. تأكد من صحة مسار ملف firebase.js في مجلد core
 import { db } from '../core/firebase.js';
 import { 
     collection, addDoc, getDocs, deleteDoc, doc, 
     serverTimestamp, query, orderBy 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+/**
+ * هذه هي الدالة التي يستدعيها main.js عند فتح قسم المنتجات
+ */
 export async function initProducts(container) {
+    console.log("🚀 جاري تحميل واجهة المنتجات من السيرفر...");
+    
     try {
-        // 2. جلب واجهة الـ HTML من المسار الصحيح
+        // 1. تحميل القالب من مجلد admin
         const response = await fetch('./admin/modules/products.html');
-        if (!response.ok) throw new Error("فشل في تحميل ملف products.html");
+        if (!response.ok) throw new Error("لم يتم العثور على ملف products.html");
         
         const html = await response.text();
         container.innerHTML = html;
 
-        console.log("✅ تم تحميل الواجهة، يبدأ الآن جلب البيانات من Firestore...");
+        // 2. تشغيل العمليات فور حقن الـ HTML في الصفحة
+        console.log("✅ تم حقن الواجهة. بدء جلب المنتجات...");
         
-        // استدعاء الوظائف الأساسية
-        fetchProducts(); 
-        setupFormHandler(); 
-        
+        // نستخدم setTimeout بسيط لضمان أن المتصفح انتهى من رسم العناصر (DOM)
+        setTimeout(() => {
+            fetchProducts();
+            setupFormHandler();
+        }, 50);
+
     } catch (error) {
-        console.error("❌ خطأ في initProducts:", error);
-        container.innerHTML = `<div class="error-msg">حدث خطأ في تحميل القسم: ${error.message}</div>`;
+        console.error("❌ خطأ في تحميل موديول المنتجات:", error);
+        container.innerHTML = `<div style="color:red; padding:20px;">حدث خطأ أثناء تحميل الواجهة: ${error.message}</div>`;
     }
 }
 
+/**
+ * جلب البيانات من Firestore
+ */
 async function fetchProducts() {
-    // 3. تأكد أن هذا الـ ID موجود حرفياً في ملف products.html
+    // تأكد أن هذا الـ ID موجود داخل admin/modules/products.html
     const grid = document.getElementById('products-list-grid');
+    
     if (!grid) {
-        console.warn("⚠️ لم يتم العثور على عنصر 'products-list-grid' في الصفحة.");
+        console.error("❌ خطأ: لم أجد عنصر 'products-list-grid' داخل ملف HTML.");
         return;
     }
 
@@ -44,82 +55,85 @@ async function fetchProducts() {
         const snapshot = await getDocs(q);
         
         if (snapshot.empty) {
-            grid.innerHTML = `<p style="text-align:center; grid-column:1/-1;">لا توجد منتجات حالياً.</p>`;
+            grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:50px; color:#64748b;">لا توجد منتجات حالياً في منصة تيرا.</div>`;
             return;
         }
 
-        grid.innerHTML = ""; 
+        grid.innerHTML = ""; // تنظيف المكان قبل العرض
 
         snapshot.forEach((docSnap) => {
             const p = docSnap.data();
             const pId = docSnap.id;
             
-            // عرض المنتج بالتنسيق الجديد
             grid.innerHTML += `
-                <div class="order-card" id="prod-${pId}">
-                    <div class="order-body">
+                <div class="order-card" style="border-top: 4px solid #e67e22; animation: fadeIn 0.5s ease;">
+                    <div class="order-body" style="padding:15px;">
                         <img src="${p.mainImage || 'admin/images/default-product.png'}" 
-                             style="width:100%; height:120px; object-fit:cover; border-radius:5px;">
-                        <h4 style="margin:10px 0;">${p.name || 'بدون اسم'}</h4>
-                        <div style="display:flex; justify-content:space-between; font-size:13px;">
-                            <span style="color:#e67e22; font-weight:bold;">${p.price || 0} ريال</span>
-                            <span>المخزون: ${p.stock || 0}</span>
+                             style="width:100%; height:140px; object-fit:cover; border-radius:8px; margin-bottom:12px;">
+                        <h4 style="font-weight:800; color:#1e293b;">${p.name}</h4>
+                        <p style="font-size:0.75rem; color:#94a3b8; margin-bottom:10px;">كود: ${p.code || 'N/A'}</p>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="color:#e67e22; font-weight:800; font-size:1.1rem;">${p.price} ريال</span>
+                            <span style="background:#f1f5f9; padding:2px 8px; border-radius:5px; font-size:0.8rem; color:#475569;">المخزون: ${p.stock}</span>
                         </div>
                     </div>
-                    <div class="order-footer" style="margin-top:10px; text-align:left;">
-                        <button onclick="deleteProduct('${pId}')" class="btn-delete" style="background:none; border:none; color:red; cursor:pointer;">
-                            <i class="fas fa-trash"></i> حذف
+                    <div class="order-footer" style="padding:12px; background:#f8fafc; border-top:1px solid #f1f5f9; display:flex; justify-content:space-between;">
+                        <button onclick="deleteProduct('${pId}')" style="color:#ef4444; border:none; background:none; cursor:pointer; font-size:0.85rem;">
+                            <i class="fas fa-trash-alt"></i> حذف
                         </button>
+                        <span style="font-size:0.75rem; color:#cbd5e1;">${p.createdAt?.toDate().toLocaleDateString('ar-SA') || '' }</span>
                     </div>
                 </div>`;
         });
-        console.log(`✅ تم جلب ${snapshot.size} منتجات بنجاح.`);
+        console.log("✅ تم عرض المنتجات بنجاح.");
 
     } catch (err) {
-        console.error("❌ خطأ أثناء جلب المنتجات من Firestore:", err);
-        grid.innerHTML = `<p style="color:red;">خطأ في الاتصال بقاعدة البيانات.</p>`;
+        console.error("❌ فشل جلب البيانات من Firestore:", err);
     }
 }
 
+/**
+ * معالج حفظ النموذج
+ */
 function setupFormHandler() {
     const form = document.getElementById('product-main-form');
     if (!form) return;
 
     form.onsubmit = async (e) => {
         e.preventDefault();
-        console.log("⏳ جاري حفظ المنتج...");
+        
+        const productData = {
+            name: document.getElementById('p-name').value,
+            code: document.getElementById('p-code').value,
+            description: document.getElementById('p-desc')?.value || "",
+            mainImage: document.getElementById('p-main-image')?.value || "",
+            galleryImages: [], 
+            price: Number(document.getElementById('p-price').value),
+            stock: Number(document.getElementById('p-stock').value),
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        };
 
         try {
-            const productData = {
-                name: document.getElementById('p-name').value,
-                code: document.getElementById('p-code').value,
-                description: document.getElementById('p-desc')?.value || "",
-                mainImage: document.getElementById('p-main-image')?.value || "",
-                price: Number(document.getElementById('p-price').value),
-                stock: Number(document.getElementById('p-stock').value),
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp()
-            };
-
             await addDoc(collection(db, "products"), productData);
-            alert("تم الحفظ بنجاح!");
+            alert("تمت إضافة المنتج بنجاح");
             form.reset();
             fetchProducts();
         } catch (err) {
-            console.error("❌ فشل في إضافة المنتج:", err);
+            console.error("❌ خطأ في الإضافة:", err);
             alert("حدث خطأ أثناء الحفظ.");
         }
     };
 }
 
-// جعل دالة الحذف متاحة للـ HTML
+// دالة الحذف (Global)
 window.deleteProduct = async (id) => {
-    if (confirm("هل أنت متأكد من الحذف؟")) {
+    if (confirm("هل تريد حذف هذا المنتج؟")) {
         try {
             await deleteDoc(doc(db, "products", id));
             fetchProducts();
         } catch (err) {
-            console.error("❌ خطأ في الحذف:", err);
+            console.error("❌ فشل الحذف:", err);
         }
     }
 };
