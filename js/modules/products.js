@@ -8,17 +8,17 @@ import {
 let editorInstance; 
 
 export async function initProducts(container) {
-    console.log("products.js:10 استدعاء نظام المنتجات...");
+    console.log("products.js: تم بدء تشغيل وحدة المنتجات والربط بالقاعدة...");
 
     container.innerHTML = `
         <div class="products-wrapper" style="animation: fadeIn 0.4s ease;">
             <div class="module-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
                 <div>
-                    <h2 style="font-weight:800; color:#1a202c; font-size:1.8rem;">إدارة المخزون</h2>
-                    <p style="color:#64748b;">منصة تيرا جيتواي - قاعدة بيانات Firestore</p>
+                    <h2 style="font-weight:800; color:#1a202c; font-size:1.8rem;">إدارة المنتجات والمخزون</h2>
+                    <p style="color:#64748b;">قاعدة بيانات تيرا - متصل الآن بـ Firestore</p>
                 </div>
                 <button onclick="document.getElementById('product-form-section').scrollIntoView({behavior:'smooth'})" 
-                        class="btn-main" style="background:#e67e22; color:white; padding:12px 25px; border-radius:12px; font-weight:800; cursor:pointer; border:none;">
+                        class="btn-main" style="background:#e67e22; color:white; border:none; padding:12px 25px; border-radius:12px; font-weight:800; cursor:pointer;">
                     <i class="fas fa-plus-circle"></i> إضافة منتج جديد
                 </button>
             </div>
@@ -26,20 +26,20 @@ export async function initProducts(container) {
             <div id="products-list-grid" class="orders-grid">
                 <div style="grid-column: 1/-1; text-align:center; padding:50px;">
                     <i class="fas fa-spinner fa-spin fa-2x" style="color:#e67e22;"></i>
-                    <p style="margin-top:15px; color:#64748b;">جاري سحب البيانات من القاعدة...</p>
+                    <p style="margin-top:15px; color:#64748b;">جاري جلب البيانات من السحابة...</p>
                 </div>
             </div>
 
             <hr style="margin:50px 0; border:0; border-top:2px dashed #e2e8f0;">
 
             <section id="product-form-section" class="order-card" style="padding:30px; background:#fff; border-radius:20px; border:1px solid #e2e8f0;">
-                <h3 style="font-weight:800; color:#1a202c; margin-bottom:25px; border-right:4px solid #e67e22; padding-right:15px;">إدخال بيانات المنتج</h3>
+                <h3 style="font-weight:800; color:#1a202c; margin-bottom:25px; border-right:4px solid #e67e22; padding-right:15px;">إدخال منتج جديد</h3>
                 
                 <form id="product-main-form">
                     <div style="display:grid; grid-template-columns: 2fr 1fr; gap:20px; margin-bottom:20px;">
                         <div>
                             <label style="font-weight:700; display:block; margin-bottom:8px;">اسم المنتج</label>
-                            <input type="text" id="p-name" required placeholder="باقة سوا 100" style="width:100%; padding:12px; border-radius:10px; border:1px solid #e2e8f0;">
+                            <input type="text" id="p-name" required placeholder="مثلاً: باقة سوا 100" style="width:100%; padding:12px; border-radius:10px; border:1px solid #e2e8f0;">
                         </div>
                         <div>
                             <label style="font-weight:700; display:block; margin-bottom:8px;">كود SKU</label>
@@ -57,19 +57,19 @@ export async function initProducts(container) {
                             <input type="number" id="p-stock" required placeholder="50" style="width:100%; padding:12px; border-radius:10px; border:1px solid #e2e8f0;">
                         </div>
                         <div>
-                            <label style="font-weight:700; display:block; margin-bottom:8px;">الصورة (URL)</label>
+                            <label style="font-weight:700; display:block; margin-bottom:8px;">رابط الصورة</label>
                             <input type="url" id="p-img" placeholder="https://..." style="width:100%; padding:12px; border-radius:10px; border:1px solid #e2e8f0;">
                         </div>
                     </div>
 
                     <div style="margin-bottom:25px;">
-                        <label style="font-weight:700; display:block; margin-bottom:10px;">وصف المنتج</label>
+                        <label style="font-weight:700; display:block; margin-bottom:10px;">وصف المنتج (HTML)</label>
                         <textarea id="p-description"></textarea>
                     </div>
 
                     <div style="display:flex; justify-content:flex-end;">
                         <button type="submit" id="save-btn" class="btn-main" style="background:#1a202c; color:#fff; padding:15px 45px; border-radius:12px; cursor:pointer; font-weight:800; border:none;">
-                             تأكيد وحفظ المنتج
+                             حفظ المنتج في القاعدة
                         </button>
                     </div>
                 </form>
@@ -77,6 +77,7 @@ export async function initProducts(container) {
         </div>
     `;
 
+    // تهيئة المحرر والبيانات
     setTimeout(() => {
         initFullEditor('p-description');
         fetchProducts(); 
@@ -84,7 +85,7 @@ export async function initProducts(container) {
     }, 100);
 }
 
-// دالة جلب البيانات
+// دالة جلب البيانات من Firestore
 async function fetchProducts() {
     const grid = document.getElementById('products-list-grid');
     if (!grid) return;
@@ -94,7 +95,7 @@ async function fetchProducts() {
         const snapshot = await getDocs(q);
         
         if (snapshot.empty) {
-            grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;">القائمة فارغة، أضف أول منتج الآن.</div>`;
+            grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;">لا توجد منتجات حالياً.</div>`;
             return;
         }
 
@@ -102,37 +103,37 @@ async function fetchProducts() {
         snapshot.forEach((docSnap) => {
             const p = docSnap.data();
             grid.innerHTML += `
-                <div class="order-card" style="overflow:hidden;">
-                    <div style="height:150px; background:#f8fafc; display:flex; align-items:center; justify-content:center; border-bottom:1px solid #f1f5f9;">
+                <div class="order-card">
+                    <div style="height:150px; background:#f8fafc; overflow:hidden; display:flex; align-items:center; justify-content:center;">
                         ${p.mainImage ? `<img src="${p.mainImage}" style="width:100%; height:100%; object-fit:cover;">` : `<i class="fas fa-image fa-2x" style="color:#cbd5e1;"></i>`}
                     </div>
                     <div class="order-body" style="padding:15px;">
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                            <span style="font-size:0.7rem; font-weight:700; color:#e67e22;">#${p.code || 'NO-SKU'}</span>
-                            <span class="order-status ${p.stock > 0 ? 'status-completed' : 'status-cancelled'}" style="font-size:0.6rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:0.7rem; font-weight:800; color:#e67e22;">#${p.code}</span>
+                            <span class="order-status ${p.stock > 0 ? 'status-completed' : 'status-cancelled'}">
                                 ${p.stock > 0 ? 'متوفر' : 'نفذ'}
                             </span>
                         </div>
-                        <h4 style="margin:10px 0; font-weight:800; font-size:1rem; color:#1e293b;">${p.name}</h4>
-                        <div class="order-finance" style="padding:8px 12px; margin-top:10px;">
-                            <span class="finance-label" style="font-size:0.7rem;">السعر</span>
-                            <span class="finance-value" style="font-size:1.1rem;">${p.price} <small style="font-size:0.6rem;">SAR</small></span>
+                        <h4 style="margin:10px 0; font-weight:800; font-size:1.1rem;">${p.name}</h4>
+                        <div class="order-finance">
+                            <span class="finance-label">السعر</span>
+                            <span class="finance-value">${p.price} <small>SAR</small></span>
                         </div>
                     </div>
-                    <div class="order-footer" style="padding:10px 15px; background:#fbfcfd;">
+                    <div class="order-footer" style="padding:10px; display:flex; gap:10px;">
                         <button class="btn-action" style="flex:1;" onclick="deleteProduct('${docSnap.id}')">
-                            <i class="fas fa-trash" style="color:#e74c3c;"></i>
+                            <i class="fas fa-trash" style="color:#e74c3c;"></i> حذف
                         </button>
                     </div>
                 </div>`;
         });
     } catch (err) {
         console.error("Fetch Error:", err);
-        grid.innerHTML = `<div style="color:red; text-align:center; grid-column:1/-1;">خطأ في الاتصال بقاعدة البيانات.</div>`;
+        grid.innerHTML = `<div style="color:red; text-align:center; grid-column:1/-1;">خطأ في الوصول إلى Firestore. تأكد من إعدادات الموقع.</div>`;
     }
 }
 
-// دالة الحفظ
+// دالة حفظ المنتج
 function setupFormHandler() {
     const form = document.getElementById('product-main-form');
     if (!form) return;
@@ -141,7 +142,7 @@ function setupFormHandler() {
         e.preventDefault();
         const btn = document.getElementById('save-btn');
         btn.disabled = true;
-        btn.innerText = "جاري الرفع...";
+        btn.innerText = "جاري الحفظ...";
 
         try {
             await addDoc(collection(db, "products"), {
@@ -157,28 +158,30 @@ function setupFormHandler() {
             form.reset();
             if(editorInstance) editorInstance.setData('');
             fetchProducts();
-            alert("تمت إضافة المنتج بنجاح!");
+            alert("تم حفظ المنتج بنجاح!");
         } catch (err) {
             console.error(err);
-            alert("حدث خطأ أثناء الحفظ.");
+            alert("خطأ أثناء الحفظ في القاعدة.");
         } finally {
             btn.disabled = false;
-            btn.innerText = "تأكيد وحفظ المنتج";
+            btn.innerText = "حفظ المنتج في القاعدة";
         }
     };
 }
 
-// دالة الحذف (Global)
+// دالة الحذف
 window.deleteProduct = async (id) => {
-    if (confirm("هل أنت متأكد من الحذف؟")) {
-        await deleteDoc(doc(db, "products", id));
-        fetchProducts();
+    if (confirm("هل تريد حذف هذا المنتج؟")) {
+        try {
+            await deleteDoc(doc(db, "products", id));
+            fetchProducts();
+        } catch (err) { alert("فشل الحذف"); }
     }
 };
 
 async function initFullEditor(elementId) {
     if (typeof ClassicEditor !== 'undefined') {
         ClassicEditor.create(document.getElementById(elementId), { language: 'ar', direction: 'rtl' })
-            .then(editor => editorInstance = editor);
+            .then(editor => { editorInstance = editor; });
     }
 }
