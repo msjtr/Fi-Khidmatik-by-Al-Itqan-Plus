@@ -1,36 +1,58 @@
-<header class="admin-header">
-    <div class="header-right">
-        <button id="sidebar-toggle" class="sidebar-btn"><i class="fas fa-bars"></i></button>
-        <div class="logo-area">
-            <img src="images/logo.svg" alt="Tera Gateway" class="logo-img" onerror="this.src='https://placehold.jp/e67e22/ffffff/50x50.png?text=T'">
-            <span class="logo-text">Tera Gateway</span>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tera Gateway | لوحة التحكم</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <header class="top-header">
+            <div class="header-right">
+                <button id="sidebar-toggle" class="menu-btn"><i class="fas fa-bars"></i></button>
+                <div class="logo-group">
+                    <img src="images/logo.svg" alt="Tera" class="logo-img" onerror="this.src='https://placehold.jp/e67e22/ffffff/50x50.png?text=T'">
+                    <span class="logo-name">Tera Gateway</span>
+                </div>
+            </div>
+            <div id="current-datetime" class="time-badge"></div>
+        </header>
+
+        <div class="main-layout">
+            <aside id="sidebar" class="side-panel">
+                <nav class="nav-menu">
+                    <ul>
+                        <li class="active" data-module="dashboard"><i class="fas fa-chart-pie"></i> <span>الرئيسية</span></li>
+                        <li data-module="products"><i class="fas fa-box"></i> <span>المنتجات</span></li>
+                        <li data-module="orders"><i class="fas fa-receipt"></i> <span>الطلبات</span></li>
+                        <li data-module="customers"><i class="fas fa-users"></i> <span>العملاء</span></li>
+                        <li data-module="settings"><i class="fas fa-cog"></i> <span>الإعدادات</span></li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <main id="main-content" class="main-view">
+                </main>
         </div>
     </div>
-    <div id="current-datetime" class="datetime-display"></div>
-</header>
 
-<div class="main-layout">
-    <aside id="sidebar-container" class="sidebar">
-        <nav class="sidebar-nav">
-            <ul id="main-menu">
-                <li class="active" data-module="dashboard">
-                    <i class="fas fa-th-large"></i> <span>الرئيسية</span>
-                </li>
-                <li data-module="products">
-                    <i class="fas fa-box-open"></i> <span>المنتجات</span>
-                </li>
-                <li data-module="orders">
-                    <i class="fas fa-file-invoice-dollar"></i> <span>الطلبات</span>
-                </li>
-                <li data-module="customers">
-                    <i class="fas fa-user-friends"></i> <span>العملاء</span>
-                </li>
-                <li data-module="settings">
-                    <i class="fas fa-cog"></i> <span>الإعدادات</span>
-                </li>
-            </ul>
-        </nav>
-    </aside>
-    <main id="main-content" class="content-body">
-        </main>
-</div>
+    <script>
+        // دالة الفتح والإغلاق
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('sidebar-toggle');
+        toggleBtn.onclick = () => sidebar.classList.toggle('is-collapsed');
+
+        // تحديث الوقت
+        function updateClock() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            document.getElementById('current-datetime').innerText = now.toLocaleDateString('ar-SA', options);
+        }
+        setInterval(updateClock, 1000); updateClock();
+    </script>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
