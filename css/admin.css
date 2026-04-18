@@ -1,71 +1,99 @@
+/* ضبط عام */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
+
 :root {
     --primary-orange: #e67e22;
-    --sidebar-dark: #1a202c; /* خلفية داكنة جداً للوضوح */
-    --text-white: #ffffff;   /* خط أبيض ناصع */
-    --text-muted: #a0aec0;   /* رمادي فاتح للعناصر غير النشطة */
+    --sidebar-dark: #1a202c; /* اللون الكحلي الداكن الذي تفضله */
+    --text-white: #ffffff;
+    --text-muted: #a0aec0;
     --header-height: 70px;
 }
 
-/* القائمة الجانبية المحدثة */
-.sidebar {
-    width: 260px;
-    background: var(--sidebar-dark); /* تغيير الخلفية للون غامق */
-    height: calc(100vh - var(--header-height));
-    transition: all 0.3s ease;
-    border-left: none;
-    z-index: 999;
+.app-layout { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+/* الهيدر: ثابت وواضح */
+.main-header {
+    height: var(--header-height);
+    background: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    border-bottom: 2px solid #edf2f7;
+    z-index: 1000;
 }
 
-.sidebar-nav ul {
-    list-style: none;
-    padding: 20px 15px;
+.header-right { display: flex; align-items: center; gap: 15px; }
+
+.btn-sidebar {
+    background: var(--sidebar-dark);
+    color: white;
+    border: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    cursor: pointer;
 }
+
+.brand-box { display: flex; align-items: center; gap: 10px; }
+.logo-small { height: 32px; width: auto; }
+.brand-name { color: var(--primary-orange); font-weight: 800; font-size: 1.3rem; }
+
+/* القائمة الجانبية: الألوان المطلوبة */
+.body-container { display: flex; flex: 1; overflow: hidden; }
+
+.sidebar {
+    width: 260px;
+    background: var(--sidebar-dark);
+    transition: 0.3s ease;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.sidebar.collapsed { width: 0; opacity: 0; }
+
+.sidebar-nav ul { list-style: none; padding: 20px 12px; }
 
 .sidebar-nav li {
     display: flex;
     align-items: center;
     gap: 15px;
-    padding: 15px 20px;
-    margin-bottom: 8px;
-    border-radius: 12px;
-    color: var(--text-muted); /* لون النص الافتراضي */
-    font-weight: 700; /* خط عريض جداً للوضوح */
-    font-size: 1rem;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-.sidebar-nav li i {
-    font-size: 1.2rem;
-    width: 25px;
-    text-align: center;
+    padding: 14px 18px;
+    margin-bottom: 5px;
+    border-radius: 10px;
     color: var(--text-muted);
+    font-weight: 700; /* خط عريض جداً كما طلبت */
+    cursor: pointer;
+    transition: 0.2s;
+    white-space: nowrap;
 }
 
-/* حالة التحليق (Hover) */
-.sidebar-nav li:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text-white);
-}
+.sidebar-nav li i { font-size: 1.2rem; width: 25px; text-align: center; }
 
-.sidebar-nav li:hover i {
-    color: var(--primary-orange);
-}
+.sidebar-nav li:hover { background: rgba(255, 255, 255, 0.05); color: var(--text-white); }
+.sidebar-nav li:hover i { color: var(--primary-orange); }
 
-/* الحالة النشطة (Active) - بروز كامل */
 .sidebar-nav li.active {
     background: var(--primary-orange);
     color: var(--text-white) !important;
-    box-shadow: 0 4px 15px rgba(230, 126, 34, 0.4);
+    box-shadow: 0 4px 15px rgba(230, 126, 34, 0.3);
 }
 
-.sidebar-nav li.active i {
-    color: var(--text-white) !important;
+.sidebar-nav li.active i { color: var(--text-white) !important; }
+
+/* المحتوى */
+.main-content {
+    flex: 1;
+    padding: 30px;
+    background: #f8fafb;
+    overflow-y: auto;
 }
 
-/* إخفاء النص عند التصغير لضمان عدم التداخل */
-.sidebar.collapsed {
-    width: 0;
-    opacity: 0;
-    pointer-events: none;
+.header-time {
+    background: #f1f5f9;
+    padding: 7px 15px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #475569;
 }
