@@ -50,31 +50,55 @@
             </aside>
 
             <main id="main-content" class="app-content">
-                <div class="content-loader">جاري تحميل البيانات...</div>
+                <div id="loader" class="content-loader" style="display:none;">
+                    <i class="fas fa-circle-notch fa-spin"></i> جاري التحميل...
+                </div>
+                <div id="module-container">
+                    </div>
             </main>
         </div>
     </div>
 
     <script>
+        // دالة عالمية للتبديل يتم استدعاؤها من أي مكان
+        window.executeModule = function(moduleName) {
+            console.log("إرسال طلب لفتح قسم: " + moduleName);
+            
+            // التأكد من أن الملف main.js جاهز ومستعد
+            if (typeof window.switchModule === 'function') {
+                window.switchModule(moduleName);
+            } else {
+                // محاولة إعادة المحاولة بعد ثانية لو لم يتحمل الملف
+                setTimeout(() => {
+                    if (typeof window.switchModule === 'function') window.switchModule(moduleName);
+                }, 1000);
+            }
+        };
+
         document.addEventListener('DOMContentLoaded', () => {
             const sidebar = document.getElementById('main-sidebar');
             const toggleBtn = document.getElementById('sidebar-toggle');
             const menuItems = document.querySelectorAll('.nav-item');
 
             // 1. تشغيل الفتح والإغلاق
-            toggleBtn.onclick = () => sidebar.classList.toggle('is-closed');
+            toggleBtn.onclick = (e) => {
+                e.stopPropagation();
+                sidebar.classList.toggle('is-closed');
+            };
 
-            // 2. تفعيل الأزرار وربطها بالـ JS الأصلي
+            // 2. تفعيل الأزرار
             menuItems.forEach(item => {
                 item.onclick = function() {
+                    // مظهر الزر النشط
                     menuItems.forEach(i => i.classList.remove('active'));
                     this.classList.add('active');
                     
                     const targetModule = this.getAttribute('data-module');
-                    
-                    // استدعاء دالة التبديل من ملف main.js
-                    if (window.switchModule) {
-                        window.switchModule(targetModule);
+                    window.executeModule(targetModule);
+
+                    // إغلاق القائمة تلقائياً في الجوال بعد الاختيار
+                    if (window.innerWidth < 768) {
+                        sidebar.classList.add('is-closed');
                     }
                 };
             });
@@ -82,13 +106,15 @@
             // 3. تحديث الساعة
             const updateTime = () => {
                 const now = new Date();
-                document.getElementById('current-datetime').innerText = now.toLocaleDateString('ar-SA', {
+                const timeString = now.toLocaleDateString('ar-SA', {
                     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
                 });
+                document.getElementById('current-datetime').innerText = timeString;
             };
             setInterval(updateTime, 1000); updateTime();
         });
     </script>
+    
     <script type="module" src="js/main.js"></script>
 </body>
 </html>
