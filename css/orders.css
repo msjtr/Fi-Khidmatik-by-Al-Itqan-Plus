@@ -1,155 +1,168 @@
-/* حاوية شبكة الطلبات - تحسين الاستجابة */
+/* حاوية الشبكة - توزيع متساوي واحترافي */
 .orders-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 24px;
-    margin-top: 25px;
-    padding-bottom: 30px;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 25px;
+    padding: 10px;
 }
 
-/* بطاقة الطلب المطورة (Glassmorphism Light) */
+/* بطاقة الطلب الاحترافية - Tera Style */
 .order-card {
     background: #ffffff;
-    border-radius: 20px; /* زوايا أكثر نعومة */
-    padding: 22px;
-    border: 1px solid #edf2f7;
-    border-right: 8px solid #cbd5e1; /* حافة أعرض للوضوح */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
     position: relative;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 .order-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.07);
-    border-color: #e2e8f0;
+    transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary-orange);
 }
 
-/* تلوين الحواف حسب الحالة - تباين عالٍ */
-.order-card.pending { border-right-color: #f39c12 !important; }
-.order-card.completed { border-right-color: #00b894 !important; }
-.order-card.cancelled { border-right-color: #ff5252 !important; }
-.order-card.processing { border-right-color: #e67e22 !important; }
+/* شريط الحالة العلوي - لمسة احترافية */
+.order-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: #cbd5e1; /* الافتراضي */
+}
 
-/* الجزء العلوي (رقم الطلب والتاريخ) */
+.order-card.pending::before { background: #f39c12; }
+.order-card.completed::before { background: #27ae60; }
+.order-card.cancelled::before { background: #e74c3c; }
+.order-card.processing::before { background: var(--primary-orange); }
+
+/* رأس البطاقة */
 .order-header {
+    padding: 20px;
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 18px;
+    align-items: center;
+    background: #fbfcfd;
+    border-bottom: 1px solid #f1f5f9;
 }
 
 .order-id {
+    font-size: 1.1rem;
     font-weight: 800;
-    color: #1a202c; /* لون أسود عميق للوضوح */
-    font-size: 1.15rem;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.order-id span {
-    font-size: 0.75rem;
-    color: #94a3b8;
-    font-weight: 500;
-}
-
-/* بادج الحالة - وضوح فائق */
-.order-status {
-    padding: 6px 12px;
-    border-radius: 10px;
-    font-size: 0.78rem;
-    font-weight: 800;
-    letter-spacing: 0.3px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-}
-
-.status-pending { background: #fff9f0; color: #d68910; border: 1px solid #fde6c7; }
-.status-completed { background: #ebfaf2; color: #00b894; border: 1px solid #c6f6d5; }
-.status-cancelled { background: #fff5f5; color: #ff5252; border: 1px solid #fed7d7; }
-.status-processing { background: #fff8f3; color: #e67e22; border: 1px solid #ffd8be; }
-
-/* بيانات العميل - ترتيب أنظف */
-.order-body {
-    background: #f8fafc; /* خلفية خفيفة لفصل المحتوى */
-    padding: 12px;
-    border-radius: 12px;
-    margin: 15px 0;
-}
-
-.customer-info {
+    color: #1a202c;
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
-    color: #334155; /* خط داكن واضح */
-    font-size: 0.95rem;
-    font-weight: 600;
+    gap: 8px;
 }
 
-.customer-info i {
-    color: #64748b;
-    font-size: 1rem;
-    width: 20px;
+.order-id i {
+    color: var(--primary-orange);
+    font-size: 0.9rem;
 }
 
-/* السعر النهائي - مظهر مالي محترف */
-.order-total {
-    padding: 10px 5px;
-    border-top: 1px solid #f1f2f6;
-    margin-top: 15px;
+/* بادج الحالة - تصميم Apple Style */
+.order-status {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
 }
 
-.total-label {
-    font-size: 0.85rem;
+.status-pending { background: #fff7ed; color: #c2410c; }
+.status-completed { background: #f0fdf4; color: #15803d; }
+.status-cancelled { background: #fef2f2; color: #b91c1c; }
+.status-processing { background: #fff8f3; color: #e67e22; }
+
+/* جسم البطاقة - التركيز على المعلومات */
+.order-body {
+    padding: 20px;
+    flex-grow: 1;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+}
+
+.info-label {
     color: #64748b;
     font-weight: 500;
 }
 
-.total-amount {
-    font-size: 1.4rem;
-    font-weight: 900;
-    color: #e67e22; /* برتقالي تيرا */
-    display: flex;
-    align-items: baseline;
-    gap: 4px;
-}
-
-.total-amount small {
-    font-size: 0.8rem;
+.info-value {
+    color: #1e293b;
     font-weight: 700;
 }
 
-/* أزرار الإجراءات - تفاعل عصري */
-.order-actions {
+/* السعر - ضخم وواضح جداً */
+.order-price-tag {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed #e2e8f0;
     display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 10px;
+    justify-content: space-between;
+    align-items: flex-end;
 }
 
-.order-actions button {
-    background: #ffffff;
-    border: 1.5px solid #f1f5f9;
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
-    cursor: pointer;
+.price-amount {
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: var(--sidebar-dark);
+    line-height: 1;
+}
+
+.price-currency {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-right: 4px;
+}
+
+/* أزرار التحكم - تصميم مسطح وراقي */
+.order-footer {
+    padding: 15px 20px;
+    background: #f8fafc;
+    display: flex;
+    gap: 10px;
+}
+
+.btn-action {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: white;
     color: #475569;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    gap: 8px;
 }
 
-.order-actions button:hover {
-    transform: scale(1.1);
-    z-index: 2;
+.btn-action:hover {
+    border-color: var(--primary-orange);
+    color: var(--primary-orange);
+    background: #fff8f3;
 }
 
-.btn-view:hover { background: #3498db; color: #fff; border-color: #3498db; box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3); }
-.btn-edit:hover { background: #00b894; color: #fff; border-color: #00b894; box-shadow: 0 5px 15px rgba(0, 184, 148, 0.3); }
-.btn-delete:hover { background: #ff5252; color: #fff; border-color: #ff5252; box-shadow: 0 5px 15px rgba(255, 82, 82, 0.3); }
-.btn-print:hover { background: #8b5cf6; color: #fff; border-color: #8b5cf6; box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3); }
+.btn-primary-action {
+    background: var(--sidebar-dark);
+    color: white;
+    border: none;
+}
+
+.btn-primary-action:hover {
+    background: #000;
+    color: white;
+}
