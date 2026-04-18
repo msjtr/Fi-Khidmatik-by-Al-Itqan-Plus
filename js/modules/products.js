@@ -1,88 +1,69 @@
 /**
  * js/modules/products.js
- * موديول إدارة المنتجات - منصة تيرا
+ * موديول إدارة المنتجات المطور - منصة تيرا
  */
 
-// استيراد قاعدة البيانات من المسار الصحيح حسب هيكل مشروعك
 import { db } from '../core/firebase.js';
-
 import { 
-    collection, addDoc, getDocs, deleteDoc, doc, 
+    collection, addDoc, getDocs, deleteDoc, doc, updateDoc,
     serverTimestamp, query, orderBy 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// متغير لمحرر النصوص (CKEditor) إذا كنت تستخدمه في واجهة المنتجات
-let editorInstance; 
-
-/**
- * دالة تشغيل موديول المنتجات
- * @param {HTMLElement} container - الحاوية التي سيتم حقن الواجهة داخلها
- */
 export async function initProducts(container) {
-    // تحميل واجهة المنتجات من مجلد admin/modules/products.html
     try {
+        // تحميل الواجهة من المسار المعتمد في هيكلك
         const response = await fetch('./admin/modules/products.html');
         const html = await response.text();
         container.innerHTML = html;
 
-        // بعد تحميل الواجهة، نبدأ بجلب البيانات وربط الأزرار
-        console.log("تم تحميل واجهة المنتجات بنجاح.");
-        
         fetchProducts(); 
         setupFormHandler(); 
         
     } catch (error) {
-        console.error("خطأ في تحميل واجهة المنتجات:", error);
-        container.innerHTML = `<p style="color:red; padding:20px;">حدث خطأ أثناء تحميل واجهة المنتجات.</p>`;
+        console.error("خطأ في تحميل الواجهة:", error);
     }
 }
 
 /**
- * جلب المنتجات من Firestore وعرضها في الجدول أو الشبكة
+ * جلب وعرض المنتجات حسب الهيكلة الجديدة
  */
 async function fetchProducts() {
-    const grid = document.getElementById('products-list-grid'); // تأكد أن هذا ID موجود في products.html
+    const grid = document.getElementById('products-list-grid');
     if (!grid) return;
 
     try {
         const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
         const snapshot = await getDocs(q);
-        
-        grid.innerHTML = ""; // تنظيف الحاوية
-
-        if (snapshot.empty) {
-            grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:20px;">لا توجد باقات مضافة حالياً.</div>`;
-            return;
-        }
+        grid.innerHTML = ""; 
 
         snapshot.forEach((docSnap) => {
             const p = docSnap.data();
             const pId = docSnap.id;
             
-            // بناء بطاقة المنتج بأسلوب تيرا النظيف
             grid.innerHTML += `
                 <div class="order-card" style="border-top: 4px solid #e67e22;">
                     <div class="order-body" style="padding:15px;">
-                        <h4 style="font-weight:800; margin-bottom:10px;">${p.name}</h4>
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <img src="${p.mainImage || 'admin/images/default-product.png'}" style="width:100%; height:150px; object-fit:cover; border-radius:8px; margin-bottom:10px;">
+                        <h4 style="font-weight:800;">${p.name}</h4>
+                        <p style="font-size:0.8rem; color:#64748b;">كود: ${p.code}</p>
+                        <div style="display:flex; justify-content:space-between; margin-top:10px;">
                             <span style="color:#e67e22; font-weight:700;">${p.price} ريال</span>
-                            <span style="font-size:0.85rem; color:#64748b;">المخزون: ${p.stock}</span>
+                            <span>المخزون: ${p.stock}</span>
                         </div>
                     </div>
-                    <div class="order-footer" style="padding:10px; background:#f8fafc; border-top:1px solid #f1f5f9; display:flex; justify-content:flex-end;">
-                        <button onclick="deleteProduct('${pId}')" style="color:#ef4444; background:none; border:none; cursor:pointer; font-size:0.9rem;">
-                            <i class="fas fa-trash-alt"></i> حذف
-                        </button>
+                    <div class="order-footer" style="padding:10px; background:#f8fafc; display:flex; justify-content:space-between;">
+                        <button onclick="deleteProduct('${pId}')" style="color:#ef4444; border:none; background:none; cursor:pointer;">حذف</button>
+                        <small style="color:#94a3b8;">${p.createdAt?.toDate().toLocaleDateString('en-GB') || ''}</small>
                     </div>
                 </div>`;
         });
     } catch (err) {
-        console.error("خطأ في جلب البيانات:", err);
+        console.error("Error fetching products:", err);
     }
 }
 
 /**
- * معالج إرسال النموذج لإضافة منتج جديد
+ * معالج الحفظ بالهيكلة الجديدة
  */
 function setupFormHandler() {
     const form = document.getElementById('product-main-form');
@@ -91,39 +72,38 @@ function setupFormHandler() {
     form.onsubmit = async (e) => {
         e.preventDefault();
         
-        const saveBtn = document.getElementById('save-btn');
-        if(saveBtn) saveBtn.disabled = true;
+        // تجهيز مصفوفة الصور الإضافية (بناءً على حقل إدخال مفصول بفاصلة أو روابط)
+        const galleryInput = document.getElementById('p-gallery').value;
+        const galleryArray = galleryInput ? galleryInput.split(',').map(img => img.trim()) : [];
+
+        const productData = {
+            name: document.getElementById('p-name').value,
+            code: document.getElementById('p-code').value,
+            description: document.getElementById('p-desc').value, // HTML Content
+            mainImage: document.getElementById('p-main-image').value,
+            galleryImages: galleryArray,
+            price: Number(document.getElementById('p-price').value),
+            stock: Number(document.getElementById('p-stock').value),
+            video: document.getElementById('p-video').value || null,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        };
 
         try {
-            await addDoc(collection(db, "products"), {
-                name: document.getElementById('p-name').value,
-                price: Number(document.getElementById('p-price').value),
-                stock: Number(document.getElementById('p-stock').value),
-                createdAt: serverTimestamp()
-            });
-
+            await addDoc(collection(db, "products"), productData);
+            alert("تم حفظ المنتج في منصة تيرا بنجاح.");
             form.reset();
             fetchProducts();
-            alert("تمت إضافة الباقة بنجاح إلى منصة تيرا.");
         } catch (err) {
-            console.error("خطأ في الحفظ:", err);
-            alert("فشل الحفظ، تأكد من إعدادات Firestore.");
-        } finally {
-            if(saveBtn) saveBtn.disabled = false;
+            console.error("Error saving product:", err);
         }
     };
 }
 
-/**
- * حذف منتج (متاحة عالمياً ليتم استدعاؤها من الـ HTML)
- */
+// دالة الحذف
 window.deleteProduct = async (id) => {
-    if (confirm("هل أنت متأكد من حذف هذه الباقة؟")) {
-        try {
-            await deleteDoc(doc(db, "products", id));
-            fetchProducts();
-        } catch (err) {
-            console.error("خطأ في الحذف:", err);
-        }
+    if (confirm("هل أنت متأكد من حذف هذا المنتج؟")) {
+        await deleteDoc(doc(db, "products", id));
+        fetchProducts();
     }
 };
