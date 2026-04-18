@@ -1,117 +1,95 @@
-/* حاوية الشبكة - تحسين الانسيابية */
+/* --- تحسينات شبكة المنتجات والطلبات --- */
 .orders-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 20px;
-    padding: 15px;
+    gap: 25px;
+    padding: 10px;
 }
 
-/* بطاقة الطلب المطورة - تصميم بدون حواف حادة */
+/* بطاقة المنتج المطورة */
 .order-card {
     background: #ffffff;
-    border-radius: 16px;
-    border: 1px solid #f0f2f5;
+    border-radius: 20px; /* زوايا أنعم */
+    border: 1px solid #f1f5f9;
     position: relative;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
 }
 
 .order-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(0,0,0,0.06);
+    transform: translateY(-6px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08);
     border-color: #e67e22;
 }
 
-/* رأس البطاقة - تقسيم المساحة بذكاء */
-.order-header {
-    padding: 16px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #f8fafc;
+/* شاشة عرض الصورة المصغرة للمنتج */
+.product-thumb-container {
+    width: 100%;
+    height: 180px;
+    background: #f8fafc;
+    position: relative;
+    overflow: hidden;
 }
 
-.order-info-meta {
-    display: flex;
-    flex-direction: column;
+.product-thumb-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
 }
 
-.order-id {
-    font-size: 1rem;
+.order-card:hover .product-thumb-container img {
+    transform: scale(1.1);
+}
+
+/* بادج المخزون (Stock Level) */
+.stock-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
     font-weight: 800;
-    color: #1e293b;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    backdrop-filter: blur(8px);
+    z-index: 2;
 }
 
-.order-date {
-    font-size: 0.75rem;
-    color: #94a3b8;
-    margin-top: 2px;
-}
+.stock-high { background: rgba(39, 174, 96, 0.1); color: #27ae60; border: 1px solid rgba(39, 174, 96, 0.2); }
+.stock-low { background: rgba(231, 76, 60, 0.1); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.2); }
 
-/* بادج الحالة - تصميم ناعم وواضح */
-.order-status {
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 0.75rem;
-    font-weight: 800;
-}
-
-.status-pending { background: #fff7ed; color: #ea580c; border: 1px solid #ffedd5; }
-.status-completed { background: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
-.status-cancelled { background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; }
-.status-processing { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
-
-/* جسم البطاقة - ترتيب المعلومات بشكل "قائمة" منظمة */
+/* تفاصيل المنتج داخل البطاقة */
 .order-body {
     padding: 20px;
 }
 
-.customer-section {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 20px;
-}
-
-.customer-avatar {
-    width: 40px;
-    height: 40px;
-    background: #f1f5f9;
-    color: #475569;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-}
-
-.customer-details {
-    display: flex;
-    flex-direction: column;
-}
-
-.customer-name {
+.product-code-label {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
     font-weight: 700;
-    color: #334155;
-    font-size: 0.95rem;
 }
 
-.customer-phone {
-    font-size: 0.8rem;
-    color: #64748b;
-    font-weight: 500;
+.product-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 5px 0 15px 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
-/* قسم السعر - التصميم المالي */
+/* قسم السعر الاحترافي */
 .order-finance {
-    background: #f8fafc;
-    border-radius: 12px;
-    padding: 12px 16px;
+    background: #fff8f3; /* لون مشتق من برتقالي تيرا */
+    border-radius: 14px;
+    padding: 12px 18px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -119,64 +97,81 @@
 
 .finance-label {
     font-size: 0.8rem;
-    color: #64748b;
-    font-weight: 600;
+    color: #e67e22;
+    font-weight: 700;
 }
 
 .finance-value {
-    font-size: 1.25rem;
+    font-size: 1.4rem;
     font-weight: 900;
-    color: #e67e22; /* لون تيرا الرسمي */
+    color: #1a202c;
 }
 
-.finance-value small {
-    font-size: 0.75rem;
-    margin-right: 2px;
+/* تصميم النموذج (Form) لإضافة منتج */
+.product-form-card {
+    background: #fff;
+    padding: 35px;
+    border-radius: 24px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.05);
 }
 
-/* الفوتر - الأزرار */
+.form-group label {
+    display: block;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #fbfcfd;
+    transition: all 0.2s;
+    font-family: 'Tajawal', sans-serif;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #e67e22;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(230, 126, 34, 0.1);
+}
+
+/* أزرار التحكم السفلى */
 .order-footer {
-    padding: 16px 20px;
+    padding: 15px 20px;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
     display: flex;
-    gap: 10px;
-    margin-top: auto;
+    gap: 12px;
 }
 
-.btn-action {
-    flex: 1;
+.btn-icon {
+    width: 42px;
     height: 42px;
     border-radius: 10px;
     border: 1px solid #e2e8f0;
-    background: #fff;
-    color: #475569;
-    font-weight: 700;
-    font-size: 0.85rem;
+    background: white;
+    color: #64748b;
     cursor: pointer;
+    transition: all 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    transition: all 0.2s;
 }
 
-.btn-action:hover {
-    background: #f8fafc;
-    border-color: #cbd5e1;
+.btn-icon:hover {
+    background: #fee2e2;
+    color: #ef4444;
+    border-color: #fecaca;
 }
 
-/* الزر الأساسي (عرض التفاصيل) */
-.btn-main {
-    background: #1e293b; /* كحلي داكن فخم */
-    color: #fff;
-    border: none;
-}
-
-.btn-main:hover {
-    background: #0f172a;
-    transform: scale(1.02);
-}
-
-.btn-print {
-    width: 42px;
-    flex: none; /* زر جانبي مربع للطباعة */
+.btn-edit:hover {
+    background: #eff6ff;
+    color: #2563eb;
+    border-color: #dbeafe;
 }
