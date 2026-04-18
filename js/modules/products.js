@@ -1,52 +1,36 @@
 /**
  * js/modules/products.js
- * موديول إدارة المنتجات - منصة تيرا
+ * موديول إدارة المستودع - منصة تيرا
  */
 
 import { db } from '../core/firebase.js';
 import { 
-    collection, addDoc, getDocs, deleteDoc, doc, 
-    serverTimestamp, query, orderBy 
+    collection, getDocs, deleteDoc, doc, query, orderBy 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/**
- * هذه هي الدالة التي يستدعيها main.js عند فتح قسم المنتجات
- */
 export async function initProducts(container) {
-    console.log("🚀 جاري تحميل واجهة المنتجات من السيرفر...");
-    
     try {
-        // 1. تحميل القالب من مجلد admin
+        // تحميل الواجهة التي أرسلتها أنت
         const response = await fetch('./admin/modules/products.html');
-        if (!response.ok) throw new Error("لم يتم العثور على ملف products.html");
-        
         const html = await response.text();
         container.innerHTML = html;
 
-        // 2. تشغيل العمليات فور حقن الـ HTML في الصفحة
-        console.log("✅ تم حقن الواجهة. بدء جلب المنتجات...");
+        console.log("✅ تم تحميل واجهة المستودع.");
         
-        // نستخدم setTimeout بسيط لضمان أن المتصفح انتهى من رسم العناصر (DOM)
-        setTimeout(() => {
-            fetchProducts();
-            setupFormHandler();
-        }, 50);
-
+        // تشغيل الجلب فوراً
+        fetchProducts();
+        
     } catch (error) {
-        console.error("❌ خطأ في تحميل موديول المنتجات:", error);
-        container.innerHTML = `<div style="color:red; padding:20px;">حدث خطأ أثناء تحميل الواجهة: ${error.message}</div>`;
+        console.error("❌ خطأ في تحميل الواجهة:", error);
     }
 }
 
-/**
- * جلب البيانات من Firestore
- */
 async function fetchProducts() {
-    // تأكد أن هذا الـ ID موجود داخل admin/modules/products.html
-    const grid = document.getElementById('products-list-grid');
+    // الـ ID الصحيح حسب الكود الذي أرسلته أنت
+    const tableBody = document.getElementById('products-list-body');
     
-    if (!grid) {
-        console.error("❌ خطأ: لم أجد عنصر 'products-list-grid' داخل ملف HTML.");
+    if (!tableBody) {
+        console.error("❌ لم يتم العثور على 'products-list-body' في ملف HTML.");
         return;
     }
 
@@ -54,81 +38,64 @@ async function fetchProducts() {
         const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
         const snapshot = await getDocs(q);
         
+        tableBody.innerHTML = ""; // تنظيف رسالة "جاري فحص المستودع"
+
         if (snapshot.empty) {
-            grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:50px; color:#64748b;">لا توجد منتجات حالياً في منصة تيرا.</div>`;
+            tableBody.innerHTML = `<tr><td colspan="6" style="padding:30px; text-align:center;">المستودع فارغ حالياً.</td></tr>`;
             return;
         }
-
-        grid.innerHTML = ""; // تنظيف المكان قبل العرض
 
         snapshot.forEach((docSnap) => {
             const p = docSnap.data();
             const pId = docSnap.id;
             
-            grid.innerHTML += `
-                <div class="order-card" style="border-top: 4px solid #e67e22; animation: fadeIn 0.5s ease;">
-                    <div class="order-body" style="padding:15px;">
-                        <img src="${p.mainImage || 'admin/images/default-product.png'}" 
-                             style="width:100%; height:140px; object-fit:cover; border-radius:8px; margin-bottom:12px;">
-                        <h4 style="font-weight:800; color:#1e293b;">${p.name}</h4>
-                        <p style="font-size:0.75rem; color:#94a3b8; margin-bottom:10px;">كود: ${p.code || 'N/A'}</p>
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="color:#e67e22; font-weight:800; font-size:1.1rem;">${p.price} ريال</span>
-                            <span style="background:#f1f5f9; padding:2px 8px; border-radius:5px; font-size:0.8rem; color:#475569;">المخزون: ${p.stock}</span>
+            // تحديد لون حالة المخزون
+            let stockClass = 'stock-in';
+            let stockText = 'متوفر';
+            if (p.stock <= 0) {
+                stockClass = 'stock-out';
+                stockText = 'نفد';
+            } else if (p.stock < 5) {
+                stockClass = 'stock-low';
+                stockText = 'منخفض';
+            }
+
+            // حقن الصف في الجدول
+            tableBody.innerHTML += `
+                <tr style="border-bottom: 1px solid #f1f1f1;">
+                    <td style="padding:15px;">
+                        <div class="product-img-slot">
+                            <img src="${p.mainImage || 'admin/images/default-product.png'}" alt="">
                         </div>
-                    </div>
-                    <div class="order-footer" style="padding:12px; background:#f8fafc; border-top:1px solid #f1f5f9; display:flex; justify-content:space-between;">
-                        <button onclick="deleteProduct('${pId}')" style="color:#ef4444; border:none; background:none; cursor:pointer; font-size:0.85rem;">
-                            <i class="fas fa-trash-alt"></i> حذف
+                    </td>
+                    <td style="padding:15px;">
+                        <div style="font-weight:bold; color:#2c3e50;">${p.name}</div>
+                        <div style="font-size:0.75rem; color:#95a5a6;">${p.code || 'بدون كود'}</div>
+                    </td>
+                    <td style="padding:15px; font-weight:bold; color:#e67e22;">${p.price} ريال</td>
+                    <td style="padding:15px;">${p.stock}</td>
+                    <td style="padding:15px;">
+                        <span class="stock-badge ${stockClass}">${stockText}</span>
+                    </td>
+                    <td style="padding:15px;">
+                        <button onclick="deleteProduct('${pId}')" style="background:none; border:none; color:#e74c3c; cursor:pointer;">
+                            <i class="fas fa-trash"></i>
                         </button>
-                        <span style="font-size:0.75rem; color:#cbd5e1;">${p.createdAt?.toDate().toLocaleDateString('ar-SA') || '' }</span>
-                    </div>
-                </div>`;
+                    </td>
+                </tr>
+            `;
         });
-        console.log("✅ تم عرض المنتجات بنجاح.");
+        console.log("✅ تم تحديث قائمة المستودع.");
 
     } catch (err) {
-        console.error("❌ فشل جلب البيانات من Firestore:", err);
+        console.error("❌ خطأ أثناء جلب المنتجات:", err);
+        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red; padding:20px;">خطأ في الاتصال بقاعدة البيانات.</td></tr>`;
     }
 }
 
-/**
- * معالج حفظ النموذج
- */
-function setupFormHandler() {
-    const form = document.getElementById('product-main-form');
-    if (!form) return;
-
-    form.onsubmit = async (e) => {
-        e.preventDefault();
-        
-        const productData = {
-            name: document.getElementById('p-name').value,
-            code: document.getElementById('p-code').value,
-            description: document.getElementById('p-desc')?.value || "",
-            mainImage: document.getElementById('p-main-image')?.value || "",
-            galleryImages: [], 
-            price: Number(document.getElementById('p-price').value),
-            stock: Number(document.getElementById('p-stock').value),
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-        };
-
-        try {
-            await addDoc(collection(db, "products"), productData);
-            alert("تمت إضافة المنتج بنجاح");
-            form.reset();
-            fetchProducts();
-        } catch (err) {
-            console.error("❌ خطأ في الإضافة:", err);
-            alert("حدث خطأ أثناء الحفظ.");
-        }
-    };
-}
-
-// دالة الحذف (Global)
+// دالة الحذف
 window.deleteProduct = async (id) => {
-    if (confirm("هل تريد حذف هذا المنتج؟")) {
+    if (confirm("هل تريد إزالة هذا المنتج من المستودع؟")) {
         try {
             await deleteDoc(doc(db, "products", id));
             fetchProducts();
