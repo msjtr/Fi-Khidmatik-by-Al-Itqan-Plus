@@ -1,70 +1,286 @@
-<script type="module">
-    // تعريف switchModule مباشرة في هذا الملف
-    window.switchModule = function(moduleName) {
-        console.log('تم النقر على:', moduleName);
-        
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tera Gateway | لوحة التحكم</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: #f5f7fb;
+            overflow: hidden;
+        }
+
+        /* تنسيق الهيدر */
+        .app-header {
+            background: white;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .sidebar-trigger {
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            cursor: pointer;
+            color: #e67e22;
+            padding: 8px;
+        }
+
+        .app-brand {
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-clock {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+
+        /* تنسيق الجسم */
+        .app-body {
+            display: flex;
+            height: calc(100vh - 60px);
+            overflow: hidden;
+        }
+
+        /* تنسيق القائمة الجانبية */
+        .app-sidebar {
+            width: 260px;
+            background: white;
+            border-left: 1px solid #e9ecef;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .side-nav ul {
+            list-style: none;
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: #fef5e8;
+            color: #e67e22;
+        }
+
+        .nav-item.active {
+            background: #fef5e8;
+            color: #e67e22;
+            border-right: 3px solid #e67e22;
+        }
+
+        .nav-item i {
+            width: 20px;
+        }
+
+        /* تنسيق المحتوى */
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        #loader {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        #module-container {
+            min-height: 100%;
+        }
+
+        /* تحسين للشاشات الصغيرة */
+        @media (max-width: 768px) {
+            .app-sidebar {
+                position: absolute;
+                top: 60px;
+                bottom: 0;
+                z-index: 99;
+                transform: translateX(0);
+            }
+            .app-sidebar.is-closed {
+                transform: translateX(-100%);
+            }
+            .header-clock {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-shell">
+    <header class="app-header">
+        <div class="header-right">
+            <button id="sidebar-toggle" class="sidebar-trigger">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="app-brand">
+                <span>Tera Gateway</span>
+            </div>
+        </div>
+        <div id="current-datetime" class="header-clock"></div>
+    </header>
+
+    <div class="app-body">
+        <aside id="main-sidebar" class="app-sidebar">
+            <nav class="side-nav">
+                <ul id="admin-menu">
+                    <li class="nav-item active" data-module="dashboard">
+                        <i class="fas fa-chart-line"></i> <span>الرئيسية</span>
+                    </li>
+                    <li class="nav-item" data-module="products">
+                        <i class="fas fa-box"></i> <span>المنتجات</span>
+                    </li>
+                    <li class="nav-item" data-module="orders">
+                        <i class="fas fa-receipt"></i> <span>طلبات التقسيط</span>
+                    </li>
+                    <li class="nav-item" data-module="customers">
+                        <i class="fas fa-users"></i> <span>العملاء</span>
+                    </li>
+                    <li class="nav-item" data-module="settings">
+                        <i class="fas fa-cog"></i> <span>الإعدادات</span>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="app-content">
+            <div id="loader">
+                <i class="fas fa-circle-notch fa-spin fa-2x" style="color: #e67e22;"></i>
+                <p style="margin-top: 10px;">جاري التحميل...</p>
+            </div>
+            <div id="module-container">
+                <!-- المحتوى سيظهر هنا -->
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // التأكد من وجود العناصر
         const container = document.getElementById('module-container');
         const loader = document.getElementById('loader');
         
+        console.log('🔍 فحص العناصر:', {
+            container: !!container,
+            loader: !!loader
+        });
+        
         if (!container) {
-            console.error('container غير موجود');
+            console.error('❌ module-container غير موجود!');
             return;
         }
         
-        // إظهار loader
-        if (loader) loader.style.display = 'block';
-        
-        // محتوى كل موديول
+        // محتويات الموديولات
         const contents = {
             dashboard: `
                 <div style="padding: 25px;">
-                    <h1 style="color: #2c3e50;"><i class="fas fa-chart-line" style="color: #e67e22;"></i> لوحة التحكم الرئيسية</h1>
-                    <p>مرحباً بك في نظام Tera Gateway</p>
-                    <hr>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 30px;">
-                        <div onclick="window.switchModule('products')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; border-radius: 15px; color: white; cursor: pointer; text-align: center;">
-                            <i class="fas fa-box fa-2x"></i>
-                            <h3>المنتجات</h3>
-                            <p>إدارة المخزون</p>
+                    <h1 style="color: #2c3e50; margin-bottom: 20px;">
+                        <i class="fas fa-chart-line" style="color: #e67e22;"></i> لوحة التحكم الرئيسية
+                    </h1>
+                    <p style="color: #7f8c8d; margin-bottom: 30px;">مرحباً بك في نظام Tera Gateway لإدارة المبيعات والتقسيط</p>
+                    <hr style="margin-bottom: 30px;">
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px;">
+                        <div onclick="window.switchModule('products')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 15px; color: white; cursor: pointer; text-align: center; transition: transform 0.3s;">
+                            <i class="fas fa-box fa-3x" style="margin-bottom: 15px;"></i>
+                            <h3 style="margin-bottom: 10px;">المنتجات</h3>
+                            <p style="opacity: 0.9;">إدارة المخزون والمنتجات</p>
                         </div>
-                        <div onclick="window.switchModule('orders')" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 25px; border-radius: 15px; color: white; cursor: pointer; text-align: center;">
-                            <i class="fas fa-receipt fa-2x"></i>
-                            <h3>الطلبات</h3>
-                            <p>متابعة الطلبات</p>
+                        <div onclick="window.switchModule('orders')" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 30px; border-radius: 15px; color: white; cursor: pointer; text-align: center; transition: transform 0.3s;">
+                            <i class="fas fa-receipt fa-3x" style="margin-bottom: 15px;"></i>
+                            <h3 style="margin-bottom: 10px;">الطلبات</h3>
+                            <p style="opacity: 0.9;">متابعة طلبات التقسيط</p>
                         </div>
-                        <div onclick="window.switchModule('customers')" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 25px; border-radius: 15px; color: white; cursor: pointer; text-align: center;">
-                            <i class="fas fa-users fa-2x"></i>
-                            <h3>العملاء</h3>
-                            <p>إدارة العملاء</p>
+                        <div onclick="window.switchModule('customers')" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 30px; border-radius: 15px; color: white; cursor: pointer; text-align: center; transition: transform 0.3s;">
+                            <i class="fas fa-users fa-3x" style="margin-bottom: 15px;"></i>
+                            <h3 style="margin-bottom: 10px;">العملاء</h3>
+                            <p style="opacity: 0.9;">إدارة بيانات العملاء</p>
                         </div>
-                        <div onclick="window.switchModule('settings')" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 25px; border-radius: 15px; color: white; cursor: pointer; text-align: center;">
-                            <i class="fas fa-cog fa-2x"></i>
-                            <h3>الإعدادات</h3>
-                            <p>تكوين النظام</p>
+                        <div onclick="window.switchModule('settings')" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 30px; border-radius: 15px; color: white; cursor: pointer; text-align: center; transition: transform 0.3s;">
+                            <i class="fas fa-cog fa-3x" style="margin-bottom: 15px;"></i>
+                            <h3 style="margin-bottom: 10px;">الإعدادات</h3>
+                            <p style="opacity: 0.9;">تكوين النظام والإعدادات</p>
                         </div>
                     </div>
                 </div>
             `,
             products: `
                 <div style="padding: 25px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h2><i class="fas fa-box" style="color: #e67e22;"></i> إدارة المنتجات</h2>
-                        <button onclick="alert('إضافة منتج جديد')" style="background: #e67e22; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
-                            <i class="fas fa-plus"></i> منتج جديد
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                        <h2 style="color: #2c3e50;"><i class="fas fa-box" style="color: #e67e22;"></i> إدارة المنتجات</h2>
+                        <button onclick="alert('فتح نموذج إضافة منتج')" style="background: #e67e22; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+                            <i class="fas fa-plus"></i> إضافة منتج
                         </button>
                     </div>
                     <div style="background: white; border-radius: 12px; padding: 20px;">
-                        <p style="text-align: center; color: #7f8c8d;">قائمة المنتجات ستظهر هنا</p>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; margin-top: 20px;">
-                            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px;">
-                                <h4>منتج تجريبي 1</h4>
-                                <p>السعر: 100 ر.س</p>
-                                <p>المخزون: 10</p>
+                        <div style="margin-bottom: 20px;">
+                            <input type="text" placeholder="بحث عن منتج..." style="width: 100%; max-width: 300px; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; border-right: 3px solid #e67e22;">
+                                <h4>باقة سوا 50</h4>
+                                <p>السعر: 50 ر.س</p>
+                                <p>التكلفة: 45 ر.س</p>
+                                <p>المخزون: 25</p>
                             </div>
-                            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px;">
-                                <h4>منتج تجريبي 2</h4>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; border-right: 3px solid #e67e22;">
+                                <h4>باقة سوا 100</h4>
+                                <p>السعر: 100 ر.س</p>
+                                <p>التكلفة: 90 ر.س</p>
+                                <p>المخزون: 15</p>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; border-right: 3px solid #e67e22;">
+                                <h4>باقة سوا 200</h4>
                                 <p>السعر: 200 ر.س</p>
-                                <p>المخزون: 5</p>
+                                <p>التكلفة: 180 ر.س</p>
+                                <p>المخزون: 8</p>
                             </div>
                         </div>
                     </div>
@@ -72,19 +288,33 @@
             `,
             orders: `
                 <div style="padding: 25px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h2><i class="fas fa-receipt" style="color: #e67e22;"></i> طلبات التقسيط</h2>
-                        <button onclick="alert('طلب جديد')" style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                        <h2 style="color: #2c3e50;"><i class="fas fa-receipt" style="color: #e67e22;"></i> طلبات التقسيط</h2>
+                        <button onclick="alert('فتح نموذج طلب جديد')" style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
                             <i class="fas fa-plus"></i> طلب جديد
                         </button>
                     </div>
-                    <div style="background: white; border-radius: 12px; padding: 20px;">
-                        <p style="text-align: center; color: #7f8c8d;">قائمة الطلبات ستظهر هنا</p>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-top: 20px;">
-                            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px;">
-                                <div><strong>عميل: أحمد محمد</strong></div>
-                                <div>المبلغ: 1500 ر.س</div>
-                                <div>الحالة: قيد الانتظار</div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;">
+                        <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                                <span style="background: #e3f2fd; color: #1976d2; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem;">INV-001</span>
+                                <span style="color: #27ae60; font-weight: bold;">مدفوع</span>
+                            </div>
+                            <h4>أحمد محمد</h4>
+                            <p>0501234567</p>
+                            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #f1f5f9;">
+                                <strong>المبلغ: 1500 ر.س</strong>
+                            </div>
+                        </div>
+                        <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                                <span style="background: #fff3cd; color: #856404; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem;">INV-002</span>
+                                <span style="color: #e67e22; font-weight: bold;">قيد الانتظار</span>
+                            </div>
+                            <h4>سارة علي</h4>
+                            <p>0551234567</p>
+                            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #f1f5f9;">
+                                <strong>المبلغ: 2500 ر.س</strong>
                             </div>
                         </div>
                     </div>
@@ -92,16 +322,17 @@
             `,
             customers: `
                 <div style="padding: 25px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h2><i class="fas fa-users" style="color: #e67e22;"></i> إدارة العملاء</h2>
-                        <button onclick="alert('إضافة عميل جديد')" style="background: #e67e22; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
-                            <i class="fas fa-user-plus"></i> عميل جديد
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                        <h2 style="color: #2c3e50;"><i class="fas fa-users" style="color: #e67e22;"></i> إدارة العملاء</h2>
+                        <button onclick="alert('فتح نموذج إضافة عميل')" style="background: #e67e22; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+                            <i class="fas fa-user-plus"></i> إضافة عميل
                         </button>
                     </div>
-                    <div style="background: white; border-radius: 12px; overflow: hidden;">
-                        <table style="width: 100%; border-collapse: collapse;">
+                    <div style="background: white; border-radius: 12px; overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; min-width: 500px;">
                             <thead style="background: #f8f9fa;">
                                 <tr>
+                                    <th style="padding: 12px; text-align: right;">#</th>
                                     <th style="padding: 12px; text-align: right;">الاسم</th>
                                     <th style="padding: 12px; text-align: right;">الجوال</th>
                                     <th style="padding: 12px; text-align: right;">المدينة</th>
@@ -110,12 +341,23 @@
                             </thead>
                             <tbody>
                                 <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 10px;">1</td>
                                     <td style="padding: 10px;">محمد عبدالله</td>
                                     <td style="padding: 10px;">0501234567</td>
                                     <td style="padding: 10px;">الرياض</td>
                                     <td style="padding: 10px; text-align: center;">
-                                        <button style="color: #f39c12; background: none; border: none; cursor: pointer;">تعديل</button>
-                                        <button style="color: #e74c3c; background: none; border: none; cursor: pointer;">حذف</button>
+                                        <button style="color: #f39c12; background: none; border: none; cursor: pointer; margin-left: 10px;"><i class="fas fa-edit"></i></button>
+                                        <button style="color: #e74c3c; background: none; border: none; cursor: pointer;"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 10px;">2</td>
+                                    <td style="padding: 10px;">نورة أحمد</td>
+                                    <td style="padding: 10px;">0551234567</td>
+                                    <td style="padding: 10px;">جدة</td>
+                                    <td style="padding: 10px; text-align: center;">
+                                        <button style="color: #f39c12; background: none; border: none; cursor: pointer; margin-left: 10px;"><i class="fas fa-edit"></i></button>
+                                        <button style="color: #e74c3c; background: none; border: none; cursor: pointer;"><i class="fas fa-trash"></i></button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -125,19 +367,26 @@
             `,
             settings: `
                 <div style="padding: 25px;">
-                    <h2><i class="fas fa-cog" style="color: #e67e22;"></i> إعدادات النظام</h2>
-                    <div style="background: white; border-radius: 12px; padding: 20px; margin-top: 20px;">
-                        <form id="settings-form">
-                            <div style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 5px;">اسم الشركة</label>
+                    <h2 style="color: #2c3e50; margin-bottom: 25px;"><i class="fas fa-cog" style="color: #e67e22;"></i> إعدادات النظام</h2>
+                    <div style="background: white; border-radius: 12px; padding: 25px; max-width: 500px;">
+                        <form onsubmit="alert('تم حفظ الإعدادات'); return false;">
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: bold;">اسم الشركة</label>
                                 <input type="text" value="تيرا جيتواي" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
                             </div>
-                            <div style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 5px;">نسبة الضريبة (%)</label>
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: bold;">نسبة الضريبة (%)</label>
                                 <input type="number" value="15" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
                             </div>
-                            <button type="submit" style="background: #e67e22; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
-                                حفظ الإعدادات
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: bold;">العملة</label>
+                                <select style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                                    <option>ريال سعودي (SAR)</option>
+                                    <option>دولار أمريكي (USD)</option>
+                                </select>
+                            </div>
+                            <button type="submit" style="background: #e67e22; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; width: 100%;">
+                                <i class="fas fa-save"></i> حفظ الإعدادات
                             </button>
                         </form>
                     </div>
@@ -145,84 +394,124 @@
             `
         };
         
-        // عرض المحتوى المطلوب
-        container.innerHTML = contents[moduleName] || contents.dashboard;
-        
-        // إخفاء loader
-        if (loader) loader.style.display = 'none';
-        
-        // تحديث القائمة النشطة
-        document.querySelectorAll('.nav-item').forEach(item => {
-            if (item.getAttribute('data-module') === moduleName) {
-                item.classList.add('active');
-            } else {
-                item.classList.remove('active');
+        // دالة تبديل الموديول
+        window.switchModule = function(moduleName) {
+            console.log('🔄 تبديل الموديول:', moduleName);
+            
+            if (!container) {
+                console.error('❌ container غير موجود');
+                return;
             }
-        });
-        
-        // تحديث عنوان الصفحة
-        const titles = {
-            dashboard: 'الرئيسية',
-            products: 'المنتجات',
-            orders: 'الطلبات',
-            customers: 'العملاء',
-            settings: 'الإعدادات'
+            
+            // إظهار loader
+            if (loader) loader.style.display = 'block';
+            
+            // محاكاة تحميل (لإظهار loader)
+            setTimeout(() => {
+                // عرض المحتوى
+                container.innerHTML = contents[moduleName] || contents.dashboard;
+                
+                // إخفاء loader
+                if (loader) loader.style.display = 'none';
+                
+                // تحديث القائمة النشطة
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    if (item.getAttribute('data-module') === moduleName) {
+                        item.classList.add('active');
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+                
+                // تحديث عنوان الصفحة
+                const titles = {
+                    dashboard: 'الرئيسية',
+                    products: 'المنتجات',
+                    orders: 'الطلبات',
+                    customers: 'العملاء',
+                    settings: 'الإعدادات'
+                };
+                document.title = `Tera Gateway | ${titles[moduleName] || 'لوحة التحكم'}`;
+                
+                console.log('✅ تم تحميل الموديول:', moduleName);
+            }, 200);
         };
-        document.title = `Tera Gateway | ${titles[moduleName] || 'لوحة التحكم'}`;
-    };
-    
-    // ربط الأحداث بعناصر القائمة
-    document.querySelectorAll('.nav-item').forEach(item => {
-        // إزالة أي مستمعات سابقة
-        const newItem = item.cloneNode(true);
-        item.parentNode.replaceChild(newItem, item);
         
-        newItem.addEventListener('click', (e) => {
-            e.preventDefault();
-            const module = newItem.getAttribute('data-module');
-            console.log('تم النقر على:', module);
-            if (module) {
-                window.switchModule(module);
-            }
-        });
-    });
-    
-    // تحميل الموديول الافتراضي
-    const hash = window.location.hash.substring(1);
-    const defaultModule = hash && ['dashboard', 'products', 'orders', 'customers', 'settings'].includes(hash) 
-        ? hash 
-        : 'dashboard';
-    
-    window.switchModule(defaultModule);
-    
-    // تحديث الساعة
-    function updateDateTime() {
-        const el = document.getElementById('current-datetime');
-        if (el) {
-            const now = new Date();
-            el.innerText = now.toLocaleDateString('en-GB', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true
+        // ربط الأحداث بعناصر القائمة
+        function bindMenuEvents() {
+            const menuItems = document.querySelectorAll('.nav-item');
+            console.log('📋 عدد عناصر القائمة:', menuItems.length);
+            
+            menuItems.forEach(item => {
+                // إزالة المستمع القديم
+                const newItem = item.cloneNode(true);
+                item.parentNode.replaceChild(newItem, item);
+                
+                newItem.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const module = newItem.getAttribute('data-module');
+                    console.log('🖱️ تم النقر على:', module);
+                    if (module) {
+                        window.switchModule(module);
+                    }
+                });
             });
         }
-    }
-    updateDateTime();
-    setInterval(updateDateTime, 1000);
-    
-    // زر القائمة للجوال
-    const toggleBtn = document.getElementById('sidebar-toggle');
-    const sidebar = document.getElementById('main-sidebar');
-    if (toggleBtn && sidebar) {
-        toggleBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('is-closed');
-        });
-    }
-    
-    console.log('✅ النظام جاهز للعمل');
+        
+        // تحديث الساعة
+        function updateDateTime() {
+            const el = document.getElementById('current-datetime');
+            if (el) {
+                const now = new Date();
+                el.innerText = now.toLocaleDateString('en-GB', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                });
+            }
+        }
+        
+        // زر القائمة للجوال
+        function bindSidebarToggle() {
+            const toggleBtn = document.getElementById('sidebar-toggle');
+            const sidebar = document.getElementById('main-sidebar');
+            if (toggleBtn && sidebar) {
+                toggleBtn.addEventListener('click', () => {
+                    sidebar.classList.toggle('is-closed');
+                });
+            }
+        }
+        
+        // تهيئة كل شيء
+        function init() {
+            console.log('🚀 بدء تهيئة النظام...');
+            bindMenuEvents();
+            bindSidebarToggle();
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+            
+            // تحميل الموديول الافتراضي
+            const hash = window.location.hash.substring(1);
+            const validModules = ['dashboard', 'products', 'orders', 'customers', 'settings'];
+            const defaultModule = hash && validModules.includes(hash) ? hash : 'dashboard';
+            
+            window.switchModule(defaultModule);
+            console.log('✅ النظام جاهز');
+        }
+        
+        // انتظار تحميل DOM بالكامل
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    })();
 </script>
+
+</body>
+</html>
