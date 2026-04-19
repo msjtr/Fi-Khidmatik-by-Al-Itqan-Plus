@@ -3,19 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="theme-color" content="#e67e22">
     <title>Tera Gateway | لوحة التحكم</title>
     
     <link rel="icon" href="/fi-khidmatik/images/logo.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/fi-khidmatik/images/logo.svg">
     
+    <!-- Font Awesome & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     
+    <!-- Stylesheets مع fallback -->
     <link rel="stylesheet" href="/fi-khidmatik/css/admin.css">
     <link rel="stylesheet" href="/fi-khidmatik/css/table.css">
     <link rel="stylesheet" href="/fi-khidmatik/css/orders.css">
     <link rel="stylesheet" href="/fi-khidmatik/css/invoice.css">
 
     <style>
+        /* ==================== المتغيرات العامة ==================== */
+        :root {
+            --primary-color: #e67e22;
+            --primary-dark: #d35400;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --info-color: #3498db;
+            --dark-color: #2c3e50;
+            --light-color: #f8f9fa;
+            --gray-color: #95a5a6;
+        }
+        
+        /* ==================== تحسينات إضافية ==================== */
+        
+        /* شريط التحميل */
+        #progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+            z-index: 10000;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(230,126,34,0.5);
+        }
+        
+        /* مؤشر التحميل */
         #loader {
             display: none;
             position: absolute;
@@ -29,28 +62,135 @@
             box-shadow: 0 5px 20px rgba(0,0,0,0.15);
             text-align: center;
             min-width: 200px;
+            backdrop-filter: blur(4px);
         }
+        
         .app-content { 
             position: relative; 
             min-height: 400px; 
         }
         
+        /* إشعارات منبثقة */
+        .toast-notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--dark-color);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            z-index: 10001;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+        
+        /* تحسين للشاشات الصغيرة */
         @media (max-width: 768px) {
+            .app-sidebar {
+                transition: transform 0.3s ease;
+            }
             .app-sidebar.is-closed {
                 transform: translateX(-100%);
             }
             .header-clock {
-                font-size: 12px;
+                font-size: 11px;
             }
             .app-brand span {
                 display: none;
             }
+            .app-brand img {
+                width: 32px;
+                height: 32px;
+            }
+        }
+        
+        /* تحسين للشاشات الكبيرة */
+        @media (min-width: 1200px) {
+            .app-sidebar {
+                width: 280px;
+            }
+            .app-content {
+                margin-right: 280px;
+            }
+            .app-sidebar.is-closed {
+                transform: translateX(-280px);
+            }
+        }
+        
+        /* تخصيص شريط التمرير */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--light-color);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+        
+        /* رسالة الخطأ */
+        .error-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 10002;
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .error-message i {
+            font-size: 3rem;
+            color: var(--danger-color);
+            margin-bottom: 15px;
+        }
+        
+        .error-message button {
+            margin-top: 20px;
+            padding: 10px 25px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Tajawal', sans-serif;
         }
     </style>
 </head>
 <body>
 
 <div class="app-shell">
+    <!-- شريط تقدم التحميل -->
+    <div id="progress-bar"></div>
+    
     <header class="app-header">
         <div class="header-right">
             <button id="sidebar-toggle" class="sidebar-trigger" aria-label="فتح/إغلاق القائمة">
@@ -85,11 +225,18 @@
                     </li>
                 </ul>
             </nav>
+            
+            <!-- زر تسجيل الخروج (اختياري) -->
+            <div class="sidebar-footer" style="padding: 20px; border-top: 1px solid rgba(0,0,0,0.1); margin-top: auto;">
+                <button id="logout-btn" style="width: 100%; background: none; border: none; color: var(--danger-color); cursor: pointer; padding: 10px; text-align: right; font-family: 'Tajawal', sans-serif;">
+                    <i class="fas fa-sign-out-alt"></i> <span>تسجيل الخروج</span>
+                </button>
+            </div>
         </aside>
 
         <main id="main-content" class="app-content">
             <div id="loader">
-                <i class="fas fa-circle-notch fa-spin fa-3x" style="color: #e67e22;"></i>
+                <i class="fas fa-circle-notch fa-spin fa-3x" style="color: var(--primary-color);"></i>
                 <p style="margin-top: 10px; font-weight: bold;">جاري تحميل البيانات...</p>
             </div>
             <div id="module-container"></div>
@@ -101,49 +248,139 @@
 
 <script>
     (function() {
-        // إدارة القائمة الجانبية والساعة
-        document.addEventListener('DOMContentLoaded', () => {
-            const sidebar = document.getElementById('main-sidebar');
-            const toggleBtn = document.getElementById('sidebar-toggle');
-
-            if (toggleBtn) {
-                toggleBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    sidebar.classList.toggle('is-closed');
-                });
+        'use strict';
+        
+        // ==================== إدارة القائمة الجانبية ====================
+        const sidebar = document.getElementById('main-sidebar');
+        const toggleBtn = document.getElementById('sidebar-toggle');
+        const SIDEBAR_STATE_KEY = 'sidebar_closed';
+        
+        // تحميل حالة القائمة من localStorage
+        function loadSidebarState() {
+            if (!sidebar) return;
+            const isClosed = localStorage.getItem(SIDEBAR_STATE_KEY) === 'true';
+            if (isClosed) {
+                sidebar.classList.add('is-closed');
+            } else {
+                sidebar.classList.remove('is-closed');
             }
-
-            // تحديث الوقت والتاريخ
-            const updateTime = () => {
-                const now = new Date();
-                const options = { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric', 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: true
-                };
-                const timeElement = document.getElementById('current-datetime');
-                if (timeElement) {
-                    timeElement.innerText = now.toLocaleDateString('en-GB', options);
-                }
-            };
-            
-            updateTime();
-            setInterval(updateTime, 1000); 
-
-            // إغلاق القائمة تلقائياً في الجوال
-            document.addEventListener('click', (e) => {
-                if (window.innerWidth < 768 && sidebar && !sidebar.contains(e.target) && !toggleBtn?.contains(e.target)) {
-                    sidebar.classList.add('is-closed');
-                }
+        }
+        
+        // حفظ حالة القائمة
+        function saveSidebarState(isClosed) {
+            localStorage.setItem(SIDEBAR_STATE_KEY, isClosed);
+        }
+        
+        if (toggleBtn && sidebar) {
+            toggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sidebar.classList.toggle('is-closed');
+                saveSidebarState(sidebar.classList.contains('is-closed'));
             });
+        }
+        
+        loadSidebarState();
+        
+        // ==================== تحديث الوقت والتاريخ ====================
+        let timeInterval = null;
+        
+        function updateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            };
+            const timeElement = document.getElementById('current-datetime');
+            if (timeElement) {
+                timeElement.innerText = now.toLocaleDateString('en-GB', options);
+            }
+        }
+        
+        updateTime();
+        timeInterval = setInterval(updateTime, 1000);
+        
+        // ==================== إغلاق القائمة في الجوال ====================
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth < 768 && sidebar && !sidebar.contains(e.target) && !toggleBtn?.contains(e.target)) {
+                sidebar.classList.add('is-closed');
+                saveSidebarState(true);
+            }
         });
-
-        // دالة تحديد العنصر النشط في القائمة
+        
+        // ==================== تحديث القائمة عند تغيير حجم النافذة ====================
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (window.innerWidth >= 768) {
+                    const isClosed = localStorage.getItem(SIDEBAR_STATE_KEY) === 'true';
+                    if (sidebar && !isClosed) {
+                        sidebar.classList.remove('is-closed');
+                    }
+                } else {
+                    if (sidebar) {
+                        sidebar.classList.add('is-closed');
+                    }
+                }
+            }, 150);
+        });
+        
+        // ==================== شريط تقدم التحميل ====================
+        const progressBar = document.getElementById('progress-bar');
+        
+        window.showProgress = function(percent) {
+            if (progressBar) {
+                progressBar.style.width = percent + '%';
+                if (percent >= 100) {
+                    setTimeout(() => {
+                        progressBar.style.width = '0%';
+                    }, 500);
+                }
+            }
+        };
+        
+        // ==================== عرض إشعارات منبثقة ====================
+        window.showToast = function(message, duration = 3000) {
+            const existingToast = document.querySelector('.toast-notification');
+            if (existingToast) existingToast.remove();
+            
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        };
+        
+        // ==================== عرض رسالة خطأ ====================
+        function showErrorMessage(message) {
+            const existingError = document.querySelector('.error-message');
+            if (existingError) existingError.remove();
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.innerHTML = `
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>حدث خطأ</h3>
+                <p>${message}</p>
+                <button onclick="location.reload()">
+                    <i class="fas fa-sync-alt"></i> إعادة تحميل
+                </button>
+            `;
+            document.body.appendChild(errorDiv);
+        }
+        
+        // ==================== دالة تحديد العنصر النشط ====================
         window.setActiveNavItem = function(moduleName) {
             const items = document.querySelectorAll('#admin-menu .nav-item');
             items.forEach(item => {
@@ -154,7 +391,89 @@
                 }
             });
         };
+        
+        // ==================== معالجة فقدان الاتصال ====================
+        window.addEventListener('offline', () => {
+            showToast('⚠️ فقدان الاتصال بالإنترنت، يرجى التحقق من الاتصال', 5000);
+        });
+        
+        window.addEventListener('online', () => {
+            showToast('✅ تم استعادة الاتصال بالإنترنت', 3000);
+        });
+        
+        // ==================== تفعيل الموديول الافتراضي ====================
+        function initializeDefaultModule() {
+            const hash = window.location.hash.substring(1);
+            const validModules = ['dashboard', 'products', 'orders', 'customers', 'settings'];
+            const defaultModule = hash && validModules.includes(hash) ? hash : 'dashboard';
+            
+            if (!hash) {
+                window.location.hash = defaultModule;
+            }
+            
+            let attempts = 0;
+            const maxAttempts = 15;
+            
+            const trySwitchModule = () => {
+                attempts++;
+                if (typeof window.switchModule === 'function') {
+                    window.showProgress(100);
+                    window.switchModule(defaultModule);
+                } else if (attempts < maxAttempts) {
+                    window.showProgress(Math.floor((attempts / maxAttempts) * 100));
+                    console.log(`⏳ انتظار تحميل main.js... المحاولة ${attempts}/${maxAttempts}`);
+                    setTimeout(trySwitchModule, 200);
+                } else {
+                    console.error('❌ فشل في تحميل main.js');
+                    showErrorMessage('فشل في تحميل النظام. يرجى تحديث الصفحة أو التحقق من اتصال الإنترنت.');
+                    window.showProgress(100);
+                }
+            };
+            
+            setTimeout(trySwitchModule, 100);
+        }
+        
+        // ==================== تسجيل الخروج ====================
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+                    localStorage.removeItem('sidebar_closed');
+                    window.location.href = '/fi-khidmatik/index.html';
+                }
+            });
+        }
+        
+        // ==================== بدء التطبيق ====================
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeDefaultModule);
+        } else {
+            initializeDefaultModule();
+        }
+        
+        // ==================== تنظيف المؤقتات ====================
+        window.addEventListener('beforeunload', () => {
+            if (timeInterval) clearInterval(timeInterval);
+        });
+        
+        // ==================== دعم PWA ====================
+        if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/fi-khidmatik/sw.js').catch(error => {
+                    console.warn('⚠️ Service Worker registration failed:', error);
+                });
+            });
+        }
+        
+        console.log('✅ admin.html تم تحميله بنجاح');
     })();
 </script>
+
+<!-- 
+    ملاحظة: في حال عدم تحميل النظام بشكل صحيح، تأكد من:
+    1. وجود ملف main.js في المسار /fi-khidmatik/js/main.js
+    2. وجود جميع ملفات CSS في المسار /fi-khidmatik/css/
+    3. اتصال الإنترنت للوصول إلى Firebase و Font Awesome
+-->
 </body>
 </html>
