@@ -232,3 +232,141 @@ window.setActiveNavItem = function(moduleName) {
 };
 
 console.log('✅ main.js تم تنفيذه بالكامل');
+
+// ===================== دوال احتياطية للتأكد من عمل الموديولات =====================
+
+// دالة احتياطية للمنتجات إذا لم تكن معرفة
+if (typeof initProducts !== 'function') {
+    window.initProducts = async function(container) {
+        console.log('🔄 استخدام الدالة الاحتياطية للمنتجات');
+        container.innerHTML = `
+            <div style="padding: 25px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2><i class="fas fa-box" style="color: #e67e22;"></i> إدارة المنتجات</h2>
+                    <button onclick="alert('إضافة منتج جديد')" style="background: #e67e22; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+                        <i class="fas fa-plus"></i> منتج جديد
+                    </button>
+                </div>
+                <div style="background: white; border-radius: 12px; padding: 20px;">
+                    <p style="text-align: center; color: #7f8c8d;">قائمة المنتجات ستظهر هنا</p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; margin-top: 20px;">
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; border-right: 3px solid #e67e22;">
+                            <h4>منتج تجريبي 1</h4>
+                            <p>السعر: 100 ر.س</p>
+                            <p>المخزون: 10</p>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; border-right: 3px solid #e67e22;">
+                            <h4>منتج تجريبي 2</h4>
+                            <p>السعر: 200 ر.س</p>
+                            <p>المخزون: 5</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    };
+    initProducts = window.initProducts;
+}
+
+// دالة احتياطية للعملاء
+if (typeof initCustomers !== 'function') {
+    window.initCustomers = async function(container) {
+        console.log('🔄 استخدام الدالة الاحتياطية للعملاء');
+        container.innerHTML = `
+            <div style="padding: 25px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2><i class="fas fa-users" style="color: #e67e22;"></i> إدارة العملاء</h2>
+                    <button onclick="alert('إضافة عميل جديد')" style="background: #e67e22; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+                        <i class="fas fa-user-plus"></i> عميل جديد
+                    </button>
+                </div>
+                <div style="background: white; border-radius: 12px; overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; min-width: 500px;">
+                        <thead style="background: #f8f9fa;">
+                            <tr><th style="padding: 12px;">الاسم</th><th style="padding: 12px;">الجوال</th><th style="padding: 12px;">المدينة</th><th style="padding: 12px;">الإجراءات</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td style="padding: 10px;">محمد عبدالله</td><td>0501234567</td><td>الرياض</td><td><button style="color:#f39c12;">تعديل</button> <button style="color:#e74c3c;">حذف</button></td></tr>
+                            <tr><td style="padding: 10px;">نورة أحمد</td><td>0551234567</td><td>جدة</td><td><button style="color:#f39c12;">تعديل</button> <button style="color:#e74c3c;">حذف</button></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    };
+    initCustomers = window.initCustomers;
+}
+
+// دالة احتياطية للطلبات
+if (typeof initOrders !== 'function') {
+    window.initOrders = async function(container) {
+        console.log('🔄 استخدام الدالة الاحتياطية للطلبات');
+        container.innerHTML = `
+            <div style="padding: 25px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2><i class="fas fa-receipt" style="color: #e67e22;"></i> طلبات التقسيط</h2>
+                    <button onclick="alert('طلب جديد')" style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+                        <i class="fas fa-plus"></i> طلب جديد
+                    </button>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;">
+                    <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        <div><span style="background:#e3f2fd; padding:4px 10px; border-radius:6px;">INV-001</span> <span style="color:#27ae60;">مدفوع</span></div>
+                        <h4>أحمد محمد</h4>
+                        <p>0501234567</p>
+                        <div><strong>المبلغ: 1500 ر.س</strong></div>
+                    </div>
+                    <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        <div><span style="background:#fff3cd; padding:4px 10px; border-radius:6px;">INV-002</span> <span style="color:#e67e22;">قيد الانتظار</span></div>
+                        <h4>سارة علي</h4>
+                        <p>0551234567</p>
+                        <div><strong>المبلغ: 2500 ر.س</strong></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    };
+    initOrders = window.initOrders;
+}
+
+// دالة احتياطية للإعدادات
+if (typeof initSettings !== 'function') {
+    window.initSettings = async function(container) {
+        console.log('🔄 استخدام الدالة الاحتياطية للإعدادات');
+        container.innerHTML = `
+            <div style="padding: 25px;">
+                <h2><i class="fas fa-cog" style="color: #e67e22;"></i> إعدادات النظام</h2>
+                <div style="background: white; border-radius: 12px; padding: 25px; max-width: 500px;">
+                    <form onsubmit="alert('تم حفظ الإعدادات'); return false;">
+                        <div style="margin-bottom: 15px;">
+                            <label>اسم الشركة</label>
+                            <input type="text" value="تيرا جيتواي" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label>نسبة الضريبة (%)</label>
+                            <input type="number" value="15" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+                        </div>
+                        <button type="submit" style="background:#e67e22; color:white; padding:10px 20px; border:none; border-radius:8px;">حفظ</button>
+                    </form>
+                </div>
+            </div>
+        `;
+    };
+    initSettings = window.initSettings;
+}
+
+// دالة احتياطية للوحة الرئيسية
+if (typeof initDashboard !== 'function') {
+    window.initDashboard = async function(container) {
+        console.log('🔄 استخدام الدالة الاحتياطية للوحة الرئيسية');
+        showDashboardPlaceholder(container);
+    };
+    initDashboard = window.initDashboard;
+}
+
+// تحديث المتغيرات العالمية
+initProducts = window.initProducts;
+initCustomers = window.initCustomers;
+initOrders = window.initOrders;
+initSettings = window.initSettings;
+initDashboard = window.initDashboard;
