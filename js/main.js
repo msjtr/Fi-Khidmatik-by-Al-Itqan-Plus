@@ -1,36 +1,24 @@
 /**
  * المحرك الرئيسي لمنصة تيرا جيتواي - Tera Gateway
- * الإصدار: المحدث - الربط المباشر
+ * المسار: js/main.js
  */
 
-import { initOrdersDashboard } from './modules/orders.js';
+import { initOrdersDashboard } from './modules/orders-dashboard.js'; 
 import { initCustomers } from './modules/customers.js';
 import { initProducts } from './modules/products.js';
 
-// دالة التحميل للمكونات الثابتة (إذا كنت لا تزال تستخدمها)
-async function loadComponent(id, path) {
-    const container = document.getElementById(id);
-    if (!container) return;
-    try {
-        const response = await fetch(`${path}?v=${Date.now()}`);
-        if (!response.ok) throw new Error(`تعذر تحميل المكون: ${path}`);
-        container.innerHTML = await response.text();
-    } catch (err) {
-        console.error(err);
-        container.innerHTML = `<div style="padding:10px; color:red;">خطأ في تحميل ${path}</div>`;
-    }
-}
-
 // الدالة الأساسية لتبديل الأقسام
 async function switchModule(moduleName) {
-    const main = document.getElementById('main-content');
-    if (!main) {
-        console.error("خطأ: لم يتم العثور على حاوية main-content");
+    // استهداف الحاوية الصحيحة بناءً على admin.html
+    const container = document.getElementById('module-container');
+    const loader = document.getElementById('loader');
+
+    if (!container) {
+        console.error("خطأ: لم يتم العثور على حاوية module-container");
         return;
     }
 
-    // 1. تحديث الحالة البصرية في القائمة الجانبية (Sidebar)
-    // نستخدم المحددات الجديدة nav-item التي وضعناها في admin.html
+    // 1. تحديث الحالة البصرية في القائمة الجانبية
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
         if (item.getAttribute('data-module') === moduleName) {
@@ -38,62 +26,64 @@ async function switchModule(moduleName) {
         }
     });
 
-    // 2. تصفير محتوى الصفحة وعرض مؤشر تحميل احترافي (Tera Style)
-    main.innerHTML = `
-        <div style="text-align:center; padding:100px;">
-            <i class="fas fa-circle-notch fa-spin fa-3x" style="color:#e67e22; margin-bottom:15px;"></i>
-            <p style="font-weight:700; color:#1a202c;">جاري تحميل ${moduleName}...</p>
-        </div>
-    `;
+    // 2. تفعيل مؤشر التحميل وتصفير الحاوية
+    if(loader) loader.style.display = 'block';
+    container.innerHTML = ''; 
 
     // 3. توجيه المسارات (Router Logic)
     try {
         switch (moduleName) {
             case 'customers':
-                await initCustomers(main);
+                await initCustomers(container);
                 break;
             case 'products':
-                await initProducts(main);
-                break;
-            case 'settings':
-                main.innerHTML = `
-                    <div style="padding:30px;">
-                        <h2 style="color:#1a202c; border-bottom:2px solid #e67e22; display:inline-block; padding-bottom:10px;">إعدادات النظام</h2>
-                        <p style="margin-top:20px; font-weight:600; color:#64748b;">هذا القسم قيد التطوير لمنصة تيرا...</p>
-                    </div>`;
+                await initProducts(container);
                 break;
             case 'orders':
-            case 'dashboard': // الرئيسية
+                await initOrdersDashboard(container);
+                break;
+            case 'settings':
+                container.innerHTML = `
+                    <div style="padding:40px; animation: fadeIn 0.5s;">
+                        <h2 style="color:#1a202c; border-bottom:3px solid #e67e22; display:inline-block; padding-bottom:10px;">إعدادات النظام</h2>
+                        <div style="margin-top:30px; background:#f8fafc; padding:20px; border-radius:15px; border:1px dashed #cbd5e1;">
+                            <p style="font-weight:600; color:#64748b;">هذا القسم قيد التطوير لمنصة تيرا جيتواي...</p>
+                        </div>
+                    </div>`;
+                break;
+            case 'dashboard':
             default:
-                await initOrdersDashboard(main);
+                await initOrdersDashboard(container);
                 break;
         }
     } catch (error) {
-        console.error(`خطأ أثناء تشغيل الموديول ${moduleName}:`, error);
-        main.innerHTML = `
+        console.error(`خطأ في موديول ${moduleName}:`, error);
+        container.innerHTML = `
             <div style="padding:40px; text-align:center; color:#e74c3c;">
                 <i class="fas fa-exclamation-triangle fa-3x"></i>
-                <h3 style="margin-top:15px;">حدث خطأ في النظام</h3>
+                <h3 style="margin-top:15px;">عذراً، تعذر تحميل البيانات</h3>
                 <p>${error.message}</p>
             </div>`;
+    } finally {
+        if(loader) setTimeout(() => { loader.style.display = 'none'; }, 300);
     }
 }
 
-// --- السطر الأهم لحل مشكلة تعطل الأزرار ---
-window.switchModule = switchModule; 
+// التصدير للـ Window ليعمل مع الأزرار في HTML
+window.switchModule = switchModule;
 
-// تشغيل النظام عند تحميل الصفحة بالكامل
+// تشغيل النظام
 (async () => {
-    console.log("نظام Tera Gateway جاهز...");
+    console.log("Tera Gateway Core Started...");
 
-    // معالجة المسار الأولي (Hash Routing) أو الافتراضي
+    // قراءة الـ Hash من الرابط (مثال: #products)
     const getHash = () => window.location.hash.replace('#', '') || 'dashboard';
     
-    // تشغيل الموديول الأول عند الدخول
+    // تحميل القسم المطلوب فوراً
     await switchModule(getHash());
 
-    // مراقبة التغيير في الروابط (Hash Change) لضمان عمل أزرار الرجوع في المتصفح
-    window.addEventListener('hashchange', async () => {
-        await switchModule(getHash());
+    // تحديث المحتوى عند تغيير الـ Hash (يدعم أزرار الخلف/للأمام في المتصفح)
+    window.addEventListener('hashchange', () => {
+        switchModule(getHash());
     });
 })();
