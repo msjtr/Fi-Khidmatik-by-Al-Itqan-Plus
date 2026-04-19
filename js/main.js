@@ -2,198 +2,233 @@
  * js/main.js - الملف الرئيسي لنظام Tera Gateway
  */
 
-console.log('🚀 Tera Gateway System Initialized');
+console.log('🚀 main.js تم تحميله بنجاح');
 
-// دالة تبديل الموديولات
+// استيراد الموديولات الموجودة
+import { initProducts } from './modules/products.js';
+
+// استيرادات اختيارية
+let initOrders, initCustomers, initSettings, initDashboard;
+
+// تحميل الموديولات الديناميكية
+try {
+    const ordersModule = await import('./modules/orders.js');
+    initOrders = ordersModule.initOrdersDashboard || ordersModule.initOrders;
+    console.log('✅ موديول الطلبات تم تحميله');
+} catch (e) {
+    console.warn('⚠️ موديول الطلبات:', e.message);
+}
+
+try {
+    const customersModule = await import('./modules/customers.js');
+    initCustomers = customersModule.initCustomers;
+    console.log('✅ موديول العملاء تم تحميله');
+} catch (e) {
+    console.warn('⚠️ موديول العملاء:', e.message);
+}
+
+try {
+    const settingsModule = await import('./modules/settings.js');
+    initSettings = settingsModule.initSettings;
+    console.log('✅ موديول الإعدادات تم تحميله');
+} catch (e) {
+    console.warn('⚠️ موديول الإعدادات:', e.message);
+}
+
+try {
+    const dashboardModule = await import('./modules/dashboard.js');
+    initDashboard = dashboardModule.initDashboard;
+    console.log('✅ موديول الرئيسية تم تحميله');
+} catch (e) {
+    console.warn('⚠️ موديول الرئيسية:', e.message);
+}
+
+// ===================== دوال مساعدة =====================
+
+function showDashboardPlaceholder(container) {
+    container.innerHTML = `
+        <div style="padding: 25px;">
+            <h1 style="color: #2c3e50;"><i class="fas fa-chart-line" style="color: #e67e22;"></i> لوحة التحكم الرئيسية</h1>
+            <p>مرحباً بك في نظام Tera Gateway</p>
+            <hr>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 30px;">
+                <div onclick="window.switchModule('products')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; border-radius: 15px; color: white; cursor: pointer;">
+                    <i class="fas fa-box fa-2x"></i>
+                    <h3>المنتجات</h3>
+                </div>
+                <div onclick="window.switchModule('orders')" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 25px; border-radius: 15px; color: white; cursor: pointer;">
+                    <i class="fas fa-receipt fa-2x"></i>
+                    <h3>الطلبات</h3>
+                </div>
+                <div onclick="window.switchModule('customers')" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 25px; border-radius: 15px; color: white; cursor: pointer;">
+                    <i class="fas fa-users fa-2x"></i>
+                    <h3>العملاء</h3>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function showUnderConstruction(container, title, icon) {
+    container.innerHTML = `
+        <div style="padding: 60px 20px; text-align: center;">
+            <i class="fas ${icon} fa-4x" style="color: #e67e22; margin-bottom: 20px;"></i>
+            <h2>${title}</h2>
+            <p>هذا القسم قيد التطوير حاليًا</p>
+        </div>
+    `;
+}
+
+// ===================== دالة تبديل الموديولات =====================
+
 async function switchModule(moduleName) {
-    console.log('🔄 Loading module:', moduleName);
+    console.log('🔄 switchModule تم استدعاؤها مع:', moduleName);
     
     const loader = document.getElementById('loader');
     const container = document.getElementById('module-container');
     
-    if (!container) return;
+    if (!container) {
+        console.error('❌ module-container غير موجود');
+        return;
+    }
     
+    // إظهار loader
     if (loader) loader.style.display = 'block';
     container.innerHTML = '';
     
+    // تحديث القائمة النشطة
     if (typeof window.setActiveNavItem === 'function') {
         window.setActiveNavItem(moduleName);
     }
     
+    // تحديث الـ URL hash
     if (window.location.hash !== `#${moduleName}`) {
         window.location.hash = moduleName;
     }
     
     try {
-        let content = '';
-        
         switch (moduleName) {
             case 'dashboard':
-                content = getDashboardContent();
+                if (initDashboard) {
+                    await initDashboard(container);
+                } else {
+                    showDashboardPlaceholder(container);
+                }
                 break;
+                
             case 'products':
-                content = getProductsContent();
+                if (typeof initProducts === 'function') {
+                    await initProducts(container);
+                } else {
+                    container.innerHTML = '<div style="padding: 20px;">قسم المنتجات غير متاح</div>';
+                }
                 break;
+                
             case 'orders':
-                content = getOrdersContent();
+                if (initOrders) {
+                    await initOrders(container);
+                } else {
+                    showUnderConstruction(container, 'نظام الطلبات', 'fa-receipt');
+                }
                 break;
+                
             case 'customers':
-                content = getCustomersContent();
+                if (initCustomers) {
+                    await initCustomers(container);
+                } else {
+                    showUnderConstruction(container, 'إدارة العملاء', 'fa-users');
+                }
                 break;
+                
             case 'settings':
-                content = getSettingsContent();
+                if (initSettings) {
+                    await initSettings(container);
+                } else {
+                    showUnderConstruction(container, 'الإعدادات', 'fa-cog');
+                }
                 break;
+                
             default:
-                content = getDashboardContent();
+                showDashboardPlaceholder(container);
         }
         
-        container.innerHTML = content;
-        console.log('✅ Module loaded:', moduleName);
+        console.log('✅ تم تحميل الموديول:', moduleName);
         
     } catch (err) {
-        console.error('❌ Error loading module:', err);
-        container.innerHTML = `
-            <div style="padding: 40px; text-align: center; color: #e74c3c;">
-                <i class="fas fa-exclamation-triangle fa-3x"></i>
-                <h3>حدث خطأ</h3>
-                <p>${err.message}</p>
-            </div>
-        `;
+        console.error('❌ خطأ:', err);
+        container.innerHTML = `<div style="padding: 20px; color: red;">خطأ: ${err.message}</div>`;
     } finally {
         if (loader) loader.style.display = 'none';
     }
 }
 
-function getDashboardContent() {
-    const today = new Date().toLocaleDateString('ar-SA', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
-    
-    return `
-        <div style="padding: 25px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                <h1 style="color: #2c3e50;"><i class="fas fa-chart-line" style="color: #e67e22;"></i> لوحة التحكم الرئيسية</h1>
-                <div style="background: white; padding: 10px 20px; border-radius: 10px;">
-                    <i class="fas fa-calendar-alt" style="color: #e67e22;"></i> ${today}
-                </div>
-            </div>
-            
-            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-bottom: 30px;">
-                <div class="stat-card" data-module="products" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; border-radius: 15px; color: white; cursor: pointer;">
-                    <i class="fas fa-box fa-3x" style="margin-bottom: 15px;"></i>
-                    <h3>المنتجات</h3>
-                    <p>إدارة المخزون والمنتجات</p>
-                </div>
-                <div class="stat-card" data-module="orders" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 25px; border-radius: 15px; color: white; cursor: pointer;">
-                    <i class="fas fa-receipt fa-3x" style="margin-bottom: 15px;"></i>
-                    <h3>الطلبات</h3>
-                    <p>متابعة طلبات التقسيط</p>
-                </div>
-                <div class="stat-card" data-module="customers" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 25px; border-radius: 15px; color: white; cursor: pointer;">
-                    <i class="fas fa-users fa-3x" style="margin-bottom: 15px;"></i>
-                    <h3>العملاء</h3>
-                    <p>إدارة بيانات العملاء</p>
-                </div>
-            </div>
-            
-            <div style="background: white; border-radius: 15px; padding: 20px; text-align: center;">
-                <i class="fas fa-chart-simple fa-2x" style="color: #e67e22;"></i>
-                <p style="margin-top: 10px; color: #7f8c8d;">مرحباً بك في نظام Tera Gateway لإدارة المبيعات والتقسيط</p>
-            </div>
-        </div>
-        
-        <script>
-            document.querySelectorAll('.stat-card').forEach(card => {
-                card.addEventListener('click', () => {
-                    const module = card.getAttribute('data-module');
-                    if (module && typeof window.switchModule === 'function') {
-                        window.switchModule(module);
-                    }
-                });
-            });
-        </script>
-    `;
-}
-
-function getProductsContent() {
-    return `
-        <div style="padding: 25px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                <h2><i class="fas fa-box" style="color: #e67e22;"></i> إدارة المنتجات</h2>
-                <button class="btn-primary" onclick="alert('سيتم إضافة المنتج قريباً')">
-                    <i class="fas fa-plus"></i> إضافة منتج
-                </button>
-            </div>
-            <div class="card">
-                <p style="color: #7f8c8d; text-align: center; padding: 40px;">
-                    <i class="fas fa-box-open fa-3x" style="color: #bdc3c7; margin-bottom: 15px; display: block;"></i>
-                    قائمة المنتجات ستظهر هنا قريباً
-                </p>
-            </div>
-        </div>
-    `;
-}
-
-function getOrdersContent() {
-    return `
-        <div style="padding: 25px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                <h2><i class="fas fa-receipt" style="color: #e67e22;"></i> طلبات التقسيط</h2>
-                <button class="btn-primary" onclick="alert('سيتم إنشاء طلب جديد قريباً')">
-                    <i class="fas fa-plus"></i> طلب جديد
-                </button>
-            </div>
-            <div class="card">
-                <p style="color: #7f8c8d; text-align: center; padding: 40px;">
-                    <i class="fas fa-file-invoice fa-3x" style="color: #bdc3c7; margin-bottom: 15px; display: block;"></i>
-                    قائمة الطلبات ستظهر هنا قريباً
-                </p>
-            </div>
-        </div>
-    `;
-}
-
-function getCustomersContent() {
-    return `
-        <div style="padding: 25px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                <h2><i class="fas fa-users" style="color: #e67e22;"></i> إدارة العملاء</h2>
-                <button class="btn-primary" onclick="alert('سيتم إضافة عميل جديد قريباً')">
-                    <i class="fas fa-user-plus"></i> إضافة عميل
-                </button>
-            </div>
-            <div class="card">
-                <p style="color: #7f8c8d; text-align: center; padding: 40px;">
-                    <i class="fas fa-address-card fa-3x" style="color: #bdc3c7; margin-bottom: 15px; display: block;"></i>
-                    قائمة العملاء ستظهر هنا قريباً
-                </p>
-            </div>
-        </div>
-    `;
-}
-
-function getSettingsContent() {
-    return `
-        <div style="padding: 25px;">
-            <h2><i class="fas fa-cog" style="color: #e67e22;"></i> الإعدادات</h2>
-            <div class="card">
-                <p style="color: #7f8c8d; text-align: center; padding: 40px;">
-                    <i class="fas fa-sliders-h fa-3x" style="color: #bdc3c7; margin-bottom: 15px; display: block;"></i>
-                    لوحة الإعدادات قيد التطوير
-                </p>
-            </div>
-        </div>
-    `;
-}
-
+// جعل الدالة متاحة عالمياً
 window.switchModule = switchModule;
 
-// تحميل الموديول الافتراضي
+// ===================== ربط أحداث القائمة =====================
+
 document.addEventListener('DOMContentLoaded', () => {
-    const hash = window.location.hash.substring(1);
-    const defaultModule = hash || 'dashboard';
-    switchModule(defaultModule);
+    console.log('🚀 DOM جاهز، جاري تهيئة القائمة...');
+    
+    // ربط الأحداث بعناصر القائمة
+    const menuItems = document.querySelectorAll('#admin-menu .nav-item');
+    console.log('📋 عدد عناصر القائمة:', menuItems.length);
+    
+    menuItems.forEach((item, index) => {
+        const moduleName = item.getAttribute('data-module');
+        console.log(`عنصر ${index}: ${moduleName}`);
+        
+        // إزالة أي مستمعات سابقة
+        const newItem = item.cloneNode(true);
+        item.parentNode.replaceChild(newItem, item);
+        
+        newItem.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const module = newItem.getAttribute('data-module');
+            console.log('🖱️ تم النقر على:', module);
+            if (module) {
+                switchModule(module);
+            }
+        });
+    });
+    
+    // تحديد الموديول الافتراضي
+    let defaultModule = window.location.hash.replace('#', '');
+    const validModules = ['dashboard', 'products', 'orders', 'customers', 'settings'];
+    
+    if (!defaultModule || !validModules.includes(defaultModule)) {
+        defaultModule = 'dashboard';
+    }
+    
+    console.log('🎯 الموديول الافتراضي:', defaultModule);
+    
+    // تحميل الموديول الافتراضي
+    setTimeout(() => {
+        switchModule(defaultModule);
+    }, 100);
 });
+
+// الاستماع لتغيرات الـ hash
+window.addEventListener('hashchange', () => {
+    const moduleName = window.location.hash.replace('#', '');
+    console.log('🔁 تغير الـ hash:', moduleName);
+    if (moduleName) {
+        switchModule(moduleName);
+    }
+});
+
+// دالة تحديث القائمة النشطة
+window.setActiveNavItem = function(moduleName) {
+    console.log('🎨 تحديد العنصر النشط:', moduleName);
+    const items = document.querySelectorAll('#admin-menu .nav-item');
+    items.forEach(item => {
+        if (item.getAttribute('data-module') === moduleName) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
+};
+
+console.log('✅ main.js تم تنفيذه بالكامل');
