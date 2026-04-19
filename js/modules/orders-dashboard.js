@@ -1,7 +1,7 @@
 /**
  * js/modules/orders-dashboard.js
  * موديول لوحة الطلبات والفواتير - تيرا جيتواي
- * @version 2.1.0
+ * @version 2.2.0
  */
 
 import { db } from '../core/firebase.js';
@@ -159,7 +159,7 @@ async function calculateTotalStats() {
         const statsContainer = document.getElementById('orders-stats');
         if (statsContainer) {
             statsContainer.innerHTML = `
-                <div style="display: flex; gap: 20px; justify-content: center; margin-bottom: 20px;">
+                <div style="display: flex; gap: 20px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">
                     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 15px 25px; border-radius: 12px; color: white; text-align: center;">
                         <div style="font-size: 1.8rem; font-weight: bold;">${totalOrders}</div>
                         <div style="font-size: 0.8rem;">إجمالي الفواتير</div>
@@ -216,7 +216,6 @@ function addItemRow(itemData = null) {
         </td>
     `;
     
-    // ربط الأحداث
     const inputs = row.querySelectorAll('input');
     inputs.forEach(input => {
         input.addEventListener('input', () => calculateTotals());
@@ -320,7 +319,17 @@ async function loadOrders() {
             list.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#95a5a6;">
                 <i class="fas fa-file-invoice fa-3x" style="margin-bottom:10px; display:block;"></i>
                 لا توجد طلبات مسجلة حالياً.
+                <button id="create-demo-order" style="display:block; margin:20px auto; background:#e67e22; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer;">
+                    <i class="fas fa-plus"></i> إنشاء طلب تجريبي
+                </button>
             </div>`;
+            
+            const demoBtn = document.getElementById('create-demo-order');
+            if (demoBtn) {
+                demoBtn.addEventListener('click', () => {
+                    document.getElementById('btn-create-order')?.click();
+                });
+            }
             return;
         }
         
@@ -330,7 +339,6 @@ async function loadOrders() {
                 ? order.createdAt.toDate().toLocaleDateString('ar-SA') 
                 : '---';
             
-            // تحديد حالة الطلب (يمكنك إضافة حقل status في قاعدة البيانات)
             const status = order.status || 'pending';
             const statusColors = {
                 paid: { bg: '#d4edda', color: '#155724', text: 'مدفوع' },
@@ -386,7 +394,6 @@ async function loadOrders() {
             `;
         }).join('');
         
-        // ربط الأحداث
         attachOrderEvents();
         await calculateTotalStats();
         
@@ -407,7 +414,6 @@ async function loadOrders() {
  * ربط أحداث أزرار التعديل والحذف والطباعة
  */
 function attachOrderEvents() {
-    // أزرار التعديل
     document.querySelectorAll('.edit-order-btn').forEach(btn => {
         btn.removeEventListener('click', btn._editHandler);
         const handler = () => editOrder(btn.dataset.id);
@@ -415,7 +421,6 @@ function attachOrderEvents() {
         btn._editHandler = handler;
     });
     
-    // أزرار الحذف
     document.querySelectorAll('.delete-order-btn').forEach(btn => {
         btn.removeEventListener('click', btn._deleteHandler);
         const handler = () => deleteOrder(btn.dataset.id);
@@ -423,7 +428,6 @@ function attachOrderEvents() {
         btn._deleteHandler = handler;
     });
     
-    // أزرار الطباعة
     document.querySelectorAll('.print-order-btn').forEach(btn => {
         btn.removeEventListener('click', btn._printHandler);
         const handler = () => printInvoice(btn.dataset.id);
@@ -431,7 +435,6 @@ function attachOrderEvents() {
         btn._printHandler = handler;
     });
     
-    // أزرار تصدير PDF
     document.querySelectorAll('.export-pdf-btn').forEach(btn => {
         btn.removeEventListener('click', btn._pdfHandler);
         const handler = () => exportToPDF(btn.dataset.id);
@@ -500,12 +503,10 @@ async function editOrder(id) {
         
         const order = snap.data();
         
-        // تعبئة الحقول
         document.getElementById('edit-id').value = id;
         document.getElementById('c-name').value = order.customerName || '';
         document.getElementById('c-phone').value = order.phone || '';
         
-        // تنظيف وإضافة بنود المنتجات
         const itemsBody = document.getElementById('items-body');
         if (itemsBody) itemsBody.innerHTML = '';
         
@@ -577,7 +578,7 @@ async function printInvoice(id) {
                 <td style="padding:8px; border-bottom:1px solid #eee; text-align:center;">${item.quantity}</td>
                 <td style="padding:8px; border-bottom:1px solid #eee; text-align:center;">${item.price.toFixed(2)}</td>
                 <td style="padding:8px; border-bottom:1px solid #eee; text-align:center;">${(item.quantity * item.price).toFixed(2)}</td>
-             </tr>
+            </tr>
         `).join('');
         
         const date = new Date().toLocaleDateString('ar-SA');
@@ -589,57 +590,15 @@ async function printInvoice(id) {
                 <meta charset="UTF-8">
                 <title>فاتورة ${order.orderNumber}</title>
                 <style>
-                    body {
-                        font-family: 'Tajawal', Arial, sans-serif;
-                        margin: 0;
-                        padding: 20px;
-                        background: white;
-                    }
-                    .invoice-container {
-                        max-width: 800px;
-                        margin: 0 auto;
-                        border: 1px solid #ddd;
-                        padding: 20px;
-                        border-radius: 10px;
-                    }
-                    .header {
-                        text-align: center;
-                        border-bottom: 2px solid #3498db;
-                        padding-bottom: 15px;
-                        margin-bottom: 20px;
-                    }
-                    .info {
-                        margin-bottom: 20px;
-                        padding: 10px;
-                        background: #f8f9fa;
-                        border-radius: 8px;
-                    }
-                    table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin-bottom: 20px;
-                    }
-                    th {
-                        background: #34495e;
-                        color: white;
-                        padding: 10px;
-                        text-align: center;
-                    }
-                    td {
-                        padding: 8px;
-                    }
-                    .totals {
-                        text-align: left;
-                        margin-top: 20px;
-                        padding-top: 10px;
-                        border-top: 2px solid #ddd;
-                    }
-                    .footer {
-                        text-align: center;
-                        margin-top: 30px;
-                        font-size: 12px;
-                        color: #95a5a6;
-                    }
+                    body { font-family: 'Tajawal', Arial, sans-serif; margin: 0; padding: 20px; background: white; }
+                    .invoice-container { max-width: 800px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px; }
+                    .header { text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 15px; margin-bottom: 20px; }
+                    .info { margin-bottom: 20px; padding: 10px; background: #f8f9fa; border-radius: 8px; }
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                    th { background: #34495e; color: white; padding: 10px; text-align: center; }
+                    td { padding: 8px; }
+                    .totals { text-align: left; margin-top: 20px; padding-top: 10px; border-top: 2px solid #ddd; }
+                    .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #95a5a6; }
                 </style>
             </head>
             <body>
@@ -648,40 +607,23 @@ async function printInvoice(id) {
                         <h2 style="color:#3498db; margin:0;">تيرا جيتواي</h2>
                         <p>فاتورة رقم: ${order.orderNumber}</p>
                     </div>
-                    
                     <div class="info">
                         <p><strong>العميل:</strong> ${escapeHtml(order.customerName)}</p>
                         <p><strong>الجوال:</strong> ${escapeHtml(order.phone)}</p>
                         <p><strong>التاريخ:</strong> ${date}</p>
                     </div>
-                    
                     <table>
-                        <thead>
-                            <tr>
-                                <th>المنتج</th>
-                                <th>الكمية</th>
-                                <th>السعر</th>
-                                <th>الإجمالي</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${itemsHtml}
-                        </tbody>
+                        <thead><tr><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead>
+                        <tbody>${itemsHtml}</tbody>
                     </table>
-                    
                     <div class="totals">
                         <p><strong>المجموع الفرعي:</strong> ${order.subtotal?.toFixed(2) || '0.00'} ريال</p>
                         <p><strong>الضريبة (15%):</strong> ${order.tax?.toFixed(2) || '0.00'} ريال</p>
                         <h3><strong>الإجمالي النهائي:</strong> ${order.total?.toFixed(2) || '0.00'} ريال</h3>
                     </div>
-                    
-                    <div class="footer">
-                        <p>شكراً لتعاملكم مع تيرا جيتواي</p>
-                    </div>
+                    <div class="footer"><p>شكراً لتعاملكم مع تيرا جيتواي</p></div>
                 </div>
-                <script>
-                    window.onload = () => window.print();
-                </scr` + `ipt>
+                <script>window.onload = () => window.print();</script>
             </body>
             </html>
         `);
@@ -695,7 +637,7 @@ async function printInvoice(id) {
 }
 
 /**
- * تصدير الفاتورة كملف PDF (باستخدام window.print المحسن)
+ * تصدير الفاتورة كملف PDF
  */
 async function exportToPDF(id) {
     showNotification('جاري تجهيز ملف PDF...', 'success');
@@ -789,7 +731,7 @@ function setupLogic() {
     };
 }
 
-// ===================== الدالة الرئيسية =====================
+// ===================== الدوال الرئيسية =====================
 
 /**
  * تهيئة موديول الطلبات والفواتير
@@ -854,15 +796,7 @@ export async function initOrdersDashboard(container) {
                         </h4>
                         <div style="overflow-x:auto;">
                             <table style="width:100%; border-collapse:collapse; min-width:500px;" id="items-table">
-                                <thead>
-                                    <tr style="background:#f8f9fa;">
-                                        <th style="padding:12px; text-align:right;">المنتج</th>
-                                        <th style="padding:12px; text-align:center; width:80px;">الكمية</th>
-                                        <th style="padding:12px; text-align:center; width:120px;">السعر</th>
-                                        <th style="padding:12px; text-align:center; width:120px;">الإجمالي</th>
-                                        <th style="padding:12px; width:50px;"></th>
-                                    </tr>
-                                </thead>
+                                <thead><tr style="background:#f8f9fa;"><th style="padding:12px;">المنتج</th><th style="padding:12px; width:80px;">الكمية</th><th style="padding:12px; width:120px;">السعر</th><th style="padding:12px; width:120px;">الإجمالي</th><th style="width:50px;"></th></tr></thead>
                                 <tbody id="items-body"></tbody>
                             </table>
                         </div>
@@ -873,21 +807,18 @@ export async function initOrdersDashboard(container) {
 
                     <div style="background:#2c3e50; padding:20px; border-radius:12px; color:white;">
                         <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                            <span>المجموع الفرعي:</span> 
-                            <span><span id="val-subtotal">0</span> ريال</span>
+                            <span>المجموع الفرعي:</span> <span><span id="val-subtotal">0</span> ريال</span>
                         </div>
                         <div style="display:flex; justify-content:space-between; margin-bottom:10px; color:#bdc3c7;">
-                            <span>الضريبة (15%):</span> 
-                            <span><span id="val-tax">0</span> ريال</span>
+                            <span>الضريبة (15%):</span> <span><span id="val-tax">0</span> ريال</span>
                         </div>
                         <div style="display:flex; justify-content:space-between; font-size:1.4rem; font-weight:bold; border-top:1px solid #455a64; margin-top:10px; padding-top:10px; color:#2ecc71;">
-                            <span>الإجمالي النهائي:</span> 
-                            <span><span id="val-total">0</span> ريال</span>
+                            <span>الإجمالي النهائي:</span> <span><span id="val-total">0</span> ريال</span>
                         </div>
                     </div>
 
-                    <div style="margin-top:25px; display:flex; gap:15px;">
-                        <button type="submit" style="flex:2; background:#2ecc71; color:white; padding:15px; border:none; border-radius:10px; font-size:1.1rem; font-weight:bold; cursor:pointer; transition: all 0.3s ease;">
+                    <div style="margin-top:25px;">
+                        <button type="submit" style="width:100%; background:#2ecc71; color:white; padding:15px; border:none; border-radius:10px; font-size:1.1rem; font-weight:bold; cursor:pointer;">
                             <i class="fas fa-save"></i> اعتماد وحفظ الفاتورة
                         </button>
                     </div>
@@ -901,5 +832,12 @@ export async function initOrdersDashboard(container) {
     await loadOrders();
 }
 
+/**
+ * دالة مبسطة للتوافق مع main.js
+ */
+export async function initOrders(container) {
+    return initOrdersDashboard(container);
+}
+
 // ===================== تصدير الدوال للاستخدام الخارجي =====================
-export { loadOrders, saveOrder, deleteOrder, editOrder, printInvoice, exportToPDF };
+export { loadOrders, saveOrder, deleteOrder, editOrder, printInvoice, exportToPDF, initOrders };
