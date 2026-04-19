@@ -1,102 +1,273 @@
-/* الأساسيات */
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
-
-:root {
-    --primary: #e67e22;
-    --dark-navy: #1a202c;
-    --sidebar-w: 260px;
-    --header-h: 70px;
-    --bg-gray: #f4f7f6;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-/* نظام الهيكل الكامل */
+body {
+    font-family: 'Tajawal', sans-serif;
+    background: #f5f7fb;
+    overflow: hidden;
+}
+
 .app-shell {
     display: flex;
     flex-direction: column;
     height: 100vh;
-    width: 100vw;
-    overflow: hidden;
 }
 
-/* الهيدر */
 .app-header {
-    height: var(--header-h);
-    background: #fff;
+    background: white;
+    padding: 15px 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 20px;
-    border-bottom: 2px solid #edf2f7;
+    position: sticky;
+    top: 0;
     z-index: 100;
 }
 
-.header-right { display: flex; align-items: center; gap: 20px; }
-
-.sidebar-trigger {
-    background: var(--dark-navy);
-    color: white;
-    border: none;
-    width: 40px; height: 40px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1.2rem;
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
 }
 
-.app-brand { display: flex; align-items: center; gap: 12px; }
-.app-brand img { height: 35px; }
-.app-brand span { color: var(--primary); font-weight: 800; font-size: 1.4rem; }
+.sidebar-trigger {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    color: #e67e22;
+    padding: 8px;
+    transition: all 0.3s;
+}
 
-.header-clock { background: #f1f5f9; padding: 8px 15px; border-radius: 50px; font-size: 0.85rem; font-weight: 700; }
+.sidebar-trigger:hover {
+    background: #fef5e8;
+    border-radius: 8px;
+}
 
-/* جسم التطبيق */
+.app-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.app-brand img {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+}
+
+.app-brand span {
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: #2c3e50;
+}
+
+.header-clock {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    font-family: 'Tajawal', sans-serif;
+}
+
 .app-body {
     display: flex;
     flex: 1;
     overflow: hidden;
 }
 
-/* القائمة الجانبية - وضوح فائق */
 .app-sidebar {
-    width: var(--sidebar-w);
-    background: var(--dark-navy);
-    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    flex-shrink: 0;
+    width: 260px;
+    background: white;
+    border-left: 1px solid #e9ecef;
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
-.app-sidebar.is-closed { width: 0; opacity: 0; }
+.side-nav {
+    flex: 1;
+}
 
-.side-nav ul { list-style: none; padding: 25px 15px; }
+.side-nav ul {
+    list-style: none;
+    padding: 20px 0;
+}
 
 .nav-item {
+    padding: 12px 20px;
     display: flex;
     align-items: center;
-    gap: 15px;
-    padding: 15px 20px;
-    margin-bottom: 10px;
-    border-radius: 12px;
-    color: #cbd5e0;
-    font-weight: 800; /* خط عريض جداً للوضوح */
+    gap: 12px;
     cursor: pointer;
-    transition: 0.2s;
-    white-space: nowrap;
+    transition: all 0.3s ease;
+    color: #4a5568;
+    font-weight: 500;
 }
 
-.nav-item i { font-size: 1.25rem; width: 25px; text-align: center; }
-
-.nav-item:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
+.nav-item:hover {
+    background: #fef5e8;
+    color: #e67e22;
+}
 
 .nav-item.active {
-    background: var(--primary);
-    color: white !important;
-    box-shadow: 0 4px 15px rgba(230, 126, 34, 0.3);
+    background: #fef5e8;
+    color: #e67e22;
+    border-right: 3px solid #e67e22;
 }
 
-.nav-item.active i { color: white; }
+.nav-item i {
+    width: 20px;
+    font-size: 1.1rem;
+}
 
-/* منطقة المحتوى */
 .app-content {
     flex: 1;
-    background: var(--bg-gray);
-    padding: 30px;
-    overflow-y: auto; /* التمرير هنا فقط */
+    overflow-y: auto;
+    position: relative;
+    background: #f8fafc;
+}
+
+/* تنسيق البطاقات */
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+/* أزرار */
+.btn-primary {
+    background: #e67e22;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.btn-primary:hover {
+    background: #d35400;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: #95a5a6;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.btn-secondary:hover {
+    background: #7f8c8d;
+}
+
+/* نماذج الإدخال */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-family: 'Tajawal', sans-serif;
+    transition: all 0.3s;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+    outline: none;
+    border-color: #e67e22;
+    box-shadow: 0 0 0 3px rgba(230,126,34,0.1);
+}
+
+/* شبكات */
+.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+/* تحسينات للشاشات الصغيرة */
+@media (max-width: 768px) {
+    .app-sidebar {
+        position: fixed;
+        top: 60px;
+        bottom: 0;
+        right: 0;
+        z-index: 99;
+        transform: translateX(0);
+        width: 260px;
+    }
+    
+    .app-sidebar.is-closed {
+        transform: translateX(-100%);
+    }
+    
+    .app-content {
+        width: 100%;
+    }
+    
+    .grid-2,
+    .grid-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* شريط التمرير المخصص */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #e67e22;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #d35400;
 }
