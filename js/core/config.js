@@ -1,32 +1,50 @@
 /**
  * js/core/config.js
- * تكوين Firebase - آمن للإنتاج
+ * إعدادات النظام العامة
  */
 
-// تحقق من بيئة التشغيل
-const isProduction = window.location.hostname !== 'localhost' && 
-                     window.location.hostname !== '127.0.0.1';
-
-// في الإنتاج، لا تستخدم config مباشرة أبداً
-if (isProduction) {
-    console.warn('⚠️ تحذير: تأكد من إعداد قواعد أمان Firebase بشكل صارم');
-}
-
-// التكوين - يجب حمايته بقواعد أمان Firebase
-export const firebaseConfig = {
-    apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
-    authDomain: "msjt301-974bb.firebaseapp.com",
-    projectId: "msjt301-974bb",
-    storageBucket: "msjt301-974bb.firebasestorage.app",
-    messagingSenderId: "186209858482",
-    appId: "1:186209858482:web:186ca610780799ef562aab",
-    // measurementId ليس ضرورياً، يمكن حذفه
+// إعدادات التطبيق
+export const APP_CONFIG = {
+    name: 'Tera Gateway',
+    version: '2.0.0',
+    company: 'Tera Gateway',
+    taxRate: 15,
+    currency: 'SAR',
+    dateFormat: 'en-GB'
 };
 
-// إضافة تحقق إضافي
-if (!firebaseConfig.apiKey || firebaseConfig.apiKey === 'YOUR_API_KEY') {
-    throw new Error('Firebase configuration is missing or invalid');
-}
+// إعدادات الضريبة
+export const TAX_CONFIG = {
+    rate: 15,
+    enabled: true,
+    includeInPrice: false
+};
 
-// إضافة timestamp للتحقق من تاريخ آخر تحديث (اختياري)
-export const configLastUpdated = '2026-04-19';
+// إعدادات المخزون
+export const INVENTORY_CONFIG = {
+    lowStockThreshold: 5,
+    criticalStockThreshold: 0,
+    enableAutoReorder: false
+};
+
+// إعدادات الطباعة
+export const PRINT_CONFIG = {
+    paperSize: 'A4',
+    orientation: 'portrait',
+    margin: 10
+};
+
+// إعدادات API
+export const API_CONFIG = {
+    baseUrl: '/api',
+    timeout: 30000,
+    retryAttempts: 3
+};
+
+export default {
+    APP_CONFIG,
+    TAX_CONFIG,
+    INVENTORY_CONFIG,
+    PRINT_CONFIG,
+    API_CONFIG
+};
