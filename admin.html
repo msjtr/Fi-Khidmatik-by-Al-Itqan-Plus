@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     
-    <!-- Stylesheets مع fallback -->
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="/fi-khidmatik/css/admin.css">
     <link rel="stylesheet" href="/fi-khidmatik/css/table.css">
     <link rel="stylesheet" href="/fi-khidmatik/css/orders.css">
@@ -226,7 +226,7 @@
                 </ul>
             </nav>
             
-            <!-- زر تسجيل الخروج (اختياري) -->
+            <!-- زر تسجيل الخروج -->
             <div class="sidebar-footer" style="padding: 20px; border-top: 1px solid rgba(0,0,0,0.1); margin-top: auto;">
                 <button id="logout-btn" style="width: 100%; background: none; border: none; color: var(--danger-color); cursor: pointer; padding: 10px; text-align: right; font-family: 'Tajawal', sans-serif;">
                     <i class="fas fa-sign-out-alt"></i> <span>تسجيل الخروج</span>
@@ -255,7 +255,6 @@
         const toggleBtn = document.getElementById('sidebar-toggle');
         const SIDEBAR_STATE_KEY = 'sidebar_closed';
         
-        // تحميل حالة القائمة من localStorage
         function loadSidebarState() {
             if (!sidebar) return;
             const isClosed = localStorage.getItem(SIDEBAR_STATE_KEY) === 'true';
@@ -266,7 +265,6 @@
             }
         }
         
-        // حفظ حالة القائمة
         function saveSidebarState(isClosed) {
             localStorage.setItem(SIDEBAR_STATE_KEY, isClosed);
         }
@@ -281,7 +279,7 @@
         
         loadSidebarState();
         
-        // ==================== تحديث الوقت والتاريخ ====================
+        // ==================== تحديث الوقت ====================
         let timeInterval = null;
         
         function updateTime() {
@@ -313,27 +311,50 @@
             }
         });
         
-        // ==================== تحديث القائمة عند تغيير حجم النافذة ====================
-        let resizeTimeout;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(() => {
-                if (window.innerWidth >= 768) {
-                    const isClosed = localStorage.getItem(SIDEBAR_STATE_KEY) === 'true';
-                    if (sidebar && !isClosed) {
-                        sidebar.classList.remove('is-closed');
-                    }
+        // ==================== دالة تحديد العنصر النشط ====================
+        window.setActiveNavItem = function(moduleName) {
+            const items = document.querySelectorAll('#admin-menu .nav-item');
+            items.forEach(item => {
+                if (item.getAttribute('data-module') === moduleName) {
+                    item.classList.add('active');
                 } else {
-                    if (sidebar) {
-                        sidebar.classList.add('is-closed');
-                    }
+                    item.classList.remove('active');
                 }
-            }, 150);
-        });
+            });
+        };
         
-        // ==================== شريط تقدم التحميل ====================
+        // ==================== ربط أحداث القائمة الجانبية (الأهم) ====================
+        function bindMenuEvents() {
+            const menuItems = document.querySelectorAll('#admin-menu .nav-item');
+            console.log('🔗 ربط أحداث القائمة - عدد العناصر:', menuItems.length);
+            
+            menuItems.forEach(function(item) {
+                // إزالة أي مستمعات سابقة
+                const newItem = item.cloneNode(true);
+                item.parentNode.replaceChild(newItem, item);
+                
+                newItem.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const moduleName = this.getAttribute('data-module');
+                    console.log('🖱️ تم النقر على القائمة:', moduleName);
+                    
+                    if (moduleName && typeof window.switchModule === 'function') {
+                        window.switchModule(moduleName);
+                    } else {
+                        console.error('❌ switchModule غير موجودة');
+                        // محاولة بديلة: تغيير الـ hash
+                        if (moduleName) {
+                            window.location.hash = moduleName;
+                            location.reload();
+                        }
+                    }
+                });
+            });
+        }
+        
+        // ==================== عرض شريط التقدم ====================
         const progressBar = document.getElementById('progress-bar');
-        
         window.showProgress = function(percent) {
             if (progressBar) {
                 progressBar.style.width = percent + '%';
@@ -345,7 +366,7 @@
             }
         };
         
-        // ==================== عرض إشعارات منبثقة ====================
+        // ==================== عرض إشعار منبثق ====================
         window.showToast = function(message, duration = 3000) {
             const existingToast = document.querySelector('.toast-notification');
             if (existingToast) existingToast.remove();
@@ -362,45 +383,6 @@
             }, duration);
         };
         
-        // ==================== عرض رسالة خطأ ====================
-        function showErrorMessage(message) {
-            const existingError = document.querySelector('.error-message');
-            if (existingError) existingError.remove();
-            
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error-message';
-            errorDiv.innerHTML = `
-                <i class="fas fa-exclamation-triangle"></i>
-                <h3>حدث خطأ</h3>
-                <p>${message}</p>
-                <button onclick="location.reload()">
-                    <i class="fas fa-sync-alt"></i> إعادة تحميل
-                </button>
-            `;
-            document.body.appendChild(errorDiv);
-        }
-        
-        // ==================== دالة تحديد العنصر النشط ====================
-        window.setActiveNavItem = function(moduleName) {
-            const items = document.querySelectorAll('#admin-menu .nav-item');
-            items.forEach(item => {
-                if (item.getAttribute('data-module') === moduleName) {
-                    item.classList.add('active');
-                } else {
-                    item.classList.remove('active');
-                }
-            });
-        };
-        
-        // ==================== معالجة فقدان الاتصال ====================
-        window.addEventListener('offline', () => {
-            showToast('⚠️ فقدان الاتصال بالإنترنت، يرجى التحقق من الاتصال', 5000);
-        });
-        
-        window.addEventListener('online', () => {
-            showToast('✅ تم استعادة الاتصال بالإنترنت', 3000);
-        });
-        
         // ==================== تفعيل الموديول الافتراضي ====================
         function initializeDefaultModule() {
             const hash = window.location.hash.substring(1);
@@ -412,12 +394,14 @@
             }
             
             let attempts = 0;
-            const maxAttempts = 15;
+            const maxAttempts = 20;
             
             const trySwitchModule = () => {
                 attempts++;
                 if (typeof window.switchModule === 'function') {
+                    console.log('✅ switchModule جاهزة، تحميل الموديول:', defaultModule);
                     window.showProgress(100);
+                    bindMenuEvents(); // ربط الأحداث بعد جاهزية switchModule
                     window.switchModule(defaultModule);
                 } else if (attempts < maxAttempts) {
                     window.showProgress(Math.floor((attempts / maxAttempts) * 100));
@@ -425,11 +409,25 @@
                     setTimeout(trySwitchModule, 200);
                 } else {
                     console.error('❌ فشل في تحميل main.js');
-                    showErrorMessage('فشل في تحميل النظام. يرجى تحديث الصفحة أو التحقق من اتصال الإنترنت.');
                     window.showProgress(100);
+                    const container = document.getElementById('module-container');
+                    if (container) {
+                        container.innerHTML = `
+                            <div style="padding: 40px; text-align: center;">
+                                <i class="fas fa-exclamation-triangle fa-3x" style="color: #e74c3c;"></i>
+                                <h3>فشل في تحميل النظام</h3>
+                                <p>يرجى تحديث الصفحة أو التحقق من اتصال الإنترنت</p>
+                                <button onclick="location.reload()" style="background: #e67e22; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+                                    <i class="fas fa-sync-alt"></i> إعادة تحميل
+                                </button>
+                            </div>
+                        `;
+                    }
                 }
             };
             
+            // ربط الأحداث فوراً
+            bindMenuEvents();
             setTimeout(trySwitchModule, 100);
         }
         
@@ -444,6 +442,15 @@
             });
         }
         
+        // ==================== معالجة فقدان الاتصال ====================
+        window.addEventListener('offline', () => {
+            window.showToast('⚠️ فقدان الاتصال بالإنترنت، يرجى التحقق من الاتصال', 5000);
+        });
+        
+        window.addEventListener('online', () => {
+            window.showToast('✅ تم استعادة الاتصال بالإنترنت', 3000);
+        });
+        
         // ==================== بدء التطبيق ====================
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initializeDefaultModule);
@@ -456,7 +463,7 @@
             if (timeInterval) clearInterval(timeInterval);
         });
         
-        // ==================== دعم PWA ====================
+        // ==================== دعم PWA (اختياري) ====================
         if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/fi-khidmatik/sw.js').catch(error => {
