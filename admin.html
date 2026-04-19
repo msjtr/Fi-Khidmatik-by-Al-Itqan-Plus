@@ -2,47 +2,80 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tera Gateway | لوحة التحكم</title>
-    
-    <link rel="icon" href="/fi-khidmatik/images/logo.svg" type="image/svg+xml">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="/fi-khidmatik/css/admin.css">
-    <link rel="stylesheet" href="/fi-khidmatik/css/table.css">
-    <link rel="stylesheet" href="/fi-khidmatik/css/orders.css">
-    <link rel="stylesheet" href="/fi-khidmatik/css/invoice.css">
-
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Tajawal', sans-serif; background: #f5f7fb; }
+        
+        .app-header {
+            background: white;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .app-body {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+        
+        .app-sidebar {
+            width: 260px;
+            background: white;
+            border-left: 1px solid #e9ecef;
+            overflow-y: auto;
+        }
+        
+        .side-nav ul {
+            list-style: none;
+            padding: 20px 0;
+        }
+        
+        .nav-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #4a5568;
+        }
+        
+        .nav-item:hover {
+            background: #fef5e8;
+            color: #e67e22;
+        }
+        
+        .nav-item.active {
+            background: #fef5e8;
+            color: #e67e22;
+            border-right: 3px solid #e67e22;
+        }
+        
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
         #loader {
             display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1000;
-            background: rgba(255,255,255,0.95);
-            padding: 20px 30px;
-            border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
             text-align: center;
-            min-width: 200px;
+            padding: 50px;
         }
-        .app-content { 
-            position: relative; 
-            min-height: 400px; 
-        }
-        @media (max-width: 768px) {
-            .app-sidebar.is-closed {
-                transform: translateX(-100%);
-            }
-            .header-clock {
-                font-size: 12px;
-            }
-            .app-brand span {
-                display: none;
-            }
+        
+        .btn-test {
+            background: #e67e22;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -50,89 +83,112 @@
     <div class="app-shell">
         <header class="app-header">
             <div class="header-right">
-                <button id="sidebar-toggle" class="sidebar-trigger" aria-label="فتح/إغلاق القائمة">
+                <button id="sidebar-toggle" style="background: none; border: none; font-size: 1.3rem; cursor: pointer;">
                     <i class="fas fa-bars"></i>
                 </button>
-                <div class="app-brand">
-                    <img src="/fi-khidmatik/images/logo.svg" alt="Tera Gateway" onerror="this.src='https://via.placeholder.com/50x50/e67e22/ffffff?text=T'">
-                    <span>Tera Gateway</span>
-                </div>
+                <span style="font-weight: bold; margin-right: 15px;">Tera Gateway</span>
             </div>
-            <div id="current-datetime" class="header-clock"></div>
+            <div id="current-datetime"></div>
         </header>
 
         <div class="app-body">
             <aside id="main-sidebar" class="app-sidebar">
                 <nav class="side-nav">
                     <ul id="admin-menu">
-                        <li class="nav-item" data-module="dashboard"><i class="fas fa-chart-line"></i> <span>الرئيسية</span></li>
-                        <li class="nav-item" data-module="products"><i class="fas fa-box"></i> <span>المنتجات</span></li>
-                        <li class="nav-item" data-module="orders"><i class="fas fa-receipt"></i> <span>طلبات التقسيط</span></li>
-                        <li class="nav-item" data-module="customers"><i class="fas fa-users"></i> <span>العملاء</span></li>
-                        <li class="nav-item" data-module="settings"><i class="fas fa-cog"></i> <span>الإعدادات</span></li>
+                        <li class="nav-item active" data-module="dashboard">
+                            <i class="fas fa-chart-line"></i> <span>الرئيسية</span>
+                        </li>
+                        <li class="nav-item" data-module="products">
+                            <i class="fas fa-box"></i> <span>المنتجات</span>
+                        </li>
+                        <li class="nav-item" data-module="orders">
+                            <i class="fas fa-receipt"></i> <span>الطلبات</span>
+                        </li>
+                        <li class="nav-item" data-module="customers">
+                            <i class="fas fa-users"></i> <span>العملاء</span>
+                        </li>
+                        <li class="nav-item" data-module="settings">
+                            <i class="fas fa-cog"></i> <span>الإعدادات</span>
+                        </li>
                     </ul>
                 </nav>
             </aside>
 
-            <main id="main-content" class="app-content">
-                <div id="loader">
-                    <i class="fas fa-circle-notch fa-spin fa-3x" style="color: #e67e22;"></i>
-                    <p style="margin-top: 10px; font-weight: bold;">جاري تحميل البيانات...</p>
+            <main class="app-content">
+                <div id="loader">جاري التحميل...</div>
+                <div id="module-container">
+                    <div style="text-align: center; padding: 50px;">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p>جاري تحميل لوحة التحكم...</p>
+                    </div>
                 </div>
-                <div id="module-container"></div>
             </main>
         </div>
     </div>
 
-    <script type="module" src="/fi-khidmatik/js/main.js"></script>
-    
-    <script>
-        (function() {
-            document.addEventListener('DOMContentLoaded', () => {
-                const sidebar = document.getElementById('main-sidebar');
-                const toggleBtn = document.getElementById('sidebar-toggle');
-                if (toggleBtn) {
-                    toggleBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        sidebar.classList.toggle('is-closed');
-                    });
-                }
-                const updateTime = () => {
-                    const now = new Date();
-                    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
-                    const timeElement = document.getElementById('current-datetime');
-                    if (timeElement) timeElement.innerText = now.toLocaleDateString('en-GB', options);
-                };
-                updateTime();
-                setInterval(updateTime, 1000);
-                document.addEventListener('click', (e) => {
-                    if (window.innerWidth < 768 && sidebar && !sidebar.contains(e.target) && !toggleBtn?.contains(e.target)) {
-                        sidebar.classList.add('is-closed');
-                    }
-                });
-                const hash = window.location.hash.substring(1);
-                const defaultModule = hash && ['dashboard', 'products', 'orders', 'customers', 'settings'].includes(hash) ? hash : 'dashboard';
-                setTimeout(() => {
-                    if (typeof window.switchModule === 'function') {
-                        window.switchModule(defaultModule);
-                    } else {
-                        const checkInterval = setInterval(() => {
-                            if (typeof window.switchModule === 'function') {
-                                window.switchModule(defaultModule);
-                                clearInterval(checkInterval);
-                            }
-                        }, 200);
-                    }
-                }, 100);
-            });
-            window.setActiveNavItem = function(moduleName) {
-                const items = document.querySelectorAll('#admin-menu .nav-item');
-                items.forEach(item => {
-                    if (item.getAttribute('data-module') === moduleName) item.classList.add('active');
-                    else item.classList.remove('active');
-                });
+    <script type="module">
+        // تعريف switchModule مباشرة في هذا الملف للاختبار
+        window.switchModule = function(moduleName) {
+            console.log('تم النقر على:', moduleName);
+            const container = document.getElementById('module-container');
+            const titles = {
+                dashboard: '🏠 لوحة التحكم الرئيسية',
+                products: '📦 إدارة المنتجات',
+                orders: '🧾 إدارة الطلبات',
+                customers: '👥 إدارة العملاء',
+                settings: '⚙️ الإعدادات'
             };
-        })();
+            container.innerHTML = `
+                <div style="text-align: center; padding: 50px;">
+                    <i class="fas fa-check-circle fa-3x" style="color: #27ae60;"></i>
+                    <h2>${titles[moduleName] || moduleName}</h2>
+                    <p>تم تحميل الموديول بنجاح!</p>
+                    <button class="btn-test" onclick="window.switchModule('dashboard')">العودة للرئيسية</button>
+                </div>
+            `;
+            
+            // تحديث القائمة النشطة
+            document.querySelectorAll('.nav-item').forEach(item => {
+                if (item.getAttribute('data-module') === moduleName) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        };
+        
+        // ربط الأحداث
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const module = item.getAttribute('data-module');
+                window.switchModule(module);
+            });
+        });
+        
+        // تحميل الموديول الافتراضي
+        window.switchModule('dashboard');
+        
+        // تحديث الساعة
+        function updateTime() {
+            const el = document.getElementById('current-datetime');
+            if (el) {
+                el.innerText = new Date().toLocaleDateString('en-GB', {
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit', hour12: true
+                });
+            }
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+        
+        // زر القائمة للجوال
+        const toggleBtn = document.getElementById('sidebar-toggle');
+        const sidebar = document.getElementById('main-sidebar');
+        if (toggleBtn && sidebar) {
+            toggleBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('is-closed');
+            });
+        }
     </script>
 </body>
 </html>
