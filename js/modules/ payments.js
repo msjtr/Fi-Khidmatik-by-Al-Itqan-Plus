@@ -1,13 +1,20 @@
-// Simplified for demo - integrated within order details modal
-import { db } from '../core/firebase.js';
-import { doc, updateDoc, getDoc } from "firebase/firestore";
+/**
+ * js/modules/payments.js
+ * موديول إدارة المدفوعات والأقساط
+ */
 
-export async function addPayment(orderId, amount) {
-    const orderRef = doc(db, "orders", orderId);
-    const orderSnap = await getDoc(orderRef);
-    const order = orderSnap.data();
-    const newPaid = (order.paidAmount || 0) + amount;
-    if(newPaid > order.total) throw new Error('المبلغ أكبر من إجمالي الطلب');
-    await updateDoc(orderRef, { paidAmount: newPaid, status: newPaid >= order.total ? 'completed' : 'pending' });
-    return true;
+import { db } from '../core/firebase.js';
+import { collection, getDocs, addDoc, updateDoc, doc, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+export async function initPayments(container) {
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div style="padding: 25px;">
+            <h2><i class="fas fa-money-bill-wave" style="color: #e67e22;"></i> إدارة المدفوعات</h2>
+            <div style="background: white; border-radius: 12px; padding: 20px; margin-top: 20px;">
+                <p style="text-align: center; color: #7f8c8d;">قائمة المدفوعات ستظهر هنا</p>
+            </div>
+        </div>
+    `;
 }
