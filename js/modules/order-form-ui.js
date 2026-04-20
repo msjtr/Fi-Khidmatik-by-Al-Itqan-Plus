@@ -1,14 +1,11 @@
 /**
  * js/modules/order-form-ui.js
- * دوال واجهة المستخدم لنموذج الطلب (نسخة مبسطة بدون تكرار)
+ * دوال واجهة المستخدم لنموذج الطلب
  * @version 2.2.0
  */
 
 // ===================== دوال مساعدة =====================
 
-/**
- * منع هجمات XSS
- */
 function escapeHtml(str) {
     if (!str) return '';
     return str
@@ -19,9 +16,6 @@ function escapeHtml(str) {
         .replace(/'/g, '&#39;');
 }
 
-/**
- * عرض إشعار منبثق
- */
 function showNotification(message, type = 'success') {
     const notification = document.createElement('div');
     notification.style.cssText = `
@@ -44,9 +38,6 @@ function showNotification(message, type = 'success') {
     setTimeout(() => notification.remove(), 3000);
 }
 
-/**
- * تنسيق العنوان الكامل من بيانات العميل
- */
 function formatFullAddress(customer) {
     const parts = [];
     if (customer?.buildingNo) parts.push(`مبنى ${customer.buildingNo}`);
@@ -180,13 +171,8 @@ export function resetOrderForm() {
     calculateItemTotals();
 }
 
-// ===================== إدارة بيانات العميل (مع Fallback) =====================
+// ===================== إدارة بيانات العميل =====================
 
-/**
- * تعبئة بيانات العميل في النموذج مع تطبيق Fallback
- * @param {Object} customer - بيانات العميل من قاعدة البيانات (كاملة)
- * @param {Object} existingOrder - بيانات الطلب الحالي (في حالة التعديل)
- */
 export function fillCustomerData(customer, existingOrder = null) {
     const nameField = document.getElementById('c-name');
     const phoneField = document.getElementById('c-phone');
