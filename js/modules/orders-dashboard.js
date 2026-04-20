@@ -1,6 +1,6 @@
 /**
  * js/modules/orders-dashboard.js
- * موديول الطلبات والفواتير - تيرا جيتواي
+ * موديول الطلبات - عرض بيانات العملاء بشكل كامل
  */
 
 import { db } from '../core/firebase.js';
@@ -37,40 +37,7 @@ function formatFullAddress(customer) {
     if (customer.additionalNo) parts.push('رقم إضافي ' + customer.additionalNo);
     if (customer.poBox) parts.push('ص.ب ' + customer.poBox);
     if (customer.country) parts.push(customer.country);
-    return parts.length > 0 ? parts.join('، ') : '';
-}
-
-async function fetchCustomerData(customerId) {
-    if (!customerId) return null;
-    try {
-        var customerDoc = await getDoc(doc(db, "customers", customerId));
-        if (customerDoc.exists()) {
-            return customerDoc.data();
-        }
-    } catch (error) {
-        console.error("Error fetching customer:", error);
-    }
-    return null;
-}
-
-function mergeOrderWithCustomer(order, customer) {
-    if (!customer) {
-        return {
-            ...order,
-            customerName: order.customerName || 'غير معروف',
-            phone: order.phone || 'غير موجود',
-            email: order.email || '',
-            address: order.shippingAddress || order.address || ''
-        };
-    }
-    
-    return {
-        ...order,
-        customerName: order.customerName || customer.name || 'غير معروف',
-        phone: order.phone || customer.phone || 'غير موجود',
-        email: order.email || customer.email || '',
-        address: order.shippingAddress || order.address || formatFullAddress(customer)
-    };
+    return parts.length > 0 ? parts.join('، ') : 'لا يوجد عنوان';
 }
 
 // ===================== عرض الطلبات =====================
@@ -88,7 +55,7 @@ async function displayOrders(container) {
         }
 
         var totalSales = 0;
-        var ordersHtml = '<div style="padding: 20px;"><h3>📋 قائمة الطلبات</h3>';
+        var ordersHtml = '<div style="padding: 20px;"><h3 style="margin-bottom: 20px;">📋 قائمة الطلبات</h3>';
         
         for (var i = 0; i < querySnapshot.docs.length; i++) {
             var docSnapshot = querySnapshot.docs[i];
@@ -97,24 +64,41 @@ async function displayOrders(container) {
             var total = Number(order.total) || 0;
             totalSales += total;
             
+            // محاولة جلب بيانات العميل إذا كان هناك customerId
             var customer = null;
-            if (order.customerId) {
-                customer = await fetchCustomerData(order.customerId);
+            var customerId = order.customerId;
+            if (customerId) {
+                try {
+                    var customerDoc = await getDoc(doc(db, "customers", customerId));
+                    if (customerDoc.exists()) {
+                        customer = customerDoc.data();
+                    }
+                } catch (err) {
+                    console.error("خطأ في جلب العميل:", err);
+                }
             }
             
-            var mergedOrder = mergeOrderWithCustomer(order, customer);
+            // دمج البيانات (الطلب + العميل)
+            var customerName = order.customerName || (customer ? customer.name : 'غير معروف');
+            var phone = order.phone || (customer ? customer.phone : 'غير موجود');
+            var email = order.email || (customer ? customer.email : '');
+            var address = order.address || order.shippingAddress || (customer ? formatFullAddress(customer) : '');
             
+            // تنسيق التاريخ
             var date = 'تاريخ غير معروف';
             if (order.createdAt && typeof order.createdAt.toDate === 'function') {
                 date = order.createdAt.toDate().toLocaleDateString('ar-SA');
             } else if (order.orderDate) {
                 date = String(order.orderDate);
+            } else if (order.createdAt) {
+                date = String(order.createdAt);
             }
             
             var orderNumber = order.orderNumber ? String(order.orderNumber) : orderId.slice(0, 8);
             
             ordersHtml += `
-                <div style="background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-right: 4px solid #e67e22;">
+                <div style="background: white; border-radius: 12px; padding: 18px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-right: 4px solid #e67e22;">
+                    
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
                         <span style="background: #e67e22; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem;">
                             🧾 ` + escapeHtml(orderNumber) + `
@@ -127,27 +111,60 @@ async function displayOrders(container) {
                     <div style="margin-bottom: 15px;">
                         <div style="display: flex; align-items: center; margin-bottom: 8px;">
                             <i class="fas fa-user" style="color: #e67e22; width: 25px;"></i>
-                            <strong>العميل:</strong> <span>` + escapeHtml(mergedOrder.customerName) + `</span>
+                            <strong style="width: 70px;">العميل:</strong>
+                            <span>` + escapeHtml(customerName) + `</span>
                         </div>
                         <div style="display: flex; align-items: center; margin-bottom: 8px;">
                             <i class="fas fa-phone" style="color: #e67e22; width: 25px;"></i>
-                            <strong>الجوال:</strong> <span dir="ltr">` + escapeHtml(mergedOrder.phone) + `</span>
+                            <strong style="width: 70px;">الجوال:</strong>
+                            <span dir="ltr">` + escapeHtml(phone) + `</span>
                         </div>
-                        ` + (mergedOrder.email ? `<div><strong>البريد:</strong> ` + escapeHtml(mergedOrder.email) + `</div>` : '') + `
-                        ` + (mergedOrder.address ? `<div><strong>العنوان:</strong> ` + escapeHtml(mergedOrder.address) + `</div>` : '') + `
+                        ` + (email ? `
+                        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                            <i class="fas fa-envelope" style="color: #e67e22; width: 25px;"></i>
+                            <strong style="width: 70px;">البريد:</strong>
+                            <span>` + escapeHtml(email) + `</span>
+                        </div>
+                        ` : '') + `
+                        ` + (address ? `
+                        <div style="display: flex; align-items: flex-start; margin-bottom: 8px;">
+                            <i class="fas fa-location-dot" style="color: #e67e22; width: 25px; margin-top: 3px;"></i>
+                            <strong style="width: 70px;">العنوان:</strong>
+                            <span style="flex: 1;">` + escapeHtml(address) + `</span>
+                        </div>
+                        ` : '') + `
                     </div>
                     
                     <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid #eee;">
-                        <div>المنتجات: ` + (order.items ? order.items.length : 0) + `</div>
-                        <div style="font-size: 1.2rem; font-weight: bold; color: #27ae60;">` + formatCurrency(total) + `</div>
+                        <div>
+                            <span style="color: #7f8c8d; font-size: 0.8rem;">
+                                <i class="fas fa-box"></i> المنتجات: ` + (order.items ? order.items.length : 0) + `
+                            </span>
+                            ` + (order.paymentMethodName ? `
+                            <span style="color: #7f8c8d; font-size: 0.8rem; margin-right: 15px;">
+                                <i class="fas fa-credit-card"></i> ` + escapeHtml(order.paymentMethodName) + `
+                            </span>
+                            ` : '') + `
+                        </div>
+                        <div style="font-size: 1.2rem; font-weight: bold; color: #27ae60;">
+                            ` + formatCurrency(total) + `
+                        </div>
                     </div>
+                    
+                    ` + (order.status ? `
+                    <div style="margin-top: 10px; text-align: left;">
+                        <span style="background: #e3f2fd; color: #1976d2; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem;">
+                            الحالة: ` + escapeHtml(order.status) + `
+                        </span>
+                    </div>
+                    ` : '') + `
                 </div>
             `;
         }
         
         ordersHtml = `
             <div style="margin-bottom: 20px; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; color: white; text-align: center;">
-                <h3>💰 إجمالي المبيعات</h3>
+                <h3 style="margin: 0;">💰 إجمالي المبيعات</h3>
                 <div style="font-size: 1.8rem; font-weight: bold;">` + formatCurrency(totalSales) + `</div>
                 <div>عدد الطلبات: ` + querySnapshot.size + `</div>
             </div>
@@ -159,7 +176,13 @@ async function displayOrders(container) {
 
     } catch (error) {
         console.error("خطأ في جلب الطلبات:", error);
-        container.innerHTML = '<div style="padding: 40px; text-align: center; color: #e74c3c;">خطأ: ' + error.message + '</div>';
+        container.innerHTML = `
+            <div style="padding: 40px; text-align: center; color: #e74c3c;">
+                <i class="fas fa-exclamation-triangle fa-3x"></i>
+                <p>حدث خطأ: ` + error.message + `</p>
+                <button onclick="location.reload()" style="margin-top: 15px; padding: 8px 20px; background: #e67e22; color: white; border: none; border-radius: 8px; cursor: pointer;">إعادة المحاولة</button>
+            </div>
+        `;
     }
 }
 
@@ -175,7 +198,10 @@ export async function initOrdersDashboard(container) {
 
     container.innerHTML = `
         <div style="padding: 20px; font-family: 'Tajawal', sans-serif;">
-            <h2><i class="fas fa-receipt" style="color: #e67e22;"></i> نظام الطلبات والفواتير</h2>
+            <h2 style="color: #2c3e50; margin-bottom: 20px;">
+                <i class="fas fa-receipt" style="color: #e67e22;"></i> 
+                نظام الطلبات والفواتير
+            </h2>
             <div id="orders-content" style="margin-top: 20px;"></div>
         </div>
     `;
