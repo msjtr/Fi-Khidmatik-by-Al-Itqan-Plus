@@ -1,7 +1,7 @@
 /**
  * js/modules/order-form-ui.js
- * دوال واجهة المستخدم لنموذج الطلب
- * @version 2.1.0
+ * دوال واجهة المستخدم لنموذج الطلب (نسخة مبسطة بدون تكرار)
+ * @version 2.2.0
  */
 
 // ===================== دوال مساعدة =====================
@@ -188,7 +188,6 @@ export function resetOrderForm() {
  * @param {Object} existingOrder - بيانات الطلب الحالي (في حالة التعديل)
  */
 export function fillCustomerData(customer, existingOrder = null) {
-    // تطبيق Fallback: استخدم بيانات الطلب إذا موجودة، وإلا استخدم بيانات العميل
     const nameField = document.getElementById('c-name');
     const phoneField = document.getElementById('c-phone');
     const emailField = document.getElementById('c-email');
@@ -204,7 +203,6 @@ export function fillCustomerData(customer, existingOrder = null) {
         emailField.value = (existingOrder?.email) || customer?.email || '';
     }
     
-    // تنسيق العنوان من بيانات العميل (وليس من shippingAddress)
     const fullAddress = formatFullAddress(customer);
     if (addressField) {
         addressField.value = (existingOrder?.address) || fullAddress;
@@ -246,7 +244,6 @@ export function showOrderModal(mode = 'add', orderData = null) {
     } else if (mode === 'edit' && orderData) {
         if (title) title.innerText = `✏️ تعديل الفاتورة: ${orderData.orderNumber || ''}`;
         
-        // تعبئة بيانات الطلب الأساسية
         const nameField = document.getElementById('c-name');
         const phoneField = document.getElementById('c-phone');
         const emailField = document.getElementById('c-email');
@@ -259,7 +256,6 @@ export function showOrderModal(mode = 'add', orderData = null) {
         if (addressField) addressField.value = orderData.address || '';
         if (editIdField) editIdField.value = orderData.id || '';
         
-        // بنود المنتجات
         const itemsBody = document.getElementById('items-body');
         if (itemsBody) itemsBody.innerHTML = '';
         
