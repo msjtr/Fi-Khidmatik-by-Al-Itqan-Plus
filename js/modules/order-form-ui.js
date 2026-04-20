@@ -1,7 +1,7 @@
 /**
  * js/modules/order-form-ui.js
  * دوال واجهة المستخدم لنموذج الطلب
- * @version 2.2.0
+ * @version 2.3.0
  */
 
 // ===================== دوال مساعدة =====================
@@ -39,13 +39,14 @@ function showNotification(message, type = 'success') {
 }
 
 function formatFullAddress(customer) {
+    if (!customer) return '';
     const parts = [];
-    if (customer?.buildingNo) parts.push(`مبنى ${customer.buildingNo}`);
-    if (customer?.street) parts.push(`شارع ${customer.street}`);
-    if (customer?.district) parts.push(`حي ${customer.district}`);
-    if (customer?.city) parts.push(customer.city);
-    if (customer?.poBox) parts.push(`ص.ب ${customer.poBox}`);
-    if (customer?.country) parts.push(customer.country);
+    if (customer.buildingNo) parts.push(`مبنى ${customer.buildingNo}`);
+    if (customer.street) parts.push(`شارع ${customer.street}`);
+    if (customer.district) parts.push(`حي ${customer.district}`);
+    if (customer.city) parts.push(customer.city);
+    if (customer.poBox) parts.push(`ص.ب ${customer.poBox}`);
+    if (customer.country) parts.push(customer.country);
     return parts.length > 0 ? parts.join('، ') : '';
 }
 
@@ -54,7 +55,8 @@ function formatFullAddress(customer) {
 function calculateItemTotals() {
     let subtotal = 0;
     
-    document.querySelectorAll('#items-body tr').forEach(row => {
+    const rows = document.querySelectorAll('#items-body tr');
+    rows.forEach(row => {
         const qty = parseFloat(row.querySelector('.item-qty')?.value) || 0;
         const price = parseFloat(row.querySelector('.item-price')?.value) || 0;
         const rowTotal = qty * price;
@@ -85,12 +87,17 @@ function attachItemEvents(row) {
     const priceInput = row.querySelector('.item-price');
     const removeBtn = row.querySelector('.remove-item');
     
-    if (qtyInput) qtyInput.addEventListener('input', () => calculateItemTotals());
-    if (priceInput) priceInput.addEventListener('input', () => calculateItemTotals());
+    if (qtyInput) {
+        qtyInput.addEventListener('input', () => calculateItemTotals());
+    }
+    if (priceInput) {
+        priceInput.addEventListener('input', () => calculateItemTotals());
+    }
     
     if (removeBtn) {
         removeBtn.addEventListener('click', () => {
-            if (document.querySelectorAll('#items-body tr').length > 1) {
+            const rows = document.querySelectorAll('#items-body tr');
+            if (rows.length > 1) {
                 row.remove();
                 calculateItemTotals();
             } else {
@@ -144,7 +151,8 @@ export function addEmptyItemRow() {
 
 export function collectOrderItems() {
     const items = [];
-    document.querySelectorAll('#items-body tr').forEach(row => {
+    const rows = document.querySelectorAll('#items-body tr');
+    rows.forEach(row => {
         const name = row.querySelector('.item-name')?.value?.trim();
         if (name) {
             items.push({
@@ -164,6 +172,9 @@ export function resetOrderForm() {
     const editId = document.getElementById('edit-id');
     if (editId) editId.value = '';
     
+    const customerData = document.getElementById('customer-data');
+    if (customerData) customerData.value = '';
+    
     const itemsBody = document.getElementById('items-body');
     if (itemsBody) itemsBody.innerHTML = '';
     
@@ -174,24 +185,32 @@ export function resetOrderForm() {
 // ===================== إدارة بيانات العميل =====================
 
 export function fillCustomerData(customer, existingOrder = null) {
+    if (!customer) return;
+    
     const nameField = document.getElementById('c-name');
     const phoneField = document.getElementById('c-phone');
     const emailField = document.getElementById('c-email');
     const addressField = document.getElementById('c-address');
     
     if (nameField) {
-        nameField.value = (existingOrder?.customerName) || customer?.name || '';
+        nameField.value = (existingOrder?.customerName) || customer.name || '';
     }
     if (phoneField) {
-        phoneField.value = (existingOrder?.phone) || customer?.phone || '';
+        phoneField.value = (existingOrder?.phone) || customer.phone || '';
     }
     if (emailField) {
-        emailField.value = (existingOrder?.email) || customer?.email || '';
+        emailField.value = (existingOrder?.email) || customer.email || '';
     }
     
     const fullAddress = formatFullAddress(customer);
     if (addressField) {
         addressField.value = (existingOrder?.address) || fullAddress;
+    }
+    
+    // تخزين بيانات العميل في hidden field
+    const customerDataField = document.getElementById('customer-data');
+    if (customerDataField) {
+        customerDataField.value = JSON.stringify(customer);
     }
 }
 
@@ -201,6 +220,9 @@ export function clearCustomerFields() {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
+    
+    const customerDataField = document.getElementById('customer-data');
+    if (customerDataField) customerDataField.value = '';
 }
 
 export function getCustomerDataFromForm() {
@@ -252,7 +274,7 @@ export function showOrderModal(mode = 'add', orderData = null) {
         }
     }
     
-    modal.style.display = 'block';
+    modal.style.display = 'flex';
 }
 
 export function closeOrderModal() {
@@ -289,6 +311,23 @@ export function validateOrderForm() {
     return { valid: errors.length === 0, errors };
 }
 
+// ===================== دالة مساعدة للتحقق من جاهزية النموذج =====================
+
+export function isOrderFormReady() {
+    const customerName = document.getElementById('c-name')?.value?.trim();
+    const phone = document.getElementById('c-phone')?.value?.trim();
+    const items = collectOrderItems();
+    
+    return {
+        ready: customerName && customerName.length >= 3 && 
+               phone && /^(05|5)[0-9]{8}$/.test(phone.replace(/\s/g, '')) && 
+               items.length > 0,
+        customerName: customerName,
+        phone: phone,
+        itemsCount: items.length
+    };
+}
+
 // ===================== تصدير الدوال =====================
 export default {
     addItemRow,
@@ -301,5 +340,6 @@ export default {
     getCustomerDataFromForm,
     showOrderModal,
     closeOrderModal,
-    validateOrderForm
+    validateOrderForm,
+    isOrderFormReady
 };
