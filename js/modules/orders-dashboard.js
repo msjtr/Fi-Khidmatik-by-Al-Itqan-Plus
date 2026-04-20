@@ -1,7 +1,7 @@
 /**
  * js/modules/orders-dashboard.js
- * موديول الطلبات - نسخة مصححة بالكامل
- * @version 3.3.0
+ * موديول الطلبات - النسخة النهائية العاملة
+ * @version 3.4.0
  */
 
 import { db } from '../core/firebase.js';
@@ -13,11 +13,7 @@ console.log('🚀 orders-dashboard.js تم تحميله بنجاح');
 
 // ===================== دوال مساعدة =====================
 
-/**
- * تحويل أي قيمة إلى نص آمن (منع XSS)
- */
 function escapeHtml(str) {
-    // تحويل إلى نص إذا كان الرقم أو أي نوع آخر
     var text = String(str === undefined || str === null ? '' : str);
     return text.replace(/[&<>]/g, function(m) {
         if (m === '&') return '&amp;';
@@ -27,17 +23,11 @@ function escapeHtml(str) {
     });
 }
 
-/**
- * تنسيق العملة
- */
 function formatCurrency(amount) {
     var num = Number(amount) || 0;
     return num.toFixed(2) + ' ر.س';
 }
 
-/**
- * تنسيق العنوان الكامل من بيانات العميل
- */
 function formatFullAddress(customer) {
     if (!customer) return '';
     var parts = [];
@@ -45,14 +35,12 @@ function formatFullAddress(customer) {
     if (customer.street) parts.push('شارع ' + customer.street);
     if (customer.district) parts.push('حي ' + customer.district);
     if (customer.city) parts.push(customer.city);
+    if (customer.additionalNo) parts.push('رقم إضافي ' + customer.additionalNo);
     if (customer.poBox) parts.push('ص.ب ' + customer.poBox);
     if (customer.country) parts.push(customer.country);
     return parts.length > 0 ? parts.join('، ') : '';
 }
 
-/**
- * جلب بيانات العميل من مجموعة customers
- */
 async function fetchCustomerData(customerId) {
     if (!customerId) return null;
     try {
@@ -66,9 +54,6 @@ async function fetchCustomerData(customerId) {
     return null;
 }
 
-/**
- * دمج بيانات الطلب مع بيانات العميل (تطبيق Fallback)
- */
 function mergeOrderWithCustomer(order, customer) {
     if (!customer) {
         return {
@@ -76,7 +61,7 @@ function mergeOrderWithCustomer(order, customer) {
             customerName: order.customerName || 'غير معروف',
             phone: order.phone || 'غير موجود',
             email: order.email || '',
-            address: order.shippingAddress || ''
+            address: order.shippingAddress || order.address || ''
         };
     }
     
@@ -85,7 +70,7 @@ function mergeOrderWithCustomer(order, customer) {
         customerName: order.customerName || customer.name || 'غير معروف',
         phone: order.phone || customer.phone || 'غير موجود',
         email: order.email || customer.email || '',
-        address: order.shippingAddress || formatFullAddress(customer)
+        address: order.shippingAddress || order.address || formatFullAddress(customer)
     };
 }
 
@@ -104,7 +89,7 @@ async function displayOrders(container) {
         }
 
         var totalSales = 0;
-        var ordersHtml = '<div style="padding: 20px;"><h3>📋 قائمة الطلبات</h3>';
+        var ordersHtml = '<div style="padding: 20px;"><h3 style="margin-bottom: 20px;">📋 قائمة الطلبات</h3>';
         
         for (var i = 0; i < querySnapshot.docs.length; i++) {
             var docSnapshot = querySnapshot.docs[i];
@@ -113,16 +98,13 @@ async function displayOrders(container) {
             var total = Number(order.total) || 0;
             totalSales += total;
             
-            // جلب بيانات العميل
             var customer = null;
             if (order.customerId) {
                 customer = await fetchCustomerData(order.customerId);
             }
             
-            // دمج البيانات
             var mergedOrder = mergeOrderWithCustomer(order, customer);
             
-            // تنسيق التاريخ
             var date = 'تاريخ غير معروف';
             if (order.createdAt && typeof order.createdAt.toDate === 'function') {
                 date = order.createdAt.toDate().toLocaleDateString('ar-SA');
@@ -132,13 +114,10 @@ async function displayOrders(container) {
                 date = String(order.createdAt);
             }
             
-            // رقم الطلب
             var orderNumber = order.orderNumber ? String(order.orderNumber) : orderId.slice(0, 8);
             
             ordersHtml += `
                 <div style="background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-right: 4px solid #e67e22;">
-                    
-                    <!-- رأس البطاقة -->
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
                         <span style="background: #e67e22; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem;">
                             🧾 ` + escapeHtml(orderNumber) + `
@@ -148,7 +127,6 @@ async function displayOrders(container) {
                         </span>
                     </div>
                     
-                    <!-- معلومات العميل -->
                     <div style="margin-bottom: 15px;">
                         <div style="display: flex; align-items: center; margin-bottom: 8px;">
                             <i class="fas fa-user" style="color: #e67e22; width: 25px;"></i>
@@ -176,22 +154,33 @@ async function displayOrders(container) {
                         ` : '') + `
                     </div>
                     
-                    <!-- المنتجات والمبلغ -->
                     <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid #eee;">
                         <div>
                             <span style="color: #7f8c8d; font-size: 0.8rem;">
                                 <i class="fas fa-box"></i> المنتجات: ` + (order.items ? order.items.length : 0) + `
                             </span>
+                            ` + (order.paymentMethodName ? `
+                            <span style="color: #7f8c8d; font-size: 0.8rem; margin-right: 15px;">
+                                <i class="fas fa-credit-card"></i> ` + escapeHtml(order.paymentMethodName) + `
+                            </span>
+                            ` : '') + `
                         </div>
                         <div style="font-size: 1.2rem; font-weight: bold; color: #27ae60;">
                             ` + formatCurrency(total) + `
                         </div>
                     </div>
+                    
+                    ` + (order.status ? `
+                    <div style="margin-top: 10px; text-align: left;">
+                        <span style="background: #e3f2fd; color: #1976d2; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem;">
+                            الحالة: ` + escapeHtml(order.status) + `
+                        </span>
+                    </div>
+                    ` : '') + `
                 </div>
             `;
         }
         
-        // إضافة إجمالي المبيعات
         ordersHtml = `
             <div style="margin-bottom: 20px; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; color: white; text-align: center;">
                 <h3 style="margin: 0;">💰 إجمالي المبيعات</h3>
