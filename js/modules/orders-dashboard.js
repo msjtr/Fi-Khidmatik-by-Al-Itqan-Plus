@@ -1,7 +1,7 @@
 /**
  * js/modules/orders-dashboard.js
- * موديول الطلبات - نسخة نظيفة تماماً
- * @version 3.2.0
+ * موديول الطلبات - نسخة مصححة بالكامل
+ * @version 3.3.0
  */
 
 import { db } from '../core/firebase.js';
@@ -13,9 +13,13 @@ console.log('🚀 orders-dashboard.js تم تحميله بنجاح');
 
 // ===================== دوال مساعدة =====================
 
+/**
+ * تحويل أي قيمة إلى نص آمن (منع XSS)
+ */
 function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
+    // تحويل إلى نص إذا كان الرقم أو أي نوع آخر
+    var text = String(str === undefined || str === null ? '' : str);
+    return text.replace(/[&<>]/g, function(m) {
         if (m === '&') return '&amp;';
         if (m === '<') return '&lt;';
         if (m === '>') return '&gt;';
@@ -23,11 +27,17 @@ function escapeHtml(str) {
     });
 }
 
+/**
+ * تنسيق العملة
+ */
 function formatCurrency(amount) {
     var num = Number(amount) || 0;
     return num.toFixed(2) + ' ر.س';
 }
 
+/**
+ * تنسيق العنوان الكامل من بيانات العميل
+ */
 function formatFullAddress(customer) {
     if (!customer) return '';
     var parts = [];
@@ -40,6 +50,9 @@ function formatFullAddress(customer) {
     return parts.length > 0 ? parts.join('، ') : '';
 }
 
+/**
+ * جلب بيانات العميل من مجموعة customers
+ */
 async function fetchCustomerData(customerId) {
     if (!customerId) return null;
     try {
@@ -53,6 +66,9 @@ async function fetchCustomerData(customerId) {
     return null;
 }
 
+/**
+ * دمج بيانات الطلب مع بيانات العميل (تطبيق Fallback)
+ */
 function mergeOrderWithCustomer(order, customer) {
     if (!customer) {
         return {
@@ -90,38 +106,49 @@ async function displayOrders(container) {
         var totalSales = 0;
         var ordersHtml = '<div style="padding: 20px;"><h3>📋 قائمة الطلبات</h3>';
         
-        for (var _i = 0, _arr = querySnapshot.docs; _i < _arr.length; _i++) {
-            var docSnapshot = _arr[_i];
+        for (var i = 0; i < querySnapshot.docs.length; i++) {
+            var docSnapshot = querySnapshot.docs[i];
             var order = docSnapshot.data();
             var orderId = docSnapshot.id;
-            var total = order.total || 0;
+            var total = Number(order.total) || 0;
             totalSales += total;
             
+            // جلب بيانات العميل
             var customer = null;
             if (order.customerId) {
                 customer = await fetchCustomerData(order.customerId);
             }
             
+            // دمج البيانات
             var mergedOrder = mergeOrderWithCustomer(order, customer);
             
+            // تنسيق التاريخ
             var date = 'تاريخ غير معروف';
-            if (order.createdAt && order.createdAt.toDate) {
+            if (order.createdAt && typeof order.createdAt.toDate === 'function') {
                 date = order.createdAt.toDate().toLocaleDateString('ar-SA');
             } else if (order.orderDate) {
-                date = order.orderDate;
+                date = String(order.orderDate);
+            } else if (order.createdAt) {
+                date = String(order.createdAt);
             }
+            
+            // رقم الطلب
+            var orderNumber = order.orderNumber ? String(order.orderNumber) : orderId.slice(0, 8);
             
             ordersHtml += `
                 <div style="background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-right: 4px solid #e67e22;">
+                    
+                    <!-- رأس البطاقة -->
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
                         <span style="background: #e67e22; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem;">
-                            🧾 ` + escapeHtml(order.orderNumber || orderId.slice(0, 8)) + `
+                            🧾 ` + escapeHtml(orderNumber) + `
                         </span>
                         <span style="color: #7f8c8d; font-size: 0.8rem;">
-                            <i class="far fa-calendar-alt"></i> ` + date + `
+                            <i class="far fa-calendar-alt"></i> ` + escapeHtml(date) + `
                         </span>
                     </div>
                     
+                    <!-- معلومات العميل -->
                     <div style="margin-bottom: 15px;">
                         <div style="display: flex; align-items: center; margin-bottom: 8px;">
                             <i class="fas fa-user" style="color: #e67e22; width: 25px;"></i>
@@ -149,6 +176,7 @@ async function displayOrders(container) {
                         ` : '') + `
                     </div>
                     
+                    <!-- المنتجات والمبلغ -->
                     <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid #eee;">
                         <div>
                             <span style="color: #7f8c8d; font-size: 0.8rem;">
@@ -163,6 +191,7 @@ async function displayOrders(container) {
             `;
         }
         
+        // إضافة إجمالي المبيعات
         ordersHtml = `
             <div style="margin-bottom: 20px; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; color: white; text-align: center;">
                 <h3 style="margin: 0;">💰 إجمالي المبيعات</h3>
