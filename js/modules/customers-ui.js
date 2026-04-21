@@ -1,13 +1,9 @@
 /**
- * customers-ui.js - الملف الرئيسي (يعتمد على core)
+ * customers-ui.js - واجهة العملاء (تستورد من core)
  */
-import { initCustomers as coreInitCustomers } from './customers-core.js';
+import { initCustomers } from './customers-core.js';
 
 console.log('✅ customers-ui.js تم تحميله');
 
-export async function initCustomers(container) {
-    console.log('initCustomers بدأت');
-    return coreInitCustomers(container);
-}
-
+export { initCustomers };
 export default { initCustomers };
