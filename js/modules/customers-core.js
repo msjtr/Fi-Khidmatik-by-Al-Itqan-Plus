@@ -1,4 +1,3 @@
-cat > fi-khidmatik/js/modules/customers-core.js << 'EOF'
 import { db } from '../core/firebase.js';
 import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -21,12 +20,7 @@ export async function initCustomers(container) {
         let i = 1;
         snap.forEach(doc => {
             const d = doc.data();
-            html += '<tr>';
-            html += '<td>' + i + '<\/td>';
-            html += '<td>' + (d.name || '-') + '<\/td>';
-            html += '<td>' + (d.phone || '-') + '<\/td>';
-            html += '<td>' + (d.email || '-') + '<\/td>';
-            html += '<\/tr>';
+            html += `<tr><td>${i}</td><td>${d.name || '-'}</td><td>${d.phone || '-'}</td><td>${d.email || '-'}</td></tr>`;
             i++;
         });
         html += '</table>';
@@ -37,4 +31,3 @@ export async function initCustomers(container) {
 }
 
 export default { initCustomers };
-EOF
