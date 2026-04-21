@@ -1,53 +1,32 @@
-/**
- * js/modules/customers-ui.js
- */
-
+cat > fi-khidmatik/js/modules/customers-ui.js << 'EOF'
 import { db } from '../core/firebase.js';
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 console.log('customers-ui.js تم تحميله');
 
 export async function initCustomers(container) {
     console.log('initCustomers بدأت');
-    
-    if (!container) {
-        console.error('container غير موجود');
-        return;
-    }
-    
+    if (!container) return;
     container.innerHTML = '<div style="padding:20px"><h2>العملاء</h2><div id="customersList">جاري التحميل...</div></div>';
-    
     try {
         const snapshot = await getDocs(collection(db, "customers"));
         const div = document.getElementById('customersList');
-        
         if (snapshot.empty) {
             div.innerHTML = '<p>لا يوجد عملاء</p>';
             return;
         }
-        
-        let html = '<table border="1" style="border-collapse:collapse;width:100%">';
-        html += '<tr><th>#</th><th>الاسم</th><th>الجوال</th><th>البريد</th></tr>';
-        
-        let index = 1;
+        let html = '<ul>';
         snapshot.forEach((doc) => {
             const data = doc.data();
-            html += '<tr>';
-            html += '<td>' + index + '</td>';
-            html += '<td>' + (data.name || '-') + '</td>';
-            html += '<td>' + (data.phone || '-') + '</td>';
-            html += '<td>' + (data.email || '-') + '</td>';
-            html += '</tr>';
-            index++;
+            html += '<li><strong>' + (data.name || 'بدون اسم') + '</strong> - ' + (data.phone || '') + '</li>';
         });
-        
-        html += '</table>';
+        html += '</ul>';
         div.innerHTML = html;
-        
     } catch (error) {
-        console.error('خطأ:', error);
-        document.getElementById('customersList').innerHTML = '<p style="color:red">خطأ: ' + error.message + '</p>';
+        console.error(error);
+        div.innerHTML = '<p style="color:red">خطأ: ' + error.message + '</p>';
     }
 }
 
 export default { initCustomers };
+EOF
