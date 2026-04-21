@@ -14,6 +14,7 @@ try {
     const productsModule = await import('./modules/products-ui.js');
     initProducts = productsModule.initProducts || productsModule.default;
     console.log('✅ موديول المنتجات تم تحميله');
+    console.log('🔍 typeof initProducts:', typeof initProducts);
 } catch (e) {
     console.warn('⚠️ موديول المنتجات:', e.message);
 }
@@ -23,6 +24,7 @@ try {
     const ordersModule = await import('./modules/orders-dashboard.js');
     initOrders = ordersModule.initOrdersDashboard || ordersModule.initOrders || ordersModule.default;
     console.log('✅ موديول الطلبات تم تحميله');
+    console.log('🔍 typeof initOrders:', typeof initOrders);
 } catch (e) {
     console.warn('⚠️ موديول الطلبات:', e.message);
 }
@@ -32,6 +34,7 @@ try {
     const customersModule = await import('./modules/customers-ui.js');
     initCustomers = customersModule.initCustomers || customersModule.default;
     console.log('✅ موديول العملاء تم تحميله');
+    console.log('🔍 typeof initCustomers:', typeof initCustomers);
 } catch (e) {
     console.warn('⚠️ موديول العملاء:', e.message);
 }
@@ -181,7 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('📋 عدد عناصر القائمة:', menuItems.length);
     
     menuItems.forEach((item) => {
-        // إزالة أي مستمعات سابقة
         const newItem = item.cloneNode(true);
         item.parentNode.replaceChild(newItem, item);
         
@@ -196,7 +198,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    // تحديد الموديول الافتراضي
     let defaultModule = window.location.hash.replace('#', '');
     const validModules = ['dashboard', 'products', 'orders', 'customers', 'settings'];
     
@@ -206,13 +207,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     console.log('🎯 الموديول الافتراضي:', defaultModule);
     
-    // تحميل الموديول الافتراضي
     setTimeout(() => {
         switchModule(defaultModule);
     }, 100);
 });
 
-// الاستماع لتغيرات الـ hash (أزرار الرجوع والتقدم)
 window.addEventListener('hashchange', () => {
     const moduleName = window.location.hash.replace('#', '');
     if (moduleName) {
@@ -220,7 +219,6 @@ window.addEventListener('hashchange', () => {
     }
 });
 
-// دالة تحديث القائمة النشطة
 window.setActiveNavItem = function(moduleName) {
     const items = document.querySelectorAll('#admin-menu .nav-item');
     items.forEach(item => {
