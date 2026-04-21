@@ -1,4 +1,3 @@
-cat > fi-khidmatik/js/main.js << 'EOF'
 console.log('main.js ready');
 
 let initProducts, initOrders, initCustomers, initSettings, initDashboard;
@@ -88,4 +87,3 @@ window.setActiveNavItem = function(module) {
         else item.classList.remove('active');
     });
 };
-EOF
