@@ -5,7 +5,7 @@
 import { db } from '../core/firebase.js';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-console.log('✅ customers-ui.js (الكامل) تم تحميله');
+console.log('✅ customers-ui.js تم تحميله');
 
 // ===================== دوال مساعدة =====================
 function escapeHtml(str) {
@@ -26,7 +26,6 @@ function showNotification(msg, type) {
     setTimeout(function() { toast.remove(); }, 3000);
 }
 
-// تنسيق رقم الجوال (مفتاح الدولة + رقم بدون صفر)
 function formatPhone(phone) {
     if (!phone) return { code: '', number: '' };
     var raw = String(phone).replace(/\s/g, '');
@@ -41,12 +40,10 @@ function formatPhone(phone) {
     return { code: '', number: raw };
 }
 
-// التحقق من اكتمال بيانات العميل (الحقول الأساسية)
 function isComplete(c) {
     return c.name && c.phone && c.email && c.city && c.district && c.street && c.buildingNo && c.poBox;
 }
 
-// ===================== جلب العملاء =====================
 async function getCustomers() {
     var q = query(collection(db, "customers"), orderBy("createdAt", "desc"));
     var snap = await getDocs(q);
@@ -57,7 +54,6 @@ async function getCustomers() {
     return customers;
 }
 
-// ===================== عرض الإحصائيات =====================
 async function renderStats(customers) {
     var total = customers.length;
     var completed = customers.filter(isComplete).length;
@@ -87,7 +83,6 @@ async function renderStats(customers) {
     `;
 }
 
-// ===================== عرض الجدول الكامل =====================
 async function renderTable() {
     var tbody = document.getElementById('customers-table-body');
     if (!tbody) return;
@@ -122,7 +117,6 @@ async function renderTable() {
         html += '<\/td><\/tr>';
     }
     tbody.innerHTML = html;
-    // ربط الأحداث
     document.querySelectorAll('.edit-customer').forEach(btn => {
         btn.addEventListener('click', function() {
             var id = this.getAttribute('data-id');
@@ -148,7 +142,6 @@ async function renderTable() {
     });
 }
 
-// ===================== طباعة بطاقة عميل =====================
 function printCard(cust) {
     var phoneObj = formatPhone(cust.phone);
     var win = window.open('', '_blank', 'width=600,height=500');
@@ -183,7 +176,6 @@ function printCard(cust) {
     win.document.close();
 }
 
-// ===================== تصدير CSV =====================
 async function exportCSV() {
     var customers = await getCustomers();
     if (!customers.length) { showNotification('لا يوجد عملاء', 'error'); return; }
@@ -202,14 +194,12 @@ async function exportCSV() {
     showNotification('تم التصدير', 'success');
 }
 
-// ===================== نموذج الإضافة والتعديل =====================
 function showModal(mode, customer) {
     var modal = document.getElementById('customer-modal');
     var title = document.getElementById('modal-title');
-    var form = document.getElementById('customer-form');
     if (mode === 'add') {
         title.innerText = '➕ إضافة عميل جديد';
-        form.reset();
+        document.getElementById('customer-form').reset();
         document.getElementById('edit-id').value = '';
     } else {
         title.innerText = '✏️ تعديل بيانات العميل';
@@ -264,7 +254,7 @@ async function saveCustomer(e) {
     }
 }
 
-// ===================== الدالة الرئيسية (لا تكرار) =====================
+// الدالة الرئيسية (التصدير الوحيد)
 export async function initCustomers(container) {
     console.log('✅ initCustomers بدأت');
     if (!container) return;
