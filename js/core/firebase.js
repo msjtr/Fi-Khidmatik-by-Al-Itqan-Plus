@@ -1,32 +1,55 @@
-// ... (أكواد الاستيراد و firebaseConfig كما هي)
+/**
+ * js/core/firebase.js
+ * تهيئة اتصال Firebase - نسخة الإصلاح النهائي
+ */
 
-// 1. تغيير التعريف ليكون مباشر (Direct Export) لضمان رؤية الموديولات الأخرى للمتغيرات
+// 1. الاستيراد المباشر من CDN (تأكد من كتابة الروابط بدقة)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+// 2. تكوين Firebase (بيانات مشروعك الخاصة)
+const firebaseConfig = {
+    apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
+    authDomain: "msjt301-974bb.firebaseapp.com",
+    projectId: "msjt301-974bb",
+    storageBucket: "msjt301-974bb.firebasestorage.app",
+    messagingSenderId: "186209858482",
+    appId: "1:186209858482:web:186ca610780799ef562aab"
+};
+
+// 3. التنفيذ المباشر والتصدير
+// ملاحظة: قمنا بالتنفيذ المباشر هنا لضمان تعريف المتغيرات فوراً
 export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 
-let isInitialized = true;
-let initError = null;
+// 4. حالة التهيئة
+export let isInitialized = true;
 
 /**
- * دالة التهيئة الإضافية (مثل persistense)
+ * تمكين العمل دون اتصال (اختياري)
  */
-async function setupFirebaseFeatures() {
+async function enableOffline() {
     try {
-        // تمكين التخزين المؤقت
         await enableIndexedDbPersistence(db);
-        console.log('✅ Offline persistence enabled');
+        console.log('✅ تم تفعيل وضع العمل دون اتصال');
     } catch (err) {
-        console.warn('⚠️ Persistence notice:', err.code);
+        console.warn('⚠️ وضع العمل دون اتصال غير متاح:', err.code);
     }
 }
 
-// تشغيل الميزات الإضافية في الخلفية
-setupFirebaseFeatures();
+enableOffline();
 
-// تصدير الأدوات المساعدة
-export const isFirebaseReady = () => isInitialized;
-export const waitForFirebase = async () => isInitialized;
+/**
+ * أداة انتظار للتأكد من الجاهزية (تُستخدم في main.js)
+ */
+export const waitForFirebase = () => {
+    return new Promise((resolve) => {
+        if (isInitialized) resolve(true);
+        else setTimeout(() => resolve(true), 500);
+    });
+};
 
-// التصدير الافتراضي
-export default { db, auth, app };
+// 5. التصدير الافتراضي
+export default { app, db, auth, waitForFirebase };
