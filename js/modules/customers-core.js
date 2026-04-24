@@ -1,14 +1,8 @@
-/**
- * js/modules/customers-core.js
- * نظام إدارة العملاء المتكامل - Tera Gateway
- * يتضمن: العرض، البحث، الإضافة، التعديل، والملاحظات المتقدمة
- */
+import { db } from '../core/config.js'; // تأكد من أن هذا المسار يؤدي لإعدادات فيربيز الخاصة بك
+import { collection, query, onSnapshot, doc, setDoc, deleteDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-import { db } from '../core/config.js';
-import { collection, addDoc, updateDoc, doc, deleteDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-// قائمة مفاتيح الدول
-const countries = [
+// قائمة الدول المحدثة
+const countryData = [
     { name: "المملكة العربية السعودية", code: "966", flag: "🇸🇦", len: 9 },
     { name: "الإمارات", code: "971", flag: "🇦🇪", len: 9 },
     { name: "الكويت", code: "965", flag: "🇰🇼", len: 8 },
@@ -16,196 +10,213 @@ const countries = [
     { name: "مصر", code: "20", flag: "🇪🇬", len: 10 }
 ];
 
-/**
- * الوظيفة الرئيسية المطلوبة (Export Named)
- * تقوم بتهيئة الصفحة وعرض جدول العملاء
- */
 export async function initCustomers(container) {
     if (!container) return;
 
-    // 1. رسم شريط الأدوات (البحث وزر الإضافة)
+    // 1. رسم الواجهة العلوية
     container.innerHTML = `
-        <div class="table-toolbar">
-            <div class="toolbar-right">
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="customer-search" placeholder="ابحث بالاسم أو رقم الجوال..." oninput="window.filterCustomers(this.value)">
-                </div>
+        <div class="customers-header">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchCust" placeholder="ابحث بالاسم أو رقم الجوال...">
             </div>
-            <div class="toolbar-left">
-                <button class="btn-add" id="btn-add-customer">
-                    <i class="fas fa-user-plus"></i> إضافة عميل جديد
-                </button>
-            </div>
+            <button class="btn-primary" id="addNewCustBtn">
+                <i class="fas fa-plus"></i> إضافة عميل جديد
+            </button>
         </div>
-        <div id="customers-list-container">
-            <div class="loading-state">جاري تحميل قائمة العملاء...</div>
+        <div id="customersTableContainer">
+            <p class="loading-msg">جاري جلب البيانات من تيرا جيتواي...</p>
         </div>
     `;
 
-    // ربط زر الإضافة
-    document.getElementById('btn-add-customer').onclick = () => openCustomerModal();
+    const tableContainer = document.getElementById('customersTableContainer');
+    const searchInput = document.getElementById('searchCust');
 
-    // 2. جلب البيانات من Firebase وعرضها
-    refreshCustomerTable();
+    // 2. ربط زر الإضافة
+    document.getElementById('addNewCustBtn').onclick = () => openCustomerModal();
+
+    // 3. الاستماع المباشر للبيانات من Firebase (Real-time)
+    const q = query(collection(db, "customers"));
+    onSnapshot(q, (snapshot) => {
+        let customers = [];
+        snapshot.forEach((doc) => {
+            customers.push({ id: doc.id, ...doc.data() });
+        });
+
+        const render = (filtered) => renderTable(tableContainer, filtered);
+        render(customers);
+
+        // تفعيل الفلترة والبحث
+        searchInput.oninput = (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = customers.filter(c => 
+                (c.name || "").toLowerCase().includes(term) || 
+                (c.phone || "").includes(term)
+            );
+            render(filtered);
+        };
+    });
 }
 
-/**
- * جلب البيانات وعرض الجدول
- */
-async function refreshCustomerTable() {
-    const container = document.getElementById('customers-list-container');
-    try {
-        const q = query(collection(db, "customers"), orderBy("createdAt", "desc"));
-        const querySnapshot = await getDocs(q);
-        const customers = [];
-        querySnapshot.forEach((doc) => customers.push({ id: doc.id, ...doc.data() }));
-
-        renderTable(container, customers);
-    } catch (error) {
-        container.innerHTML = `<div class="error">خطأ في جلب البيانات: ${error.message}</div>`;
-    }
-}
-
-/**
- * رسم الجدول
- */
-function renderTable(container, customers) {
-    if (customers.length === 0) {
-        container.innerHTML = `<div class="empty-state">لا يوجد عملاء مضافين حالياً.</div>`;
+function renderTable(container, data) {
+    if (data.length === 0) {
+        container.innerHTML = `<div class="empty-state">لا يوجد عملاء مطابقين للبحث</div>`;
         return;
     }
 
     container.innerHTML = `
-        <div class="table-responsive">
-            <table class="main-table">
-                <thead>
+        <table class="tera-table">
+            <thead>
+                <tr>
+                    <th>العميل</th>
+                    <th>الاتصال</th>
+                    <th>العنوان الوطني</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${data.map(c => `
                     <tr>
-                        <th>العميل</th>
-                        <th>الاتصال</th>
-                        <th>المدينة / الحي</th>
-                        <th>الإجراءات</th>
+                        <td>
+                            <div class="cust-info">
+                                <strong>${c.name || 'بدون اسم'}</strong>
+                                <span>ID: ${c.id.slice(0,5)}</span>
+                            </div>
+                        </td>
+                        <td dir="ltr">
+                            <div><i class="fas fa-mobile-alt"></i> +${c.phone || ''}</div>
+                            ${c.landline ? `<div class="landline-sub"><i class="fas fa-phone"></i> +${c.landline}</div>` : ''}
+                        </td>
+                        <td>
+                            <div class="addr-tags">
+                                <span class="tag-city">${c.city || 'غير محدد'}</span>
+                                <span class="tag-dist">${c.district || ''}</span>
+                                <span class="tag-zip"><i class="fas fa-envelope"></i> ${c.postalCode || c.poBox || '-'}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn-edit" onclick="window.editCustomer('${c.id}')"><i class="fas fa-pen"></i></button>
+                                <button class="btn-print" onclick="window.printCustomer('${c.id}')"><i class="fas fa-print"></i></button>
+                                <button class="btn-delete" onclick="window.deleteCustomer('${c.id}')"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    ${customers.map(c => `
-                        <tr>
-                            <td>
-                                <div class="user-cell">
-                                    <div class="user-icon">${c.name.charAt(0)}</div>
-                                    <div class="user-info">
-                                        <strong>${c.name}</strong>
-                                        <span>ID: ${c.id.slice(-5)}</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="contact-cell">
-                                    <span dir="ltr">+${c.countryCode} ${c.phone}</span>
-                                    <small>${c.email || ''}</small>
-                                </div>
-                            </td>
-                            <td>${c.city} - ${c.district}</td>
-                            <td>
-                                <div class="actions">
-                                    <button onclick="window.editCustomerUI('${c.id}')" class="btn-edit"><i class="fas fa-edit"></i></button>
-                                    <button onclick="window.deleteCustomerUI('${c.id}')" class="btn-delete"><i class="fas fa-trash"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        </div>
+                `).join('')}
+            </tbody>
+        </table>
     `;
-
-    // ربط وظائف التعديل والحذف بالنافذة العالمية
-    window.editCustomerUI = async (id) => {
-        const c = customers.find(x => x.id === id);
-        openCustomerModal(c);
-    };
 }
 
-/**
- * نافذة الإضافة والتعديل (Modal)
- */
-export async function openCustomerModal(customerData = null) {
-    const isEdit = !!customerData;
-    const modalHTML = `
-    <div id="customer-modal" class="modal-overlay">
-        <div class="modal-content">
+// دالة فتح النافذة (Modal)
+window.openCustomerModal = function(customer = null) {
+    const isEdit = !!customer;
+    const modal = document.createElement('div');
+    modal.id = 'custModal';
+    modal.className = 'tera-modal-overlay';
+    
+    modal.innerHTML = `
+        <div class="tera-modal">
             <div class="modal-header">
-                <h2>${isEdit ? 'تعديل بيانات العميل' : 'إضافة عميل جديد'}</h2>
-                <button type="button" onclick="this.closest('#customer-modal').remove()" class="close-btn">&times;</button>
+                <h3>${isEdit ? 'تحديث بيانات العميل' : 'إضافة عميل إلى النظام'}</h3>
+                <button onclick="this.closest('.tera-modal-overlay').remove()">&times;</button>
             </div>
-            <form id="customer-form">
-                <div class="form-body">
-                    <div class="section-box">
-                        <h3 class="section-h">البيانات الشخصية</h3>
-                        <div class="f-row">
-                            <div class="i-group full">
-                                <label>الاسم الكامل</label>
-                                <input type="text" id="cust-name" value="${customerData?.name || ''}" required>
-                            </div>
-                        </div>
-                        <div class="f-row">
-                            <div class="i-group">
-                                <label>مفتاح الدولة</label>
-                                <select id="cust-country-code">
-                                    ${countries.map(c => `<option value="${c.code}" ${customerData?.countryCode === c.code ? 'selected' : ''}>${c.flag} +${c.code}</option>`).join('')}
-                                </select>
-                            </div>
-                            <div class="i-group flex-2">
-                                <label>الجوال (يبدأ بـ 5)</label>
-                                <input type="tel" id="cust-phone" value="${customerData?.phone || ''}" required maxlength="9">
-                            </div>
+            <form id="custForm">
+                <div class="form-grid">
+                    <div class="field full">
+                        <label>الاسم الكامل</label>
+                        <input type="text" id="m_name" value="${customer?.name || ''}" required>
+                    </div>
+                    <div class="field">
+                        <label>الدولة</label>
+                        <select id="m_country" onchange="updateDialCode(this.value)">
+                            ${countryData.map(d => `<option value="${d.code}" ${customer?.phone?.startsWith(d.code) ? 'selected' : ''}>${d.flag} ${d.name}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>رقم الجوال (يبدأ بـ 5)</label>
+                        <div class="phone-box">
+                            <span id="dialCode">${customer ? '' : '966'}</span>
+                            <input type="tel" id="m_phone" value="${customer?.phone || ''}" placeholder="5xxxxxxxx" required>
                         </div>
                     </div>
-
-                    <div class="section-box">
-                        <h3 class="section-h">العنوان والملاحظات</h3>
-                        <div class="f-row">
-                            <div class="i-group"><label>المدينة</label><input type="text" id="cust-city" value="${customerData?.city || ''}"></div>
-                            <div class="i-group"><label>الحي</label><input type="text" id="cust-district" value="${customerData?.district || ''}"></div>
-                        </div>
-                        <div class="i-group full" style="margin-top:10px">
-                            <label>ملاحظات متقدمة</label>
-                            <div id="cust-notes" class="editor-area" contenteditable="true" style="border:1px solid #ddd; min-height:80px; padding:10px; border-radius:5px">
-                                ${customerData?.notes || ''}
-                            </div>
-                        </div>
+                    <div class="field">
+                        <label>الهاتف الثابت (اختياري)</label>
+                        <input type="tel" id="m_landline" value="${customer?.landline || ''}">
+                    </div>
+                    <div class="field">
+                        <label>المدينة</label>
+                        <input type="text" id="m_city" value="${customer?.city || 'حائل'}">
+                    </div>
+                    <div class="field">
+                        <label>الحي</label>
+                        <input type="text" id="m_dist" value="${customer?.district || ''}">
+                    </div>
+                    <div class="field">
+                        <label>صندوق البريد</label>
+                        <input type="text" id="m_pobox" value="${customer?.poBox || ''}" oninput="document.getElementById('m_zip').value = this.value">
+                    </div>
+                    <div class="field">
+                        <label>الرمز البريدي</label>
+                        <input type="text" id="m_zip" value="${customer?.postalCode || ''}">
+                    </div>
+                    <div class="field full">
+                        <label>ملاحظات الموظف (محرر متقدم)</label>
+                        <textarea id="m_notes" rows="3">${customer?.notes || ''}</textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" onclick="this.closest('#customer-modal').remove()" class="btn-secondary">إلغاء</button>
-                    <button type="submit" class="btn-primary">حفظ</button>
+                    <button type="submit" class="btn-save">${isEdit ? 'حفظ التعديلات' : 'إضافة العميل'}</button>
                 </div>
             </form>
         </div>
-    </div>
     `;
 
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    document.body.appendChild(modal);
 
-    document.getElementById('customer-form').onsubmit = async (e) => {
+    document.getElementById('custForm').onsubmit = async (e) => {
         e.preventDefault();
+        const dial = document.getElementById('dialCode').innerText;
+        const rawPhone = document.getElementById('m_phone').value.replace(/^0/, '');
+        
         const data = {
-            name: document.getElementById('cust-name').value,
-            countryCode: document.getElementById('cust-country-code').value,
-            phone: document.getElementById('cust-phone').value,
-            city: document.getElementById('cust-city').value,
-            district: document.getElementById('cust-district').value,
-            notes: document.getElementById('cust-notes').innerHTML,
-            updatedAt: new Date().toISOString()
+            name: document.getElementById('m_name').value,
+            phone: dial + rawPhone,
+            landline: document.getElementById('m_landline').value,
+            city: document.getElementById('m_city').value,
+            district: document.getElementById('m_dist').value,
+            poBox: document.getElementById('m_pobox').value,
+            postalCode: document.getElementById('m_zip').value,
+            notes: document.getElementById('m_notes').value,
+            updatedAt: serverTimestamp()
         };
 
-        if (isEdit) {
-            await updateDoc(doc(db, "customers", customerData.id), data);
-        } else {
-            data.createdAt = new Date().toISOString();
-            await addDoc(collection(db, "customers"), data);
-        }
-        document.getElementById('customer-modal').remove();
-        refreshCustomerTable();
+        try {
+            if (isEdit) {
+                await updateDoc(doc(db, "customers", customer.id), data);
+            } else {
+                data.createdAt = serverTimestamp();
+                await setDoc(doc(collection(db, "customers")), data);
+            }
+            modal.remove();
+        } catch (err) { alert("خطأ في الحفظ: " + err.message); }
     };
-}
+};
+
+window.updateDialCode = (val) => { document.getElementById('dialCode').innerText = val; };
+
+// وظائف الحذف والطباعة والتعديل
+window.deleteCustomer = async (id) => {
+    if (confirm("هل أنت متأكد من حذف هذا العميل نهائياً؟")) {
+        await deleteDoc(doc(db, "customers", id));
+    }
+};
+
+window.editCustomer = async (id) => {
+    // سيتم جلب البيانات من القائمة المفتوحة وفتح المودال
+    alert("سيتم جلب بيانات العميل وتعديلها..");
+};
+
+window.printCustomer = (id) => {
+    window.print(); // يمكنك تخصيص صفحة طباعة لاحقاً
+};
