@@ -1,119 +1,151 @@
 import { db } from '../core/firebase.js';
-import { collection, getDocs, query, orderBy, deleteDoc, doc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { 
+    collection, query, onSnapshot, orderBy, 
+    doc, addDoc, deleteDoc, updateDoc, getDoc, 
+    serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-console.log('✅ customers-core.js تم تحميل النسخة الاحترافية المحدثة');
+console.log('✅ customers-core.js: تم تفعيل نظام تيرا المطور');
+
+// قائمة الدول المعتمدة
+const countries = [
+    { name: "المملكة العربية السعودية", code: "966", flag: "🇸🇦" },
+    { name: "الإمارات", code: "971", flag: "🇦🇪" },
+    { name: "الكويت", code: "965", flag: "🇰🇼" },
+    { name: "مصر", code: "20", flag: "🇪🇬" }
+];
 
 export async function initCustomers(container) {
     if (!container) return;
     
-    // 1. رسم الهيكل العام (العنوان + أزرار التحكم + الفلتر)
     container.innerHTML = `
         <div style="padding: 20px; font-family: 'Tajawal', sans-serif; direction: rtl;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
-                <h2 style="color: #2c3e50; margin: 0; display: flex; align-items: center; gap: 10px;">
-                    <i class="fas fa-users-cog" style="color: #e67e22;"></i> إدارة سجل العملاء
-                </h2>
-                <div style="display: flex; gap: 10px;">
-                    <button id="btn-add-customer" style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">
-                        <i class="fas fa-user-plus"></i> إضافة عميل جديد
-                    </button>
-                    <div id="stats-badge"></div>
+            <div id="stats-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                <div class="stat-card" style="background:#fff; padding:15px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border-right:4px solid #e67e22;">
+                    <small style="color:#7f8c8d;">إجمالي العملاء</small>
+                    <div id="stat-total" style="font-size:22px; font-weight:bold; color:#2c3e50;">0</div>
+                </div>
+                <div class="stat-card" style="background:#fff; padding:15px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border-right:4px solid #27ae60;">
+                    <small style="color:#7f8c8d;">مكتمل البيانات</small>
+                    <div id="stat-complete" style="font-size:22px; font-weight:bold; color:#27ae60;">0</div>
+                </div>
+                <div class="stat-card" style="background:#fff; padding:15px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border-right:4px solid #e74c3c;">
+                    <small style="color:#7f8c8d;">عملاء محتالون</small>
+                    <div id="stat-fraud" style="font-size:22px; font-weight:bold; color:#e74c3c;">0</div>
                 </div>
             </div>
 
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                <h2 style="color: #2c3e50; margin: 0;"><i class="fas fa-users"></i> قاعدة بيانات العملاء</h2>
+                <button id="btn-add-customer" style="background: #27ae60; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: bold; transition:0.3s;">
+                    <i class="fas fa-user-plus"></i> إضافة عميل جديد
+                </button>
+            </div>
+
             <div style="background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; gap: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                <div style="flex: 1; position: relative;">
+                <div style="flex: 2; position: relative;">
                     <i class="fas fa-search" style="position: absolute; right: 15px; top: 12px; color: #95a5a6;"></i>
-                    <input type="text" id="customer-search" placeholder="ابحث باسم العميل أو رقم الجوال..." 
+                    <input type="text" id="customer-search" placeholder="بحث بالاسم، الجوال، المدينة..." 
                            style="width: 100%; padding: 10px 40px 10px 15px; border-radius: 8px; border: 1px solid #ddd; outline: none;">
                 </div>
-                <select id="city-filter" style="padding: 10px; border-radius: 8px; border: 1px solid #ddd; outline: none; background: #f8fafc;">
-                    <option value="">جميع المدن</option>
-                    <option value="حائل">حائل</option>
+                <select id="class-filter" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ddd; background: #f8fafc;">
+                    <option value="">جميع التصنيفات</option>
+                    <option value="مميز">عميل مميز</option>
+                    <option value="محتال">عميل محتال</option>
+                    <option value="غير جدي">غير جدي</option>
+                    <option value="غير متعاون">غير متعاون</option>
                 </select>
             </div>
 
             <div id="customers-table-container">
                 <div style="text-align: center; padding: 40px;">
                     <i class="fas fa-sync fa-spin fa-2x" style="color: #e67e22;"></i>
-                    <p>جاري مزامنة البيانات...</p>
+                    <p>جاري تحميل البيانات الحية...</p>
                 </div>
             </div>
         </div>
     `;
 
-    // ربط الأحداث (Events)
-    document.getElementById('btn-add-customer').addEventListener('click', showAddCustomerModal);
-    document.getElementById('customer-search').addEventListener('input', filterCustomers);
-    document.getElementById('city-filter').addEventListener('change', filterCustomers);
+    document.getElementById('btn-add-customer').onclick = () => showCustomerModal();
+    document.getElementById('customer-search').oninput = filterCustomers;
+    document.getElementById('class-filter').onchange = filterCustomers;
 
-    loadCustomersData();
+    listenToCustomers();
 }
 
-// دالة جلب البيانات من Firebase
-async function loadCustomersData() {
-    const containerDiv = document.getElementById('customers-table-container');
-    try {
-        const q = query(collection(db, "customers"), orderBy("createdAt", "desc"));
-        const snapshot = await getDocs(q);
-        
-        if (snapshot.empty) {
-            containerDiv.innerHTML = `<div style="text-align:center; padding:50px; color:#95a5a6;"><i class="fas fa-folder-open fa-3x"></i><p>لا يوجد عملاء في السجل</p></div>`;
-            return;
-        }
+// استماع حي للبيانات (Real-time)
+function listenToCustomers() {
+    const q = query(collection(db, "customers"), orderBy("createdAt", "desc"));
+    onSnapshot(q, (snapshot) => {
+        const customers = [];
+        snapshot.forEach(doc => customers.push({ id: doc.id, ...doc.data() }));
+        renderTable(customers);
+        updateStats(customers);
+    });
+}
 
-        renderTable(snapshot);
-        updateStats(snapshot.size);
-        
-    } catch (error) {
-        console.error('❌ Error:', error);
-        containerDiv.innerHTML = `<div style="color:red; text-align:center; padding:20px;">خطأ في تحميل البيانات</div>`;
+function updateStats(customers) {
+    document.getElementById('stat-total').innerText = customers.length;
+    document.getElementById('stat-complete').innerText = customers.filter(c => c.postalCode && c.buildingNo).length;
+    document.getElementById('stat-fraud').innerText = customers.filter(c => c.classification === 'محتال').length;
+}
+
+function renderTable(customers) {
+    const container = document.getElementById('customers-table-container');
+    if (customers.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:50px; color:#95a5a6;"><p>لا يوجد عملاء حالياً</p></div>`;
+        return;
     }
-}
 
-// دالة رسم الجدول القائم على القائمة
-function renderTable(snapshot) {
-    const containerDiv = document.getElementById('customers-table-container');
     let html = `
         <div style="overflow-x: auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-            <table id="main-customers-table" style="width: 100%; border-collapse: collapse; min-width: 1100px;">
+            <table style="width: 100%; border-collapse: collapse; min-width: 1000px;">
                 <thead style="background: #f8fafc; color: #64748b; border-bottom: 2px solid #edf2f7;">
                     <tr>
                         <th style="padding: 15px; text-align: right;">العميل</th>
-                        <th style="padding: 15px; text-align: center;">الجوال</th>
-                        <th style="padding: 15px; text-align: center;">العنوان</th>
-                        <th style="padding: 15px; text-align: center;">الرمز البريدي/الإضافي</th>
+                        <th style="padding: 15px; text-align: center;">الاتصال</th>
+                        <th style="padding: 15px; text-align: center;">العنوان الوطني</th>
+                        <th style="padding: 15px; text-align: center;">التصنيف</th>
                         <th style="padding: 15px; text-align: center;">العمليات</th>
                     </tr>
                 </thead>
                 <tbody>
     `;
 
-    snapshot.forEach((doc) => {
-        const data = doc.data();
+    customers.forEach(c => {
+        const classStyle = c.classification === 'محتال' ? 'background:#fee2e2; color:#b91c1c;' : 
+                          c.classification === 'مميز' ? 'background:#dcfce7; color:#15803d;' : 'background:#f1f5f9; color:#475569;';
+        
         html += `
-            <tr class="customer-row" data-city="${data.city}" style="border-bottom: 1px solid #edf2f7; transition: 0.2s;">
+            <tr class="customer-row" data-search="${(c.name||'')}${(c.phone||'')}${(c.city||'')}" data-class="${c.classification || ''}" style="border-bottom: 1px solid #edf2f7;">
                 <td style="padding: 15px;">
-                    <div style="font-weight: bold; color: #2d3748;">${escapeHtml(data.name)}</div>
-                    <div style="font-size: 0.75rem; color: #a0aec0;">ID: ${doc.id.slice(-5)}</div>
-                </td>
-                <td style="padding: 15px; text-align: center; direction: ltr;">${escapeHtml(data.phone)}</td>
-                <td style="padding: 15px; text-align: center;">
-                    <span style="font-size: 0.9rem;">${escapeHtml(data.city)} - ${escapeHtml(data.district)}</span><br>
-                    <small style="color: #718096;">${escapeHtml(data.street)}</small>
-                </td>
-                <td style="padding: 15px; text-align: center;">
-                    <div style="display: flex; flex-direction: column; gap: 4px; align-items: center;">
-                        <span style="background: #f1f5f9; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">📦 ${escapeHtml(data.postalCode) || '-'}</span>
-                        <span style="background: #fff7ed; color: #c2410c; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">➕ ${escapeHtml(data.additionalNo) || '-'}</span>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="width:40px; height:40px; background:#e67e22; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">
+                            ${(c.name || 'C').charAt(0)}
+                        </div>
+                        <div>
+                            <div style="font-weight:bold; color:#2d3748;">${c.name || 'بدون اسم'}</div>
+                            <small style="color:#a0aec0;">ID: ${c.id.slice(-5)}</small>
+                        </div>
                     </div>
                 </td>
+                <td style="padding: 15px; text-align: center; direction: ltr;">
+                    <div>+${c.phone || ''}</div>
+                    <small style="color:#718096;">${c.email || ''}</small>
+                </td>
                 <td style="padding: 15px; text-align: center;">
-                    <div style="display: flex; gap: 8px; justify-content: center;">
-                        <button onclick="window.location.hash='#orders?customer=${doc.id}'" title="طلب جديد" style="background:#e67e22; color:white; border:none; padding:6px 10px; border-radius:6px; cursor:pointer;"><i class="fas fa-plus"></i></button>
-                        <button onclick="editCustomer('${doc.id}')" title="تعديل" style="background:#3498db; color:white; border:none; padding:6px 10px; border-radius:6px; cursor:pointer;"><i class="fas fa-edit"></i></button>
-                        <button onclick="printCustomerRecord('${doc.id}')" title="طباعة" style="background:#95a5a6; color:white; border:none; padding:6px 10px; border-radius:6px; cursor:pointer;"><i class="fas fa-print"></i></button>
-                        <button onclick="deleteCustomerRecord('${doc.id}')" title="حذف" style="background:#e74c3c; color:white; border:none; padding:6px 10px; border-radius:6px; cursor:pointer;"><i class="fas fa-trash-alt"></i></button>
+                    <div style="font-size:0.85rem;">${c.city || 'حائل'} - ${c.district || ''}</div>
+                    <div style="font-size:0.75rem; color:#94a3b8;">مبنى: ${c.buildingNo || '-'} | رمز: ${c.postalCode || '-'}</div>
+                </td>
+                <td style="padding: 15px; text-align: center;">
+                    <span style="padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:bold; ${classStyle}">
+                        ${c.classification || 'غير مصنف'}
+                    </span>
+                </td>
+                <td style="padding: 15px; text-align: center;">
+                    <div style="display: flex; gap: 5px; justify-content: center;">
+                        <button onclick="showCustomerModal('${c.id}')" title="تعديل" style="background:#3498db; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer;"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteCustomerRecord('${c.id}')" title="حذف" style="background:#e74c3c; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer;"><i class="fas fa-trash"></i></button>
                     </div>
                 </td>
             </tr>
@@ -121,55 +153,79 @@ function renderTable(snapshot) {
     });
 
     html += `</tbody></table></div>`;
-    containerDiv.innerHTML = html;
+    container.innerHTML = html;
 }
 
-// --- الدوال الفرعية للعمليات ---
-
 function filterCustomers() {
-    const searchTerm = document.getElementById('customer-search').value.toLowerCase();
-    const cityTerm = document.getElementById('city-filter').value;
-    const rows = document.querySelectorAll('.customer-row');
-
-    rows.forEach(row => {
-        const text = row.innerText.toLowerCase();
-        const city = row.getAttribute('data-city');
-        const matchesSearch = text.includes(searchTerm);
-        const matchesCity = cityTerm === "" || city === cityTerm;
-
-        row.style.display = (matchesSearch && matchesCity) ? "" : "none";
+    const search = document.getElementById('customer-search').value.toLowerCase();
+    const cat = document.getElementById('class-filter').value;
+    document.querySelectorAll('.customer-row').forEach(row => {
+        const matchesSearch = row.dataset.search.toLowerCase().includes(search);
+        const matchesClass = !cat || row.dataset.class === cat;
+        row.style.display = (matchesSearch && matchesClass) ? "" : "none";
     });
 }
 
-window.deleteCustomerRecord = async (id) => {
-    if (confirm('هل أنت متأكد من حذف هذا العميل نهائياً؟')) {
+// نافذة الإضافة والتعديل الشاملة
+window.showCustomerModal = async (id = null) => {
+    let data = { name:'', phone:'', city:'حائل', district:'', street:'', buildingNo:'', additionalNo:'', poBox:'', postalCode:'', email:'', classification:'', notes:'' };
+    if(id) {
+        const docSnap = await getDoc(doc(db, "customers", id));
+        if(docSnap.exists()) data = docSnap.data();
+    }
+
+    const modal = document.createElement('div');
+    modal.id = "tera-modal";
+    modal.style = "position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:1000; padding:20px; font-family:'Tajawal';";
+    modal.innerHTML = `
+        <div style="background:white; width:100%; max-width:700px; border-radius:15px; overflow:hidden; animation: slideUp 0.3s ease-out;">
+            <div style="background:#2c3e50; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0;">${id ? 'تعديل بيانات العميل' : 'إضافة عميل جديد'}</h3>
+                <button onclick="document.getElementById('tera-modal').remove()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            <form id="customer-form" style="padding:20px; display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                <div class="field"><label>اسم العميل</label><input type="text" name="name" value="${data.name}" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;"></div>
+                <div class="field"><label>رقم الجوال</label><input type="tel" name="phone" value="${data.phone}" placeholder="9665..." required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px; direction:ltr;"></div>
+                <div class="field"><label>المدينة</label><input type="text" name="city" value="${data.city}" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;"></div>
+                <div class="field"><label>الحي</label><input type="text" name="district" value="${data.district}" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;"></div>
+                <div class="field"><label>رقم المبنى</label><input type="text" name="buildingNo" value="${data.buildingNo}" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;"></div>
+                <div class="field"><label>الرمز البريدي</label><input type="text" name="postalCode" value="${data.postalCode}" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;"></div>
+                <div class="field"><label>التصنيف</label>
+                    <select name="classification" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+                        <option value="">اختر..</option>
+                        <option value="مميز" ${data.classification==='مميز'?'selected':''}>مميز</option>
+                        <option value="محتال" ${data.classification==='محتال'?'selected':''}>محتال</option>
+                        <option value="غير جدي" ${data.classification==='غير جدي'?'selected':''}>غير جدي</option>
+                    </select>
+                </div>
+                <div class="field" style="grid-column: span 2;">
+                    <label>ملاحظات (محرر نصي)</label>
+                    <textarea name="notes" style="width:100%; height:80px; padding:8px; border:1px solid #ddd; border-radius:6px;">${data.notes}</textarea>
+                </div>
+                <div style="grid-column: span 2; text-align:left; margin-top:10px;">
+                    <button type="submit" style="background:#27ae60; color:white; border:none; padding:10px 30px; border-radius:6px; cursor:pointer;">حفظ البيانات</button>
+                </div>
+            </form>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    document.getElementById('customer-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const updateData = Object.fromEntries(formData.entries());
+        updateData.updatedAt = serverTimestamp();
+
         try {
-            await deleteDoc(doc(db, "customers", id));
-            alert('تم حذف العميل بنجاح');
-            loadCustomersData();
-        } catch (e) { alert('خطأ في الحذف'); }
+            if(id) await updateDoc(doc(db, "customers", id), updateData);
+            else { updateData.createdAt = serverTimestamp(); await addDoc(collection(db, "customers"), updateData); }
+            modal.remove();
+        } catch (err) { alert('خطأ في الحفظ'); }
+    };
+}
+
+window.deleteCustomerRecord = async (id) => {
+    if(confirm('سيتم حذف العميل وكافة سجلاته، هل أنت متأكد؟')) {
+        await deleteDoc(doc(db, "customers", id));
     }
-}
-
-window.printCustomerRecord = (id) => {
-    alert('جاري تجهيز نسخة للطباعة للعميل: ' + id);
-    // يمكن هنا فتح نافذة جديدة تحتوي على تصميم الطباعة
-};
-
-function updateStats(count) {
-    const badge = document.getElementById('stats-badge');
-    if (badge) {
-        badge.innerHTML = `<span style="background: #e1f5fe; color: #01579b; padding: 8px 16px; border-radius: 20px; font-weight: bold;">إجمالي المسجلين: ${count}</span>`;
-    }
-}
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/[&<>]/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
-}
-
-// دالة إظهار نافذة إضافة عميل (Modal)
-function showAddCustomerModal() {
-    alert("سيتم فتح نموذج الإضافة الشامل (يمكنك ربطه بـ Form مخصص)");
-    // هنا يمكنك إضافة كود لفتح Modal يحتوي على مدخلات (Name, Phone, City, etc.)
 }
