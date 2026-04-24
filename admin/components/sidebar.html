@@ -1,22 +1,192 @@
-<!-- القائمة الجانبية -->
 <aside id="main-sidebar" class="app-sidebar">
+    <div class="sidebar-header">
+        <span class="menu-label">لوحة التحكم</span>
+    </div>
+    
     <nav class="side-nav">
         <ul id="admin-menu">
-            <li class="nav-item" data-module="dashboard">
-                <i class="fas fa-chart-line"></i> <span>الرئيسية</span>
+            <li class="nav-item active" data-module="dashboard">
+                <div class="nav-icon">
+                    <i class="fas fa-grid-2"></i>
+                </div>
+                <span>الرئيسية</span>
+                <div class="active-pill"></div>
             </li>
+            
             <li class="nav-item" data-module="products">
-                <i class="fas fa-box"></i> <span>المنتجات</span>
+                <div class="nav-icon">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <span>المنتجات</span>
+                <div class="active-pill"></div>
             </li>
+            
             <li class="nav-item" data-module="orders">
-                <i class="fas fa-receipt"></i> <span>الطلبات</span>
+                <div class="nav-icon">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <span>طلبات التقسيط</span>
+                <div class="active-pill"></div>
             </li>
+            
             <li class="nav-item" data-module="customers">
-                <i class="fas fa-users"></i> <span>العملاء</span>
+                <div class="nav-icon">
+                    <i class="fas fa-user-group"></i>
+                </div>
+                <span>قاعدة العملاء</span>
+                <div class="active-pill"></div>
             </li>
+            
+            <div class="nav-divider"></div>
+            
             <li class="nav-item" data-module="settings">
-                <i class="fas fa-cog"></i> <span>الإعدادات</span>
+                <div class="nav-icon">
+                    <i class="fas fa-sliders"></i>
+                </div>
+                <span>الإعدادات</span>
+                <div class="active-pill"></div>
             </li>
         </ul>
     </nav>
+
+    <div class="sidebar-footer">
+        <div class="system-status">
+            <span class="status-dot"></span>
+            <small>النظام متصل</small>
+        </div>
+    </div>
 </aside>
+
+<style>
+    /* التنسيقات المطورة للقائمة الجانبية */
+    .app-sidebar {
+        display: flex;
+        flex-direction: column;
+        background: #ffffff;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .sidebar-header {
+        padding: 20px 25px 10px;
+    }
+
+    .menu-label {
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+    }
+
+    .side-nav {
+        flex: 1;
+        padding: 10px 0;
+    }
+
+    #admin-menu {
+        list-style: none;
+        padding: 0 15px;
+    }
+
+    .nav-item {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 15px;
+        margin-bottom: 5px;
+        border-radius: 12px;
+        color: #64748b;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .nav-icon {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: #f8fafc;
+        transition: 0.2s;
+    }
+
+    .nav-item i {
+        font-size: 1rem;
+    }
+
+    /* حالة التحويم (Hover) */
+    .nav-item:hover {
+        background: #f1f5f9;
+        color: #1e293b;
+    }
+
+    .nav-item:hover .nav-icon {
+        background: #ffffff;
+        color: #e67e22;
+    }
+
+    /* الحالة النشطة (Active) */
+    .nav-item.active {
+        background: #fff7ed;
+        color: #e67e22;
+    }
+
+    .nav-item.active .nav-icon {
+        background: #e67e22;
+        color: #ffffff;
+    }
+
+    .active-pill {
+        position: absolute;
+        right: -15px;
+        width: 4px;
+        height: 20px;
+        background: #e67e22;
+        border-radius: 4px 0 0 4px;
+        opacity: 0;
+        transition: 0.2s;
+    }
+
+    .nav-item.active .active-pill {
+        opacity: 1;
+    }
+
+    .nav-divider {
+        height: 1px;
+        background: #f1f5f9;
+        margin: 15px 15px;
+    }
+
+    /* فوتر القائمة */
+    .sidebar-footer {
+        padding: 20px;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    .system-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #94a3b8;
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        background: #10b981;
+        border-radius: 50%;
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+    }
+
+    /* إخفاء النصوص عند تصغير القائمة (لو فعلتها برمجياً) */
+    .is-closed .menu-label,
+    .is-closed span,
+    .is-closed .system-status small {
+        display: none;
+    }
+</style>
