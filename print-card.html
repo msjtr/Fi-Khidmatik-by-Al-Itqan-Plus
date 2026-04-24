@@ -2,100 +2,150 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>بطاقة بيانات العميل - Tera Gateway</title>
+    <title>بطاقة بيانات العميل - منصة في خدمتك</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
         
-        body { font-family: 'Cairo', sans-serif; margin: 0; padding: 0; background: #f1f5f9; color: #334155; }
-        .print-container { width: 210mm; min-height: 297mm; padding: 15mm; margin: 20px auto; background: white; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); position: relative; }
+        body { font-family: 'Cairo', sans-serif; margin: 0; padding: 0; background: #f4f7f6; color: #333; }
+        .print-container { width: 210mm; min-height: 297mm; padding: 12mm; margin: 20px auto; background: white; position: relative; box-sizing: border-box; }
         
-        /* الهيدر */
-        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; border: 2px solid #1e293b; }
-        .header-table td { border: 1px solid #1e293b; padding: 12px; text-align: center; vertical-align: middle; }
-        .logo-section img { height: 75px; width: auto; max-width: 180px; }
-        .title-section h2 { margin: 0; font-size: 1.4rem; color: #e67e22; font-weight: 700; }
-        .info-header { font-size: 0.85rem; line-height: 1.8; text-align: right; }
-
-        /* جسم البطاقة */
-        .details-table { width: 100%; border-collapse: collapse; margin-top: 25px; }
-        .details-table th, .details-table td { border: 1px solid #e2e8f0; padding: 15px; text-align: right; }
-        .details-table th { background: #f8fafc; width: 30%; color: #475569; font-weight: 700; }
-        .details-table td { font-weight: 400; color: #0f172a; }
+        /* الهيدر حسب الترتيب المطلوب */
+        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; border: 1.5px solid #000; }
+        .header-table td { border: 1px solid #000; padding: 10px; vertical-align: middle; }
         
-        .qr-section { text-align: center; margin-top: 40px; }
-        #qrcode { display: inline-block; padding: 10px; border: 1px solid #f1f5f9; background: #fff; }
+        /* اليمين: الشعار والعبارة */
+        .right-section { width: 35%; text-align: right; }
+        .logo-box { display: flex; align-items: center; gap: 10px; }
+        .logo-box img { height: 60px; }
+        .logo-box span { font-size: 0.85rem; font-weight: 700; line-height: 1.4; color: #2c3e50; }
 
-        /* التذييل */
-        .footer { position: absolute; bottom: 15mm; left: 15mm; right: 15mm; border-top: 2px solid #e67e22; padding-top: 15px; text-align: center; }
-        .footer-info { display: flex; justify-content: space-around; margin-top: 10px; font-size: 0.85rem; font-weight: 600; }
+        /* المنتصف: العنوان */
+        .center-section { width: 30%; text-align: center; }
+        .center-section h2 { margin: 0; font-size: 1.2rem; font-weight: 800; }
+        .center-section p { margin: 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
 
-        .no-print-tools { position: fixed; top: 20px; left: 20px; display: flex; gap: 10px; z-index: 9999; }
-        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: 'Cairo'; display: flex; align-items: center; gap: 8px; }
-        .btn-print { background: #e67e22; color: white; }
-        .btn-pdf { background: #ef4444; color: white; }
+        /* اليسار: الأرقام الرسمية */
+        .left-section { width: 35%; text-align: left; font-size: 0.8rem; line-height: 1.6; font-weight: 600; }
+
+        /* شريط المعاملة */
+        .meta-bar { width: 100%; border: 1.5px solid #000; border-top: none; padding: 8px 15px; display: flex; justify-content: space-between; background: #f9f9f9; box-sizing: border-box; font-weight: bold; font-size: 0.9rem; }
+
+        /* جدول البيانات: عربي - بيانات - إنجليزي */
+        .details-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .details-table th, .details-table td { border: 1px solid #000; padding: 12px; text-align: center; }
+        .details-table .label-ar { width: 20%; background: #f2f2f2; font-weight: 700; text-align: right; }
+        .details-table .data-cell { width: 60%; font-weight: 600; font-size: 1.1rem; color: #1a1a1a; }
+        .details-table .label-en { width: 20%; background: #f2f2f2; font-weight: 600; text-align: left; font-size: 0.85rem; }
+
+        /* التذييل والباركود */
+        .verification-section { margin-top: 30px; text-align: center; }
+        #qrcode { display: inline-block; padding: 5px; border: 1px solid #ccc; }
+        .qr-text { font-size: 0.85rem; font-weight: bold; margin-top: 5px; }
+
+        .footer { position: absolute; bottom: 15mm; left: 12mm; right: 12mm; border-top: 2px solid #333; padding-top: 15px; text-align: center; }
+        .footer-brand { font-weight: 800; margin-bottom: 10px; font-size: 0.95rem; }
+        .footer-contacts { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; font-size: 0.8rem; font-weight: 600; }
+        
+        .no-print { position: fixed; top: 20px; left: 20px; z-index: 1000; }
+        .btn-print { background: #2c3e50; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; font-weight: bold; font-family: 'Cairo'; }
 
         @media print {
             body { background: white; }
-            .print-container { margin: 0; box-shadow: none; width: 100%; padding: 10mm; }
+            .print-container { margin: 0; box-shadow: none; width: 100%; }
             .no-print { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <div class="no-print-tools no-print">
-        <button class="btn btn-print" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
-        <button class="btn btn-pdf" onclick="generatePDF()"><i class="fas fa-file-pdf"></i> حفظ PDF</button>
+    <div class="no-print">
+        <button class="btn-print" onclick="window.print()"><i class="fas fa-print"></i> طباعة الوثيقة</button>
     </div>
 
-    <div class="print-container" id="content-to-export">
+    <div class="print-container">
         <table class="header-table">
             <tr>
-                <td style="width: 35%;" class="info-header">
+                <td class="right-section">
+                    <div class="logo-box">
+                        <img src="fi-khidmatik/images/logo.svg" alt="Logo" onerror="this.style.display='none'">
+                        <span>منصة في خدمتك<br>من الأتقان بلس</span>
+                    </div>
+                </td>
+                <td class="center-section">
+                    <h2>بطاقة بيانات العميل</h2>
+                    <p>Customer Data Card</p>
+                </td>
+                <td class="left-section">
                     رقم شهادة العمل الحر: FL-765735204<br>
                     الرقم الضريبي: 312495447600003
                 </td>
-                <td style="width: 30%;" class="title-section">
-                    <h2>بطاقة بيانات العميل</h2>
-                    <small>Customer Data Card</small>
-                </td>
-                <td style="width: 35%;" class="logo-section">
-                    <img src="fi-khidmatik/images/logo.svg" alt="Tera Logo" onerror="this.onerror=null; this.parentElement.innerHTML='<strong>Tera Gateway</strong>';">
-                </td>
-            </tr>
-            <tr style="background: #f1f5f9;">
-                <td colspan="3" style="font-weight: bold; padding: 8px;">
-                    رقم المعاملة: <span id="trans-id">---</span> | التاريخ: <span id="current-date"></span>
-                </td>
             </tr>
         </table>
+
+        <div class="meta-bar">
+            <span>رقم المعاملة: <span id="trans-id">KF-2026-04-XXXX</span></span>
+            <span>التاريخ: <span id="current-date"></span></span>
+            <span>الوقت: <span id="current-time"></span></span>
+        </div>
 
         <table class="details-table">
-            <tr><th><i class="fas fa-user"></i> اسم العميل</th><td id="name">جاري التحميل...</td></tr>
-            <tr><th><i class="fas fa-phone"></i> رقم الجوال</th><td id="phone" dir="ltr"></td></tr>
-            <tr><th><i class="fas fa-envelope"></i> البريد الإلكتروني</th><td id="email"></td></tr>
-            <tr><th><i class="fas fa-map-marker-alt"></i> المدينة / الحي</th><td id="location"></td></tr>
-            <tr><th><i class="fas fa-home"></i> العنوان الوطني</th><td id="national-address"></td></tr>
-            <tr><th><i class="fas fa-mailbox"></i> الرمز البريدي / ص.ب</th><td id="postal"></td></tr>
-            <tr><th><i class="fas fa-tag"></i> تصنيف العميل</th><td id="tag"></td></tr>
-            <tr><th><i class="fas fa-sticky-note"></i> ملاحظات</th><td id="notes" style="height: 80px; vertical-align: top;"></td></tr>
+            <tr>
+                <td class="label-ar">اسم العميل</td>
+                <td id="name" class="data-cell">جاري التحميل...</td>
+                <td class="label-en">Customer Name</td>
+            </tr>
+            <tr>
+                <td class="label-ar">رقم الجوال</td>
+                <td id="phone" class="data-cell" dir="ltr"></td>
+                <td class="label-en">Mobile Number</td>
+            </tr>
+            <tr>
+                <td class="label-ar">البريد الإلكتروني</td>
+                <td id="email" class="data-cell"></td>
+                <td class="label-en">Email Address</td>
+            </tr>
+            <tr>
+                <td class="label-ar">المدينة / الحي</td>
+                <td id="location" class="data-cell"></td>
+                <td class="label-en">City / District</td>
+            </tr>
+            <tr>
+                <td class="label-ar">العنوان الوطني</td>
+                <td id="national-address" class="data-cell"></td>
+                <td class="label-en">National Address</td>
+            </tr>
+            <tr>
+                <td class="label-ar">الرمز البريدي / ص.ب</td>
+                <td id="postal" class="data-cell"></td>
+                <td class="label-en">Postal Code / P.O Box</td>
+            </tr>
+            <tr>
+                <td class="label-ar">تصنيف العميل</td>
+                <td id="tag" class="data-cell"></td>
+                <td class="label-en">Customer Category</td>
+            </tr>
+            <tr>
+                <td class="label-ar">ملاحظات إضافية</td>
+                <td id="notes" class="data-cell" style="height: 60px;"></td>
+                <td class="label-en">Additional Notes</td>
+            </tr>
         </table>
 
-        <div class="qr-section">
+        <div class="verification-section">
             <div id="qrcode"></div>
-            <p style="font-size: 0.8rem; margin-top: 10px; font-weight: bold;">كود التحقق الرقمي</p>
+            <p class="qr-text">كود التحقق من الوثيقة</p>
+            <p style="font-size: 0.7rem; color: #666;">(كود التحقق هو عبارة عن تحميل البيانات)</p>
         </div>
 
         <div class="footer">
-            <p>هذه المعلومات صادرة من منصة Tera Gateway لخدمات الاتصالات</p>
-            <div class="footer-info">
+            <div class="footer-brand">هذه المعلومات صادرة من منصة في خدمتك من الأتقان بلس</div>
+            <div class="footer-contacts">
                 <span><i class="fas fa-phone"></i> 966534051317</span>
                 <span><i class="fab fa-whatsapp"></i> 966545312021</span>
-                <span><i class="fas fa-globe"></i> www.tera-gateway.com</span>
+                <span><i class="fas fa-envelope"></i> info@fi-khidmatik.com</span>
+                <span><i class="fas fa-globe"></i> www.khidmatik.com</span>
             </div>
         </div>
     </div>
@@ -109,45 +159,38 @@
 
         if (customerId) {
             const docRef = doc(db, "customers", customerId);
-            try {
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    
-                    document.getElementById('name').innerText = data.name || '-';
-                    document.getElementById('phone').innerText = (data.countryCode || '') + (data.phone || '');
-                    document.getElementById('email').innerText = data.email || '-';
-                    document.getElementById('location').innerText = `${data.city || '-'} - ${data.district || '-'}`;
-                    document.getElementById('national-address').innerText = `مبنى: ${data.buildingNo || '-'} | شارع: ${data.street || '-'}`;
-                    document.getElementById('postal').innerText = `رمز: ${data.postalCode || '-'} | ص.ب: ${data.poBox || '-'}`;
-                    document.getElementById('tag').innerText = data.tag || 'عادي';
-                    document.getElementById('notes').innerText = data.notes || 'لا يوجد ملاحظات.';
-                    document.getElementById('current-date').innerText = new Date().toLocaleDateString('ar-SA');
-                    document.getElementById('trans-id').innerText = `TG-${new Date().getFullYear()}-${customerId.substring(0,5).toUpperCase()}`;
+            const docSnap = await getDoc(docRef);
 
-                    // توليد الباركود
-                    new QRCode(document.getElementById("qrcode"), {
-                        text: `https://tera-gateway.com/verify?id=${customerId}`,
-                        width: 110,
-                        height: 110
-                    });
-                }
-            } catch (error) {
-                console.error("Error fetching document:", error);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                const now = new Date();
+                
+                // تعبئة البيانات
+                document.getElementById('name').innerText = data.name || '-';
+                document.getElementById('phone').innerText = (data.countryCode || '') + (data.phone || '');
+                document.getElementById('email').innerText = data.email || '-';
+                document.getElementById('location').innerText = `${data.city || '-'} - ${data.district || '-'}`;
+                document.getElementById('national-address').innerText = `مبنى: ${data.buildingNo || '-'} | شارع: ${data.street || '-'}`;
+                document.getElementById('postal').innerText = `رمز: ${data.postalCode || '-'} | ص.ب: ${data.poBox || '-'}`;
+                document.getElementById('tag').innerText = data.tag || 'عادي';
+                document.getElementById('notes').innerText = data.notes || 'لا يوجد ملاحظات.';
+                
+                // التاريخ والوقت
+                document.getElementById('current-date').innerText = now.toLocaleDateString('ar-SA');
+                document.getElementById('current-time').innerText = now.toLocaleTimeString('ar-SA', {hour: '2-digit', minute:'2-digit'});
+                
+                // رقم المعاملة التلقائي (السنة والشهر ورقم KF)
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                document.getElementById('trans-id').innerText = `KF-${year}-${month}-${customerId.substring(0,4).toUpperCase()}`;
+
+                // توليد كود التحقق (الباركود)
+                new QRCode(document.getElementById("qrcode"), {
+                    text: `https://khidmatik.com/verify?id=${customerId}`,
+                    width: 100,
+                    height: 100
+                });
             }
-        }
-
-        // دالة حفظ PDF
-        window.generatePDF = function() {
-            const element = document.getElementById('content-to-export');
-            const opt = {
-                margin: 0,
-                filename: `Tera-Customer-${customerId}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-            html2pdf().set(opt).from(element).save();
         }
     </script>
 </body>
