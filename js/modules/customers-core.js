@@ -1,13 +1,12 @@
 /**
  * js/modules/customers-core.js
  * نظام إدارة العملاء المتكامل - Tera Gateway
- * التعديل الأخير: إصلاح ReferenceError وإضافة الحقول المتقدمة
+ * التحديث: إضافة كافة حقول العنوان الوطني (buildingNo, additionalNo, poBox, postalCode)
  */
 
 import { db } from '../core/config.js';
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// بيانات الدول والتصنيفات
 const countryData = [
     { name: "السعودية", code: "+966", flag: "🇸🇦" },
     { name: "الإمارات", code: "+971", flag: "🇦🇪" },
@@ -60,7 +59,6 @@ export async function initCustomers(container) {
 
     document.getElementById('add-customer-btn').onclick = () => openCustomerModal();
     document.getElementById('customer-search').oninput = (e) => filterTable(e.target.value);
-    
     loadCustomers();
 }
 
@@ -77,11 +75,12 @@ async function loadCustomers() {
         const id = docSnap.id;
         stats.total++;
         
+        // التحقق من اكتمال البيانات (رقم المبنى والرمز البريدي)
         if (!data.buildingNo || !data.postalCode) stats.incomplete++; else stats.complete++;
         if (['scammer', 'uncooperative'].includes(data.tag)) stats.flagged++;
 
         const tagInfo = customerTags[data.tag || 'normal'];
-        const avatar = data.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=random&color=fff`;
+        const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=random&color=fff`;
 
         listBody.innerHTML += `
             <tr class="customer-row">
@@ -90,16 +89,16 @@ async function loadCustomers() {
                         <img src="${avatar}" class="avatar">
                         <div class="info">
                             <span class="name">${data.name}</span>
-                            <span class="email">${data.email || ''}</span>
+                            <small>${data.email || 'لا يوجد بريد'}</small>
                         </div>
                     </div>
                 </td>
-                <td dir="ltr"><span class="code">${data.countryCode || ''}</span> ${data.phone}</td>
+                <td dir="ltr"><b>${data.countryCode || ''}</b> ${data.phone}</td>
                 <td>
-                    <small>
-                        ${data.city}, ${data.district}<br>
-                        بناء: ${data.buildingNo || '-'} | رمز: ${data.postalCode || '-'}
-                    </small>
+                    <div class="address-details">
+                        <b>${data.city}</b> - ${data.district}<br>
+                        <small>مبنى: ${data.buildingNo || '-'} | إضافي: ${data.additionalNo || '-'} | رمز: ${data.postalCode || '-'}</small>
+                    </div>
                 </td>
                 <td>
                     <span class="tag-badge" style="background:${tagInfo.color}20; color:${tagInfo.color};">
@@ -122,10 +121,7 @@ async function loadCustomers() {
     document.getElementById('stat-flagged').innerText = stats.flagged;
 }
 
-/**
- * دالة فتح النافذة (Modal)
- */
-export async function openCustomerModal(customer = null) {
+export function openCustomerModal(customer = null) {
     const isEdit = !!customer;
     const modalHTML = `
     <div id="customer-modal" class="modal-overlay">
@@ -136,12 +132,8 @@ export async function openCustomerModal(customer = null) {
             </div>
             <form id="customer-form">
                 <div class="form-body">
-                    <div class="row">
-                        <div class="field full">
-                            <label>اسم العميل</label>
-                            <input type="text" id="cust-name" value="${customer?.name || ''}" required>
-                        </div>
-                    </div>
+                    <div class="field"><label>اسم العميل</label><input type="text" id="cust-name" value="${customer?.name || ''}" required></div>
+                    
                     <div class="row">
                         <div class="field">
                             <label>الدولة</label>
@@ -149,32 +141,43 @@ export async function openCustomerModal(customer = null) {
                                 ${countryData.map(c => `<option value="${c.code}" ${customer?.countryCode === c.code ? 'selected' : ''}>${c.flag} ${c.name}</option>`).join('')}
                             </select>
                         </div>
-                        <div class="field flex-2">
-                            <label>رقم الجوال</label>
-                            <input type="tel" id="cust-phone" value="${customer?.phone || ''}" required>
-                        </div>
+                        <div class="field flex-2"><label>رقم الجوال</label><input type="tel" id="cust-phone" value="${customer?.phone || ''}" required></div>
                     </div>
+
                     <div class="row">
                         <div class="field"><label>المدينة</label><input type="text" id="cust-city" value="${customer?.city || 'حائل'}"></div>
                         <div class="field"><label>الحي</label><input type="text" id="cust-district" value="${customer?.district || ''}"></div>
                     </div>
+
                     <div class="row">
-                        <div class="field"><label>المبنى</label><input type="text" id="cust-building" value="${customer?.buildingNo || ''}"></div>
+                        <div class="field"><label>الشارع</label><input type="text" id="cust-street" value="${customer?.street || ''}"></div>
+                        <div class="field"><label>رقم المبنى</label><input type="text" id="cust-building" value="${customer?.buildingNo || ''}"></div>
+                    </div>
+
+                    <div class="row">
+                        <div class="field"><label>الرقم الإضافي</label><input type="text" id="cust-additional" value="${customer?.additionalNo || ''}"></div>
                         <div class="field"><label>الرمز البريدي</label><input type="text" id="cust-zip" value="${customer?.postalCode || ''}"></div>
                     </div>
+
+                    <div class="row">
+                        <div class="field"><label>صندوق البريد</label><input type="text" id="cust-pobox" value="${customer?.poBox || ''}"></div>
+                        <div class="field"><label>البريد الإلكتروني</label><input type="email" id="cust-email" value="${customer?.email || ''}"></div>
+                    </div>
+
                     <div class="field">
                         <label>تصنيف العميل</label>
                         <select id="cust-tag">
                             ${Object.keys(customerTags).map(key => `<option value="${key}" ${customer?.tag === key ? 'selected' : ''}>${customerTags[key].label}</option>`).join('')}
                         </select>
                     </div>
+
                     <div class="field">
-                        <label>ملاحظات إدارية</label>
-                        <textarea id="cust-notes" rows="3">${customer?.notes || ''}</textarea>
+                        <label>ملاحظات (محرر نصوص)</label>
+                        <textarea id="cust-notes" rows="3" placeholder="سجل الملاحظات هنا...">${customer?.notes || ''}</textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn-save">حفظ البيانات</button>
+                    <button type="submit" class="btn-save">حفظ العميل</button>
                     <button type="button" class="btn-cancel" onclick="document.getElementById('customer-modal').remove()">إلغاء</button>
                 </div>
             </form>
@@ -191,8 +194,12 @@ export async function openCustomerModal(customer = null) {
             phone: document.getElementById('cust-phone').value,
             city: document.getElementById('cust-city').value,
             district: document.getElementById('cust-district').value,
+            street: document.getElementById('cust-street').value,
             buildingNo: document.getElementById('cust-building').value,
+            additionalNo: document.getElementById('cust-additional').value,
+            poBox: document.getElementById('cust-pobox').value,
             postalCode: document.getElementById('cust-zip').value,
+            email: document.getElementById('cust-email').value,
             tag: document.getElementById('cust-tag').value,
             notes: document.getElementById('cust-notes').value,
             updatedAt: new Date()
@@ -209,7 +216,7 @@ export async function openCustomerModal(customer = null) {
     };
 }
 
-// --- تصدير الدوال للـ Window لتعمل مع HTML onclick ---
+// ربط الدوال بالنافذة العالمية لحل مشكلة ReferenceError
 window.editCustomer = async (id) => {
     const querySnapshot = await getDocs(collection(db, "customers"));
     const docSnap = querySnapshot.docs.find(d => d.id === id);
@@ -231,36 +238,31 @@ function filterTable(value) {
 }
 
 function injectStyles() {
-    if (document.getElementById('cust-styles')) return;
+    if (document.getElementById('cust-styles-final')) return;
     const s = document.createElement('style');
-    s.id = 'cust-styles';
+    s.id = 'cust-styles-final';
     s.innerHTML = `
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: #fff; padding: 15px; border-radius: 10px; border-right: 5px solid #3b82f6; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .stat-card { background: #fff; padding: 15px; border-radius: 10px; border-right: 5px solid #e67e22; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .stat-card.success { border-color: #10b981; }
         .stat-card.warning { border-color: #f59e0b; }
         .stat-card.danger { border-color: #ef4444; }
-        .stat-card h3 { font-size: 0.8rem; color: #64748b; margin-bottom: 5px; }
-        .stat-card p { font-size: 1.5rem; font-weight: bold; }
-
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 9999; }
-        .modal-content { background: white; width: 90%; max-width: 500px; border-radius: 12px; padding: 20px; direction: rtl; }
-        .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .form-body .row { display: flex; gap: 10px; margin-bottom: 10px; }
-        .field { display: flex; flex-direction: column; flex: 1; }
-        .field label { font-size: 0.8rem; margin-bottom: 5px; font-weight: bold; }
-        .field input, .field select, .field textarea { padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
-        .modal-footer { margin-top: 20px; display: flex; gap: 10px; }
-        .btn-save { background: #16a34a; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
-        .btn-cancel { background: #ccc; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
         
-        .tag-badge { padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px); }
+        .modal-content { background: white; width: 95%; max-width: 600px; border-radius: 15px; padding: 25px; direction: rtl; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 20px; }
+        
+        .row { display: flex; gap: 15px; margin-bottom: 12px; }
+        .field { display: flex; flex-direction: column; flex: 1; }
+        .field label { font-size: 0.85rem; font-weight: bold; color: #475569; margin-bottom: 5px; }
+        .field input, .field select, .field textarea { padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; }
+        
         .user-cell { display: flex; align-items: center; gap: 10px; }
-        .user-cell .avatar { width: 35px; height: 35px; border-radius: 50%; }
-        .actions { display: flex; gap: 5px; }
-        .act-btn { border: none; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; }
-        .act-btn.edit { background: #e0f2fe; color: #0369a1; }
-        .act-btn.del { background: #fee2e2; color: #991b1b; }
+        .user-cell .avatar { width: 40px; height: 40px; border-radius: 50%; }
+        .tag-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; }
+        
+        .btn-save { background: #e67e22; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-cancel { background: #f1f5f9; color: #475569; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; }
     `;
     document.head.appendChild(s);
 }
