@@ -22,7 +22,7 @@
                 <td class="header-right">
                     <div class="logo-container">
                         <span class="logo-text">منصة في خدمتك<br>من الأتقان بلس</span>
-                        <img src="fi-khidmatik/images/logo.svg" alt="Logo" onerror="this.src='https://via.placeholder.com/60'">
+                        <img src="fi-khidmatik/images/logo.svg" alt="Logo">
                     </div>
                 </td>
                 <td class="header-center">
@@ -50,8 +50,58 @@
                     <th>Field in English</th>
                 </tr>
             </thead>
-            <tbody id="data-body">
-                </tbody>
+            <tbody>
+                <tr>
+                    <td class="col-ar">اسم العميل</td>
+                    <td id="name-cell" class="col-data">-</td>
+                    <td class="col-en">Customer Name</td>
+                </tr>
+                <tr>
+                    <td class="col-ar">الدولة</td>
+                    <td id="country-cell" class="col-data">المملكة العربية السعودية / Saudi Arabia</td>
+                    <td class="col-en">Country</td>
+                </tr>
+                <tr>
+                    <td class="col-ar">رقم الجوال</td>
+                    <td id="phone-cell" class="col-data" dir="ltr">-</td>
+                    <td class="col-en">Mobile Number</td>
+                </tr>
+                <tr>
+                    <td class="col-ar">البريد الإلكتروني</td>
+                    <td id="email-cell" class="col-data">-</td>
+                    <td class="col-en">Email Address</td>
+                </tr>
+                <tr>
+                    <td class="col-ar">المدينة</td>
+                    <td id="city-cell" class="col-data">-</td>
+                    <td class="col-en">City</td>
+                </tr>
+                <tr>
+                    <td class="col-ar">الحي</td>
+                    <td id="district-cell" class="col-data">-</td>
+                    <td class="col-en">District</td>
+                </tr>
+                <tr>
+                    <td class="col-ar">الشارع</td>
+                    <td id="street-cell" class="col-data">-</td>
+                    <td class="col-en">Street</td>
+                </tr>
+                <tr>
+                    <td class="col-ar">رقم المبنى</td>
+                    <td id="building-cell" class="col-data">-</td>
+                    <td class="col-en">Building Number</td>
+                </tr>
+                <tr>
+                    <td class="col-ar">الرمز البريدي</td>
+                    <td id="postal-cell" class="col-data">-</td>
+                    <td class="col-en">Postal Code</td>
+                </tr>
+                <tr>
+                    <td class="col-ar">تصنيف العميل</td>
+                    <td id="tag-cell" class="col-data">-</td>
+                    <td class="col-en">Customer Category</td>
+                </tr>
+            </tbody>
         </table>
 
         <div class="verification-box">
@@ -75,17 +125,14 @@
         import { db } from './js/core/config.js';
         import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // محرك ترجمة آلي بسيط للقيم الشائعة
+        // قاموس الترجمة التلقائية
         const dictionary = {
             "الرياض": "Riyadh", "حائل": "Hail", "النهضة": "Al-Nahda", "النفرة": "Al-Nafra",
-            "سلطان": "Sultan", "محمد": "Mohammad", "وعله": "Waalah", "القصيم": "Qassim",
-            "عادي": "Normal", "مميز": "VIP", "سعد المشاط": "Saad Al-Mashat"
+            "عادي": "Normal", "مميز": "VIP", "المملكة العربية السعودية": "Saudi Arabia"
         };
 
-        function autoTranslate(text) {
-            if (!text || text === '-') return '-';
-            // إذا كان النص يحتوي على إنجليزي أصلاً نرجعه كما هو
-            if (/[a-zA-Z]/.test(text)) return text;
+        function getTranslation(text) {
+            if (!text || text === '-') return '';
             return dictionary[text] || text; 
         }
 
@@ -98,49 +145,39 @@
 
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                const now = new Date();
                 
-                const fields = [
-                    { ar: "اسم العميل", en: "Customer Name", val: data.name },
-                    { ar: "الدولة", en: "Country", val: "المملكة العربية السعودية" },
-                    { ar: "رقم الجوال", en: "Mobile Number", val: `${data.countryCode || '+966'} ${data.phone || ''}` },
-                    { ar: "البريد الإلكتروني", en: "Email Address", val: data.email },
-                    { ar: "المدينة", en: "City", val: data.city },
-                    { ar: "الحي", en: "District", val: data.district },
-                    { ar: "الشارع", en: "Street", val: data.street },
-                    { ar: "رقم المبنى", en: "Building No.", val: data.buildingNo },
-                    { ar: "الرمز البريدي", en: "Postal Code", val: data.postalCode },
-                    { ar: "صندوق البريد", en: "P.O Box", val: data.poBox || '-' },
-                    { ar: "تصنيف العميل", en: "Category", val: data.tag },
-                    { ar: "ملاحظات", en: "Notes", val: data.notes }
-                ];
+                // تحديث الحقول مع الترجمة التلقائية
+                const updateCell = (id, val) => {
+                    const cell = document.getElementById(id);
+                    const trans = getTranslation(val);
+                    cell.innerHTML = `${val || '-'} <br> <small>${trans !== val ? trans : ''}</small>`;
+                };
 
-                const tbody = document.getElementById('data-body');
-                fields.forEach(f => {
-                    const tr = document.createElement('tr');
-                    const translated = autoTranslate(f.val);
-                    tr.innerHTML = `
-                        <td class="col-ar">${f.ar}</td>
-                        <td class="col-data">${f.val || '-'} <br> <small>${translated !== f.val ? translated : ''}</small></td>
-                        <td class="col-en">${f.en}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+                updateCell('name-cell', data.name);
+                updateCell('city-cell', data.city);
+                updateCell('district-cell', data.district);
+                updateCell('street-cell', data.street);
+                updateCell('tag-cell', data.tag);
+                
+                document.getElementById('phone-cell').innerText = `${data.countryCode || '+966'} ${data.phone || ''}`;
+                document.getElementById('email-cell').innerText = data.email || '-';
+                document.getElementById('building-cell').innerText = data.buildingNo || '-';
+                document.getElementById('postal-cell').innerText = data.postalCode || '-';
 
+                const now = new Date();
                 document.getElementById('current-date').innerText = now.toLocaleDateString('ar-SA');
                 document.getElementById('current-time').innerText = now.toLocaleTimeString('ar-SA', {hour:'2-digit', minute:'2-digit'});
-                const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-                document.getElementById('trans-id').innerText = `KF-${ym}-${customerId.substring(0,5).toUpperCase()}`;
+                document.getElementById('trans-id').innerText = `KF-${now.getFullYear()}-${customerId.substring(0,5).toUpperCase()}`;
 
-                new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 85, height: 85 });
+                new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 90, height: 90 });
             }
         }
 
         window.saveAsPDF = function() {
             const element = document.getElementById('printable-area');
             html2pdf().from(element).set({
-                margin: 0, filename: 'Customer-Card.pdf',
-                html2canvas: { scale: 3, useCORS: true },
+                margin: 5, filename: 'Customer-Card.pdf',
+                html2canvas: { scale: 3 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             }).save();
         }
