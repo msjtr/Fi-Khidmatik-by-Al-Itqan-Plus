@@ -1,28 +1,21 @@
 /**
  * js/modules/customers-core.js
- * نظام إدارة العملاء المتكامل - Tera Gateway
- * التحديث: إضافة كافة حقول العنوان الوطني (buildingNo, additionalNo, poBox, postalCode)
+ * موديول إدارة العملاء الاحترافي - Tera Gateway
+ * يتضمن: الطباعة، معاينة PDF، تصدير واستيراد Excel، ومعالجة undefined
  */
 
 import { db } from '../core/config.js';
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const countryData = [
-    { name: "السعودية", code: "+966", flag: "🇸🇦" },
-    { name: "الإمارات", code: "+971", flag: "🇦🇪" },
-    { name: "الكويت", code: "+965", flag: "🇰🇼" },
-    { name: "مصر", code: "+20", flag: "🇪🇬" }
-];
-
-const customerTags = {
-    "normal": { label: "عميل عادي", icon: "fa-user", color: "#64748b" },
-    "vip": { label: "عميل مميز", icon: "fa-star", color: "#f1c40f" },
-    "scammer": { label: "عميل محتال", icon: "fa-user-secret", color: "#e74c3c" },
-    "unserious": { label: "غير جدي", icon: "fa-user-slash", color: "#95a5a6" },
-    "uncooperative": { label: "غير متعاون", icon: "fa-handshake-slash", color: "#e67e22" }
+// المكتبات الخارجية المطلوبة (سيتم حقنها تلقائياً)
+const LIBS = {
+    xlsx: "https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js",
+    jspdf: "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
+    jspdfAutotable: "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"
 };
 
 export async function initCustomers(container) {
+    await loadExternalLibs();
     injectStyles();
 
     container.innerHTML = `
@@ -33,16 +26,21 @@ export async function initCustomers(container) {
             <div class="stat-card danger"><h3>ملاحظات هامة</h3><p id="stat-flagged">0</p></div>
         </div>
 
-        <div class="module-header">
+        <div class="toolbar">
             <div class="search-box">
                 <i class="fas fa-search"></i>
-                <input type="text" id="customer-search" placeholder="بحث باسم العميل أو الرقم...">
+                <input type="text" id="customer-search" placeholder="بحث ذكي (اسم، جوال، حي)...">
             </div>
-            <button id="add-customer-btn" class="btn-primary-tera"><i class="fas fa-plus"></i> إضافة عميل جديد</button>
+            <div class="action-buttons">
+                <button onclick="exportToExcel()" class="btn-alt"><i class="fas fa-file-excel"></i> تصدير Excel</button>
+                <button onclick="document.getElementById('import-excel').click()" class="btn-alt"><i class="fas fa-upload"></i> استيراد</button>
+                <input type="file" id="import-excel" hidden accept=".xlsx, .xls">
+                <button id="add-customer-btn" class="btn-primary-tera"><i class="fas fa-plus"></i> إضافة عميل</button>
+            </div>
         </div>
         
         <div class="table-container">
-            <table class="tera-table">
+            <table class="tera-table" id="customers-table-to-print">
                 <thead>
                     <tr>
                         <th>العميل</th>
@@ -55,10 +53,26 @@ export async function initCustomers(container) {
                 <tbody id="customers-list"></tbody>
             </table>
         </div>
+
+        <div id="print-modal" class="modal-overlay" style="display:none">
+            <div class="modal-content print-preview">
+                <div class="modal-header">
+                    <h2><i class="fas fa-print"></i> معاينة طباعة بطاقة العميل</h2>
+                    <button onclick="closePrintModal()">&times;</button>
+                </div>
+                <div id="print-card-area" class="print-card"></div>
+                <div class="modal-footer">
+                    <button onclick="downloadPDF()" class="btn-save"><i class="fas fa-file-pdf"></i> تحميل PDF</button>
+                    <button onclick="processPrint()" class="btn-primary-tera"><i class="fas fa-print"></i> طباعة الآن</button>
+                </div>
+            </div>
+        </div>
     `;
 
     document.getElementById('add-customer-btn').onclick = () => openCustomerModal();
     document.getElementById('customer-search').oninput = (e) => filterTable(e.target.value);
+    document.getElementById('import-excel').onchange = (e) => importFromExcel(e);
+    
     loadCustomers();
 }
 
@@ -75,38 +89,41 @@ async function loadCustomers() {
         const id = docSnap.id;
         stats.total++;
         
-        // التحقق من اكتمال البيانات (رقم المبنى والرمز البريدي)
-        if (!data.buildingNo || !data.postalCode) stats.incomplete++; else stats.complete++;
-        if (['scammer', 'uncooperative'].includes(data.tag)) stats.flagged++;
+        // معالجة القيم الفارغة لمنع ظهور undefined
+        const cleanData = {
+            city: data.city || 'غير محدد',
+            district: data.district || 'غير محدد',
+            buildingNo: data.buildingNo || '-',
+            postalCode: data.postalCode || '-',
+            additionalNo: data.additionalNo || '-',
+            street: data.street || '-',
+            name: data.name || 'عميل بدون اسم'
+        };
 
-        const tagInfo = customerTags[data.tag || 'normal'];
-        const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=random&color=fff`;
+        if (cleanData.buildingNo === '-' || cleanData.postalCode === '-') stats.incomplete++; else stats.complete++;
 
         listBody.innerHTML += `
             <tr class="customer-row">
                 <td>
                     <div class="user-cell">
-                        <img src="${avatar}" class="avatar">
+                        <div class="avatar-text">${cleanData.name.charAt(0)}</div>
                         <div class="info">
-                            <span class="name">${data.name}</span>
+                            <span class="name">${cleanData.name}</span>
                             <small>${data.email || 'لا يوجد بريد'}</small>
                         </div>
                     </div>
                 </td>
-                <td dir="ltr"><b>${data.countryCode || ''}</b> ${data.phone}</td>
+                <td dir="ltr"><b>${data.countryCode || '+966'}</b> ${data.phone}</td>
                 <td>
                     <div class="address-details">
-                        <b>${data.city}</b> - ${data.district}<br>
-                        <small>مبنى: ${data.buildingNo || '-'} | إضافي: ${data.additionalNo || '-'} | رمز: ${data.postalCode || '-'}</small>
+                        <b>${cleanData.city}</b> - ${cleanData.district}<br>
+                        <small>مبنى: ${cleanData.buildingNo} | إضافي: ${cleanData.additionalNo} | رمز: ${cleanData.postalCode}</small>
                     </div>
                 </td>
-                <td>
-                    <span class="tag-badge" style="background:${tagInfo.color}20; color:${tagInfo.color};">
-                        <i class="fas ${tagInfo.icon}"></i> ${tagInfo.label}
-                    </span>
-                </td>
+                <td><span class="status-badge">${data.tag || 'عادي'}</span></td>
                 <td>
                     <div class="actions">
+                        <button onclick="previewPrint('${id}')" class="act-btn print" title="طباعة وتحميل"><i class="fas fa-print"></i></button>
                         <button onclick="editCustomer('${id}')" class="act-btn edit"><i class="fas fa-pen"></i></button>
                         <button onclick="deleteCustomer('${id}')" class="act-btn del"><i class="fas fa-trash"></i></button>
                     </div>
@@ -118,151 +135,155 @@ async function loadCustomers() {
     document.getElementById('stat-total').innerText = stats.total;
     document.getElementById('stat-complete').innerText = stats.complete;
     document.getElementById('stat-incomplete').innerText = stats.incomplete;
-    document.getElementById('stat-flagged').innerText = stats.flagged;
 }
 
-export function openCustomerModal(customer = null) {
-    const isEdit = !!customer;
-    const modalHTML = `
-    <div id="customer-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>${isEdit ? 'تعديل بيانات العميل' : 'إضافة عميل جديد'}</h2>
-                <button type="button" onclick="document.getElementById('customer-modal').remove()">&times;</button>
+// --- وظائف الطباعة و PDF ---
+window.previewPrint = async (id) => {
+    const querySnapshot = await getDocs(collection(db, "customers"));
+    const customer = querySnapshot.docs.find(d => d.id === id)?.data();
+    
+    if (!customer) return;
+
+    const printArea = document.getElementById('print-card-area');
+    printArea.innerHTML = `
+        <div class="business-card">
+            <div class="card-header">
+                <img src="logo.png" style="height:40px">
+                <h3>بطاقة بيانات العميل</h3>
             </div>
-            <form id="customer-form">
-                <div class="form-body">
-                    <div class="field"><label>اسم العميل</label><input type="text" id="cust-name" value="${customer?.name || ''}" required></div>
-                    
-                    <div class="row">
-                        <div class="field">
-                            <label>الدولة</label>
-                            <select id="cust-country">
-                                ${countryData.map(c => `<option value="${c.code}" ${customer?.countryCode === c.code ? 'selected' : ''}>${c.flag} ${c.name}</option>`).join('')}
-                            </select>
-                        </div>
-                        <div class="field flex-2"><label>رقم الجوال</label><input type="tel" id="cust-phone" value="${customer?.phone || ''}" required></div>
-                    </div>
-
-                    <div class="row">
-                        <div class="field"><label>المدينة</label><input type="text" id="cust-city" value="${customer?.city || 'حائل'}"></div>
-                        <div class="field"><label>الحي</label><input type="text" id="cust-district" value="${customer?.district || ''}"></div>
-                    </div>
-
-                    <div class="row">
-                        <div class="field"><label>الشارع</label><input type="text" id="cust-street" value="${customer?.street || ''}"></div>
-                        <div class="field"><label>رقم المبنى</label><input type="text" id="cust-building" value="${customer?.buildingNo || ''}"></div>
-                    </div>
-
-                    <div class="row">
-                        <div class="field"><label>الرقم الإضافي</label><input type="text" id="cust-additional" value="${customer?.additionalNo || ''}"></div>
-                        <div class="field"><label>الرمز البريدي</label><input type="text" id="cust-zip" value="${customer?.postalCode || ''}"></div>
-                    </div>
-
-                    <div class="row">
-                        <div class="field"><label>صندوق البريد</label><input type="text" id="cust-pobox" value="${customer?.poBox || ''}"></div>
-                        <div class="field"><label>البريد الإلكتروني</label><input type="email" id="cust-email" value="${customer?.email || ''}"></div>
-                    </div>
-
-                    <div class="field">
-                        <label>تصنيف العميل</label>
-                        <select id="cust-tag">
-                            ${Object.keys(customerTags).map(key => `<option value="${key}" ${customer?.tag === key ? 'selected' : ''}>${customerTags[key].label}</option>`).join('')}
-                        </select>
-                    </div>
-
-                    <div class="field">
-                        <label>ملاحظات (محرر نصوص)</label>
-                        <textarea id="cust-notes" rows="3" placeholder="سجل الملاحظات هنا...">${customer?.notes || ''}</textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn-save">حفظ العميل</button>
-                    <button type="button" class="btn-cancel" onclick="document.getElementById('customer-modal').remove()">إلغاء</button>
-                </div>
-            </form>
+            <div class="card-body">
+                <div class="info-row"><span>الاسم:</span> <b>${customer.name}</b></div>
+                <div class="info-row"><span>الجوال:</span> <b dir="ltr">${customer.countryCode}${customer.phone}</b></div>
+                <div class="info-row"><span>المدينة:</span> <b>${customer.city}</b></div>
+                <div class="info-row"><span>الحي:</span> <b>${customer.district}</b></div>
+                <div class="info-row"><span>العنوان الوطني:</span> <b>${customer.buildingNo} - ${customer.postalCode}</b></div>
+                <div class="info-row"><span>ملاحظات:</span> <p>${customer.notes || 'لا يوجد'}</p></div>
+            </div>
+            <div class="card-footer">Tera Gateway - نظام إدارة العملاء</div>
         </div>
-    </div>`;
+    `;
+    document.getElementById('print-modal').style.display = 'flex';
+};
 
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
+window.downloadPDF = () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    
+    // ملاحظة: دعم العربية في PDF يحتاج ملف خطوط .ttf، هنا نستخدم autoTable كحل بديل سريع
+    doc.text("Customer Report - Tera Gateway", 10, 10);
+    doc.autoTable({
+        html: '#customers-table-to-print',
+        styles: { font: 'Amiri', halign: 'right' }
+    });
+    doc.save("customers_report.pdf");
+};
 
-    document.getElementById('customer-form').onsubmit = async (e) => {
-        e.preventDefault();
-        const data = {
-            name: document.getElementById('cust-name').value,
-            countryCode: document.getElementById('cust-country').value,
-            phone: document.getElementById('cust-phone').value,
-            city: document.getElementById('cust-city').value,
-            district: document.getElementById('cust-district').value,
-            street: document.getElementById('cust-street').value,
-            buildingNo: document.getElementById('cust-building').value,
-            additionalNo: document.getElementById('cust-additional').value,
-            poBox: document.getElementById('cust-pobox').value,
-            postalCode: document.getElementById('cust-zip').value,
-            email: document.getElementById('cust-email').value,
-            tag: document.getElementById('cust-tag').value,
-            notes: document.getElementById('cust-notes').value,
-            updatedAt: new Date()
+window.processPrint = () => {
+    const printContents = document.getElementById('print-card-area').innerHTML;
+    const originalContents = document.body.innerHTML;
+    document.body.innerHTML = printContents;
+    window.print();
+    location.reload(); // لإعادة النظام بعد الطباعة
+};
+
+window.closePrintModal = () => { document.getElementById('print-modal').style.display = 'none'; };
+
+// --- وظائف Excel (تصدير واستيراد) ---
+window.exportToExcel = async () => {
+    const querySnapshot = await getDocs(collection(db, "customers"));
+    const data = querySnapshot.docs.map(doc => {
+        const d = doc.data();
+        return {
+            "الاسم": d.name,
+            "الجوال": d.phone,
+            "المدينة": d.city,
+            "الحي": d.district,
+            "الشارع": d.street,
+            "رقم المبنى": d.buildingNo,
+            "الرقم الاضافي": d.additionalNo,
+            "الرمز البريدي": d.postalCode,
+            "صندوق البريد": d.poBox,
+            "البريد الإلكتروني": d.email,
+            "ملاحظات": d.notes
         };
+    });
 
-        if (isEdit) {
-            await updateDoc(doc(db, "customers", customer.id), data);
-        } else {
-            data.createdAt = new Date();
-            await addDoc(collection(db, "customers"), data);
-        }
-        document.getElementById('customer-modal').remove();
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "العملاء");
+    XLSX.writeFile(wb, "Tera_Customers_Export.xlsx");
+};
+
+async function importFromExcel(e) {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+        const bstr = evt.target.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws);
+
+        const batch = writeBatch(db);
+        data.forEach(row => {
+            const newDocRef = doc(collection(db, "customers"));
+            batch.set(newDocRef, {
+                name: row["الاسم"] || "",
+                phone: row["الجوال"] || "",
+                city: row["المدينة"] || "",
+                district: row["الحي"] || "",
+                street: row["الشارع"] || "",
+                buildingNo: row["رقم المبنى"] || "",
+                additionalNo: row["الرقم الاضافي"] || "",
+                postalCode: row["الرمز البريدي"] || "",
+                poBox: row["صندوق البريد"] || "",
+                email: row["البريد الإلكتروني"] || "",
+                notes: row["ملاحظات"] || "",
+                createdAt: new Date()
+            });
+        });
+        await batch.commit();
+        alert("تم استيراد البيانات بنجاح!");
         loadCustomers();
     };
+    reader.readAsBinaryString(file);
 }
 
-// ربط الدوال بالنافذة العالمية لحل مشكلة ReferenceError
-window.editCustomer = async (id) => {
-    const querySnapshot = await getDocs(collection(db, "customers"));
-    const docSnap = querySnapshot.docs.find(d => d.id === id);
-    if (docSnap) openCustomerModal({ id, ...docSnap.data() });
-};
-
-window.deleteCustomer = async (id) => {
-    if (confirm("هل أنت متأكد من الحذف؟")) {
-        await deleteDoc(doc(db, "customers", id));
-        loadCustomers();
+// --- خدمات النظام ---
+async function loadExternalLibs() {
+    for (let lib in LIBS) {
+        if (!document.querySelector(`script[src="${LIBS[lib]}"]`)) {
+            const script = document.createElement('script');
+            script.src = LIBS[lib];
+            document.head.appendChild(script);
+        }
     }
-};
-
-function filterTable(value) {
-    const rows = document.querySelectorAll('.customer-row');
-    rows.forEach(row => {
-        row.style.display = row.innerText.toLowerCase().includes(value.toLowerCase()) ? '' : 'none';
-    });
 }
 
 function injectStyles() {
-    if (document.getElementById('cust-styles-final')) return;
+    if (document.getElementById('tera-adv-styles')) return;
     const s = document.createElement('style');
-    s.id = 'cust-styles-final';
+    s.id = 'tera-adv-styles';
     s.innerHTML = `
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: #fff; padding: 15px; border-radius: 10px; border-right: 5px solid #e67e22; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .stat-card.success { border-color: #10b981; }
-        .stat-card.warning { border-color: #f59e0b; }
-        .stat-card.danger { border-color: #ef4444; }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; background: white; padding: 15px; border-radius: 12px; }
+        .action-buttons { display: flex; gap: 10px; }
+        .btn-alt { background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px 15px; border-radius: 8px; cursor: pointer; color: #475569; font-weight: 600; }
+        .btn-alt:hover { background: #e2e8f0; }
         
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px); }
-        .modal-content { background: white; width: 95%; max-width: 600px; border-radius: 15px; padding: 25px; direction: rtl; max-height: 90vh; overflow-y: auto; }
-        .modal-header { display: flex; justify-content: space-between; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 20px; }
+        .avatar-text { width: 40px; height: 40px; background: #e67e22; color: white; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: bold; font-size: 1.2rem; }
         
-        .row { display: flex; gap: 15px; margin-bottom: 12px; }
-        .field { display: flex; flex-direction: column; flex: 1; }
-        .field label { font-size: 0.85rem; font-weight: bold; color: #475569; margin-bottom: 5px; }
-        .field input, .field select, .field textarea { padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; }
+        /* تصميم بطاقة الطباعة */
+        .print-card { background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px dashed #ccc; margin: 20px 0; }
+        .business-card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 0 10px rgba(0,0,0,0.1); direction: rtl; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e67e22; padding-bottom: 10px; margin-bottom: 20px; }
+        .info-row { margin-bottom: 10px; display: flex; gap: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; }
+        .info-row span { color: #64748b; width: 100px; }
         
-        .user-cell { display: flex; align-items: center; gap: 10px; }
-        .user-cell .avatar { width: 40px; height: 40px; border-radius: 50%; }
-        .tag-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; }
-        
-        .btn-save { background: #e67e22; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .btn-cancel { background: #f1f5f9; color: #475569; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; }
+        @media print {
+            body * { visibility: hidden; }
+            .print-card, .print-card * { visibility: visible; }
+            .print-card { position: absolute; left: 0; top: 0; width: 100%; }
+        }
     `;
     document.head.appendChild(s);
 }
