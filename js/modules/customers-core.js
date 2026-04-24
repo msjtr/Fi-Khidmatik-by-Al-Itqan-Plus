@@ -1,6 +1,6 @@
 /**
- * نظام إدارة العملاء المتكامل - منصة تيرا (Tera Gateway)
- * الإصدار المستقر: يعالج أخطاء التوقيت، ويوحد مفاتيح الدول، ويفعل الإحصائيات الشاملة
+ * نظام إدارة العملاء المتكامل لـ Tera Gateway
+ * النسخة النهائية الشاملة لكافة حقول العنوان الوطني والإحصائيات والطباعة
  */
 
 import { db } from '../core/config.js';
@@ -9,7 +9,6 @@ import {
     deleteDoc, updateDoc, getDoc, serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// قائمة الدول المعتمدة في نظام تيرا
 const worldCountries = [
     { name: "المملكة العربية السعودية", code: "966", flag: "🇸🇦" },
     { name: "الإمارات", code: "971", flag: "🇦🇪" },
@@ -24,263 +23,230 @@ export async function initCustomers(container) {
     if (!container) return;
 
     container.innerHTML = `
-        <div class="tera-stats-grid" id="statsGrid"></div>
-        <div class="customers-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; flex-wrap: wrap;">
-            <div class="search-and-filter" style="display: flex; gap: 10px; flex: 1;">
-                <div class="search-bar" style="position: relative; flex: 2;">
-                    <i class="fas fa-search" style="position: absolute; right: 10px; top: 12px; color: #94a3b8;"></i>
-                    <input type="text" id="searchCust" placeholder="ابحث بالاسم، الرقم، أو المدينة..." 
-                           style="width: 100%; padding: 10px 35px 10px 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
-                </div>
-                <select id="classFilter" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <option value="">جميع التصنيفات</option>
+        <div id="statsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px;"></div>
+        
+        <div class="customers-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; flex-wrap: wrap; direction: rtl;">
+            <div style="display: flex; gap: 10px; flex: 1;">
+                <input type="text" id="searchCust" placeholder="بحث ذكي (اسم، جوال، حي، شارع...)" 
+                       style="flex: 2; padding: 12px; border: 1px solid #ddd; border-radius: 10px;">
+                <select id="classFilter" style="flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #ddd;">
+                    <option value="">كل التصنيفات</option>
                     <option value="مميز">عميل مميز</option>
                     <option value="محتال">عميل محتال</option>
                     <option value="غير جدي">غير جدي</option>
                     <option value="غير متعاون">غير متعاون</option>
                 </select>
             </div>
-            <button class="btn-primary" id="openAddModal" style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">
-                <i class="fas fa-user-plus"></i> إضافة عميل جديد
+            <button id="openAddModal" style="background: #1a73e8; color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; font-weight: bold;">
+                <i class="fas fa-plus"></i> إضافة عميل جديد
             </button>
         </div>
-        <div id="customersTableContainer" style="background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); overflow: hidden;">
-            <div class="tera-loader" style="padding: 40px; text-align: center; color: #64748b;">جاري جلب البيانات من تيرا...</div>
+
+        <div id="tableContainer" style="background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); overflow: hidden; direction: rtl;">
+            <div style="padding: 50px; text-align: center;">جاري مزامنة بيانات العملاء...</div>
         </div>
     `;
 
     document.getElementById('openAddModal').onclick = () => openCustomerModal();
 
-    // الاستماع المباشر للتغييرات
     const q = query(collection(db, "customers"));
     onSnapshot(q, (snapshot) => {
         const customers = [];
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            customers.push({ id: doc.id, ...data });
-        });
+        snapshot.forEach(doc => customers.push({ id: doc.id, ...doc.data() }));
         renderStats(customers);
-        setupFilters(customers);
+        setupLiveSearch(customers);
     });
 }
 
-// دالة الإحصائيات المتقدمة
 function renderStats(data) {
     const now = new Date();
-    const stats = {
+    const s = {
         total: data.length,
-        new: data.filter(c => {
-            const d = c.createdAt?.toDate ? c.createdAt.toDate() : (c.createdAt ? new Date(c.createdAt) : null);
-            return d && (now - d) < (7 * 24 * 60 * 60 * 1000); // آخر 7 أيام
-        }).length,
-        complete: data.filter(c => c.name && c.phone && c.buildingNo && c.postalCode).length,
-        incomplete: data.filter(c => !c.name || !c.phone || !c.buildingNo).length,
-        withNotes: data.filter(c => c.notes && c.notes.trim() !== "").length
+        new: data.filter(c => (now - (c.createdAt?.toDate?.() || now)) < 604800000).length,
+        complete: data.filter(c => c.buildingNo && c.street && c.district && c.postalCode).length,
+        incomplete: data.filter(c => !c.buildingNo || !c.postalCode).length,
+        hasNotes: data.filter(c => c.notes && c.notes.length > 0).length
     };
 
-    const grid = document.getElementById('statsGrid');
-    if (grid) {
-        grid.style = "display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px;";
-        grid.innerHTML = `
-            <div class="stat-card" style="background:white; padding:15px; border-radius:10px; border-right:4px solid #3498db; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                <span style="color:#64748b; font-size:0.85rem;">إجمالي العملاء</span><br><strong style="font-size:1.4rem;">${stats.total}</strong>
-            </div>
-            <div class="stat-card" style="background:white; padding:15px; border-radius:10px; border-right:4px solid #9b59b6; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                <span style="color:#64748b; font-size:0.85rem;">جدد (أسبوع)</span><br><strong style="font-size:1.4rem;">${stats.new}</strong>
-            </div>
-            <div class="stat-card" style="background:white; padding:15px; border-radius:10px; border-right:4px solid #27ae60; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                <span style="color:#64748b; font-size:0.85rem;">مكتمل البيانات</span><br><strong style="font-size:1.4rem; color:#27ae60;">${stats.complete}</strong>
-            </div>
-            <div class="stat-card" style="background:white; padding:15px; border-radius:10px; border-right:4px solid #e67e22; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                <span style="color:#64748b; font-size:0.85rem;">نقص بيانات</span><br><strong style="font-size:1.4rem; color:#e67e22;">${stats.incomplete}</strong>
-            </div>
-            <div class="stat-card" style="background:white; padding:15px; border-radius:10px; border-right:4px solid #f1c40f; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                <span style="color:#64748b; font-size:0.85rem;">ملاحظات</span><br><strong style="font-size:1.4rem;">${stats.withNotes}</strong>
-            </div>
-        `;
-    }
+    document.getElementById('statsGrid').innerHTML = `
+        <div style="background:#fff; padding:15px; border-radius:12px; border-bottom:4px solid #1a73e8;">إجمالي العملاء: <b>${s.total}</b></div>
+        <div style="background:#fff; padding:15px; border-radius:12px; border-bottom:4px solid #34a853;">جدد (أسبوع): <b>${s.new}</b></div>
+        <div style="background:#fff; padding:15px; border-radius:12px; border-bottom:4px solid #27ae60;">مكتمل البيانات: <b>${s.complete}</b></div>
+        <div style="background:#fff; padding:15px; border-radius:12px; border-bottom:4px solid #ea4335;">نقص بيانات: <b>${s.incomplete}</b></div>
+        <div style="background:#fff; padding:15px; border-radius:12px; border-bottom:4px solid #fbbc05;">بملاحظات: <b>${s.hasNotes}</b></div>
+    `;
 }
 
-function setupFilters(customers) {
-    const searchInput = document.getElementById('searchCust');
-    const classSelect = document.getElementById('classFilter');
-    
-    const filterData = () => {
-        const term = searchInput.value.toLowerCase();
-        const cat = classSelect.value;
-        const filtered = customers.filter(c => {
-            const matchSearch = (c.name||"").toLowerCase().includes(term) || 
-                                (c.phone||"").includes(term) || 
-                                (c.city||"").toLowerCase().includes(term);
-            const matchCat = cat === "" || c.classification === cat;
-            return matchSearch && matchCat;
+function setupLiveSearch(customers) {
+    const search = document.getElementById('searchCust');
+    const filter = document.getElementById('classFilter');
+    const run = () => {
+        const t = search.value.toLowerCase();
+        const f = filter.value;
+        const res = customers.filter(c => {
+            const match = (c.name||'').toLowerCase().includes(t) || (c.phone||'').includes(t) || (c.district||'').toLowerCase().includes(t) || (c.street||'').toLowerCase().includes(t);
+            return match && (f === "" || c.classification === f);
         });
-        renderTable(filtered);
+        renderTable(res);
     };
-
-    searchInput.oninput = filterData;
-    classSelect.onchange = filterData;
-    filterData(); // تشغيل أولي
+    search.oninput = run;
+    filter.onchange = run;
+    run();
 }
 
 function renderTable(data) {
-    const container = document.getElementById('customersTableContainer');
-    if (data.length === 0) {
-        container.innerHTML = `<div style="padding:40px; text-align:center; color:#94a3b8;">لا يوجد عملاء مطابقين للبحث</div>`;
-        return;
-    }
-
-    container.innerHTML = `
-        <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
-            <thead style="background:#f8fafc; color:#64748b; border-bottom:1px solid #e2e8f0;">
-                <tr>
-                    <th style="padding:15px; text-align:right;">العميل</th>
-                    <th style="padding:15px; text-align:center;">الاتصال</th>
-                    <th style="padding:15px; text-align:center;">العنوان الوطني</th>
-                    <th style="padding:15px; text-align:center;">التصنيف</th>
-                    <th style="padding:15px; text-align:center;">الإجراءات</th>
+    document.getElementById('tableContainer').innerHTML = `
+        <table style="width:100%; border-collapse:collapse;">
+            <thead style="background:#f8f9fa;">
+                <tr style="text-align:right; border-bottom:2px solid #eee;">
+                    <th style="padding:15px;">العميل</th>
+                    <th style="padding:15px;">الجوال</th>
+                    <th style="padding:15px;">العنوان الوطني</th>
+                    <th style="padding:15px;">التصنيف</th>
+                    <th style="padding:15px;">الإجراءات</th>
                 </tr>
             </thead>
             <tbody>
-                ${data.map(c => {
-                    const badgeClass = c.classification === 'محتال' ? 'background:#fee2e2; color:#991b1b;' : 
-                                      c.classification === 'مميز' ? 'background:#dcfce7; color:#166534;' : 'background:#f1f5f9; color:#475569;';
-                    return `
-                    <tr style="border-bottom:1px solid #f1f5f9; transition: background 0.2s;" onmouseover="this.style.background='#fcfcfc'" onmouseout="this.style.background='transparent'">
-                        <td style="padding:12px 15px;">
-                            <div style="display:flex; align-items:center; gap:12px;">
-                                <div style="width:35px; height:35px; background:#e67e22; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">
-                                    ${(c.name||"C").charAt(0)}
-                                </div>
-                                <div>
-                                    <strong style="color:#1e293b;">${c.name||'---'}</strong><br>
-                                    <small style="color:#94a3b8;">ID: ${c.id.slice(-6)}</small>
-                                </div>
+                ${data.map(c => `
+                    <tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:15px;">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <img src="${c.avatar || 'https://ui-avatars.com/api/?name='+c.name+'&background=random'}" 
+                                     style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+                                <div><b>${c.name}</b><br><small style="color:#888;">${c.email || ''}</small></div>
                             </div>
                         </td>
-                        <td style="padding:12px; text-align:center; direction:ltr; color:#475569;">+${c.phone||''}</td>
-                        <td style="padding:12px; text-align:center; color:#475569;">
-                            <div>${c.city||'حائل'} - ${c.district||''}</div>
-                            <small style="color:#94a3b8;">مبنى: ${c.buildingNo || '-'} | رمز: ${c.postalCode || '-'}</small>
+                        <td style="padding:15px; direction:ltr; text-align:right;">+${c.phone}</td>
+                        <td style="padding:15px;">
+                            <small>${c.city}, ${c.district}<br>${c.street}, مبنى ${c.buildingNo}</small>
                         </td>
-                        <td style="padding:12px; text-align:center;">
-                            <span style="padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:bold; ${badgeClass}">
-                                ${c.classification||'غير مصنف'}
-                            </span>
+                        <td style="padding:15px;"><span class="badge-${c.classification}">${c.classification || 'عادي'}</span></td>
+                        <td style="padding:15px;">
+                            <button onclick="openCustomerModal('${c.id}')" title="تعديل"><i class="fas fa-edit"></i></button>
+                            <button onclick="window.printCustomer('${c.id}')" title="طباعة"><i class="fas fa-print"></i></button>
+                            <button onclick="deleteCustomer('${c.id}')" style="color:red" title="حذف"><i class="fas fa-trash"></i></button>
                         </td>
-                        <td style="padding:12px; text-align:center;">
-                            <button onclick="openCustomerModal('${c.id}')" style="color:#3498db; border:none; background:none; cursor:pointer; margin:0 5px; font-size:1.1rem;"><i class="fas fa-edit"></i></button>
-                            <button onclick="deleteCustomer('${c.id}')" style="color:#e74c3c; border:none; background:none; cursor:pointer; margin:0 5px; font-size:1.1rem;"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>`;
-                }).join('')}
+                    </tr>
+                `).join('')}
             </tbody>
         </table>
     `;
 }
 
-window.openCustomerModal = async function(id = null) {
-    let customer = { name: '', email: '', country: 'المملكة العربية السعودية', city: 'حائل', phone: '', district: '', buildingNo: '', poBox: '', postalCode: '', classification: '', notes: '' };
-    
-    if (id) {
-        const snap = await getDoc(doc(db, "customers", id));
-        if (snap.exists()) customer = { id: snap.id, ...snap.data() };
+window.openCustomerModal = async (id = null) => {
+    let c = { name:'', email:'', country:'المملكة العربية السعودية', city:'', district:'', street:'', buildingNo:'', additionalNo:'', poBox:'', postalCode:'', phone:'', classification:'', notes:'' };
+    if(id) {
+        const s = await getDoc(doc(db, "customers", id));
+        c = { id: s.id, ...s.data() };
     }
 
-    const modalHTML = `
-        <div id="custModal" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:9999; backdrop-filter: blur(4px);">
-            <div style="background:white; width:95%; max-width:700px; border-radius:15px; overflow:hidden; font-family:'Tajawal', sans-serif;">
-                <div style="background:#2c3e50; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center;">
-                    <h3 style="margin:0;">${id ? 'تعديل بيانات العميل' : 'إضافة عميل جديد'}</h3>
-                    <button onclick="document.getElementById('custModal').remove()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+    const m = document.createElement('div');
+    m.id = "custModal";
+    m.style = "position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:10000; display:flex; align-items:center; justify-content:center; direction:rtl; font-family:sans-serif;";
+    m.innerHTML = `
+        <div style="background:white; width:90%; max-width:800px; max-height:90vh; overflow-y:auto; border-radius:15px; padding:25px;">
+            <h3 style="margin-top:0;">${id ? 'تعديل بيانات عميل' : 'إضافة عميل جديد'}</h3>
+            <form id="custForm" style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                <div style="grid-column: span 2;"><label>اسم العميل</label><input id="m_name" value="${c.name}" required style="width:100%; padding:10px;"></div>
+                <div><label>البريد الإلكتروني</label><input id="m_email" type="email" value="${c.email}" style="width:100%; padding:10px;"></div>
+                <div>
+                    <label>الدولة</label>
+                    <select id="m_country" onchange="document.getElementById('m_code').innerText = '+'+this.selectedOptions[0].dataset.code" style="width:100%; padding:10px;">
+                        ${worldCountries.map(x => `<option value="${x.name}" data-code="${x.code}" ${c.country===x.name?'selected':''}>${x.flag} ${x.name}</option>`).join('')}
+                    </select>
                 </div>
-                <form id="saveCustForm" style="padding:20px;">
-                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px;">
-                        <div><label style="display:block; margin-bottom:5px; font-size:0.85rem;">الاسم الكامل</label><input type="text" id="f_name" value="${customer.name}" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;"></div>
-                        <div><label style="display:block; margin-bottom:5px; font-size:0.85rem;">البريد الإلكتروني</label><input type="email" id="f_email" value="${customer.email||''}" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;"></div>
-                        <div>
-                            <label style="display:block; margin-bottom:5px; font-size:0.85rem;">الدولة</label>
-                            <select id="f_country" onchange="updatePhoneCode(this)" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
-                                ${worldCountries.map(ct => `<option value="${ct.name}" data-code="${ct.code}" ${customer.country === ct.name ? 'selected' : ''}>${ct.flag} ${ct.name}</option>`).join('')}
-                            </select>
-                        </div>
-                        <div>
-                            <label style="display:block; margin-bottom:5px; font-size:0.85rem;">الجوال</label>
-                            <div style="display:flex; direction:ltr;">
-                                <span id="f_code_display" style="padding:8px; background:#f1f5f9; border:1px solid #ddd; border-right:none; border-radius:6px 0 0 6px;">+${customer.phone ? (worldCountries.find(x => customer.phone.startsWith(x.code))?.code || '966') : '966'}</span>
-                                <input type="tel" id="f_phone" value="${customer.phone ? customer.phone.replace(/^(966|971|965|973|968|974|20)/, '') : ''}" placeholder="5xxxxxxxx" required style="flex:1; padding:8px; border:1px solid #ddd; border-radius:0 6px 6px 0;">
-                            </div>
-                        </div>
-                        <div><label style="display:block; margin-bottom:5px; font-size:0.85rem;">المدينة</label><input type="text" id="f_city" value="${customer.city}" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;"></div>
-                        <div><label style="display:block; margin-bottom:5px; font-size:0.85rem;">الحي</label><input type="text" id="f_district" value="${customer.district||''}" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;"></div>
-                        <div><label style="display:block; margin-bottom:5px; font-size:0.85rem;">رقم المبنى</label><input type="text" id="f_building" value="${customer.buildingNo||''}" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;"></div>
-                        <div><label style="display:block; margin-bottom:5px; font-size:0.85rem;">الرمز البريدي</label><input type="text" id="f_zip" value="${customer.postalCode||''}" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;"></div>
-                        <div style="grid-column: span 2;">
-                            <label style="display:block; margin-bottom:5px; font-size:0.85rem;">التصنيف</label>
-                            <select id="f_class" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
-                                <option value="">اختر التصنيف..</option>
-                                <option value="مميز" ${customer.classification==='مميز'?'selected':''}>عميل مميز</option>
-                                <option value="محتال" ${customer.classification==='محتال'?'selected':''}>عميل محتال</option>
-                                <option value="غير جدي" ${customer.classification==='غير جدي'?'selected':''}>غير جدي</option>
-                                <option value="غير متعاون" ${customer.classification==='غير متعاون'?'selected':''}>غير متعاون</option>
-                            </select>
-                        </div>
-                        <div style="grid-column: span 2;">
-                            <label style="display:block; margin-bottom:5px; font-size:0.85rem;">ملاحظات العميل (محرر نصي)</label>
-                            <textarea id="f_notes" rows="3" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">${customer.notes||''}</textarea>
-                        </div>
+                <div>
+                    <label>رقم الجوال</label>
+                    <div style="display:flex; direction:ltr;">
+                        <span id="m_code" style="padding:10px; background:#eee; border:1px solid #ddd;">+${worldCountries.find(x=>x.name===c.country)?.code || '966'}</span>
+                        <input id="m_phone" value="${c.phone.replace(/^(966|971|965|973|968|974|20)/, '')}" required style="flex:1; padding:10px;">
                     </div>
-                    <div style="margin-top:20px; text-align:left;">
-                        <button type="submit" style="background:#27ae60; color:white; border:none; padding:12px 40px; border-radius:8px; cursor:pointer; font-weight:bold;">حفظ البيانات</button>
+                </div>
+                <div style="grid-column: span 2; background:#f9f9f9; padding:10px; border-radius:8px;">
+                    <p style="margin:0 0 10px 0; font-weight:bold; color:#1a73e8;">العنوان الوطني</p>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                        <input id="m_city" placeholder="المدينة" value="${c.city}" style="padding:8px;">
+                        <input id="m_district" placeholder="الحي" value="${c.district}" style="padding:8px;">
+                        <input id="m_street" placeholder="الشارع" value="${c.street}" style="padding:8px;">
+                        <input id="m_build" placeholder="رقم المبنى" value="${c.buildingNo}" style="padding:8px;">
+                        <input id="m_add" placeholder="الرقم الإضافي" value="${c.additionalNo}" style="padding:8px;">
+                        <input id="m_zip" placeholder="الرمز البريدي" value="${c.postalCode}" style="padding:8px;">
+                        <input id="m_pobox" placeholder="صندوق البريد" value="${c.poBox}" style="padding:8px; grid-column: span 3;">
                     </div>
-                </form>
-            </div>
+                </div>
+                <div style="grid-column: span 2;">
+                    <label>تصنيف العميل (اختياري)</label>
+                    <select id="m_class" style="width:100%; padding:10px;">
+                        <option value="">بدون تصنيف</option>
+                        <option value="مميز" ${c.classification==='مميز'?'selected':''}>عميل مميز</option>
+                        <option value="محتال" ${c.classification==='محتال'?'selected':''}>عميل محتال</option>
+                        <option value="غير جدي" ${c.classification==='غير جدي'?'selected':''}>عميل غير جدي</option>
+                        <option value="غير متعاون" ${c.classification==='غير متعاون'?'selected':''}>عميل غير متعاون</option>
+                    </select>
+                </div>
+                <div style="grid-column: span 2;">
+                    <label>ملاحظات (مربع نص كامل المزايا)</label>
+                    <textarea id="m_notes" style="width:100%; height:80px; padding:10px;">${c.notes}</textarea>
+                </div>
+                <div style="grid-column: span 2; display:flex; gap:10px; margin-top:10px;">
+                    <button type="submit" style="flex:1; background:#27ae60; color:white; padding:12px; border:none; border-radius:8px; cursor:pointer;">حفظ البيانات</button>
+                    <button type="button" onclick="document.getElementById('custModal').remove()" style="flex:1; background:#888; color:white; padding:12px; border:none; border-radius:8px;">إلغاء</button>
+                </div>
+            </form>
         </div>
     `;
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    document.body.appendChild(m);
 
-    window.updatePhoneCode = (el) => {
-        const code = el.selectedOptions[0].dataset.code;
-        document.getElementById('f_code_display').innerText = '+' + code;
-    };
-
-    document.getElementById('saveCustForm').onsubmit = async (e) => {
+    document.getElementById('custForm').onsubmit = async (e) => {
         e.preventDefault();
-        const code = document.getElementById('f_country').selectedOptions[0].dataset.code;
+        const code = document.getElementById('m_country').selectedOptions[0].dataset.code;
         const data = {
-            name: document.getElementById('f_name').value,
-            email: document.getElementById('f_email').value,
-            country: document.getElementById('f_country').value,
-            phone: code + document.getElementById('f_phone').value.replace(/^0/, ''), // توحيد الصيغة بدون 0 في البداية
-            city: document.getElementById('f_city').value,
-            district: document.getElementById('f_district').value,
-            buildingNo: document.getElementById('f_building').value,
-            postalCode: document.getElementById('f_zip').value,
-            classification: document.getElementById('f_class').value,
-            notes: document.getElementById('f_notes').value,
+            name: document.getElementById('m_name').value,
+            email: document.getElementById('m_email').value,
+            country: document.getElementById('m_country').value,
+            phone: code + document.getElementById('m_phone').value.replace(/^0/, ''),
+            city: document.getElementById('m_city').value,
+            district: document.getElementById('m_district').value,
+            street: document.getElementById('m_street').value,
+            buildingNo: document.getElementById('m_build').value,
+            additionalNo: document.getElementById('m_add').value,
+            postalCode: document.getElementById('m_zip').value,
+            poBox: document.getElementById('m_pobox').value,
+            classification: document.getElementById('m_class').value,
+            notes: document.getElementById('m_notes').value,
             updatedAt: serverTimestamp()
         };
-
-        try {
-            if (id) await updateDoc(doc(db, "customers", id), data);
-            else { 
-                data.createdAt = serverTimestamp(); 
-                await setDoc(doc(collection(db, "customers")), data); 
-            }
-            document.getElementById('custModal').remove();
-        } catch (err) {
-            console.error("Error saving customer:", err);
-            alert("خطأ في الاتصال بقاعدة البيانات");
-        }
+        if(id) await updateDoc(doc(db, "customers", id), data);
+        else { data.createdAt = serverTimestamp(); await setDoc(doc(collection(db, "customers")), data); }
+        m.remove();
     };
 };
 
+// وظيفة طباعة بيانات العميل
+window.printCustomer = async (id) => {
+    const s = await getDoc(doc(db, "customers", id));
+    const c = s.data();
+    const win = window.open('', '_blank');
+    win.document.write(`
+        <div style="direction:rtl; font-family:Arial; padding:40px; border:2px solid #eee;">
+            <h2 style="text-align:center; border-bottom:2px solid #333; padding-bottom:10px;">بطاقة بيانات عميل - Tera Gateway</h2>
+            <p><b>الاسم:</b> ${c.name}</p>
+            <p><b>الجوال:</b> +${c.phone}</p>
+            <p><b>البريد:</b> ${c.email || 'غير متوفر'}</p>
+            <hr>
+            <h3>العنوان الوطني:</h3>
+            <p>${c.city} - ${c.district} - ${c.street}</p>
+            <p>رقم المبنى: ${c.buildingNo} | الرمز البريدي: ${c.postalCode}</p>
+            <p>الرقم الإضافي: ${c.additionalNo} | صندوق البريد: ${c.poBox}</p>
+            <hr>
+            <p><b>التصنيف:</b> ${c.classification || 'عادي'}</p>
+            <p><b>ملاحظات:</b> ${c.notes || 'لا يوجد'}</p>
+            <div style="margin-top:50px; text-align:center; color:#888;">طُبع بواسطة نظام Tera Gateway</div>
+        </div>
+    `);
+    win.print();
+};
+
 window.deleteCustomer = async (id) => {
-    if (confirm("هل أنت متأكد من حذف هذا العميل وكافة سجلاته من تيرا؟")) {
-        try {
-            await deleteDoc(doc(db, "customers", id));
-        } catch (err) {
-            alert("خطأ في الحذف");
-        }
-    }
+    if(confirm("حذف العميل نهائياً؟")) await deleteDoc(doc(db, "customers", id));
 };
