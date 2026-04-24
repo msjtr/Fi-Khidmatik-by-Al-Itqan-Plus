@@ -15,7 +15,6 @@
         
         body { font-family: 'Cairo', sans-serif; margin: 0; padding: 0; background: #f4f7f6; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         
-        /* حاوية التصفية (تظهر في المتصفح فقط) */
         .selection-panel {
             width: 210mm; margin: 20px auto; background: #fff; padding: 20px;
             border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid #1e293b;
@@ -24,16 +23,17 @@
         .checkbox-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin: 15px 0; }
         .checkbox-group label { cursor: pointer; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
 
-        /* حاوية الطباعة */
         .print-container { width: 210mm; min-height: 297mm; padding: 12mm; margin: 0 auto; background: #fff; box-sizing: border-box; border: 2px solid #000; position: relative; }
         
-        /* الهيدر المحدث: الشعار يمين والترجمة تحته */
         .header-table { width: 100%; border-collapse: collapse; border: 2px solid #000; }
         .header-table td { border: 1.5px solid #000; padding: 10px; vertical-align: middle; }
         
         .header-right { width: 35%; text-align: right; }
         .logo-box { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-        .logo-box img { height: 55px; margin-bottom: 5px; }
+        /* معالجة مسار الشعار مع وضع نص بديل في حال الخطأ */
+        .logo-box img { height: 55px; margin-bottom: 5px; max-width: 150px; }
+        .logo-fallback { font-weight: 900; font-size: 1.1rem; color: #000; display: none; }
+        
         .logo-text-main { font-weight: 900; font-size: 0.9rem; display: block; }
         .logo-text-sub { font-weight: 700; font-size: 0.7rem; color: #555; display: block; }
 
@@ -45,7 +45,6 @@
 
         .meta-bar { width: 100%; border: 2px solid #000; border-top: none; padding: 8px 12px; display: flex; justify-content: space-between; font-weight: 800; font-size: 0.8rem; background: #f9f9f9; }
 
-        /* الجدول */
         .customer-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         .customer-table th { background: #000; color: #fff; padding: 10px; font-size: 0.85rem; }
         .customer-table td { border: 1.5px solid #000; padding: 12px 8px; text-align: center; font-weight: 700; font-size: 1rem; }
@@ -57,12 +56,10 @@
         .verification-box { margin-top: 30px; text-align: center; page-break-inside: avoid; }
         #qrcode { display: inline-block; padding: 5px; border: 1px solid #000; background: #fff; }
 
-        /* التذييل المترجم */
         .main-footer { border-top: 2px solid #000; margin-top: 40px; padding-top: 15px; text-align: center; page-break-inside: avoid; }
         .footer-statement { font-weight: 800; font-size: 0.9rem; margin-bottom: 10px; }
         .footer-statement small { display: block; color: #555; font-size: 0.75rem; margin-top: 4px; }
 
-        /* أزرار العمليات بالأسفل */
         .footer-actions { display: flex; justify-content: center; gap: 15px; padding: 40px 0; }
         .btn-action { padding: 12px 30px; border: none; border-radius: 8px; cursor: pointer; font-weight: 800; color: #fff; font-family: 'Cairo'; transition: 0.3s; }
         .btn-print { background: #1e293b; }
@@ -78,7 +75,7 @@
 <body>
 
     <div class="selection-panel no-print">
-        <h3><i class="fas fa-filter"></i> اختر المعلومات المراد طباعتها</h3>
+        <h3><i class="fas fa-filter"></i> إعدادات الطباعة والترجمة</h3>
         <div class="checkbox-group">
             <label><input type="checkbox" checked onchange="toggleAll(this)"> <b>تحديد الكل</b></label>
             <label><input type="checkbox" class="field-check" value="name" checked> اسم العميل</label>
@@ -88,7 +85,7 @@
             <label><input type="checkbox" class="field-check" value="district" checked> الحي</label>
             <label><input type="checkbox" class="field-check" value="tag" checked> التصنيف</label>
         </div>
-        <button class="btn-action btn-print" style="width: 100%; background: #3b82f6;" onclick="refreshPreview()">تحديث المعاينة</button>
+        <button class="btn-action btn-print" style="width: 100%; background: #3b82f6;" onclick="refreshPreview()">تحديث المعاينة المترجمة</button>
     </div>
 
     <div class="print-container" id="printable-area">
@@ -96,7 +93,8 @@
             <tr>
                 <td class="header-right">
                     <div class="logo-box">
-                        <img src="fi-khidmatik/images/logo.svg" alt="Logo" onerror="this.src='https://via.placeholder.com/60'">
+                        <img src="/fi-khidmatik/images/logo.svg" alt="Logo" id="main-logo" onerror="handleLogoError(this)">
+                        <span id="logo-text-fallback" class="logo-fallback">منصة في خدمتك</span>
                         <span class="logo-text-main">منصة في خدمتك</span>
                         <span class="logo-text-sub">من الأتقان بلس</span>
                         <span class="logo-text-sub" style="font-size: 0.6rem; opacity: 0.8;">Fi-Khidmatik from Al-Etqan Plus</span>
@@ -153,16 +151,35 @@
         import { db } from './js/core/config.js';
         import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        // 1. القاموس الأساسي
         const dictionary = {
             "الرياض": "Riyadh", "حائل": "Hail", "النهضة": "Al-Nahda", "المملكة العربية السعودية": "Saudi Arabia",
             "عادي": "Normal", "مميز": "VIP", "تاجر": "Merchant"
+        };
+
+        // 2. محرك الترجمة الصوتية للأسماء والأحياء الجديدة (لضمان ترجمة 100%)
+        const transliterate = (text) => {
+            if (!text) return '';
+            const map = {
+                'أ': 'A', 'إ': 'I', 'ب': 'B', 'ت': 'T', 'ث': 'Th', 'ج': 'J', 'ح': 'H', 'خ': 'Kh', 'د': 'D', 'ذ': 'Dh',
+                'ر': 'R', 'ز': 'Z', 'س': 'S', 'ش': 'Sh', 'ص': 'S', 'ض': 'D', 'ط': 'T', 'ظ': 'Z', 'ع': 'A', 'غ': 'Gh',
+                'ف': 'F', 'ق': 'Q', 'ك': 'K', 'ل': 'L', 'م': 'M', 'ن': 'N', 'ه': 'H', 'و': 'W', 'ي': 'Y', 'ء': 'A',
+                'ة': 'a', 'ى': 'a', ' ': ' ', 'لا': 'La'
+            };
+            return text.split('').map(char => map[char] || char).join('');
+        };
+
+        window.handleLogoError = function(img) {
+            img.style.display = 'none';
+            document.getElementById('logo-text-fallback').style.display = 'block';
         };
 
         let currentCustomerData = null;
 
         function translateVal(text) {
             if (!text || text === '-') return '';
-            return dictionary[text] || text;
+            if (/[a-zA-Z]/.test(text)) return text; // إذا كان إنجليزي اتركه
+            return dictionary[text] || transliterate(text);
         }
 
         async function loadData() {
@@ -170,17 +187,21 @@
             const id = urlParams.get('id');
             if (!id) return;
 
-            const docSnap = await getDoc(doc(db, "customers", id));
-            if (docSnap.exists()) {
-                currentCustomerData = docSnap.data();
-                refreshPreview();
-                
-                const now = new Date();
-                document.getElementById('current-date').innerText = `${now.toLocaleDateString('ar-SA')} | ${now.toLocaleDateString('en-US')}`;
-                document.getElementById('current-time').innerText = now.toLocaleTimeString('ar-SA');
-                document.getElementById('trans-id').innerText = `KF-${now.getFullYear()}-${id.substring(0,5).toUpperCase()}`;
-                
-                new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 85, height: 85 });
+            try {
+                const docSnap = await getDoc(doc(db, "customers", id));
+                if (docSnap.exists()) {
+                    currentCustomerData = docSnap.data();
+                    refreshPreview();
+                    
+                    const now = new Date();
+                    document.getElementById('current-date').innerText = `${now.toLocaleDateString('ar-SA')} | ${now.toLocaleDateString('en-US')}`;
+                    document.getElementById('current-time').innerText = now.toLocaleTimeString('ar-SA');
+                    document.getElementById('trans-id').innerText = `KF-${now.getFullYear()}-${id.substring(0,5).toUpperCase()}`;
+                    
+                    new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 85, height: 85 });
+                }
+            } catch (err) {
+                console.error("Error loading customer data:", err);
             }
         }
 
