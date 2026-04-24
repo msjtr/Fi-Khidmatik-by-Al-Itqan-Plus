@@ -1,40 +1,138 @@
-<!-- مودال تأكيد -->
-<div id="confirm-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
-    <div style="background: white; width: 300px; padding: 20px; border-radius: 12px; text-align: center;">
-        <i class="fas fa-question-circle fa-3x" style="color: #e67e22;"></i>
-        <h3 id="confirm-title">تأكيد</h3>
-        <p id="confirm-message">هل أنت متأكد؟</p>
-        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
-            <button id="confirm-yes" style="background: #e67e22; color: white; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer;">نعم</button>
-            <button id="confirm-no" style="background: #95a5a6; color: white; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer;">لا</button>
+<div id="confirm-modal" class="tera-modal-overlay">
+    <div class="tera-modal-content">
+        <div class="modal-icon-wrapper">
+            <i class="fas fa-exclamation-triangle" id="confirm-icon"></i>
+        </div>
+        <h3 id="confirm-title">تأكيد الإجراء</h3>
+        <p id="confirm-message">هل أنت متأكد من تنفيذ هذه العملية؟</p>
+        
+        <div class="modal-actions">
+            <button id="confirm-yes" class="btn-confirm">تأكيد</button>
+            <button id="confirm-no" class="btn-cancel">إلغاء</button>
         </div>
     </div>
 </div>
 
+<style>
+    /* تنسيقات المودال المحدثة */
+    .tera-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.7); /* لون داكن عميق */
+        backdrop-filter: blur(5px);
+        z-index: 10000;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .tera-modal-content {
+        background: white;
+        width: 100%;
+        max-width: 380px;
+        padding: 30px;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        transform: scale(0.9);
+        animation: scaleUp 0.3s forwards;
+    }
+
+    .modal-icon-wrapper {
+        width: 70px;
+        height: 70px;
+        background: #fff7ed;
+        color: #e67e22;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        margin: 0 auto 20px;
+        font-size: 2rem;
+    }
+
+    .tera-modal-content h3 {
+        color: #1e293b;
+        font-size: 1.3rem;
+        margin-bottom: 10px;
+        font-weight: 800;
+    }
+
+    .tera-modal-content p {
+        color: #64748b;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 25px;
+    }
+
+    .modal-actions button {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 12px;
+        font-weight: 700;
+        font-family: inherit;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .btn-confirm { background: #e67e22; color: white; }
+    .btn-confirm:hover { background: #d35400; transform: translateY(-2px); }
+
+    .btn-cancel { background: #f1f5f9; color: #64748b; }
+    .btn-cancel:hover { background: #e2e8f0; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes scaleUp { to { transform: scale(1); } }
+</style>
+
 <script>
+    /**
+     * دالة التأكيد الاحترافية
+     * @param {string} title - عنوان الرسالة
+     * @param {string} message - نص الرسالة
+     * @param {function} onConfirm - الدالة التي ستنفذ عند الضغط على "نعم"
+     */
     window.showConfirm = (title, message, onConfirm) => {
         const modal = document.getElementById('confirm-modal');
-        document.getElementById('confirm-title').innerText = title;
-        document.getElementById('confirm-message').innerHTML = message;
-        modal.style.display = 'flex';
-        
         const yesBtn = document.getElementById('confirm-yes');
         const noBtn = document.getElementById('confirm-no');
         
-        const handler = () => {
+        document.getElementById('confirm-title').innerText = title;
+        document.getElementById('confirm-message').innerHTML = message;
+        
+        modal.style.display = 'flex';
+
+        // تنظيف الأحداث السابقة لمنع التكرار (Important for Stability)
+        const cleanUp = () => {
             modal.style.display = 'none';
-            yesBtn.removeEventListener('click', confirmHandler);
-            noBtn.removeEventListener('click', cancelHandler);
+            yesBtn.replaceWith(yesBtn.cloneNode(true));
+            noBtn.replaceWith(noBtn.cloneNode(true));
         };
-        
-        const confirmHandler = () => {
+
+        // إعادة ربط العناصر بعد الاستنساخ
+        const newYesBtn = document.getElementById('confirm-yes');
+        const newNoBtn = document.getElementById('confirm-no');
+
+        newYesBtn.onclick = () => {
             onConfirm();
-            handler();
+            cleanUp();
+        };
+
+        newNoBtn.onclick = () => {
+            cleanUp();
         };
         
-        const cancelHandler = () => handler();
-        
-        yesBtn.addEventListener('click', confirmHandler);
-        noBtn.addEventListener('click', cancelHandler);
+        // إغلاق عند النقر خارج المودال
+        modal.onclick = (e) => {
+            if (e.target === modal) cleanUp();
+        };
     };
 </script>
