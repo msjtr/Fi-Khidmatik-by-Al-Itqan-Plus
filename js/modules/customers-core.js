@@ -1,240 +1,259 @@
 /**
  * js/modules/customers-core.js
- * نظام إدارة العملاء المتكامل - Tera Gateway
- * التحديث الأخير: ربط كامل مع Firebase وتحسينات الواجهة
+ * الإصدار الاحترافي - Tera Gateway
+ * يشمل الإحصائيات، تصنيف العملاء، وفصل مفاتيح الدول
  */
 
 import { db } from '../core/config.js';
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const countryData = [
-    { name: "المملكة العربية السعودية", code: "+966", flag: "🇸🇦", phoneLen: 9 },
-    { name: "الإمارات العربية المتحدة", code: "+971", flag: "🇦🇪", phoneLen: 9 },
+    { name: "السعودية", code: "+966", flag: "🇸🇦", phoneLen: 9 },
+    { name: "الإمارات", code: "+971", flag: "🇦🇪", phoneLen: 9 },
     { name: "الكويت", code: "+965", flag: "🇰🇼", phoneLen: 8 },
-    { name: "مصر", code: "+20", flag: "🇪🇬", phoneLen: 10 },
-    { name: "الأردن", code: "+962", flag: "🇯🇴", phoneLen: 9 }
+    { name: "مصر", code: "+20", flag: "🇪🇬", phoneLen: 10 }
 ];
 
-/**
- * 1. الدالة الرئيسية لتشغيل موديول العملاء
- */
+// تصنيفات العملاء
+const customerTags = {
+    "normal": { label: "عميل عادي", icon: "fa-user", color: "#64748b" },
+    "vip": { label: "عميل مميز", icon: "fa-star", color: "#f1c40f" },
+    "scammer": { label: "عميل محتال", icon: "fa-user-secret", color: "#e74c3c" },
+    "unserious": { label: "غير جدي", icon: "fa-user-slash", color: "#95a5a6" },
+    "uncooperative": { label: "غير متعاون", icon: "fa-handshake-slash", color: "#e67e22" }
+};
+
 export async function initCustomers(container) {
+    // 1. هيكل الواجهة مع الإحصائيات
     container.innerHTML = `
+        <div class="stats-grid">
+            <div class="stat-card"><h3>إجمالي العملاء</h3><p id="stat-total">0</p></div>
+            <div class="stat-card"><h3>عملاء جدد</h3><p id="stat-new">0</p></div>
+            <div class="stat-card warning"><h3>بيانات ناقصة</h3><p id="stat-incomplete">0</p></div>
+            <div class="stat-card danger"><h3>ملاحظات سلبية</h3><p id="stat-flagged">0</p></div>
+        </div>
+
         <div class="module-header">
-            <div>
-                <h1>دليل العملاء</h1>
-                <p>إدارة بيانات العملاء وعناوينهم الوطنية</p>
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="customer-search" placeholder="بحث باسم العميل، الرقم، أو المدينة...">
             </div>
-            <button id="add-customer-btn" class="btn-primary">
-                <i class="fas fa-plus"></i> إضافة عميل جديد
-            </button>
+            <button id="add-customer-btn" class="btn-primary"><i class="fas fa-plus"></i> إضافة عميل جديد</button>
         </div>
         
         <div class="table-container">
             <table class="tera-table">
                 <thead>
                     <tr>
-                        <th>الاسم الكامل</th>
-                        <th>رقم الجوال</th>
-                        <th>المدينة / الحي</th>
-                        <th>ملاحظات</th>
+                        <th>العميل</th>
+                        <th>الاتصال</th>
+                        <th>العنوان الوطني</th>
+                        <th>التصنيف</th>
                         <th>الإجراءات</th>
                     </tr>
                 </thead>
-                <tbody id="customers-list">
-                    <tr><td colspan="5" style="text-align:center;">جاري تحميل العملاء...</td></tr>
-                </tbody>
+                <tbody id="customers-list"></tbody>
             </table>
         </div>
     `;
 
     document.getElementById('add-customer-btn').onclick = () => openCustomerModal();
     loadCustomers();
+
+    // فلتر البحث السهل
+    document.getElementById('customer-search').oninput = (e) => {
+        filterTable(e.target.value);
+    };
 }
 
-/**
- * 2. جلب وتحميل العملاء من Firebase
- */
 async function loadCustomers() {
     const listBody = document.getElementById('customers-list');
-    try {
-        const q = query(collection(db, "customers"), orderBy("name"));
-        const querySnapshot = await getDocs(q);
-        listBody.innerHTML = '';
+    const q = query(collection(db, "customers"), orderBy("createdAt", "desc"));
+    const querySnapshot = await getDocs(q);
+    
+    let stats = { total: 0, incomplete: 0, flagged: 0 };
+    listBody.innerHTML = '';
 
-        if (querySnapshot.empty) {
-            listBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">لا يوجد عملاء مسجلين حالياً.</td></tr>';
-            return;
-        }
+    querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        const id = docSnap.id;
+        stats.total++;
+        
+        if (!data.buildingNo || !data.postalCode) stats.incomplete++;
+        if (data.tag === 'scammer' || data.tag === 'uncooperative') stats.flagged++;
 
-        querySnapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            const id = docSnap.id;
-            listBody.innerHTML += `
-                <tr>
-                    <td><strong>${data.name}</strong></td>
-                    <td dir="ltr" style="text-align:right;">${data.phone}</td>
-                    <td>${data.city} - ${data.district || 'غير محدد'}</td>
-                    <td><small>${data.notes || '-'}</small></td>
-                    <td>
-                        <button class="action-btn edit" onclick="editCustomer('${id}')"><i class="fas fa-edit"></i></button>
-                        <button class="action-btn delete" onclick="deleteCustomer('${id}')"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `;
-        });
-    } catch (error) {
-        console.error("Error loading customers:", error);
-        listBody.innerHTML = '<tr><td colspan="5" style="color:red;">فشل تحميل البيانات.</td></tr>';
-    }
+        const tagInfo = customerTags[data.tag || 'normal'];
+
+        listBody.innerHTML += `
+            <tr class="customer-row">
+                <td>
+                    <div class="user-info">
+                        <img src="${data.photoURL || 'https://ui-avatars.com/api/?name='+data.name+'&background=random'}" class="user-avatar">
+                        <div>
+                            <div class="user-name">${data.name}</div>
+                            <small>${data.email || 'لا يوجد بريد'}</small>
+                        </div>
+                    </div>
+                </td>
+                <td dir="ltr">
+                    <span class="country-tag">${data.countryCode || ''}</span> ${data.phone}
+                </td>
+                <td>
+                    <div class="address-brief">
+                        <i class="fas fa-map-marker-alt"></i> ${data.city}, ${data.district}<br>
+                        <small>مبنى: ${data.buildingNo || '-'} | رمز: ${data.postalCode || '-'}</small>
+                    </div>
+                </td>
+                <td>
+                    <span class="status-badge" style="background:${tagInfo.color}">
+                        <i class="fas ${tagInfo.icon}"></i> ${tagInfo.label}
+                    </span>
+                </td>
+                <td>
+                    <div class="action-group">
+                        <button class="btn-icon edit" onclick="editCustomer('${id}')" title="تعديل"><i class="fas fa-edit"></i></button>
+                        <button class="btn-icon print" onclick="window.printCustomer('${id}')" title="طباعة"><i class="fas fa-print"></i></button>
+                        <button class="btn-icon delete" onclick="deleteCustomer('${id}')" title="حذف"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+
+    // تحديث الأرقام في الإحصائيات
+    document.getElementById('stat-total').innerText = stats.total;
+    document.getElementById('stat-incomplete').innerText = stats.incomplete;
+    document.getElementById('stat-flagged').innerText = stats.flagged;
 }
 
-/**
- * 3. فتح نافذة العميل (إضافة/تعديل)
- */
 export function openCustomerModal(customer = null) {
     const isEdit = !!customer;
-    const selectedCountry = isEdit ? (countryData.find(c => customer.phone.startsWith(c.code)) || countryData[0]) : countryData[0];
-
     const modalHTML = `
     <div id="customer-modal" class="modal-overlay">
-        <div class="modal-content">
+        <div class="modal-content large">
             <div class="modal-header">
-                <h2><i class="fas ${isEdit ? 'fa-user-edit' : 'fa-user-plus'}"></i> ${isEdit ? 'تعديل بيانات العميل' : 'إضافة عميل جديد'}</h2>
-                <button type="button" id="close-modal" class="close-btn">&times;</button>
+                <h2><i class="fas fa-user-circle"></i> ${isEdit ? 'تعديل الملف الشخصي' : 'ملف عميل جديد'}</h2>
+                <button type="button" class="close-modal" onclick="document.getElementById('customer-modal').remove()">&times;</button>
             </div>
-            
-            <form id="customer-form" class="customer-form">
-                <div class="form-section">
-                    <h3><i class="fas fa-id-card"></i> البيانات الأساسية</h3>
-                    <div class="input-group full">
-                        <label>الاسم الكامل</label>
-                        <input type="text" id="cust-name" value="${customer?.name || ''}" required>
-                    </div>
-                    <div class="row">
-                        <div class="input-group">
-                            <label>الدولة</label>
-                            <select id="cust-country-select">
-                                ${countryData.map(c => `<option value="${c.code}" data-len="${c.phoneLen}" ${selectedCountry.code === c.code ? 'selected' : ''}>${c.flag} ${c.name}</option>`).join('')}
-                            </select>
+            <form id="customer-form">
+                <div class="modal-body-scroll">
+                    <div class="form-grid">
+                        <div class="photo-upload-section">
+                            <img id="preview-photo" src="${customer?.photoURL || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}">
+                            <input type="text" id="cust-photo-url" placeholder="رابط الصورة (اختياري)" value="${customer?.photoURL || ''}">
                         </div>
-                        <div class="input-group flex-2">
-                            <label>رقم الجوال</label>
-                            <div class="phone-wrapper">
-                                <span id="prefix-display">${selectedCountry.code}</span>
-                                <input type="tel" id="cust-phone" dir="ltr" value="${isEdit ? customer.phone.replace(selectedCountry.code, '') : ''}" required>
+                        <div class="main-info">
+                            <label>اسم العميل الكامل</label>
+                            <input type="text" id="cust-name" value="${customer?.name || ''}" required placeholder="محمد بن صالح...">
+                            
+                            <div class="row">
+                                <div class="field">
+                                    <label>الدولة</label>
+                                    <select id="cust-country">
+                                        ${countryData.map(c => `<option value="${c.code}" ${customer?.countryCode === c.code ? 'selected' : ''}>${c.flag} ${c.name}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="field flex-2">
+                                    <label>رقم الجوال</label>
+                                    <input type="tel" id="cust-phone" value="${customer?.phone || ''}" placeholder="5xxxxxxxx" required>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="form-section">
-                    <h3><i class="fas fa-map-marked-alt"></i> العنوان الوطني</h3>
+                    <div class="section-title">العنوان الوطني والاتصال</div>
                     <div class="row">
-                        <div class="input-group">
-                            <label>المدينة</label>
-                            <input type="text" id="cust-city" value="${customer?.city || 'حائل'}" required>
-                        </div>
-                        <div class="input-group">
-                            <label>الحي</label>
-                            <input type="text" id="cust-district" value="${customer?.district || ''}">
-                        </div>
+                        <input type="email" id="cust-email" placeholder="البريد الإلكتروني" value="${customer?.email || ''}">
+                        <input type="text" id="cust-city" placeholder="المدينة" value="${customer?.city || 'حائل'}">
+                        <input type="text" id="cust-district" placeholder="الحي" value="${customer?.district || ''}">
                     </div>
                     <div class="row">
-                        <div class="input-group">
-                            <label>رقم المبنى</label>
-                            <input type="text" id="cust-building" value="${customer?.buildingNo || ''}" maxlength="5">
-                        </div>
-                        <div class="input-group">
-                            <label>الرمز البريدي</label>
-                            <input type="text" id="cust-zip" value="${customer?.postalCode || ''}">
-                        </div>
+                        <input type="text" id="cust-street" placeholder="اسم الشارع" value="${customer?.street || ''}">
+                        <input type="text" id="cust-building" placeholder="رقم المبنى" value="${customer?.buildingNo || ''}">
+                        <input type="text" id="cust-additional" placeholder="الرقم الإضافي" value="${customer?.additionalNo || ''}">
                     </div>
-                </div>
+                    <div class="row">
+                        <input type="text" id="cust-pobox" placeholder="صندوق البريد" value="${customer?.poBox || ''}">
+                        <input type="text" id="cust-zip" placeholder="الرمز البريدي" value="${customer?.postalCode || ''}">
+                    </div>
 
-                <div class="form-section">
-                    <h3><i class="fas fa-edit"></i> ملاحظات</h3>
-                    <textarea id="cust-notes" rows="2">${customer?.notes || ''}</textarea>
+                    <div class="section-title">تصنيف العميل وملاحظات إدارية</div>
+                    <select id="cust-tag" class="tag-select">
+                        ${Object.keys(customerTags).map(key => `<option value="${key}" ${customer?.tag === key ? 'selected' : ''}>${customerTags[key].label}</option>`).join('')}
+                    </select>
+                    
+                    <div class="rich-text-area">
+                        <label>الملاحظات (دعم كامل)</label>
+                        <textarea id="cust-notes" rows="4" placeholder="اكتب ملاحظاتك هنا...">${customer?.notes || ''}</textarea>
+                    </div>
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" id="cancel-modal" class="btn-cancel">إلغاء</button>
-                    <button type="submit" class="btn-save">${isEdit ? 'تحديث' : 'حفظ'}</button>
+                    <button type="submit" class="btn-save">${isEdit ? 'تحديث البيانات' : 'حفظ العميل'}</button>
+                    <button type="button" class="btn-cancel" onclick="document.getElementById('customer-modal').remove()">إلغاء</button>
                 </div>
             </form>
         </div>
-    </div>`;
+    </div>
+    `;
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-    // معالجة إغلاق النافذة
-    const closeModal = () => document.getElementById('customer-modal').remove();
-    document.getElementById('close-modal').onclick = closeModal;
-    document.getElementById('cancel-modal').onclick = closeModal;
-
-    // تحديث المفتاح عند تغيير الدولة
-    document.getElementById('cust-country-select').onchange = (e) => {
-        document.getElementById('prefix-display').innerText = e.target.value;
-    };
-
-    // معالجة الحفظ
     document.getElementById('customer-form').onsubmit = async (e) => {
         e.preventDefault();
-        if (window.toggleLoader) window.toggleLoader(true);
-
-        const countryCode = document.getElementById('cust-country-select').value;
-        const phoneSuffix = document.getElementById('cust-phone').value.trim();
-
-        const customerData = {
-            name: document.getElementById('cust-name').value.trim(),
-            phone: countryCode + phoneSuffix,
-            city: document.getElementById('cust-city').value.trim(),
-            district: document.getElementById('cust-district').value.trim(),
-            buildingNo: document.getElementById('cust-building').value.trim(),
-            postalCode: document.getElementById('cust-zip').value.trim(),
-            notes: document.getElementById('cust-notes').value.trim(),
+        const data = {
+            name: document.getElementById('cust-name').value,
+            countryCode: document.getElementById('cust-country').value,
+            phone: document.getElementById('cust-phone').value,
+            email: document.getElementById('cust-email').value,
+            city: document.getElementById('cust-city').value,
+            district: document.getElementById('cust-district').value,
+            street: document.getElementById('cust-street').value,
+            buildingNo: document.getElementById('cust-building').value,
+            additionalNo: document.getElementById('cust-additional').value,
+            poBox: document.getElementById('cust-pobox').value,
+            postalCode: document.getElementById('cust-zip').value,
+            tag: document.getElementById('cust-tag').value,
+            notes: document.getElementById('cust-notes').value,
+            photoURL: document.getElementById('cust-photo-url').value,
             updatedAt: new Date()
         };
 
-        try {
-            if (isEdit) {
-                await updateDoc(doc(db, "customers", customer.id), customerData);
-            } else {
-                customerData.createdAt = new Date();
-                await addDoc(collection(db, "customers"), customerData);
-            }
-            closeModal();
-            loadCustomers();
-        } catch (error) {
-            alert("حدث خطأ أثناء الحفظ: " + error.message);
-        } finally {
-            if (window.toggleLoader) window.toggleLoader(false);
+        if (isEdit) {
+            await updateDoc(doc(db, "customers", customer.id), data);
+        } else {
+            data.createdAt = new Date();
+            await addDoc(collection(db, "customers"), data);
         }
+        document.getElementById('customer-modal').remove();
+        loadCustomers();
     };
 }
 
-/**
- * 4. دوال التعديل والحذف (تعريفها على window لتصل إليها أزرار الجدول)
- */
+// دالة البحث السريع
+function filterTable(value) {
+    const rows = document.querySelectorAll('.customer-row');
+    const term = value.toLowerCase();
+    rows.forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none';
+    });
+}
+
+// وظائف عالمية
 window.editCustomer = async (id) => {
-    // جلب بيانات العميل أولاً
     const querySnapshot = await getDocs(collection(db, "customers"));
     const docSnap = querySnapshot.docs.find(d => d.id === id);
-    if (docSnap) {
-        openCustomerModal({ id, ...docSnap.data() });
-    }
+    if (docSnap) openCustomerModal({ id, ...docSnap.data() });
+};
+
+window.printCustomer = (id) => {
+    // منطق الطباعة المبسط
+    window.open(`/print-customer.html?id=${id}`, '_blank');
 };
 
 window.deleteCustomer = async (id) => {
-    if (confirm("هل أنت متأكد من حذف هذا العميل؟ لا يمكن التراجع عن هذه الخطوة.")) {
-        if (window.toggleLoader) window.toggleLoader(true);
-        try {
-            await deleteDoc(doc(db, "customers", id));
-            loadCustomers();
-        } catch (error) {
-            alert("فشل الحذف: " + error.message);
-        } finally {
-            if (window.toggleLoader) window.toggleLoader(false);
-        }
+    if (confirm("حذف العميل؟")) {
+        await deleteDoc(doc(db, "customers", id));
+        loadCustomers();
     }
 };
