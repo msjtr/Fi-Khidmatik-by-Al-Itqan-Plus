@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>بطاقة بيانات العميل - منصة في خدمتك</title>
-    <link rel="stylesheet" href="fi-khidmatik/css/customers-print.css">
+    <link rel="stylesheet" href="/fi-khidmatik/css/customers-print.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -21,7 +21,7 @@
                 <td class="header-right">
                     <div class="logo-container">
                         <span class="logo-text">منصة في خدمتك<br>من الأتقان بلس</span>
-                        <img src="fi-khidmatik/images/logo.svg" alt="Logo">
+                        <img src="/fi-khidmatik/images/logo.svg" alt="Logo">
                     </div>
                 </td>
                 <td class="header-center">
@@ -109,4 +109,25 @@
                 document.getElementById('tag').innerText = data.tag || 'normal';
                 document.getElementById('notes').innerText = data.notes || '-';
 
-                document.getElementById('
+                document.getElementById('current-date').innerText = now.toLocaleDateString('ar-SA');
+                document.getElementById('current-time').innerText = now.toLocaleTimeString('ar-SA', {hour:'2-digit', minute:'2-digit'});
+                
+                const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+                document.getElementById('trans-id').innerText = `KF-${ym}-${customerId.substring(0,5).toUpperCase()}`;
+
+                new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 85, height: 85 });
+            }
+        }
+
+        window.saveAsPDF = function() {
+            const element = document.getElementById('printable-area');
+            html2pdf().from(element).set({
+                margin: 0, 
+                filename: 'Customer-Card.pdf',
+                html2canvas: { scale: 3 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).save();
+        }
+    </script>
+</body>
+</html>
