@@ -1,24 +1,241 @@
-<div style="padding: 25px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2><i class="fas fa-users" style="color: #e67e22;"></i> إدارة العملاء</h2>
-        <button id="add-customer-btn" style="background: #e67e22; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
-            <i class="fas fa-user-plus"></i> عميل جديد
-        </button>
+<div class="module-wrapper">
+    <div class="module-header">
+        <div class="header-info">
+            <div class="title-icon">
+                <i class="fas fa-user-group"></i>
+            </div>
+            <div>
+                <h2>إدارة قاعدة العملاء</h2>
+                <p>إدارة وتتبع بيانات العملاء المسجلين في نظام التقسيط</p>
+            </div>
+        </div>
+        
+        <div class="header-actions">
+            <div class="search-box">
+                <i class="fas fa-magnifying-glass"></i>
+                <input type="text" id="customer-search" placeholder="بحث باسم العميل أو رقم الجوال...">
+            </div>
+            <button id="add-customer-btn" class="btn-primary-glow">
+                <i class="fas fa-plus-circle"></i>
+                <span>إضافة عميل جديد</span>
+            </button>
+        </div>
     </div>
-    <div style="background: white; border-radius: 12px; overflow: hidden;">
-        <table class="data-table" style="width: 100%;">
+
+    <div class="quick-stats">
+        <div class="stat-card">
+            <span class="stat-label">إجمالي العملاء</span>
+            <span class="stat-value" id="total-customers-count">0</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">نشطين حالياً</span>
+            <span class="stat-value text-success" id="active-customers-count">0</span>
+        </div>
+    </div>
+
+    <div class="table-container-modern">
+        <table class="tera-table">
             <thead>
                 <tr>
-                    <th>الاسم</th>
-                    <th>الجوال</th>
-                    <th>المدينة</th>
-                    <th>تاريخ الإضافة</th>
-                    <th>الإجراءات</th>
+                    <th>العميل</th>
+                    <th>بيانات الاتصال</th>
+                    <th>الموقع</th>
+                    <th>تاريخ الانضمام</th>
+                    <th style="text-align: center;">العمليات</th>
                 </tr>
             </thead>
             <tbody id="customers-table-body">
-                <tr><td colspan="5" style="text-align: center; padding: 30px;">جاري التحميل...</td></tr>
+                <tr>
+                    <td colspan="5">
+                        <div class="loading-state">
+                            <div class="spinner"></div>
+                            <p>جاري مزامنة بيانات العملاء من Firestore...</p>
+                        </div>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
 </div>
+
+<style>
+    /* التنسيقات الخاصة بموديول العملاء */
+    .module-wrapper {
+        animation: fadeIn 0.4s ease-out;
+    }
+
+    .module-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 30px;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .header-info {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+    }
+
+    .title-icon {
+        width: 55px;
+        height: 55px;
+        background: #fff;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        border-radius: 16px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    }
+
+    .header-info h2 {
+        color: #1e293b;
+        font-size: 1.4rem;
+        font-weight: 800;
+        margin-bottom: 4px;
+    }
+
+    .header-info p {
+        color: #94a3b8;
+        font-size: 0.85rem;
+    }
+
+    /* أدوات البحث والأزرار */
+    .header-actions {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+
+    .search-box {
+        position: relative;
+        background: white;
+        border-radius: 12px;
+        padding: 2px 15px;
+        display: flex;
+        align-items: center;
+        border: 1px solid #edf2f7;
+        width: 300px;
+        transition: 0.3s;
+    }
+
+    .search-box:focus-within {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.1);
+    }
+
+    .search-box i { color: #cbd5e1; margin-left: 10px; }
+    .search-box input {
+        border: none;
+        padding: 10px 0;
+        outline: none;
+        font-family: inherit;
+        font-size: 0.9rem;
+        width: 100%;
+    }
+
+    .btn-primary-glow {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 12px 22px;
+        border-radius: 12px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        transition: 0.3s;
+        box-shadow: 0 4px 15px rgba(230, 126, 34, 0.3);
+    }
+
+    .btn-primary-glow:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(230, 126, 34, 0.4);
+    }
+
+    /* الجدول المطور */
+    .table-container-modern {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+        overflow: hidden;
+        border: 1px solid #f1f5f9;
+    }
+
+    .tera-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: right;
+    }
+
+    .tera-table th {
+        background: #f8fafc;
+        padding: 18px 25px;
+        color: #64748b;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .tera-table td {
+        padding: 16px 25px;
+        border-bottom: 1px solid #f8fafc;
+        color: #334155;
+        font-size: 0.92rem;
+        vertical-align: middle;
+    }
+
+    .tera-table tr:hover { background: #fefaf6; }
+
+    /* مظهر حالة التحميل */
+    .loading-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 50px 0;
+        color: #94a3b8;
+    }
+
+    .spinner {
+        width: 35px;
+        height: 35px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid var(--primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 15px;
+    }
+
+    .quick-stats {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 15px 25px;
+        border-radius: 15px;
+        display: flex;
+        flex-direction: column;
+        min-width: 150px;
+        border: 1px solid #f1f5f9;
+    }
+
+    .stat-label { font-size: 0.75rem; color: #94a3b8; font-weight: 700; }
+    .stat-value { font-size: 1.2rem; font-weight: 800; color: #1e293b; }
+
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 768px) {
+        .header-actions { width: 100%; flex-direction: column; align-items: stretch; }
+        .search-box { width: 100%; }
+    }
+</style>
