@@ -1,4 +1,11 @@
-import { db } from '../firebase-config.js'; 
+/**
+ * js/dashboard-core.js
+ * موديول الإحصائيات - Tera Gateway
+ */
+
+// التصحيح: الدخول لمجلد core المجاور للملف الحالي
+import { db } from './core/firebase.js'; 
+
 import { 
     collection, 
     getDocs, 
@@ -22,7 +29,7 @@ export async function initDashboard(container) {
             const customersSnap = await getDocs(collection(db, "customers"));
             if (totalCustomersEl) totalCustomersEl.innerText = customersSnap.size;
 
-            // جلب إجمالي الطلبات (إذا كان لديك مجموعة طلبات)
+            // جلب إجمالي الطلبات
             const ordersSnap = await getDocs(collection(db, "orders"));
             if (totalOrdersEl) totalOrdersEl.innerText = ordersSnap.size;
 
@@ -31,7 +38,7 @@ export async function initDashboard(container) {
         }
     }
 
-    // --- 3. جلب آخر النشاطات (آخر 5 عملاء مضافين مثلاً) ---
+    // --- 3. جلب آخر النشاطات (آخر 5 عملاء مضافين) ---
     async function fetchRecentActivity() {
         if (!recentActivityList) return;
 
