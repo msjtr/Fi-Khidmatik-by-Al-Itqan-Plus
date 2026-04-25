@@ -1,23 +1,43 @@
+/**
+ * customers-core.js
+ * المحرك الرئيسي لإدارة العملاء - Tera Gateway
+ */
+
 import { db } from '../core/config.js';
 import { 
-    collection, getDocs, doc, getDoc, query, orderBy 
+    collection, getDocs, query, orderBy, doc, getDoc 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { UI } from './customers-ui.js';
 
+/**
+ * تشغيل موديول العملاء
+ * @param {HTMLElement} container - الحاوية التي سيتم حقن الواجهة فيها
+ */
 export async function initCustomers(container) {
     if (!container) return;
+
+    // 1. رسم الهيكل الرئيسي (الإحصائيات، شريط البحث، الجدول)
     container.innerHTML = UI.renderMainLayout();
     
-    // ربط البحث
+    // 2. تفعيل نظام البحث الحي
     const searchInput = document.getElementById('customer-search');
-    if (searchInput) searchInput.oninput = (e) => filterTable(e.target.value);
+    if (searchInput) {
+        searchInput.oninput = (e) => filterCustomersTable(e.target.value);
+    }
 
-    await loadCustomers();
+    // 3. جلب البيانات من Firestore
+    await loadCustomersData();
 }
 
-async function loadCustomers() {
+/**
+ * جلب بيانات العملاء وتحديث الواجهة
+ */
+async function loadCustomersData() {
     const listBody = document.getElementById('customers-list');
+    if (!listBody) return;
+
     try {
+        // جلب العملاء مرتبين حسب الأحدث
         const q = query(collection(db, "customers"), orderBy("createdAt", "desc"));
         const querySnapshot = await getDocs(q);
         
@@ -28,51 +48,79 @@ async function loadCustomers() {
             const data = docSnap.data();
             const id = docSnap.id;
             
+            // تحديث عدادات الإحصائيات
             stats.total++;
-            // فحص البيانات (الجوال، الهوية، المدينة)
-            const isComplete = data.phone && data.idNumber && data.city;
-            if (isComplete) stats.complete++; else stats.incomplete++;
-            if (data.notes) stats.flagged++;
+            const isDataComplete = data.phone && data.idNumber && data.city;
+            if (isDataComplete) stats.complete++; else stats.incomplete++;
+            if (data.notes || data.tag === 'مميز') stats.flagged++;
 
+            // بناء صف الجدول باستخدام القالب من UI
             rowsHtml += UI.renderCustomerRow(id, data);
         });
 
-        listBody.innerHTML = rowsHtml;
-        updateStatsUI(stats);
+        // حقن الصفوف في الجدول
+        listBody.innerHTML = rowsHtml || '<tr><td colspan="5" style="text-align:center; padding:20px;">لا يوجد عملاء مسجلين حالياً</td></tr>';
+        
+        // تحديث أرقام الإحصائيات في الأعلى
+        updateStatsCounters(stats);
+
     } catch (error) {
-        console.error("خطأ جلب البيانات:", error);
+        console.error("خطأ أثناء جلب بيانات العملاء:", error);
+        listBody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:red; padding:20px;">فشل تحميل البيانات. تأكد من صلاحيات الوصول.</td></tr>';
     }
 }
 
-// --- ربط الدوال بالنطاق العام (لتعمل الأزرار داخل الجدول) ---
+/**
+ * تحديث عدادات الإحصائيات في الواجهة
+ */
+function updateStatsCounters(stats) {
+    const mappings = {
+        'stat-total': stats.total,
+        'stat-complete': stats.complete,
+        'stat-incomplete': stats.incomplete,
+        'stat-flagged': stats.flagged
+    };
 
-window.previewPrint = (id) => {
-    window.open(`print-card.html?id=${id}`, '_blank', 'width=1100,height=900');
-};
+    for (const [id, value] of Object.entries(mappings)) {
+        const el = document.getElementById(id);
+        if (el) el.innerText = value;
+    }
+}
 
+/**
+ * فلترة الجدول بناءً على البحث
+ */
+function filterCustomersTable(queryText) {
+    const rows = document.querySelectorAll('.customer-row-fade');
+    const term = queryText.toLowerCase().trim();
+
+    rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(term) ? '' : 'none';
+    });
+}
+
+/**
+ * --- ربط الوظائف بـ window لضمان عمل الأزرار (Global Access) ---
+ */
+
+// وظيفة التعديل: تفتح المودال الموجود في admin.html
 window.editCustomer = (id) => {
     if (typeof window.openCustomerModal === 'function') {
         window.openCustomerModal(id);
     } else {
-        console.error("دالة openCustomerModal غير موجودة في index.html");
+        console.error("دالة openCustomerModal غير معرفة في admin.html");
     }
 };
 
-window.exportToExcel = () => {
-    alert("جاري تجهيز تقرير Excel...");
+// وظيفة الطباعة: تفتح صفحة العقد أو الكرت
+window.previewPrint = (id) => {
+    const printUrl = `/fi-khidmatik/print-customer.html?id=${id}`;
+    window.open(printUrl, '_blank', 'width=1000,height=800');
 };
 
-function updateStatsUI(stats) {
-    if (document.getElementById('stat-total')) document.getElementById('stat-total').innerText = stats.total;
-    if (document.getElementById('stat-complete')) document.getElementById('stat-complete').innerText = stats.complete;
-    if (document.getElementById('stat-incomplete')) document.getElementById('stat-incomplete').innerText = stats.incomplete;
-    if (document.getElementById('stat-flagged')) document.getElementById('stat-flagged').innerText = stats.flagged;
-}
-
-function filterTable(value) {
-    const rows = document.querySelectorAll('.customer-row-fade');
-    const searchVal = value.toLowerCase().trim();
-    rows.forEach(row => {
-        row.style.display = row.innerText.toLowerCase().includes(searchVal) ? '' : 'none';
-    });
-}
+// وظيفة التصدير (Excel)
+window.exportToExcel = () => {
+    console.log("طلب تصدير بيانات العملاء إلى Excel");
+    alert("سيتم تحميل ملف Excel بكافة البيانات قريباً...");
+};
