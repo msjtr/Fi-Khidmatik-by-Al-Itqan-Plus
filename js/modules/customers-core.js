@@ -1,9 +1,10 @@
 /**
- * customers-core.js - Tera Gateway
- * المحرك الرئيسي لإدارة بيانات العملاء في قاعدة البيانات
+ * fi-khidmatik/js/modules/customers-core.js
+ * المحرك الرئيسي لإدارة بيانات العملاء - منصة Tera Gateway
+ * متوافق مع الحقول: (name, phone, email, district, createdAt)
  */
 
-import { db } from '../core/config.js'; 
+import { db } from '../core/firebase.js'; 
 import { 
     collection, 
     getDocs, 
@@ -17,24 +18,27 @@ import {
     serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// المرجع الرئيسي لمجموعة العملاء
+// المرجع الرئيسي لمجموعة العملاء في قاعدة البيانات
 const customersRef = collection(db, "customers");
 
 /**
- * جلب جميع العملاء من قاعدة البيانات
- * تم وضع محاولة جلب مرتبة، وفي حال الفشل يتم الجلب الخام
+ * جلب جميع العملاء مرتبين حسب تاريخ الإنشاء
+ * تم ضبط الحقل ليكون 'createdAt' ليتطابق مع بياناتك الفعلية
  */
 export const fetchAllCustomers = async function() {
     try {
-        console.log("🔄 جاري محاولة جلب بيانات العملاء...");
-        // محاولة جلب مرتبة بالأحدث أولاً
-        const q = query(customersRef, orderBy("CreatedAt", "desc"));
+        console.log("🔄 جاري محاولة جلب بيانات العملاء من تيرا...");
+        
+        // محاولة جلب مرتبة (تتطلب وجود حقل createdAt في المستندات)
+        const q = query(customersRef, orderBy("createdAt", "desc"));
         const snapshot = await getDocs(q);
+        
         console.log(`✅ تم جلب ${snapshot.size} عميل بنجاح (مرتب).`);
         return snapshot;
     } catch (error) {
-        console.warn("⚠️ فشل الجلب المرتب (قد يحتاج لفهرس):", error.message);
-        // جلب خام بدون ترتيب لضمان عدم توقف النظام
+        console.warn("⚠️ فشل الجلب المرتب (ربما بسبب نقص الفهرس أو اختلاف المسمى):", error.message);
+        
+        // جلب خام بدون ترتيب لضمان استمرار عمل النظام في كل الظروف
         const rawSnapshot = await getDocs(customersRef);
         console.log(`✅ تم جلب ${rawSnapshot.size} عميل (جلب خام).`);
         return rawSnapshot;
@@ -57,14 +61,15 @@ export const fetchCustomerById = async function(id) {
 };
 
 /**
- * إضافة عميل جديد لمنصة تيرا
+ * إضافة عميل جديد مع طابع زمني تلقائي
  */
 export const addCustomer = async function(customerData) {
     try {
         return await addDoc(customersRef, {
             ...customerData,
-            CreatedAt: serverTimestamp(),
-            system_origin: "Tera Gateway"
+            createdAt: serverTimestamp(), // استخدام الحرف الصغير ليتوافق مع بياناتك
+            system_origin: "Tera Gateway",
+            region: "Hail"
         });
     } catch (error) {
         console.error("❌ فشل إضافة العميل:", error);
@@ -80,7 +85,7 @@ export const updateCustomer = async function(id, updatedData) {
         const docRef = doc(db, "customers", id);
         return await updateDoc(docRef, {
             ...updatedData,
-            LastUpdate: serverTimestamp()
+            updatedAt: serverTimestamp() // التوافق مع حقل updatedAt الموجود لديك
         });
     } catch (error) {
         console.error("❌ فشل تحديث البيانات:", error);
@@ -89,7 +94,7 @@ export const updateCustomer = async function(id, updatedData) {
 };
 
 /**
- * حذف عميل من النظام
+ * حذف عميل نهائياً من النظام
  */
 export const removeCustomer = async function(id) {
     try {
@@ -100,4 +105,12 @@ export const removeCustomer = async function(id) {
         console.error("❌ فشل عملية الحذف:", error);
         return false;
     }
+};
+
+export default { 
+    fetchAllCustomers, 
+    fetchCustomerById, 
+    addCustomer, 
+    updateCustomer, 
+    removeCustomer 
 };
