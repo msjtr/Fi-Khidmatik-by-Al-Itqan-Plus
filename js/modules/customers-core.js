@@ -1,42 +1,71 @@
+/**
+ * customers-core.js
+ * منطق العمليات لعملاء Tera Gateway
+ */
 import { db } from '../core/config.js';
 import { 
-    doc, getDoc, deleteDoc, collection, getDocs, query, orderBy 
+    collection, 
+    getDocs, 
+    onSnapshot, 
+    query, 
+    orderBy 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { UI } from './customers-ui.js';
 
-// دالة جلب بيانات العميل وتعبئتها في الفورم بدقة
-window.fetchCustomerToForm = async (id) => {
-    try {
-        const docSnap = await getDoc(doc(db, "customers", id));
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            document.getElementById('cust-name').value = data.name || '';
-            document.getElementById('cust-email').value = data.email || '';
-            document.getElementById('cust-phone').value = data.phone || '';
-            document.getElementById('cust-idNumber').value = data.idNumber || '';
-            document.getElementById('cust-city').value = data.city || 'حائل';
-            document.getElementById('cust-district').value = data.district || '';
+/**
+ * دالة تهيئة موديول العملاء
+ * يجب أن تكون مصدّرة (export) ليقرأها ملف admin.html
+ */
+export async function initCustomers(container) {
+    // 1. رسم الهيكل الرئيسي للواجهة
+    container.innerHTML = UI.renderMainLayout();
+
+    // 2. ربط مستمع للبحث
+    const searchInput = document.getElementById('customer-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            filterCustomers(e.target.value);
+        });
+    }
+
+    // 3. تحميل البيانات الحية من Firestore
+    loadCustomersLive();
+}
+
+/**
+ * جلب البيانات الحية وتحديث الجدول تلقائياً
+ */
+function loadCustomersLive() {
+    const customersList = document.getElementById('customers-list');
+    const q = query(collection(db, "customers"), orderBy("createdAt", "desc"));
+
+    onSnapshot(q, (snapshot) => {
+        customersList.innerHTML = '';
+        let total = 0;
+        let vips = 0;
+
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            customersList.innerHTML += UI.renderCustomerRow(doc.id, data);
             
-            if (data.createdAt) {
-                const joinBox = document.getElementById('join-date-box');
-                const joinVal = document.getElementById('join-date-val');
-                joinVal.innerText = new Date(data.createdAt).toLocaleDateString('ar-SA', {
-                    year: 'numeric', month: 'long', day: 'numeric'
-                });
-                joinBox.style.display = 'block';
-            }
-        }
-    } catch (e) { console.error("Error fetching customer:", e); }
-};
+            // تحديث الإحصائيات البسيطة
+            total++;
+            if (data.tag === 'vip') vips++;
+        });
 
-// دالة حذف العميل
-window.handleDelete = async (id) => {
-    try {
-        await deleteDoc(doc(db, "customers", id));
-        window.closeCustomerModal();
-        alert("تم الحذف بنجاح");
-        location.reload(); // تحديث الجدول
-    } catch (e) { alert("فشل الحذف، حاول مجدداً"); }
-};
+        // تحديث أرقام الإحصائيات في الواجهة
+        if(document.getElementById('stat-total')) document.getElementById('stat-total').innerText = total;
+        if(document.getElementById('stat-flagged')) document.getElementById('stat-flagged').innerText = vips;
+    });
+}
 
-// ... (بقية دوال initCustomers و loadCustomers تبقى كما هي)
+/**
+ * منطق الفلترة (بحث بسيط)
+ */
+function filterCustomers(term) {
+    const rows = document.querySelectorAll('.customer-row-fade');
+    rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(term.toLowerCase()) ? '' : 'none';
+    });
+}
