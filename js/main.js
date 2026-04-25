@@ -1,9 +1,9 @@
 /**
  * main.js - Tera Gateway 
- * الموزع الرئيسي للنظام
  */
 
-// استيراد الموديول المحدث بالاسم الصحيح
+// استيراد التفعيل من الملف المركزي الجديد
+import { db } from './core/firebase.js'; 
 import { initCustomersUI } from './modules/customers-ui.js';
 
 const routes = {
@@ -17,7 +17,6 @@ const routes = {
 
 async function switchModule(moduleName) {
     const container = document.getElementById('module-container');
-    
     if (!container) {
         setTimeout(() => switchModule(moduleName), 100);
         return;
@@ -28,20 +27,15 @@ async function switchModule(moduleName) {
 
     try {
         const response = await fetch(path);
-        if (!response.ok) throw new Error(`404: ${path}`);
         const html = await response.text();
-        
         container.innerHTML = html;
 
-        // تشغيل المنطق البرمجي بناءً على اسم الموديول
         if (moduleName === 'customers') {
-            // ننتظر قليلاً لضمان حقن الـ HTML في المتصفح
             setTimeout(() => {
                 const uiRoot = document.getElementById('customers-ui-root') || container;
                 initCustomersUI(uiRoot);
             }, 50);
         }
-
     } catch (error) {
         console.error("❌ خطأ في التنقل:", error);
     }
@@ -54,5 +48,4 @@ function handleRoute() {
 
 window.addEventListener('load', handleRoute);
 window.addEventListener('hashchange', handleRoute);
-
 window.switchModule = switchModule;
