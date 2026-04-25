@@ -1,7 +1,6 @@
 /**
  * customers-core.js - Tera Gateway
- * المحرك الرئيسي لإدارة بيانات العملاء - نسخة الإصلاح الشامل
- * تم التحديث لضمان جلب البيانات حتى في حال تأخر استجابة السيرفر
+ * المحرك الرئيسي لإدارة بيانات العملاء - الإصدار المتوافق مع حقول 'customers'
  */
 
 import { db } from '../core/firebase.js'; 
@@ -18,41 +17,41 @@ import {
     serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// المرجع الرئيسي لمجموعة العملاء
+// المرجع الرئيسي للمجموعة (تأكد أنها customers بالحروف الصغيرة)
 const customersRef = collection(db, "customers");
 
 /**
- * جلب جميع العملاء - تم تحسينها لضمان استجابة سريعة
+ * جلب جميع العملاء 
+ * تم التعديل ليتوافق مع مسمى createdAt الصغير (String/Timestamp)
  */
 export const fetchAllCustomers = async function() {
     try {
-        console.log("🔄 محاولة الاتصال بـ Tera Gateway لطلب البيانات...");
+        console.log("🔄 جاري الاتصال بقاعدة بيانات تيرا (customers)...");
         
-        // الترتيب حسب CreatedAt (تأكد من وجود هذا الحقل في المستندات)
-        const q = query(customersRef, orderBy("CreatedAt", "desc"));
+        // محاولة جلب البيانات مرتبة حسب التاريخ (الأحدث أولاً)
+        // ملاحظة: استخدمنا createdAt (حروف صغيرة) لتطابق بياناتك الأصلية
+        const q = query(customersRef, orderBy("createdAt", "desc"));
         const snapshot = await getDocs(q);
         
-        // إذا كان الترتيب يسبب مشكلة (بسبب نقص الفهرس)، سينتقل الكود تلقائياً لـ catch
         console.log(`✅ تم جلب ${snapshot.size} عميل بنجاح.`);
         return snapshot;
         
     } catch (error) {
-        console.warn("⚠️ جاري الجلب بدون ترتيب (Fallback) بسبب:", error.message);
+        console.warn("⚠️ جاري جلب البيانات بدون ترتيب بسبب اختلاف أنواع الحقول (createdAt):", error.message);
         
         try {
-            // جلب بسيط بدون تعقيدات لضمان ظهور البيانات للمستخدم فوراً
+            // Fallback: الجلب بدون ترتيب في حال وجود تضارب بين (String و Timestamp) في createdAt
             const rawSnapshot = await getDocs(customersRef);
-            console.log(`✅ تم جلب ${rawSnapshot.size} عميل (بدون ترتيب).`);
             return rawSnapshot;
         } catch (innerError) {
-            console.error("❌ فشل الجلب النهائي:", innerError);
+            console.error("❌ فشل الجلب نهائياً:", innerError);
             throw innerError;
         }
     }
 };
 
 /**
- * جلب بيانات عميل واحد
+ * جلب بيانات عميل واحد بالمعرف
  */
 export const fetchCustomerById = async function(id) {
     if (!id) return null;
@@ -71,18 +70,20 @@ export const fetchCustomerById = async function(id) {
 
 /**
  * إضافة عميل جديد لمنصة تيرا
+ * نستخدم المسميات الصغيرة (phone, email, tag) لتطابق بياناتك القديمة
  */
 export const addCustomer = async function(customerData) {
     try {
         const payload = {
             ...customerData,
-            CreatedAt: serverTimestamp(),
+            createdAt: new Date().toISOString(), // حفظه كـ String ليتوافق مع سجلاتك السابقة
             system_origin: "Tera Gateway",
-            region: "Hail"
+            region: "Hail",
+            updatedAt: serverTimestamp()
         };
-        console.log("📤 جاري حفظ بيانات العميل الجديد...");
+        
+        console.log("📤 جاري حفظ العميل الجديد في مجموعة customers...");
         const docRef = await addDoc(customersRef, payload);
-        console.log("✅ تمت الإضافة بنجاح، المعرف:", docRef.id);
         return docRef;
     } catch (error) {
         console.error("❌ فشل إضافة العميل:", error);
@@ -98,9 +99,9 @@ export const updateCustomer = async function(id, updatedData) {
         const docRef = doc(db, "customers", id);
         await updateDoc(docRef, {
             ...updatedData,
-            LastUpdate: serverTimestamp()
+            updatedAt: serverTimestamp() // تحديث طابع الوقت الأخير
         });
-        console.log("✅ تم التحديث بنجاح للعميل:", id);
+        console.log("✅ تم تحديث بيانات العميل بنجاح:", id);
         return true;
     } catch (error) {
         console.error("❌ فشل تحديث البيانات:", error);
@@ -109,12 +110,13 @@ export const updateCustomer = async function(id, updatedData) {
 };
 
 /**
- * حذف عميل
+ * حذف عميل نهائياً
  */
 export const removeCustomer = async function(id) {
     try {
         const docRef = doc(db, "customers", id);
         await deleteDoc(docRef);
+        console.log("🗑️ تم حذف العميل من النظام.");
         return true;
     } catch (error) {
         console.error("❌ فشل الحذف:", error);
