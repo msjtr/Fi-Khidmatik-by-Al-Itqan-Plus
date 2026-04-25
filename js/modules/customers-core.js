@@ -1,4 +1,11 @@
-import { db } from '../firebase-config.js'; 
+/**
+ * js/modules/customers-core.js
+ * موديول إدارة العملاء - Tera Gateway
+ */
+
+// التصحيح: الخروج درجة للوصول لمجلد js ثم الدخول لـ core/firebase.js
+import { db } from '../core/firebase.js'; 
+
 import { 
     collection, 
     addDoc, 
@@ -23,7 +30,7 @@ export async function initCustomers(container) {
     const btnCloseModal = container.querySelectorAll('button[onclick="closeCustomerModal()"]');
     const btnDelete = container.querySelector('#delete-btn');
 
-    // مصفوفة محلية لتخزين البيانات مؤقتاً (لتحسين سرعة التعديل)
+    // مصفوفة محلية لتخزين البيانات مؤقتاً
     let localCustomers = [];
 
     // --- 1. الدوال الأساسية ---
@@ -42,10 +49,10 @@ export async function initCustomers(container) {
         customerModal.style.display = 'none';
     };
 
-    // --- 2. ربط الأحداث برمجياً (حل مشكلة CSP Eval) ---
+    // --- 2. ربط الأحداث برمجياً ---
 
     if (btnAddNew) {
-        btnAddNew.removeAttribute('onclick'); // إزالة الربط القديم
+        btnAddNew.removeAttribute('onclick'); 
         btnAddNew.addEventListener('click', () => openModal(false));
     }
 
@@ -78,7 +85,7 @@ export async function initCustomers(container) {
             const q = query(collection(db, "customers"), orderBy("createdAt", "desc"));
             const querySnapshot = await getDocs(q);
             customersTable.innerHTML = '';
-            localCustomers = []; // تصفير المصفوفة المحلية
+            localCustomers = []; 
 
             if (statTotal) statTotal.innerText = querySnapshot.size;
 
@@ -173,7 +180,6 @@ export async function initCustomers(container) {
         }
     });
 
-    // دوال مساعدة
     function translateTag(tag) {
         const mapping = { 'normal': 'عادي', 'vip': 'مميز ⭐', 'fraud': 'محتال ⚠️' };
         return mapping[tag] || 'أخرى';
@@ -185,6 +191,5 @@ export async function initCustomers(container) {
         return '#f1f5f9';
     }
 
-    // التشغيل الأول
     loadCustomers();
 }
