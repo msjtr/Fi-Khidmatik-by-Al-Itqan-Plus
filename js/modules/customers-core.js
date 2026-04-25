@@ -1,166 +1,174 @@
-/**
- * customers-core.js
- * منطق العمليات المطور لعملاء Tera Gateway
- */
-import { db } from '../core/config.js';
+import { db } from '../firebase-config.js'; // تأكد من مسار ملف الإعدادات الخاص بك
 import { 
-    collection, addDoc, doc, updateDoc, deleteDoc, 
-    getDoc, onSnapshot, query, orderBy, serverTimestamp 
+    collection, 
+    addDoc, 
+    getDocs, 
+    doc, 
+    updateDoc, 
+    deleteDoc, 
+    serverTimestamp,
+    query,
+    orderBy 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { UI } from './customers-ui.js';
 
-/**
- * تهيئة الموديول وربط العمليات
- */
 export async function initCustomers(container) {
-    // 1. رسم الواجهة (تم استبدال UI.renderMainLayout لأننا نستخدم HTML خارجي الآن)
-    // إذا كنت تستخدم fetch لتحميل customers.html، تأكد من استدعاء هذه الدالة بعد التحميل
-    
-    // 2. ربط مستمع للبحث (فلتر بحث مميز وسهل)
-    const searchInput = document.getElementById('customer-search');
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => filterCustomers(e.target.value));
-    }
+    const customersTable = document.getElementById('customers-list');
+    const customerForm = document.getElementById('customer-form');
+    const customerModal = document.getElementById('customer-modal');
+    const statTotal = document.getElementById('stat-total');
 
-    // 3. ربط نموذج الإضافة/التعديل
-    const form = document.getElementById('customer-form');
-    if (form) {
-        form.onsubmit = async (e) => {
-            e.preventDefault();
-            await handleSaveCustomer();
-        };
-    }
+    // --- 1. الدوال الأساسية (تصدير للـ Window لتعمل الأزرار) ---
 
-    // 4. تحميل البيانات الحية والإحصائيات
-    loadCustomersLive();
-}
-
-/**
- * جلب البيانات وتحديث الإحصائيات الأربعة
- */
-function loadCustomersLive() {
-    const customersList = document.getElementById('customers-list');
-    const q = query(collection(db, "customers"), orderBy("createdAt", "desc"));
-
-    onSnapshot(q, (snapshot) => {
-        customersList.innerHTML = '';
-        let stats = { total: 0, complete: 0, incomplete: 0, notes: 0 };
-
-        snapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            const id = docSnap.id;
-
-            // حساب الإحصائيات بناءً على مخططك
-            stats.total++;
-            if (data.buildingNo && data.district && data.postalCode) stats.complete++; 
-            else stats.incomplete++;
-            if (data.notes && data.notes.trim() !== "") stats.notes++;
-
-            // إضافة السطر للجدول
-            customersList.innerHTML += UI.renderCustomerRow(id, data);
-        });
-
-        // تحديث أرقام الإحصائيات في الواجهة
-        updateStatsUI(stats);
-    });
-}
-
-/**
- * تحديث واجهة الإحصائيات
- */
-function updateStatsUI(s) {
-    if(document.getElementById('stat-total')) document.getElementById('stat-total').innerText = s.total;
-    if(document.getElementById('stat-complete')) document.getElementById('stat-complete').innerText = s.complete;
-    if(document.getElementById('stat-incomplete')) document.getElementById('stat-incomplete').innerText = s.incomplete;
-    if(document.getElementById('stat-notes')) document.getElementById('stat-notes').innerText = s.notes;
-}
-
-/**
- * حفظ أو تحديث بيانات العميل
- */
-async function handleSaveCustomer() {
-    const id = document.getElementById('edit-customer-id').value;
-    const customerData = {
-        name: document.getElementById('cust-name').value,
-        email: document.getElementById('cust-email').value,
-        country: document.getElementById('cust-country').value,
-        countryCode: document.getElementById('cust-countryCode').value,
-        phone: document.getElementById('cust-phone').value,
-        tag: document.getElementById('cust-tag').value,
-        city: document.getElementById('cust-city').value,
-        district: document.getElementById('cust-district').value,
-        street: document.getElementById('cust-street').value,
-        buildingNo: document.getElementById('cust-buildingNo').value,
-        additionalNo: document.getElementById('cust-additionalNo').value,
-        postalCode: document.getElementById('cust-postalCode').value,
-        poBox: document.getElementById('cust-poBox').value,
-        notes: document.getElementById('cust-notes').value,
-        updatedAt: serverTimestamp()
+    window.openCustomerModal = () => {
+        customerForm.reset();
+        document.getElementById('edit-customer-id').value = '';
+        document.getElementById('modal-title').innerText = 'إضافة عميل جديد';
+        document.getElementById('delete-btn').style.display = 'none';
+        customerModal.style.display = 'flex';
     };
 
-    try {
-        if (id) {
-            await updateDoc(doc(db, "customers", id), customerData);
-        } else {
-            customerData.createdAt = new Date().toISOString(); // تاريخ الإضافة
-            await addDoc(collection(db, "customers"), customerData);
+    window.closeCustomerModal = () => {
+        customerModal.style.display = 'none';
+    };
+
+    window.deleteCustomer = async () => {
+        const id = document.getElementById('edit-customer-id').value;
+        if (!id) return;
+
+        if (confirm('هل أنت متأكد من حذف بيانات هذا العميل نهائياً؟')) {
+            try {
+                await deleteDoc(doc(db, "customers", id));
+                window.closeCustomerModal();
+                loadCustomers(); // تحديث الجدول
+                alert('تم حذف العميل بنجاح');
+            } catch (error) {
+                console.error("Error deleting document: ", error);
+            }
         }
-        window.closeCustomerModal();
-    } catch (error) {
-        console.error("Error saving customer:", error);
-        alert("حدث خطأ أثناء الحفظ");
-    }
-}
+    };
 
-/**
- * جلب بيانات عميل واحد للفورم عند التعديل
- */
-window.editCustomer = async (id) => {
-    const docSnap = await getDoc(doc(db, "customers", id));
-    if (docSnap.exists()) {
-        const d = docSnap.data();
-        document.getElementById('edit-customer-id').value = id;
-        document.getElementById('cust-name').value = d.name || '';
-        document.getElementById('cust-email').value = d.email || '';
-        document.getElementById('cust-countryCode').value = d.countryCode || '+966';
-        document.getElementById('cust-phone').value = d.phone || '';
-        document.getElementById('cust-tag').value = d.tag || 'normal';
-        document.getElementById('cust-city').value = d.city || '';
-        document.getElementById('cust-district').value = d.district || '';
-        document.getElementById('cust-street').value = d.street || '';
-        document.getElementById('cust-buildingNo').value = d.buildingNo || '';
-        document.getElementById('cust-additionalNo').value = d.additionalNo || '';
-        document.getElementById('cust-postalCode').value = d.postalCode || '';
-        document.getElementById('cust-poBox').value = d.poBox || '';
-        document.getElementById('cust-notes').value = d.notes || '';
+    // --- 2. جلب البيانات وعرضها ---
+
+    async function loadCustomers() {
+        if (!customersTable) return;
+        customersTable.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">جاري جلب البيانات...</td></tr>';
         
-        const joinDateEl = document.getElementById('join-date-display');
-        if(d.createdAt) joinDateEl.innerText = "تاريخ الانضمام: " + new Date(d.createdAt).toLocaleDateString('ar-SA');
-        
-        document.getElementById('modal-title').innerText = "تعديل بيانات العميل";
-        document.getElementById('delete-btn').style.display = 'block';
-        document.getElementById('customer-modal').style.display = 'flex';
-    }
-};
+        try {
+            const q = query(collection(db, "customers"), orderBy("createdAt", "desc"));
+            const querySnapshot = await getDocs(q);
+            customersTable.innerHTML = '';
+            
+            statTotal.innerText = querySnapshot.size;
 
-/**
- * حذف العميل
- */
-window.deleteCustomer = async () => {
-    const id = document.getElementById('edit-customer-id').value;
-    if (confirm("هل أنت متأكد من حذف هذا العميل نهائياً؟")) {
-        await deleteDoc(doc(db, "customers", id));
-        window.closeCustomerModal();
-    }
-};
+            querySnapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const id = docSnap.id;
 
-/**
- * فلتر البحث المميز
- */
-function filterCustomers(term) {
-    const rows = document.querySelectorAll('#customers-list tr');
-    const searchTerm = term.toLowerCase();
-    rows.forEach(row => {
-        row.style.display = row.innerText.toLowerCase().includes(searchTerm) ? '' : 'none';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="padding: 15px;">
+                        <div style="font-weight: 700;">${data.name}</div>
+                        <div style="font-size: 0.75rem; color: #94a3b8;">${data.email || 'لا يوجد بريد'}</div>
+                    </td>
+                    <td style="padding: 15px;">${data.countryCode} ${data.phone}</td>
+                    <td style="padding: 15px;">${data.city} - ${data.district}</td>
+                    <td style="padding: 15px;">
+                        <span class="tag-${data.tag}" style="padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold;">
+                            ${translateTag(data.tag)}
+                        </span>
+                    </td>
+                    <td style="padding: 15px; text-align: center;">
+                        <button onclick="editCustomer('${id}')" class="btn-edit" style="background: none; border: none; color: #e67e22; cursor: pointer; font-size: 1.1rem;">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                `;
+                customersTable.appendChild(tr);
+            });
+        } catch (error) {
+            console.error("Error loading customers: ", error);
+            customersTable.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">فشل جلب البيانات</td></tr>';
+        }
+    }
+
+    // --- 3. تعديل عميل (جلب بياناته للمودال) ---
+
+    window.editCustomer = async (id) => {
+        // البحث عن البيانات في الـ Snapshot أو جلبها من Firestore
+        // للتبسيط سنجلبها مباشرة من Firestore
+        const docRef = doc(db, "customers", id);
+        try {
+            // منطقياً: يمكنك جلبها من مصفوفة محلية لتكون أسرع
+            const querySnapshot = await getDocs(collection(db, "customers"));
+            const data = querySnapshot.docs.find(d => d.id === id).data();
+
+            document.getElementById('edit-customer-id').value = id;
+            document.getElementById('cust-name').value = data.name;
+            document.getElementById('cust-email').value = data.email;
+            document.getElementById('cust-countryCode').value = data.countryCode;
+            document.getElementById('cust-phone').value = data.phone;
+            document.getElementById('cust-tag').value = data.tag;
+            document.getElementById('cust-city').value = data.city;
+            document.getElementById('cust-district').value = data.district;
+            document.getElementById('cust-street').value = data.street;
+            document.getElementById('cust-buildingNo').value = data.buildingNo;
+            document.getElementById('cust-notes').value = data.notes;
+
+            document.getElementById('modal-title').innerText = 'تعديل بيانات العميل';
+            document.getElementById('delete-btn').style.display = 'block';
+            customerModal.style.display = 'flex';
+        } catch (e) { console.error(e); }
+    };
+
+    // --- 4. حفظ البيانات (إضافة أو تحديث) ---
+
+    customerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-customer-id').value;
+
+        const customerData = {
+            name: document.getElementById('cust-name').value,
+            email: document.getElementById('cust-email').value,
+            countryCode: document.getElementById('cust-countryCode').value,
+            phone: document.getElementById('cust-phone').value,
+            tag: document.getElementById('cust-tag').value,
+            city: document.getElementById('cust-city').value,
+            district: document.getElementById('cust-district').value,
+            street: document.getElementById('cust-street').value,
+            buildingNo: document.getElementById('cust-buildingNo').value,
+            notes: document.getElementById('cust-notes').value,
+            updatedAt: serverTimestamp()
+        };
+
+        try {
+            if (id) {
+                // تحديث
+                await updateDoc(doc(db, "customers", id), customerData);
+            } else {
+                // إضافة جديد
+                customerData.createdAt = serverTimestamp();
+                await addDoc(collection(db, "customers"), customerData);
+            }
+            window.closeCustomerModal();
+            loadCustomers();
+        } catch (error) {
+            alert("حدث خطأ أثناء الحفظ");
+            console.error(error);
+        }
     });
+
+    // دالة مساعدة لترجمة التصنيفات
+    function translateTag(tag) {
+        const tags = {
+            'normal': 'عادي',
+            'vip': 'مميز ⭐',
+            'fraud': 'محتال ⚠️',
+            'unserious': 'غير جدي',
+            'uncooperative': 'غير متعاون'
+        };
+        return tags[tag] || tag;
+    }
+
+    // تشغيل الجلب عند التحميل
+    loadCustomers();
 }
