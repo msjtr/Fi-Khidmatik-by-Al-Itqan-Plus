@@ -1,6 +1,7 @@
 /**
  * customers-ui.js - Tera Gateway
  * الإصدار النهائي المصلح: ترتيب شامل + إحصائيات + محرك بحث وتعديل فعال
+ * تم إضافة فحص وقائي للعناصر لمنع أخطاء الـ null (setting 'innerText')
  */
 
 import * as Core from './customers-core.js';
@@ -94,7 +95,7 @@ async function loadAndRender() {
         let stats = { total: 0, complete: 0, incomplete: 0, active: 0, vips: 0 };
         let counter = 1;
 
-        if (snapshot.empty) {
+        if (!snapshot || snapshot.empty) {
             list.innerHTML = '<tr><td colspan="17" style="text-align:center; padding:40px; color:#94a3b8;">لا يوجد عملاء مسجلين حالياً في النظام.</td></tr>';
             updateStatsDisplay(stats);
             return;
@@ -104,7 +105,6 @@ async function loadAndRender() {
             const d = docSnap.data();
             const id = docSnap.id;
 
-            // منطق الإحصائيات
             stats.total++;
             const isComplete = (d.name && d.Phone && d.city && d.district && d.buildingNo);
             if (isComplete) stats.complete++; else stats.incomplete++;
@@ -112,16 +112,12 @@ async function loadAndRender() {
 
             const dateStr = d.CreatedAt?.toDate ? d.CreatedAt.toDate().toLocaleDateString('ar-SA') : '-';
 
-            // معالجة رقم الجوال والمفتاح
-            let countryKey = d.countryCode || '+966';
-            let purePhone = d.Phone || '-';
-
             list.innerHTML += `
                 <tr class="cust-row" style="border-bottom:1px solid #f1f5f9; transition: 0.2s;" onmouseover="this.style.background='#fcfcfc'" onmouseout="this.style.background='transparent'">
                     <td style="padding:12px; color:#94a3b8;">${counter++}</td>
                     <td style="font-weight:bold; color:#1e293b;">${d.name || '-'}</td>
-                    <td dir="ltr">${purePhone}</td>
-                    <td dir="ltr" style="color:#64748b;">${countryKey}</td>
+                    <td dir="ltr">${d.Phone || '-'}</td>
+                    <td dir="ltr" style="color:#64748b;">${d.countryCode || '+966'}</td>
                     <td><small style="color:#2563eb;">${d.Email || '-'}</small></td>
                     <td>${d.country || 'السعودية'}</td>
                     <td>${d.city || '-'}</td>
@@ -147,19 +143,28 @@ async function loadAndRender() {
         updateStatsDisplay(stats);
 
     } catch (error) {
-        list.innerHTML = '<tr><td colspan="17" style="text-align:center; color:#dc2626; padding:20px;">خطأ في الاتصال بقاعدة البيانات.</td></tr>';
+        console.error("Render Error:", error);
+        list.innerHTML = '<tr><td colspan="17" style="text-align:center; color:#dc2626; padding:20px;">خطأ في جلب البيانات. يرجى مراجعة الصلاحيات.</td></tr>';
     }
 }
 
 function updateStatsDisplay(s) {
-    document.getElementById('stat-total').innerText = s.total;
-    document.getElementById('stat-complete').innerText = s.complete;
-    document.getElementById('stat-incomplete').innerText = s.incomplete;
-    document.getElementById('stat-types').innerText = `نشط: ${s.active} | تميز: ${s.vips}`;
+    const totalEl = document.getElementById('stat-total');
+    if (totalEl) totalEl.innerText = s.total;
+    
+    const completeEl = document.getElementById('stat-complete');
+    if (completeEl) completeEl.innerText = s.complete;
+
+    const incompleteEl = document.getElementById('stat-incomplete');
+    if (incompleteEl) incompleteEl.innerText = s.incomplete;
+
+    const typesEl = document.getElementById('stat-types');
+    if (typesEl) typesEl.innerText = `نشط: ${s.active} | تميز: ${s.vips}`;
 }
 
 function setupSearch() {
     const input = document.getElementById('cust-filter');
+    if (!input) return;
     input.addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
         document.querySelectorAll('.cust-row').forEach(row => {
@@ -168,14 +173,18 @@ function setupSearch() {
     });
 }
 
-// --- العمليات (الربط مع الـ Modal والمحرك) ---
+// --- العمليات العالمية ---
 
 window.showAddCustomerModal = () => {
     editingId = null;
     const form = document.getElementById('customer-form');
     if (form) form.reset();
-    document.getElementById('modal-title').innerText = "إضافة عميل جديد (Tera)";
-    document.getElementById('customer-modal').style.display = 'flex';
+    
+    const title = document.getElementById('modal-title');
+    const modal = document.getElementById('customer-modal');
+    
+    if (title) title.innerText = "إضافة عميل جديد (Tera)";
+    if (modal) modal.style.display = 'flex';
 };
 
 window.handleEdit = async (id) => {
@@ -183,49 +192,57 @@ window.handleEdit = async (id) => {
     const d = await Core.fetchCustomerById(id);
     if (!d) return;
 
-    // تعبئة النموذج
-    document.getElementById('cust-name').value = d.name || '';
-    document.getElementById('cust-phone').value = d.Phone || '';
-    document.getElementById('cust-email').value = d.Email || '';
-    document.getElementById('cust-city').value = d.city || '';
-    document.getElementById('cust-district').value = d.district || '';
-    document.getElementById('cust-street').value = d.street || '';
-    document.getElementById('cust-building').value = d.buildingNo || '';
-    document.getElementById('cust-additional').value = d.additionalNo || '';
-    document.getElementById('cust-postal').value = d.postalCode || '';
-    document.getElementById('cust-pobox').value = d.poBox || '';
-    document.getElementById('cust-status-active').value = d.customerStatus || 'نشط';
-    document.getElementById('cust-category').value = d.status || 'عادي';
+    // تعبئة النموذج مع فحص وجود العناصر أولاً
+    const fields = {
+        'cust-name': d.name,
+        'cust-phone': d.Phone,
+        'cust-email': d.Email,
+        'cust-city': d.city,
+        'cust-district': d.district,
+        'cust-street': d.street,
+        'cust-building': d.buildingNo,
+        'cust-additional': d.additionalNo,
+        'cust-postal': d.postalCode,
+        'cust-pobox': d.poBox,
+        'cust-status-active': d.customerStatus,
+        'cust-category': d.status
+    };
 
-    document.getElementById('modal-title').innerText = "تعديل بيانات العميل";
-    document.getElementById('customer-modal').style.display = 'flex';
+    for (const [id, value] of Object.entries(fields)) {
+        const el = document.getElementById(id);
+        if (el) el.value = value || '';
+    }
+
+    const title = document.getElementById('modal-title');
+    const modal = document.getElementById('customer-modal');
+    if (title) title.innerText = "تعديل بيانات العميل";
+    if (modal) modal.style.display = 'flex';
 };
 
 window.handleDelete = async (id) => {
-    if (confirm('تنبيه: هل تريد حذف العميل نهائياً من منصة تيرا؟')) {
+    if (confirm('تنبيه من تيرا: هل تريد حذف العميل نهائياً؟')) {
         const success = await Core.removeCustomer(id);
         if (success) await loadAndRender();
     }
 };
 
-/**
- * وظيفة حفظ البيانات (إضافة أو تعديل)
- * يتم استدعاؤها عند النقر على "حفظ" في المودال
- */
 window.saveCustomerData = async () => {
+    // جلب القيم مع حماية ضد الـ null
+    const getValue = (id) => document.getElementById(id) ? document.getElementById(id).value : '';
+
     const data = {
-        name: document.getElementById('cust-name').value,
-        Phone: document.getElementById('cust-phone').value,
-        Email: document.getElementById('cust-email').value,
-        city: document.getElementById('cust-city').value,
-        district: document.getElementById('cust-district').value,
-        street: document.getElementById('cust-street').value,
-        buildingNo: document.getElementById('cust-building').value,
-        additionalNo: document.getElementById('cust-additional').value,
-        postalCode: document.getElementById('cust-postal').value,
-        poBox: document.getElementById('cust-pobox').value,
-        customerStatus: document.getElementById('cust-status-active').value,
-        status: document.getElementById('cust-category').value,
+        name: getValue('cust-name'),
+        Phone: getValue('cust-phone'),
+        Email: getValue('cust-email'),
+        city: getValue('cust-city'),
+        district: getValue('cust-district'),
+        street: getValue('cust-street'),
+        buildingNo: getValue('cust-building'),
+        additionalNo: getValue('cust-additional'),
+        postalCode: getValue('cust-postal'),
+        poBox: getValue('cust-pobox'),
+        customerStatus: getValue('cust-status-active'),
+        status: getValue('cust-category'),
         country: 'السعودية',
         countryCode: '+966'
     };
@@ -239,15 +256,15 @@ window.saveCustomerData = async () => {
         window.closeCustomerModal();
         await loadAndRender();
     } catch (err) {
-        alert("حدث خطأ أثناء حفظ البيانات، يرجى المحاولة لاحقاً.");
+        alert("فشل الحفظ: يرجى التأكد من اتصال الإنترنت.");
     }
 };
 
 window.handlePrint = (id) => {
-    alert("جاري تجهيز نسخة الطباعة للعميل...");
     window.open(`print-customer.html?id=${id}`, '_blank');
 };
 
 window.closeCustomerModal = () => {
-    document.getElementById('customer-modal').style.display = 'none';
+    const modal = document.getElementById('customer-modal');
+    if (modal) modal.style.display = 'none';
 };
