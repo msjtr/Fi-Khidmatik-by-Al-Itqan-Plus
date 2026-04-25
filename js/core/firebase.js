@@ -1,6 +1,7 @@
 /**
  * js/core/firebase.js
  * الملف المركزي لتهيئة Firebase ونظام الكاش المتطور لمنصة تيرا
+ * تم التحديث لإصلاح أخطاء الاتصال (404/400) عبر Long Polling
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -25,13 +26,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 /**
- * 2. تهيئة Firestore بنظام الكاش المتعدد (Persistent Multi-Tab)
- * يضمن سرعة تحميل البيانات في حائل والمناطق ذات الإنترنت المتغير
+ * 2. تهيئة Firestore بنظام الكاش المتعدد + إجبار الاتصال المستقر
+ * تم إضافة experimentalForceLongPolling لحل مشكلة الـ WebChannel Connection Errored
  */
 const db = initializeFirestore(app, {
     localCache: persistentLocalCache({
         tabManager: persistentMultipleTabManager()
-    })
+    }),
+    experimentalForceLongPolling: true // الإصلاح الجذري لأخطاء RPC 'Listen' stream
 });
 
 // 3. تهيئة نظام المصادقة
@@ -41,12 +43,12 @@ const auth = getAuth(app);
 export const APP_CONFIG = {
     name: "Tera Gateway",
     region: "Hail",
-    version: "2.0.0"
+    version: "2.0.1"
 };
 
 /**
  * 5. التصدير الموحد والمباشر
- * لضمان عدم حدوث خطأ SyntaxError: Unexpected token '{'
+ * لضمان عدم حدوث خطأ SyntaxError
  */
 export { app, db, auth };
 
