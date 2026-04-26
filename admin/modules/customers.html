@@ -1,81 +1,65 @@
-<div class="customers-dashboard">
+<div class="customers-module-wrapper">
     
-    <div class="toolbar-card">
-        <div class="header-info">
-            <h1 class="page-title">قاعدة البيانات: <span id="current-group">customers</span></h1>
-            <p class="page-subtitle">إدارة سجلات العملاء والبيانات الجغرافية والاتصال</p>
+    <div class="glass-header">
+        <div class="title-zone">
+            <div class="icon-box"><i class="fas fa-users"></i></div>
+            <div class="text-box">
+                <h1>مجموعة العملاء</h1>
+                <p>إدارة <span class="badge-group">customers</span> ومراقبة النشاط</p>
+            </div>
         </div>
-        <div class="header-actions">
-            <button class="btn-primary" onclick="openAddCustomerModal()">
-                <i class="fas fa-user-plus"></i> إضافة عميل جديد
-            </button>
-            <button class="btn-secondary" onclick="exportToExcel()">
-                <i class="fas fa-file-export"></i> تصدير البيانات
+        
+        <div class="action-zone">
+            <div class="search-wrapper">
+                <i class="fas fa-search"></i>
+                <input type="text" id="customerSearch" placeholder="ابحث عن عميل، رقم جوال، أو مدينة...">
+            </div>
+            <button class="btn-glass-add" onclick="openAddCustomerModal()">
+                <i class="fas fa-plus"></i> إضافة عميل
             </button>
         </div>
     </div>
 
-    <div class="stats-grid">
-        <div class="stat-card">
-            <span>إجمالي العملاء</span>
-            <strong id="total-customers-count">0</strong>
+    <div class="quick-stats">
+        <div class="stat-item">
+            <span class="label">إجمالي المجموعة</span>
+            <strong id="count-total">0</strong>
         </div>
-        <div class="stat-card">
-            <span>العملاء النشطين</span>
-            <strong id="active-customers-count" style="color: #16a34a;">0</strong>
+        <div class="stat-item">
+            <span class="label">نشط حالياً</span>
+            <strong id="count-active" class="text-success">0</strong>
+        </div>
+        <div class="stat-item">
+            <span class="label">خارج الخدمة</span>
+            <strong id="count-inactive" class="text-danger">0</strong>
         </div>
     </div>
 
-    <div class="table-container">
-        <table id="main-customers-table">
+    <div class="glass-table-container">
+        <table id="customersTable" class="modern-table">
             <thead>
                 <tr>
-                    <th>#</th> <th>اسم العميل</th> <th>رقم الجوال</th> <th>مفتاح الدولة</th> <th>البريد الإلكتروني</th> <th>اسم الدولة</th> <th>المدينة</th> <th>الحي</th> <th>الشارع</th> <th>رقم المبنى</th> <th>الرقم الإضافي</th> <th>الرمز البريدي</th> <th>صندوق البريد</th> <th>تاريخ الإضافة</th> <th>حالة العميل</th> <th>تصنيف العميل</th> <th class="sticky-actions">الإجراءات</th> </tr>
+                    <th class="sticky-col">#</th>
+                    <th class="sticky-col-name">اسم العميل</th>
+                    <th>رقم الجوال</th>
+                    <th>المفتاح</th>
+                    <th>البريد</th>
+                    <th>الدولة</th>
+                    <th>المدينة</th>
+                    <th>الحي</th>
+                    <th>الشارع</th>
+                    <th>المبنى</th>
+                    <th>الإضافي</th>
+                    <th>الرمز البريدي</th>
+                    <th>صندوق البريد</th>
+                    <th>تاريخ الإضافة</th>
+                    <th>الحالة</th>
+                    <th>التصنيف</th>
+                    <th class="sticky-actions-header">الإجراءات</th>
+                </tr>
             </thead>
             <tbody id="customers-data-rows">
-                <tr>
-                    <td colspan="17" class="loading-state">
-                        <div class="loader-content">
-                            <i class="fas fa-spinner fa-spin"></i> جاري مزامنة البيانات من المجموعة...
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
+                </tbody>
         </table>
     </div>
-
 </div>
-
-<style>
-    .loading-state {
-        text-align: center;
-        padding: 50px !important;
-        color: #64748b;
-    }
-    .loader-content i {
-        margin-left: 10px;
-        color: #2563eb;
-    }
-    
-    /* منع التفاف النص في العناوين لضمان ظهور الأعمدة الـ 17 بشكل مرتب */
-    #main-customers-table th {
-        white-space: nowrap;
-        background: rgba(248, 250, 252, 0.8);
-    }
-
-    /* تحسين شكل عمود الإجراءات الثابت */
-    .sticky-actions {
-        position: sticky;
-        left: 0;
-        background: #fff;
-        z-index: 5;
-        box-shadow: -2px 0 5px rgba(0,0,0,0.05);
-        text-align: center;
-    }
-    
-    .table-container {
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        background: white;
-    }
-</style>
