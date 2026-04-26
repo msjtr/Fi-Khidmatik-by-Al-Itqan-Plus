@@ -1,6 +1,7 @@
 /**
  * main.js - Fi-Khidmatik Core
  * المحرك الرئيسي لإدارة التنقل وتحميل الأقسام برمجياً
+ * المسار المعتمد للموديولات: js/modules/
  */
 
 const routes = {
@@ -27,38 +28,43 @@ async function switchModule(moduleName) {
     if (!path) return;
 
     try {
-        // 1. إظهار مؤشر التحميل
+        // 1. إظهار مؤشر التحميل بتصميم احترافي
         container.innerHTML = `
             <div style="text-align:center; padding:100px;">
                 <i class="fas fa-spinner fa-spin fa-2x" style="color:#2563eb;"></i>
+                <p style="margin-top:10px; color:#666;">جاري تحميل ${moduleName}...</p>
             </div>`;
 
         // 2. تحديث الحالة في القائمة الجانبية
         updateSidebarUI(moduleName);
 
-        // 3. جلب الـ HTML (استخدام مسار كامل بالنسبة للجذر لتجنب 404)
+        // 3. جلب الـ HTML مع كاسر التخزين المؤقت (Cache Buster)
         const response = await fetch(`${path}?v=${Date.now()}`);
-        if (!response.ok) throw new Error(`Could not load ${path}`);
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status} - ${path}`);
         
         const html = await response.text();
         container.innerHTML = html;
 
-        // 4. تحميل موديول العملاء إذا تم اختياره
+        // 4. تشغيل الموديول البرمجي إذا كان القسم هو "العملاء"
         if (moduleName === 'customers') {
             await loadCustomersModule(container);
         }
 
     } catch (error) {
-        console.error("Navigation Error:", error);
-        container.innerHTML = `<div style="padding:20px; color:red; text-align:center;">تعذر تحميل القسم: ${moduleName}</div>`;
+        console.error("❌ Navigation Error:", error);
+        container.innerHTML = `
+            <div style="padding:40px; color:#dc2626; text-align:center;">
+                <i class="fas fa-exclamation-triangle fa-2x"></i>
+                <p style="margin-top:10px;">تعذر تحميل القسم المطلوب. تأكد من وجود الملف في المسار الصحيح.</p>
+            </div>`;
     }
 }
 
 /**
- * تحميل موديول العملاء (JS + CSS)
+ * تحميل موديول العملاء (JS + CSS) من المسار المعتمد
  */
 async function loadCustomersModule(container) {
-    // تحميل التنسيق
+    // تحميل ملف التنسيق الخاص بالعملاء
     const styleId = 'module-customers-style';
     if (!document.getElementById(styleId)) {
         const link = document.createElement('link');
@@ -69,46 +75,51 @@ async function loadCustomersModule(container) {
     }
 
     try {
-        // تصحيح المسار: استخدام ./js/modules/ بدلاً من ./modules/
-        const modulePath = `./js/modules/customers-ui.js?v=${Date.now()}`;
+        /**
+         * تصحيح المسار النهائي:
+         * بما أن main.js موجود في مجلد js/
+         * والملف المستهدف في js/modules/
+         * نستخدم المسار النسبي المباشر ./modules/
+         */
+        const modulePath = `./modules/customers-ui.js?v=${Date.now()}`;
         const module = await import(modulePath);
         
         if (module && module.initCustomersUI) {
-            // انتظار بسيط للتأكد من حقن الـ HTML في الـ DOM
+            // انتظار بسيط لضمان استقرار العناصر في الصفحة (DOM Stability)
             setTimeout(async () => {
-                // البحث عن الحاوية المخصصة داخل ملف customers.html أو استخدام الحاوية الرئيسية
                 const target = document.getElementById('customers-module-container') || container;
                 await module.initCustomersUI(target);
-            }, 50);
+            }, 100);
         }
     } catch (err) {
-        console.error("Failed to load customer module script:", err);
+        console.error("❌ Failed to fetch dynamically imported module:", err);
     }
 }
 
 /**
- * تحديث واجهة القائمة الجانبية
+ * تحديث واجهة القائمة الجانبية لإظهار القسم النشط
  */
 function updateSidebarUI(activeModule) {
     document.querySelectorAll('.sidebar-nav a').forEach(link => {
         const href = link.getAttribute('href');
         if (href) {
+            // مقارنة الرابط بالقسم الحالي (مثلاً #customers)
             link.classList.toggle('active', href === `#${activeModule}`);
         }
     });
 }
 
 /**
- * معالج الروابط (Router)
+ * معالج الروابط بناءً على الـ Hash في المتصفح
  */
 function handleRoute() {
     const hash = window.location.hash.replace('#', '') || 'dashboard';
     switchModule(hash);
 }
 
-// تشغيل النظام
+// تشغيل النظام عند تحميل الصفحة وعند تغيير الـ Hash
 window.addEventListener('load', handleRoute);
 window.addEventListener('hashchange', handleRoute);
 
-// إتاحة الدالة عالمياً
+// إتاحة الدالة للوصول إليها من خارج الملف إذا لزم الأمر
 window.switchModule = switchModule;
