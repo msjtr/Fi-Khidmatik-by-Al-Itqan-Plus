@@ -1,233 +1,206 @@
 /**
- * Tera Gateway - Customers Module Styles (Ultra Modern)
+ * Tera Gateway - Customers Premium Styles
  * المطور: محمد صالح الشمري
- * الوصف: نظام التنسيق الزجاجي المتطور لإدارة العملاء
+ * المسار: fi-khidmatik/css/customers.css
  */
 
 :root {
     --primary: #2563eb;
-    --primary-light: rgba(37, 99, 235, 0.1);
-    --tera-orange: #f97316;
-    --tera-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-    --bg-soft: #f8fafc;
-    --text-main: #1e293b;
+    --primary-glow: rgba(37, 99, 235, 0.15);
+    --accent: #f97316; /* لون تيرا البرتقالي */
+    --success: #10b981;
+    --danger: #ef4444;
+    --glass: rgba(255, 255, 255, 0.8);
+    --border-color: #e2e8f0;
+    --text-dark: #0f172a;
     --text-muted: #64748b;
-    --shadow-neo: 8px 8px 16px #e2e8f0, -8px -8px 16px #ffffff;
-    --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.4);
+    --neo-shadow: 10px 10px 20px #e2e8f0, -10px -10px 20px #ffffff;
 }
 
-/* الحاوية الرئيسية بلمسة زجاجية وانتقال ناعم */
-.cust-ui-wrapper {
-    animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    background: var(--bg-soft);
-    border-radius: 28px;
+/* الحاوية الزجاجية الكبرى */
+.customers-dashboard {
     padding: 25px;
-}
-
-/* كروت الإحصائيات (Stat Cards) بنمط النيومورفيك المطور */
-.grid-4 {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 25px;
-    margin-bottom: 35px;
-}
-
-.stat-item {
-    background: #ffffff;
-    padding: 24px;
-    border-radius: 24px;
-    box-shadow: var(--shadow-neo);
-    border: 1px solid var(--glass-border);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    position: relative;
-    overflow: hidden;
-}
-
-.stat-item::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; width: 4px; height: 100%;
-    background: var(--tera-gradient);
-}
-
-.stat-item:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 12px 12px 24px #cbd5e1, -12px -12px 24px #ffffff;
-}
-
-.stat-item small {
-    color: var(--text-muted);
-    font-weight: 800;
-    font-size: 0.75rem;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-}
-
-.stat-item strong {
-    font-size: 1.8rem;
-    color: var(--text-main);
-    display: block;
-    margin-top: 5px;
-    font-weight: 900;
-}
-
-/* شريط البحث المطور (Floating Search) */
-.search-container {
-    background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--glass-border);
-    border-radius: 20px;
-    padding: 15px;
-    margin-bottom: 25px;
-    display: flex;
-    gap: 15px;
-}
-
-.tera-input {
-    flex-grow: 1;
-    padding: 14px 20px;
-    border: 2px solid transparent;
-    border-radius: 16px;
-    background: #ffffff;
-    box-shadow: inset 2px 2px 5px #e2e8f0;
-    transition: all 0.3s ease;
-    font-size: 0.95rem;
-}
-
-.tera-input:focus {
-    border-color: var(--primary);
-    background: #fff;
-    box-shadow: 0 0 0 4px var(--primary-light);
-    outline: none;
-}
-
-/* تنسيق الجدول الفاخر (Premium Table) */
-.table-wrapper {
-    background: #ffffff;
-    border-radius: 24px;
-    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.05);
-    overflow: hidden;
-    border: 1px solid #f1f5f9;
-}
-
-.tera-table-modern {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-}
-
-.tera-table-modern th {
     background: #f8fafc;
-    color: var(--text-muted);
-    font-weight: 800;
-    padding: 20px;
-    font-size: 0.8rem;
-    text-align: right;
-    border-bottom: 2px solid #f1f5f9;
+    min-height: 100vh;
+    animation: fadeIn 0.8s ease-in-out;
 }
 
-.cust-row td {
-    padding: 18px 20px;
-    border-bottom: 1px solid #f1f5f9;
-    color: var(--text-main);
-    font-size: 0.92rem;
+/* كروت الإحصائيات العلوية */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 22px;
+    box-shadow: var(--neo-shadow);
+    border: 1px solid var(--border-color);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.stat-card:hover {
+    transform: translateY(-10px);
+}
+
+.stat-card span {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.stat-card strong {
+    font-size: 1.8rem;
+    color: var(--text-dark);
+}
+
+/* شريط الأدوات الذكي */
+.toolbar-card {
+    background: var(--glass);
+    backdrop-filter: blur(12px);
+    padding: 15px 25px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.5);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+}
+
+/* حقول الإدخال الاحترافية */
+.search-box {
+    position: relative;
+    flex-grow: 1;
+    max-width: 500px;
+}
+
+.search-box i {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.search-box input {
+    width: 100%;
+    padding: 12px 45px 12px 20px;
+    border-radius: 14px;
+    border: 1.5px solid var(--border-color);
+    background: #fff;
     transition: 0.3s;
 }
 
-.cust-row:hover td {
-    background: #fdf7f2; /* لون برتقالي تيرا هادئ */
+.search-box input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px var(--primary-glow);
+    outline: none;
 }
 
-.cust-row:last-child td {
-    border-bottom: none;
+/* الجدول العملاق بخصائص التثبيت (Sticky Actions) */
+.table-container {
+    background: #fff;
+    border-radius: 24px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    box-shadow: 0 10px 40px -10px rgba(0,0,0,0.04);
 }
 
-/* أوسمة الحالة (Badges) */
-.badge {
-    padding: 6px 12px;
-    border-radius: 10px;
+#main-customers-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 2000px; /* لضمان ظهور الـ 17 حقل بوضوح */
+}
+
+#main-customers-table thead th {
+    background: #f8fafc;
+    padding: 18px 15px;
+    text-align: right;
     font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 900;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.customer-row td {
+    padding: 15px;
+    border-bottom: 1px solid #f8fafc;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+}
+
+.customer-row:hover td {
+    background: #fdf7f2; /* تلميح برتقالي عند التمرير */
+}
+
+/* تثبيت عمود الإجراءات في اليسار */
+.sticky-actions {
+    position: sticky;
+    left: 0;
+    background: #fff;
+    z-index: 10;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+    text-align: center;
+    padding: 10px 20px !important;
+}
+
+/* أوسمة الحالة والتصنيف */
+.badge {
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 0.7rem;
     font-weight: 800;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
 }
 
-.tag-vip {
-    background: #fef3c7;
-    color: #92400e;
-    border: 1px solid #fcd34d;
-}
+.badge.status-نشط { background: #dcfce7; color: #15803d; }
+.badge.status-معلق { background: #fef9c3; color: #a16207; }
+.badge.status-موقوف { background: #fee2e2; color: #b91c1c; }
 
-.status-active {
-    background: #dcfce7;
-    color: #166534;
-}
+.badge.type-VIP { background: #faf5ff; color: #7e22ce; border: 1px solid #e9d5ff; }
 
-/* أزرار الإجراءات (Actions) */
-.action-buttons {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-}
-
-.btn-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+/* أزرار الإجراءات */
+.btn-sm {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
     border: none;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: #f1f5f9;
-    color: #475569;
+    transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 2px;
 }
 
-.btn-icon:hover {
-    transform: rotate(10deg) scale(1.1);
-    background: var(--primary);
-    color: white;
-}
+.btn-edit { background: #eff6ff; color: #2563eb; }
+.btn-print { background: #f0fdf4; color: #16a34a; }
+.btn-delete { background: #fef2f2; color: #dc2626; }
 
-.btn-icon.delete:hover {
-    background: #ef4444;
-}
-
-/* المودال (النافذة الزجاجية) */
-.tera-modal-overlay {
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-}
-
-.tera-modal-content {
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid var(--glass-border);
-    border-radius: 30px;
-    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-    animation: slideUp 0.5s ease-out;
+.btn-sm:hover {
+    transform: scale(1.15) rotate(5deg);
 }
 
 /* الأنيميشن */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(15px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes slideUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
+/* تخصيص السكرول بار ليناسب حائل */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
 }
-
-/* الهواتف الذكية (Responsive) */
-@media (max-width: 768px) {
-    .grid-4 { grid-template-columns: 1fr 1fr; }
-    .cust-ui-wrapper { padding: 15px; }
-    .tera-table-modern th:nth-child(n+5), 
-    .tera-table-modern td:nth-child(n+5) {
-        display: none; /* إخفاء التفاصيل الطويلة في الجوال */
-    }
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
 }
