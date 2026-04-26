@@ -20,7 +20,7 @@ export async function initCustomersUI(container) {
                     <input type="text" id="main-search" placeholder="بحث بالاسم، الجوال، المدينة، أو التصنيف...">
                 </div>
                 
-                <div class="filter-group" style="display:flex; gap:10px;">
+                <div class="filter-group" style="display:flex; gap:10px; flex-wrap: wrap;">
                     <select id="filter-status" class="tera-input" style="width:150px;">
                         <option value="">حالة العميل</option>
                         <option value="نشط">نشط</option>
@@ -37,7 +37,7 @@ export async function initCustomersUI(container) {
                 </div>
             </div>
 
-            <div class="table-container">
+            <div class="table-container shadow-sm">
                 <table id="main-customers-table">
                     <thead>
                         <tr>
@@ -69,10 +69,16 @@ export async function initCustomersUI(container) {
     `;
 
     // 2. ربط الأحداث (Event Listeners)
-    document.getElementById('btn-add-customer').onclick = () => openFormModal();
-    document.getElementById('main-search').oninput = debounce(() => refreshCustomerTable(), 300);
-    document.getElementById('filter-status').onchange = () => refreshCustomerTable();
-    document.getElementById('filter-type').onchange = () => refreshCustomerTable();
+    const addBtn = document.getElementById('btn-add-customer');
+    if (addBtn) addBtn.onclick = () => openFormModal();
+
+    const searchInput = document.getElementById('main-search');
+    if (searchInput) searchInput.oninput = debounce(() => refreshCustomerTable(), 300);
+
+    const statusSelect = document.getElementById('filter-status');
+    const typeSelect = document.getElementById('filter-type');
+    if (statusSelect) statusSelect.onchange = () => refreshCustomerTable();
+    if (typeSelect) typeSelect.onchange = () => refreshCustomerTable();
 
     // 3. تحميل البيانات لأول مرة
     await refreshCustomerTable();
@@ -83,6 +89,8 @@ export async function initCustomersUI(container) {
  */
 async function refreshCustomerTable() {
     const tbody = document.getElementById('customers-tbody');
+    if (!tbody) return;
+
     const searchTerm = document.getElementById('main-search')?.value.toLowerCase() || '';
     const statusFilter = document.getElementById('filter-status')?.value || '';
     const typeFilter = document.getElementById('filter-type')?.value || '';
@@ -93,7 +101,6 @@ async function refreshCustomerTable() {
         let stats = { total: 0, active: 0, pending: 0, incomplete: 0 };
         let counter = 1;
 
-        // ملاحظة: Firestore snapshot يحتاج لاستخدام forEach الخاص به
         snapshot.forEach((docSnap) => {
             const d = docSnap.data();
             const id = docSnap.id;
@@ -116,9 +123,9 @@ async function refreshCustomerTable() {
                     <tr class="customer-row">
                         <td>${counter++}</td>
                         <td style="font-weight:bold; color:var(--primary);">${d.name || '-'}</td>
-                        <td dir="ltr">${d.phone || '-'}</td>
-                        <td>${d.countryKey || '+966'}</td>
-                        <td>${d.email || '-'}</td>
+                        <td dir="ltr" style="text-align:right;">${d.phone || '-'}</td>
+                        <td dir="ltr">${d.countryKey || '+966'}</td>
+                        <td class="text-truncate" title="${d.email || ''}">${d.email || '-'}</td>
                         <td>${d.country || 'السعودية'}</td>
                         <td>${d.city || '-'}</td>
                         <td>${d.district || '-'}</td>
@@ -143,12 +150,12 @@ async function refreshCustomerTable() {
         updateStatsUI(stats);
     } catch (err) {
         console.error("Error refreshing table:", err);
-        tbody.innerHTML = `<tr><td colspan="17" style="color:red; text-align:center;">خطأ في تحميل البيانات: ${err.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="17" style="color:red; text-align:center; padding:20px;">خطأ في تحميل البيانات من القاعدة</td></tr>`;
     }
 }
 
 /**
- * وظيفة 1: إضافة عميل جديد
+ * وظيفة 1: فتح النافذة المنبثقة (إضافة/تعديل)
  */
 function openFormModal(data = null) {
     editingId = data ? data.id : null;
@@ -157,7 +164,6 @@ function openFormModal(data = null) {
         const form = document.getElementById('customer-form');
         if (form) {
             form.reset();
-            // تصفير Quill إذا كان موجوداً
             if (window.quill) window.quill.setContents([]);
             if (data) fillFormFields(data);
         }
@@ -168,12 +174,15 @@ function openFormModal(data = null) {
  * وظيفة 2: التعديل
  */
 window.editCustomerAction = async (id) => {
-    const data = await Core.fetchCustomerById(id);
-    if (data) openFormModal(data);
+    try {
+        const data = await Core.fetchCustomerById(id);
+        if (data) openFormModal({ ...data, id });
+    } catch (err) {
+        alert("خطأ في جلب بيانات العميل.");
+    }
 };
 
 function fillFormFields(data) {
-    // التأكد من وجود العناصر قبل التعبئة لتجنب أخطاء JS
     const fields = {
         'cust-name': data.name,
         'cust-phone': data.phone,
@@ -202,11 +211,11 @@ function fillFormFields(data) {
 }
 
 /**
- * وظيفة 3: الحفظ (تعديل أو إضافة)
+ * وظيفة 3: الحفظ
  */
 window.saveCustomerData = async () => {
     const formData = gatherFormData();
-    if (!formData.name || !formData.phone) return alert("يرجى إدخال الاسم ورقم الجوال على الأقل.");
+    if (!formData.name || !formData.phone) return alert("الاسم والجوال حقول إجبارية.");
 
     try {
         if (editingId) {
@@ -216,7 +225,7 @@ window.saveCustomerData = async () => {
         }
         
         if (window.closeCustomerModal) window.closeCustomerModal();
-        refreshCustomerTable();
+        await refreshCustomerTable();
     } catch (err) {
         alert("حدث خطأ أثناء الحفظ: " + err.message);
     }
@@ -229,7 +238,7 @@ window.deleteCustomerAction = async (id, name) => {
     if (confirm(`هل أنت متأكد من حذف العميل "${name}"؟`)) {
         try {
             await Core.deleteCustomer(id);
-            refreshCustomerTable();
+            await refreshCustomerTable();
         } catch (err) {
             alert("فشل الحذف");
         }
@@ -249,10 +258,10 @@ window.printCustomerAction = async (id) => {
         <head>
             <title>تقرير عميل - ${data.name}</title>
             <style>
-                body { font-family: 'Tajawal', sans-serif; padding: 40px; }
+                body { font-family: 'Tajawal', sans-serif; padding: 40px; line-height: 1.6; }
                 .report-header { border-bottom: 2px solid #2563eb; margin-bottom: 30px; text-align: center; }
-                .data-row { margin-bottom: 15px; font-size: 1.1rem; }
-                .label { font-weight: bold; color: #444; width: 150px; display: inline-block; }
+                .data-row { margin-bottom: 12px; font-size: 1.1rem; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
+                .label { font-weight: bold; color: #2563eb; width: 150px; display: inline-block; }
             </style>
         </head>
         <body onload="window.print()">
@@ -262,10 +271,9 @@ window.printCustomerAction = async (id) => {
             </div>
             <div class="data-row"><span class="label">الاسم:</span> ${data.name}</div>
             <div class="data-row"><span class="label">الجوال:</span> ${data.phone}</div>
-            <div class="data-row"><span class="label">البريد:</span> ${data.email || '-'}</div>
-            <div class="data-row"><span class="label">العنوان:</span> ${data.city} - ${data.district}</div>
-            <div class="data-row"><span class="label">الرمز البريدي:</span> ${data.zipCode || '-'}</div>
+            <div class="data-row"><span class="label">المدينة:</span> ${data.city || '-'}</div>
             <div class="data-row"><span class="label">الحالة:</span> ${data.status}</div>
+            <div class="data-row"><span class="label">تاريخ التسجيل:</span> ${data.createdAt || '-'}</div>
         </body>
         </html>
     `);
@@ -276,9 +284,9 @@ function gatherFormData() {
     return {
         name: document.getElementById('cust-name')?.value,
         phone: document.getElementById('cust-phone')?.value,
-        countryKey: document.getElementById('cust-key')?.value,
+        countryKey: document.getElementById('cust-key')?.value || '+966',
         email: document.getElementById('cust-email')?.value,
-        country: document.getElementById('cust-country')?.value,
+        country: document.getElementById('cust-country')?.value || 'السعودية',
         city: document.getElementById('cust-city')?.value,
         district: document.getElementById('cust-district')?.value,
         street: document.getElementById('cust-street')?.value,
@@ -286,9 +294,10 @@ function gatherFormData() {
         additionalNo: document.getElementById('cust-additional')?.value,
         zipCode: document.getElementById('cust-zip')?.value,
         poBox: document.getElementById('cust-pobox')?.value,
-        status: document.getElementById('cust-status')?.value,
-        type: document.getElementById('cust-type')?.value,
-        notes: window.quill ? window.quill.root.innerHTML : ''
+        status: document.getElementById('cust-status')?.value || 'معلق',
+        type: document.getElementById('cust-type')?.value || 'فرد',
+        notes: window.quill ? window.quill.root.innerHTML : '',
+        updatedAt: new Date().toISOString()
     };
 }
 
@@ -297,8 +306,8 @@ function updateStatsUI(s) {
     if (container) {
         container.innerHTML = `
             <div class="stat-card"><span>إجمالي العملاء</span><strong>${s.total}</strong></div>
-            <div class="stat-card"><span>النشطين</span><strong>${s.active}</strong></div>
-            <div class="stat-card"><span>بيانات غير مكتملة</span><strong style="color:#ef4444">${s.incomplete}</strong></div>
+            <div class="stat-card"><span>النشطين</span><strong style="color:#10b981">${s.active}</strong></div>
+            <div class="stat-card"><span>بيانات ناقصة</span><strong style="color:#ef4444">${s.incomplete}</strong></div>
         `;
     }
 }
