@@ -9,26 +9,77 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     
     <style>
-        :root { --sidebar-width: 280px; --header-height: 70px; }
-        body { margin: 0; font-family: 'Tajawal', sans-serif; background-color: #f8fafc; display: flex; height: 100vh; overflow: hidden; }
-        .main-wrapper { display: flex; width: 100%; height: 100%; }
-        #sidebar-placeholder { width: var(--sidebar-width); height: 100%; background: #fff; border-left: 1px solid #e2e8f0; flex-shrink: 0; }
-        .content-area { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
-        #header-placeholder { height: var(--header-height); background: #fff; border-bottom: 1px solid #e2e8f0; }
-        #module-container { flex-grow: 1; padding: 25px; overflow-y: auto; }
-        .loader-box { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #94a3b8; }
+        :root {
+            --sidebar-width: 280px;
+            --header-height: 70px;
+            --bg-color: #f8fafc;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .main-wrapper {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        #sidebar-placeholder {
+            width: var(--sidebar-width);
+            height: 100%;
+            background: #fff;
+            flex-shrink: 0;
+            transition: width 0.3s ease;
+            border-left: 1px solid #e2e8f0;
+        }
+
+        .content-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #header-placeholder {
+            height: var(--header-height);
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        #main-content {
+            flex-grow: 1;
+            padding: 25px;
+            overflow-y: auto;
+        }
+
+        .loader-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #64748b;
+        }
     </style>
 </head>
 <body>
 
     <div class="main-wrapper">
         <div id="sidebar-placeholder"></div>
+
         <div class="content-area">
             <div id="header-placeholder"></div>
-            <main id="module-container">
+
+            <main id="main-content">
                 <div class="loader-box">
                     <i class="fas fa-circle-notch fa-spin fa-2x" style="color: #f97316;"></i>
-                    <p style="margin-top:15px;">جاري تحميل نظام تيرا من المسار الصحيح...</p>
+                    <p style="margin-top: 15px;">جاري تحميل لوحة التحكم...</p>
                 </div>
             </main>
         </div>
@@ -38,62 +89,46 @@
 
     <script>
         /**
-         * الحل الجذري: استخدام "./" قبل المسار
-         * هذا يخبر المتصفح بالبحث داخل مجلد admin الذي يوجد فيه هذا الملف حالياً
+         * دالة موحدة لتحميل الملفات من مجلد components
+         * بناءً على صورتك: كل شيء داخل components/
          */
-        async function loadComponent(id, fileName) {
-            const path = `./components/${fileName}`; 
+        async function loadFile(targetId, fileName) {
+            const path = `components/${fileName}`;
             try {
                 const response = await fetch(path);
                 if (!response.ok) throw new Error(`Status: ${response.status}`);
-                document.getElementById(id).innerHTML = await response.text();
-                console.log(`✅ نجح تحميل: ${path}`);
-            } catch (err) {
-                console.error(`❌ فشل المسار: ${path}`);
-                // محاولة أخيرة بمسار بديل بدون النقطة
-                try {
-                    const fallbackRes = await fetch(`components/${fileName}`);
-                    document.getElementById(id).innerHTML = await fallbackRes.text();
-                } catch(e) {
-                    document.getElementById(id).innerHTML = `<div style="color:red; font-size:12px;">خطأ 404 في: ${fileName}</div>`;
+                const html = await response.text();
+                document.getElementById(targetId).innerHTML = html;
+                console.log(`✅ تم تحميل: ${path}`);
+            } catch (error) {
+                console.error(`❌ فشل تحميل: ${path}`, error);
+                if (targetId === 'main-content') {
+                    document.getElementById(targetId).innerHTML = `<div style="text-align:center; padding:50px; color:red;">خطأ 404: لم يتم العثور على الملف components/${fileName}</div>`;
                 }
             }
         }
 
-        async function loadModule(moduleName) {
-            const container = document.getElementById('module-container');
-            const path = `./modules/${moduleName}.html`;
-            try {
-                const response = await fetch(path);
-                if (!response.ok) throw new Error();
-                container.innerHTML = await response.text();
-            } catch (err) {
-                container.innerHTML = `<div style="text-align:center; padding:50px;">
-                    <i class="fas fa-exclamation-triangle fa-2x" style="color:#cbd5e1;"></i>
-                    <p>الملف ${moduleName}.html غير موجود في مجلد modules</p>
-                </div>`;
-            }
-        }
-
+        // تشغيل التحميل عند فتح الصفحة
         window.addEventListener('DOMContentLoaded', async () => {
-            // تحميل المكونات من المجلد المجاور للملف
+            // 1. تحميل المكونات الأساسية
             await Promise.all([
-                loadComponent('sidebar-placeholder', 'sidebar.html'),
-                loadComponent('header-placeholder', 'header.html'),
-                loadComponent('modals-placeholder', 'modals.html')
+                loadFile('sidebar-placeholder', 'sidebar.html'),
+                loadFile('header-placeholder', 'header.html'),
+                loadFile('modals-placeholder', 'modals.html')
             ]);
 
-            loadModule('dashboard');
+            // 2. تحميل الصفحة الافتراضية (dashboard) من داخل مجلد components أيضاً
+            loadFile('main-content', 'dashboard.html');
         });
 
-        // دوال عالمية
-        window.openCustomerModal = (t) => {
+        // دوال عالمية للتحكم بالواجهة (أضفتها لضمان عمل الأزرار)
+        window.openCustomerModal = (title) => {
             const m = document.getElementById('customer-modal');
-            if(m) { m.style.display='flex'; document.getElementById('modal-title').innerText=t; }
+            if(m) { m.style.display = 'flex'; document.getElementById('modal-title').innerText = title; }
         };
         window.closeCustomerModal = () => {
             const m = document.getElementById('customer-modal');
-            if(m) m.style.display='none';
+            if(m) m.style.display = 'none';
         };
     </script>
 </body>
