@@ -1,102 +1,121 @@
 <div id="customers-module-container" class="module-fade-in">
-    <div class="module-header">
+    <div class="module-header shadow-sm">
         <div class="header-title">
-            <h2><i class="fas fa-users"></i> قاعدة بيانات العملاء</h2>
-            <p>إدارة بيانات العملاء والاتصال والعناوين الوطنية</p>
+            <h2><i class="fas fa-address-card"></i> مجموعة العملاء (Customers)</h2>
+            <p>السجل الشامل للبيانات الشخصية والعناوين الوطنية</p>
         </div>
         <div class="header-stats">
             <div class="stat-item">
-                <span class="stat-label">إجمالي العملاء</span>
-                <span id="total-customers-count" class="stat-value">...</span>
+                <span class="stat-label">إجمالي المسجلين</span>
+                <span id="total-customers-count" class="stat-value">0</span>
             </div>
         </div>
     </div>
 
+    <div id="customers-toolbar-area"></div>
+
     <div id="customers-ui-root">
-        <div class="loading-overlay">
-            <i class="fas fa-circle-notch fa-spin"></i>
-            <p>جاري تحضير واجهة العملاء...</p>
+        <div class="loading-placeholder">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>جاري استدعاء كافة عناصر المجموعة...</p>
         </div>
     </div>
 </div>
 
 <style>
-    /* تنسيقات خاصة بموديول العملاء لضمان مظهر احترافي */
+    /* تحسينات بصرية خاصة بواجهة العملاء */
+    :root {
+        --tera-blue: #2563eb;
+        --soft-gray: #f8fafc;
+    }
+
     .module-fade-in {
-        animation: fadeIn 0.4s ease-out;
-        padding: 20px;
+        animation: fadeIn 0.5s ease-in-out;
+        padding: 25px;
+        max-width: 1400px;
+        margin: 0 auto;
     }
 
     .module-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 25px;
-        background: rgba(255, 255, 255, 0.7);
-        padding: 20px;
-        border-radius: 15px;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        margin-bottom: 30px;
+        background: white;
+        padding: 25px;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
     }
 
     .header-title h2 {
         margin: 0;
-        color: #1e293b;
-        font-size: 1.5rem;
+        color: #0f172a;
+        font-size: 1.6rem;
+        font-weight: 800;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
     }
 
     .header-title p {
-        margin: 5px 0 0;
+        margin: 8px 0 0;
         color: #64748b;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
     }
 
     .stat-item {
-        text-align: center;
-        background: #2563eb;
+        min-width: 120px;
+        background: linear-gradient(135deg, var(--tera-blue), #1d4ed8);
         color: white;
-        padding: 10px 20px;
+        padding: 12px 24px;
         border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        text-align: center;
+        box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2);
     }
 
     .stat-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
         display: block;
-        font-size: 0.75rem;
-        opacity: 0.9;
+        margin-bottom: 4px;
+        opacity: 0.85;
     }
 
     .stat-value {
-        font-size: 1.2rem;
-        font-weight: bold;
+        font-size: 1.4rem;
+        font-weight: 700;
     }
 
-    /* تنسيق مؤقت للتحميل */
-    .loading-overlay {
+    .loading-placeholder {
+        background: white;
+        border-radius: 16px;
+        padding: 80px;
         text-align: center;
-        padding: 50px;
-        color: #2563eb;
+        color: var(--tera-blue);
+        border: 2px dashed #e2e8f0;
     }
 
-    .loading-overlay i {
-        font-size: 2rem;
-        margin-bottom: 15px;
+    .loading-placeholder i {
+        font-size: 2.5rem;
+        margin-bottom: 20px;
     }
 
-    /* تحسينات الوسائط (Responsive) */
+    /* استجابة الشاشات الصغيرة */
     @media (max-width: 768px) {
         .module-header {
             flex-direction: column;
+            gap: 20px;
             text-align: center;
-            gap: 15px;
+        }
+        
+        .header-title h2 {
+            justify-content: center;
         }
     }
 
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
+        from { opacity: 0; transform: translateY(15px); }
         to { opacity: 1; transform: translateY(0); }
     }
 </style>
