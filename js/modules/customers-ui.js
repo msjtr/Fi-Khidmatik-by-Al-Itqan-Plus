@@ -1,6 +1,6 @@
 /**
  * customers-ui.js - Tera Gateway
- * الإصدار الاحترافي: متوافق مع متطلبات الصورة بدقة 100%
+ * النسخة المنقحة: حذف التكرار وتنسيق أزرار الإضافة والبحث
  */
 
 import * as Core from './customers-core.js';
@@ -13,6 +13,7 @@ let editingId = null;
 export async function initCustomersUI(container) {
     if (!container) return;
 
+    // تم التأكد من وجود زر واحد فقط للإضافة في شريط الأدوات
     container.innerHTML = `
         <div class="cust-ui-wrapper" style="font-family: 'Tajawal', sans-serif; direction: rtl; padding: 20px; background: #f9fbff;">
             
@@ -35,14 +36,15 @@ export async function initCustomersUI(container) {
                 </div>
             </div>
 
-            <div class="action-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                <button onclick="showAddCustomerModal()" style="background:#2563eb; color:white; border:none; padding:12px 28px; border-radius:10px; cursor:pointer; font-weight:bold; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(37,99,235,0.25);">
-                    <i class="fas fa-plus-circle"></i> اضافة عميل جديد
+            <div class="action-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background:#fff; padding:15px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+                <button onclick="showAddCustomerModal()" style="background:#2563eb; color:white; border:none; padding:12px 25px; border-radius:10px; cursor:pointer; font-weight:bold; display: flex; align-items: center; gap: 10px; transition: 0.3s; box-shadow: 0 4px 12px rgba(37,99,235,0.2);">
+                    <i class="fas fa-plus"></i> اضافة عميل جديد
                 </button>
-                <div class="search-container" style="position: relative; width: 400px;">
-                    <i class="fas fa-search" style="position: absolute; right: 15px; top: 15px; color: #94a3b8;"></i>
-                    <input type="text" id="cust-filter" placeholder="شريط بحث (بالاسم، الجوال، المدينة...)" 
-                           style="width: 100%; padding: 12px 45px 12px 15px; border-radius: 10px; border: 1px solid #e2e8f0; outline: none; font-family: inherit;">
+                
+                <div class="search-container" style="position: relative; width: 450px;">
+                    <i class="fas fa-search" style="position: absolute; right: 15px; top: 14px; color: #94a3b8;"></i>
+                    <input type="text" id="cust-filter" placeholder="شريط بحث ذكي..." 
+                           style="width: 100%; padding: 12px 45px 12px 15px; border-radius: 10px; border: 1px solid #e2e8f0; outline: none; font-size: 0.9rem;">
                 </div>
             </div>
 
@@ -105,19 +107,18 @@ async function loadAndRender() {
             const d = docSnap.data();
             const id = docSnap.id;
 
-            // حساب اكتمال البيانات (شرط: وجود الاسم، الجوال، المدينة، الحي، ورقم المبنى)
             const isComplete = (d.name && d.phone && d.city && d.district && d.buildingNo);
             stats.total++;
             if (isComplete) stats.complete++; else stats.incomplete++;
             if (d.tag?.toLowerCase() === 'vip') stats.vips++;
 
             list.innerHTML += `
-                <tr class="cust-row" style="border-bottom:1px solid #f1f5f9; transition:0.2s;">
+                <tr class="cust-row" style="border-bottom:1px solid #f1f5f9;">
                     <td style="padding:15px; color:#94a3b8; font-weight:bold;">${index++}</td>
                     <td style="font-weight:700; color:#1e293b;">${d.name || '-'}</td>
                     <td dir="ltr" style="font-weight:600; color:#2563eb;">${d.phone || '-'}</td>
                     <td dir="ltr" style="color:#64748b;">${d.countryCode || '+966'}</td>
-                    <td style="color:#64748b;">${d.email || '-'}</td>
+                    <td>${d.email || '-'}</td>
                     <td>${d.country || 'المملكة العربية السعودية'}</td>
                     <td>${d.city || '-'}</td>
                     <td>${d.district || '-'}</td>
@@ -139,7 +140,6 @@ async function loadAndRender() {
                 </tr>`;
         });
 
-        // تحديث أرقام الإحصائيات في اللوحة
         document.getElementById('stat-total').innerText = stats.total;
         document.getElementById('stat-complete').innerText = stats.complete;
         document.getElementById('stat-incomplete').innerText = stats.incomplete;
@@ -164,10 +164,9 @@ function setupSearch() {
     });
 }
 
-// --- العمليات (أزرار الأكشن) ---
+// --- العمليات (تعديل - طباعة - حذف) ---
 
 window.handlePrint = (id) => {
-    // فتح رابط الطباعة المخصص للعميل
     window.open(`admin/modules/print-customer.html?id=${id}`, '_blank');
 };
 
@@ -176,7 +175,6 @@ window.handleEdit = async (id) => {
     const d = await Core.fetchCustomerById(id);
     if (!d) return;
 
-    // ملء النموذج (تأكد من وجود ID لكل حقل في الـ HTML الرئيسي)
     const fill = (id, val) => { if(document.getElementById(id)) document.getElementById(id).value = val || ''; };
     fill('cust-name', d.name);
     fill('cust-phone', d.phone);
@@ -195,15 +193,21 @@ window.handleEdit = async (id) => {
 };
 
 window.handleDelete = async (id) => {
-    if (confirm('هل أنت متأكد من حذف هذا العميل من منصة تيرا؟')) {
+    if (confirm('هل أنت متأكد من حذف هذا العميل؟')) {
         await Core.removeCustomer(id);
         await loadAndRender();
     }
 };
 
+window.showAddCustomerModal = () => {
+    editingId = null;
+    document.getElementById('customer-form')?.reset();
+    document.getElementById('modal-title').innerText = "إضافة عميل جديد";
+    document.getElementById('customer-modal').style.display = 'flex';
+};
+
 window.saveCustomerData = async () => {
     const get = (id) => document.getElementById(id)?.value || '';
-    
     const payload = {
         name: get('cust-name'),
         phone: get('cust-phone'),
@@ -221,9 +225,8 @@ window.saveCustomerData = async () => {
         updatedAt: new Date().toISOString()
     };
 
-    if (editingId) {
-        await Core.updateCustomer(editingId, payload);
-    } else {
+    if (editingId) await Core.updateCustomer(editingId, payload);
+    else {
         payload.createdAt = new Date().toISOString();
         await Core.addCustomer(payload);
     }
