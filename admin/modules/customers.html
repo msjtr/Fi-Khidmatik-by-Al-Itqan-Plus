@@ -8,105 +8,164 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <style>
         :root {
-            --primary-color: #2563eb;
-            --bg-color: #f4f7fe;
-            --text-main: #1e293b;
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --white: #ffffff;
+            --text-dark: #1e293b;
+            --border: #e2e8f0;
         }
 
         body {
             font-family: 'Tajawal', sans-serif;
-            background-color: var(--bg-color);
+            background-color: var(--bg);
             margin: 0;
-            padding: 0;
-            color: var(--text-main);
+            color: var(--text-dark);
         }
 
-        /* تنسيق النافذة المنبثقة (Modal) */
+        /* تنسيق النافذة المنبثقة (Modal) المطور */
         .modal {
             display: none;
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(5px);
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(8px);
             z-index: 9999;
             justify-content: center;
             align-items: center;
         }
 
         .modal-content {
-            background: #fff;
-            width: 90%;
-            max-width: 800px;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            background: var(--white);
+            width: 95%;
+            max-width: 900px;
+            border-radius: 24px;
+            padding: 35px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
             max-height: 90vh;
             overflow-y: auto;
+            position: relative;
         }
 
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 20px 0 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* تقسيم الحقول */
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 15px;
-            margin-top: 20px;
         }
 
         .form-group {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 6px;
         }
 
+        .form-group.full { grid-column: span 3; }
+        .form-group.half { grid-column: span 1; }
+
         .form-group label {
-            font-size: 0.85rem;
-            font-weight: bold;
+            font-size: 0.8rem;
+            font-weight: 700;
             color: #64748b;
         }
 
         .form-group input, .form-group select {
             padding: 12px;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 10px;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
             font-family: inherit;
             outline: none;
-            transition: 0.3s;
+            transition: 0.2s;
         }
 
         .form-group input:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
         }
 
-        .full-width { grid-column: span 2; }
+        /* منطقة تحميل الصورة */
+        .photo-upload-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        #photo-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 2px solid var(--border);
+        }
+
+        #photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* محرر النصوص */
+        #notes-editor {
+            height: 150px;
+            border-radius: 12px;
+            background: #fff;
+        }
 
         .modal-footer {
-            margin-top: 25px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
             display: flex;
             justify-content: flex-end;
-            gap: 10px;
+            gap: 12px;
         }
 
-        .btn-save {
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .btn-cancel {
-            background: #f1f5f9;
-            color: #64748b;
-            border: none;
+        .btn {
             padding: 12px 25px;
-            border-radius: 10px;
+            border-radius: 12px;
+            font-weight: bold;
             cursor: pointer;
+            border: none;
+            transition: 0.3s;
         }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-secondary { background: #f1f5f9; color: #475569; }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-2px); }
+
+        /* إخفاء شريط التمرير */
+        .modal-content::-webkit-scrollbar { width: 6px; }
+        .modal-content::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -115,72 +174,84 @@
 
     <div id="customer-modal" class="modal">
         <div class="modal-content">
-            <h2 id="modal-title" style="margin-top:0; color:var(--primary-color);">إضافة عميل جديد</h2>
+            <div class="modal-header">
+                <h2 id="modal-title" style="margin:0;">إضافة عميل لتيرا</h2>
+                <button onclick="closeCustomerModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#94a3b8;">&times;</button>
+            </div>
             
             <form id="customer-form">
+                <div class="photo-upload-section">
+                    <div id="photo-preview"><i class="fas fa-user-circle fa-3x" style="color:#cbd5e1;"></i></div>
+                    <div>
+                        <label for="cust-photo-input" class="btn btn-secondary" style="font-size:0.8rem; padding:8px 15px;">
+                            <i class="fas fa-camera"></i> تحميل صورة العميل
+                        </label>
+                        <input type="file" id="cust-photo-input" hidden accept="image/*" onchange="previewCustomerPhoto(this)">
+                        <p style="font-size:0.7rem; color:#64748b; margin:5px 0 0 0;">يفضل صورة مربعة (PNG/JPG)</p>
+                    </div>
+                </div>
+
                 <div class="form-grid">
-                    <div class="form-group full-width">
-                        <label>اسم العميل بالكامل</label>
-                        <input type="text" id="cust-name" placeholder="أدخل اسم العميل..." required>
+                    <div class="form-group full">
+                        <label>الاسم الكامل للعميل</label>
+                        <input type="text" id="cust-name" placeholder="مثال: محمد الشمري" required>
                     </div>
-
-                    <div class="form-group">
+                    
+                    <div class="form-group half">
                         <label>رقم الجوال</label>
-                        <input type="text" id="cust-phone" placeholder="05xxxxxxxx" required>
+                        <input type="text" id="cust-phone" placeholder="50xxxxxxx" required>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group half">
+                        <label>دولة الإقامة (بحث)</label>
+                        <select id="cust-country-select" onchange="updateCountryCode(this)">
+                            <option value="Saudi Arabia" data-code="+966" selected>المملكة العربية السعودية (+966)</option>
+                            <option value="United Arab Emirates" data-code="+971">الإمارات العربية المتحدة (+971)</option>
+                            <option value="Kuwait" data-code="+965">الكويت (+965)</option>
+                            <option value="Qatar" data-code="+974">قطر (+974)</option>
+                            <option value="Oman" data-code="+968">عمان (+968)</option>
+                            <option value="Bahrain" data-code="+973">البحرين (+973)</option>
+                            <option value="Egypt" data-code="+20">مصر (+20)</option>
+                            <option value="Jordan" data-code="+962">الأردن (+962)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group half">
                         <label>البريد الإلكتروني</label>
-                        <input type="email" id="cust-email" placeholder="example@mail.com">
+                        <input type="email" id="cust-email" placeholder="name@domain.com">
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label>المدينة</label>
-                        <input type="text" id="cust-city" placeholder="مثال: حائل">
-                    </div>
+                <div class="section-title"><i class="fas fa-map-marker-alt"></i> تفاصيل العنوان الوطني</div>
+                <div class="form-grid">
+                    <div class="form-group half"><label>المدينة</label><input type="text" id="cust-city" placeholder="حائل"></div>
+                    <div class="form-group half"><label>الحي</label><input type="text" id="cust-district"></div>
+                    <div class="form-group half"><label>الشارع</label><input type="text" id="cust-street"></div>
+                    <div class="form-group half"><label>رقم المبنى</label><input type="text" id="cust-building"></div>
+                    <div class="form-group half"><label>الرقم الإضافي</label><input type="text" id="cust-additional"></div>
+                    <div class="form-group half"><label>الرمز البريدي</label><input type="text" id="cust-postal"></div>
+                </div>
 
-                    <div class="form-group">
-                        <label>الحي</label>
-                        <input type="text" id="cust-district">
-                    </div>
-
-                    <div class="form-group">
-                        <label>الشارع</label>
-                        <input type="text" id="cust-street">
-                    </div>
-
-                    <div class="form-group">
-                        <label>رقم المبنى</label>
-                        <input type="text" id="cust-building">
-                    </div>
-
-                    <div class="form-group">
-                        <label>الرقم الإضافي</label>
-                        <input type="text" id="cust-additional">
-                    </div>
-
-                    <div class="form-group">
-                        <label>الرمز البريدي</label>
-                        <input type="text" id="cust-postal">
-                    </div>
-
-                    <div class="form-group">
-                        <label>صندوق البريد (P.O Box)</label>
-                        <input type="text" id="cust-pobox">
-                    </div>
-
-                    <div class="form-group">
+                <div class="section-title"><i class="fas fa-tags"></i> التصنيف والطلبات</div>
+                <div class="form-grid">
+                    <div class="form-group full">
                         <label>تصنيف العميل</label>
                         <select id="cust-category">
                             <option value="عادي">عميل عادي</option>
                             <option value="vip">عميل تميز (VIP)</option>
+                            <option value="blacklist">القائمة السوداء</option>
                         </select>
+                    </div>
+                    
+                    <div class="form-group full">
+                        <label>ملاحظات وطلبات العميل (محرر نصوص)</label>
+                        <div id="notes-editor"></div>
                     </div>
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn-cancel" onclick="closeCustomerModal()">إلغاء</button>
-                    <button type="button" class="btn-save" onclick="saveCustomerData()">حفظ البيانات</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeCustomerModal()">إلغاء</button>
+                    <button type="button" class="btn btn-primary" onclick="saveCustomerData()">حفظ بيانات العميل</button>
                 </div>
             </form>
         </div>
@@ -189,7 +260,6 @@
     <script type="module">
         import { initCustomersUI } from './js/modules/customers-ui.js';
         
-        // تشغيل الواجهة فور تحميل الصفحة
         document.addEventListener('DOMContentLoaded', () => {
             const container = document.getElementById('customers-module-container');
             initCustomersUI(container);
