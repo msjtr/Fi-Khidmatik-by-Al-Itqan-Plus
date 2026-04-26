@@ -1,8 +1,6 @@
 /**
  * main.js - Fi-Khidmatik Core
- * تم تحديث المسارات بناءً على:
- * - ملف الأدمن في الجذر الرئيسي /admin.html
- * - الشعار في مجلد الصور /images/logo.svg
+ * تم إصلاح مسارات المجلدات بناءً على هيكل GitHub الفعلي
  */
 
 const routes = {
@@ -26,64 +24,69 @@ async function switchModule(moduleName) {
     if (!path) return;
 
     try {
-        // تنظيف الحاوية ووضع مؤشر تحميل
+        // تنظيف الحاوية لمنع تداخل الصفحات (حل مشكلة اختفاء المحتوى)
         container.innerHTML = `
             <div style="text-align:center; padding:100px;">
-                <i class="fas fa-circle-notch fa-spin fa-2x" style="color:#2563eb;"></i>
+                <i class="fas fa-spinner fa-spin fa-2x" style="color:#2563eb;"></i>
             </div>`;
 
-        // تحديث حالة القائمة الجانبية
-        updateSidebarUI(moduleName);
-
+        // جلب المحتوى مع منع التخزين المؤقت
         const response = await fetch(`${path}?v=${Date.now()}`);
-        if (!response.ok) throw new Error(`لم يتم العثور على الملف: ${path}`);
+        if (!response.ok) throw new Error(`404: ${path}`);
         
         const html = await response.text();
         container.innerHTML = html;
 
-        // تنفيذ إعدادات الموديولات الخاصة
-        handleModuleScripts(moduleName, container);
+        // معالجة موديول العملاء بشكل خاص
+        if (moduleName === 'customers') {
+            handleCustomersLoading(container);
+        }
+
+        // تحديث حالة القائمة الجانبية
+        updateSidebarUI(moduleName);
 
     } catch (error) {
         console.error("Navigation Error:", error);
-        container.innerHTML = `<div style="padding:20px; color:#ef4444; border:1px dashed;">خطأ في تحميل القسم: ${moduleName}</div>`;
+        container.innerHTML = `<div style="padding:20px; color:red;">خطأ في تحميل الصفحة: ${moduleName}</div>`;
     }
 }
 
-function updateSidebarUI(activeModule) {
+async function handleCustomersLoading(container) {
+    // إصلاح الخطأ الظاهر في الصورة: ملف التنسيق موجود في css/ وليس js/modules/
+    const styleId = 'module-customers-style';
+    if (!document.getElementById(styleId)) {
+        const link = document.createElement('link');
+        link.id = styleId;
+        link.rel = 'stylesheet';
+        link.href = `css/customers.css?v=${Date.now()}`; // المسار الصحيح بناءً على الهيكل الفعلي
+        document.head.appendChild(link);
+    }
+
+    try {
+        // تحميل موديول الـ JS من مجلد modules
+        const modulePath = `./modules/customers-ui.js?v=${Date.now()}`;
+        const module = await import(modulePath);
+        if (module && module.initCustomersUI) {
+            setTimeout(() => {
+                const target = document.getElementById('customers-module-content') || container;
+                module.initCustomersUI(target);
+            }, 100);
+        }
+    } catch (err) {
+        console.warn("Customer module JS loading skipped or failed.");
+    }
+}
+
+function updateSidebarUI(activeHash) {
     document.querySelectorAll('.sidebar-nav a').forEach(link => {
-        link.classList.toggle('active', link.getAttribute('href') === `#${activeModule}`);
+        if (link.getAttribute('href') === `#${activeHash}`) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
     });
 }
 
-async function handleModuleScripts(moduleName, container) {
-    // تحميل تنسيق العملاء من المسار الصحيح /css/
-    if (moduleName === 'customers') {
-        const styleId = 'module-customers-style';
-        if (!document.getElementById(styleId)) {
-            const link = document.createElement('link');
-            link.id = styleId;
-            link.rel = 'stylesheet';
-            link.href = `css/customers.css?v=${Date.now()}`;
-            document.head.appendChild(link);
-        }
-
-        // تحميل المنطق البرمجي للعملاء من /js/modules/
-        try {
-            const module = await import(`./modules/customers-ui.js?v=${Date.now()}`);
-            if (module.initCustomersUI) {
-                setTimeout(() => {
-                    const target = document.getElementById('customers-module-container') || container;
-                    module.initCustomersUI(target);
-                }, 100);
-            }
-        } catch (err) {
-            console.warn("Customer JS module loading failed.");
-        }
-    }
-}
-
-// مراقبة تغيير الروابط
 function handleRoute() {
     const hash = window.location.hash.replace('#', '') || 'dashboard';
     switchModule(hash);
