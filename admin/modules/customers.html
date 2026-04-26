@@ -32,7 +32,7 @@
         .modal-body { padding: 30px; overflow-y: auto; flex-grow: 1; }
         .modal-footer { padding: 15px 30px; border-top: 1px solid var(--border); background: #f8fafc; text-align: left; }
 
-        /* شبكة النموذج لـ 17 حقلاً */
+        /* شبكة النموذج */
         .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
         .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
         .form-group.full { grid-column: span 4; }
@@ -49,9 +49,13 @@
         .btn-secondary { background: #e2e8f0; color: #475569; }
         .btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
-        /* تخصيص Select2 ليتناسب مع التصميم */
-        .select2-container--default .select2-selection--single { height: 45px; border: 1.5px solid var(--border); border-radius: 10px; }
-        .select2-container [dir="rtl"] .select2-selection--single .select2-selection__rendered { line-height: 42px; padding-right: 12px; }
+        /* تعديلات الجداول لتناسب الـ 17 حقل */
+        .table-container { overflow-x: auto; background: white; border-radius: 15px; margin: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; min-width: 1500px; } /* عرض كبير للأعمدة */
+        th { background: #f1f5f9; padding: 15px; text-align: right; font-size: 0.85rem; color: #64748b; }
+        td { padding: 15px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+        
+        .sticky-actions { position: sticky; left: 0; background: white; box-shadow: -5px 0 10px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
@@ -61,101 +65,67 @@
     <div id="customer-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="modal-title" style="margin:0; color:var(--primary); font-size: 1.2rem;">بيانات العميل التفصيلية</h2>
+                <h2 id="modal-title" style="margin:0; color:var(--primary); font-size: 1.2rem;">بيانات العميل</h2>
                 <button onclick="closeCustomerModal()" style="background:none; border:none; font-size:1.8rem; cursor:pointer; color:#94a3b8;">&times;</button>
             </div>
             
             <div class="modal-body">
                 <form id="customer-form">
                     <div class="form-grid">
-                        <div class="section-title">أولاً: المعلومات الشخصية والاتصال</div>
-                        
+                        <div class="section-title">المعلومات الشخصية والاتصال</div>
                         <div class="form-group half">
-                            <label>اسم العميل الكامل (رباعي)</label>
-                            <input type="text" id="cust-name" placeholder="أدخل الاسم الكامل" required>
+                            <label>الاسم الكامل</label>
+                            <input type="text" id="cust-name" required>
                         </div>
-                        
                         <div class="form-group">
                             <label>الدولة</label>
                             <select id="cust-country" class="select2-search" style="width:100%;">
-                                <option value="Saudi Arabia" selected>السعودية</option>
-                                <option value="UAE">الإمارات</option>
-                                <option value="Kuwait">الكويت</option>
-                                <option value="Egypt">مصر</option>
-                                <option value="Jordan">الأردن</option>
+                                <option value="السعودية" selected>السعودية</option>
+                                <option value="الإمارات">الإمارات</option>
+                                <option value="الكويت">الكويت</option>
                             </select>
                         </div>
-
                         <div class="form-group">
                             <label>مفتاح الدولة</label>
-                            <input type="text" id="cust-key" value="+966" readonly style="background:#f1f5f9;">
+                            <input type="text" id="cust-key" value="+966">
                         </div>
-
                         <div class="form-group half">
                             <label>رقم الجوال</label>
                             <input type="text" id="cust-phone" placeholder="5xxxxxxxx" required>
                         </div>
-
                         <div class="form-group half">
                             <label>البريد الإلكتروني</label>
-                            <input type="email" id="cust-email" placeholder="example@mail.com">
+                            <input type="email" id="cust-email">
                         </div>
 
-                        <div class="section-title">ثانياً: العنوان الوطني والتفاصيل البريدية</div>
-                        
-                        <div class="form-group">
-                            <label>المدينة</label>
-                            <input type="text" id="cust-city" placeholder="الرياض">
-                        </div>
-                        <div class="form-group">
-                            <label>الحي</label>
-                            <input type="text" id="cust-district" placeholder="حي النرجس">
-                        </div>
-                        <div class="form-group">
-                            <label>الشارع</label>
-                            <input type="text" id="cust-street">
-                        </div>
-                        <div class="form-group">
-                            <label>رقم المبنى</label>
-                            <input type="text" id="cust-building">
-                        </div>
-                        <div class="form-group">
-                            <label>الرقم الإضافي</label>
-                            <input type="text" id="cust-additional">
-                        </div>
-                        <div class="form-group">
-                            <label>الرمز البريدي</label>
-                            <input type="text" id="cust-zip">
-                        </div>
-                        <div class="form-group half">
-                            <label>صندوق البريد (P.O Box)</label>
-                            <input type="text" id="cust-pobox">
-                        </div>
+                        <div class="section-title">العنوان الوطني</div>
+                        <div class="form-group"><label>المدينة</label><input type="text" id="cust-city"></div>
+                        <div class="form-group"><label>الحي</label><input type="text" id="cust-district"></div>
+                        <div class="form-group"><label>الشارع</label><input type="text" id="cust-street"></div>
+                        <div class="form-group"><label>رقم المبنى</label><input type="text" id="cust-building"></div>
+                        <div class="form-group"><label>الإضافي</label><input type="text" id="cust-additional"></div>
+                        <div class="form-group"><label>الرمز البريدي</label><input type="text" id="cust-zip"></div>
+                        <div class="form-group half"><label>صندوق البريد</label><input type="text" id="cust-pobox"></div>
 
-                        <div class="section-title">ثالثاً: التصنيف والحالة النظامية</div>
-
+                        <div class="section-title">الحالة والتصنيف</div>
                         <div class="form-group">
-                            <label>حالة العميل</label>
+                            <label>الحالة</label>
                             <select id="cust-status">
                                 <option value="نشط">نشط</option>
                                 <option value="معلق">معلق</option>
                                 <option value="موقوف">موقوف</option>
-                                <option value="مكتمل">مكتمل البيانات</option>
                             </select>
                         </div>
-
                         <div class="form-group">
-                            <label>تصنيف العميل</label>
+                            <label>التصنيف</label>
                             <select id="cust-type">
                                 <option value="فرد">فرد</option>
                                 <option value="شركة">شركة</option>
-                                <option value="مؤسسة">مؤسسة</option>
-                                <option value="VIP">عميل VIP</option>
-                                <option value="متعثر">عميل متعثر</option>
+                                <option value="VIP">VIP</option>
                             </select>
                         </div>
 
-                        <div class="section-title">رابعاً: ملاحظات إضافية</div>
+                        <div class="section-title">ملاحظات</div>
                         <div class="form-group full">
                             <div id="notes-editor" style="height:120px;"></div>
                         </div>
@@ -164,9 +134,9 @@
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeCustomerModal()">إلغاء الأمر</button>
-                <button type="button" class="btn btn-primary" onclick="saveCustomerData()">
-                    <i class="fas fa-save"></i> حفظ البيانات والربط بالقاعدة
+                <button type="button" class="btn btn-secondary" onclick="closeCustomerModal()">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="triggerSave()">
+                    <i class="fas fa-save"></i> حفظ البيانات
                 </button>
             </div>
         </div>
@@ -179,26 +149,24 @@
     <script type="module">
         import { initCustomersUI } from './js/modules/customers-ui.js';
 
-        // تهيئة النظام عند تحميل الصفحة
         document.addEventListener('DOMContentLoaded', () => {
-            // تشغيل واجهة الجدول
-            const container = document.getElementById('customers-module-container');
-            if (container) initCustomersUI(container);
+            // 1. تشغيل الواجهة
+            initCustomersUI(document.getElementById('customers-module-container'));
 
-            // تشغيل محرر النصوص Quill
+            // 2. تهيئة Quill
             window.quill = new Quill('#notes-editor', {
                 theme: 'snow',
-                placeholder: 'اكتب ملاحظات العميل هنا...'
+                placeholder: 'ملاحظات إضافية...'
             });
 
-            // تشغيل البحث في الدول Select2
+            // 3. تهيئة Select2
             $('.select2-search').select2({
                 dir: "rtl",
                 dropdownParent: $('#customer-modal')
             });
         });
 
-        // وظائف النافذة (Global لكي تعمل من أزرار HTML)
+        // دوال التحكم بالنافذة (متاحة عالمياً)
         window.openCustomerModal = (title) => {
             document.getElementById('modal-title').innerText = title;
             document.getElementById('customer-modal').style.display = 'flex';
@@ -206,6 +174,15 @@
 
         window.closeCustomerModal = () => {
             document.getElementById('customer-modal').style.display = 'none';
+        };
+
+        // وسيط لتشغيل الحفظ من داخل موديول الـ UI
+        window.triggerSave = () => {
+            if (window.saveCustomerData) {
+                window.saveCustomerData();
+            } else {
+                console.error("خطأ: دالة الحفظ غير محملة بعد.");
+            }
         };
     </script>
 </body>
