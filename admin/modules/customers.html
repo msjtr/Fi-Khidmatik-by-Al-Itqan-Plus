@@ -3,17 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة العملاء - تيرا جيت واي</title>
+    <title>إدارة العملاء | تيرا جيت واي</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     
     <style>
         :root {
@@ -23,40 +19,39 @@
             --danger: #ef4444;
             --bg: #f8fafc;
             --white: #ffffff;
-            --text-dark: #1e293b;
             --border: #e2e8f0;
         }
 
-        body { font-family: 'Tajawal', sans-serif; background-color: var(--bg); margin: 0; color: var(--text-dark); }
+        body { font-family: 'Tajawal', sans-serif; background-color: var(--bg); margin: 0; }
 
-        /* التنسيقات العامة والمودال */
+        /* تنسيق المودال الاحترافي */
         .modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px); z-index: 9999; justify-content: center; align-items: center; }
-        .modal-content { background: var(--white); width: 95%; max-width: 1000px; border-radius: 20px; padding: 30px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+        .modal-content { background: var(--white); width: 95%; max-width: 1100px; border-radius: 20px; padding: 0; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3); max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
+        
+        .modal-header { padding: 20px 30px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #fff; }
+        .modal-body { padding: 30px; overflow-y: auto; flex-grow: 1; }
+        .modal-footer { padding: 15px 30px; border-top: 1px solid var(--border); background: #f8fafc; text-align: left; }
+
+        /* شبكة النموذج لـ 17 حقلاً */
         .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
         .form-group.full { grid-column: span 4; }
         .form-group.half { grid-column: span 2; }
-        .form-group.quarter { grid-column: span 1; }
-        .form-group label { font-size: 0.8rem; font-weight: 700; color: #64748b; }
-        .form-group input, .form-group select { padding: 10px; border: 1.5px solid var(--border); border-radius: 10px; outline: none; }
-        .form-group input:focus { border-color: var(--primary); }
         
-        /* Select2 Customization */
-        .select2-container .select2-selection--single { height: 42px; border: 1.5px solid var(--border); border-radius: 10px; display: flex; align-items: center; }
-        .select2-container--default[dir="rtl"] .select2-selection--single .select2-selection__arrow { top: 8px; }
+        .form-group label { font-size: 0.85rem; font-weight: 700; color: #475569; }
+        .form-group input, .form-group select { padding: 12px; border: 1.5px solid var(--border); border-radius: 10px; font-family: inherit; }
+        .form-group input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
 
-        .btn { padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; border: none; }
+        .section-title { color: var(--primary); font-size: 1rem; border-right: 4px solid var(--primary); padding-right: 10px; margin: 20px 0 15px 0; grid-column: span 4; }
+
+        .btn { padding: 12px 25px; border-radius: 10px; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-success { background: var(--success); color: white; }
-        .btn-secondary { background: #f1f5f9; color: #475569; }
+        .btn-secondary { background: #e2e8f0; color: #475569; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
-        /* Tooltip */
-        [data-title]:hover::after {
-            content: attr(data-title);
-            position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
-            background: #1e293b; color: #fff; padding: 4px 8px; border-radius: 4px;
-            font-size: 0.7rem; white-space: nowrap; z-index: 10;
-        }
+        /* تخصيص Select2 ليتناسب مع التصميم */
+        .select2-container--default .select2-selection--single { height: 45px; border: 1.5px solid var(--border); border-radius: 10px; }
+        .select2-container [dir="rtl"] .select2-selection--single .select2-selection__rendered { line-height: 42px; padding-right: 12px; }
     </style>
 </head>
 <body>
@@ -65,93 +60,153 @@
 
     <div id="customer-modal" class="modal">
         <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #e2e8f0; padding-bottom:15px; margin-bottom:20px;">
-                <h2 id="modal-title" style="margin:0; color:var(--primary);">بيانات العميل</h2>
-                <button onclick="closeCustomerModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+            <div class="modal-header">
+                <h2 id="modal-title" style="margin:0; color:var(--primary); font-size: 1.2rem;">بيانات العميل التفصيلية</h2>
+                <button onclick="closeCustomerModal()" style="background:none; border:none; font-size:1.8rem; cursor:pointer; color:#94a3b8;">&times;</button>
             </div>
             
-            <form id="customer-form">
-                <div style="display:flex; gap:20px; margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:15px;">
-                    <div id="photo-preview" style="width:80px; height:80px; border-radius:12px; background:#fff; display:flex; align-items:center; justify-content:center; overflow:hidden; border:2px solid #e2e8f0;">
-                        <i class="fas fa-user-circle fa-3x" style="color:#cbd5e1;"></i>
-                    </div>
-                    <div style="flex-grow:1;">
-                        <label class="btn btn-secondary" style="font-size:0.8rem;">
-                            <i class="fas fa-camera"></i> رفع صورة <input type="file" id="cust-photo-input" hidden accept="image/*" onchange="previewCustomerPhoto(this)">
-                        </label>
-                        <div style="margin-top:10px; display:flex; gap:15px;">
-                            <label style="font-weight:bold; font-size:0.9rem;">حالة العميل:</label>
-                            <select id="cust-status" style="padding:5px 10px; border-radius:6px; border:1px solid #cbd5e1;">
-                                <option value="نشط">نشط</option>
-                                <option value="غير نشط">غير نشط</option>
+            <div class="modal-body">
+                <form id="customer-form">
+                    <div class="form-grid">
+                        <div class="section-title">أولاً: المعلومات الشخصية والاتصال</div>
+                        
+                        <div class="form-group half">
+                            <label>اسم العميل الكامل (رباعي)</label>
+                            <input type="text" id="cust-name" placeholder="أدخل الاسم الكامل" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>الدولة</label>
+                            <select id="cust-country" class="select2-search" style="width:100%;">
+                                <option value="Saudi Arabia" selected>السعودية</option>
+                                <option value="UAE">الإمارات</option>
+                                <option value="Kuwait">الكويت</option>
+                                <option value="Egypt">مصر</option>
+                                <option value="Jordan">الأردن</option>
                             </select>
                         </div>
+
+                        <div class="form-group">
+                            <label>مفتاح الدولة</label>
+                            <input type="text" id="cust-key" value="+966" readonly style="background:#f1f5f9;">
+                        </div>
+
+                        <div class="form-group half">
+                            <label>رقم الجوال</label>
+                            <input type="text" id="cust-phone" placeholder="5xxxxxxxx" required>
+                        </div>
+
+                        <div class="form-group half">
+                            <label>البريد الإلكتروني</label>
+                            <input type="email" id="cust-email" placeholder="example@mail.com">
+                        </div>
+
+                        <div class="section-title">ثانياً: العنوان الوطني والتفاصيل البريدية</div>
+                        
+                        <div class="form-group">
+                            <label>المدينة</label>
+                            <input type="text" id="cust-city" placeholder="الرياض">
+                        </div>
+                        <div class="form-group">
+                            <label>الحي</label>
+                            <input type="text" id="cust-district" placeholder="حي النرجس">
+                        </div>
+                        <div class="form-group">
+                            <label>الشارع</label>
+                            <input type="text" id="cust-street">
+                        </div>
+                        <div class="form-group">
+                            <label>رقم المبنى</label>
+                            <input type="text" id="cust-building">
+                        </div>
+                        <div class="form-group">
+                            <label>الرقم الإضافي</label>
+                            <input type="text" id="cust-additional">
+                        </div>
+                        <div class="form-group">
+                            <label>الرمز البريدي</label>
+                            <input type="text" id="cust-zip">
+                        </div>
+                        <div class="form-group half">
+                            <label>صندوق البريد (P.O Box)</label>
+                            <input type="text" id="cust-pobox">
+                        </div>
+
+                        <div class="section-title">ثالثاً: التصنيف والحالة النظامية</div>
+
+                        <div class="form-group">
+                            <label>حالة العميل</label>
+                            <select id="cust-status">
+                                <option value="نشط">نشط</option>
+                                <option value="معلق">معلق</option>
+                                <option value="موقوف">موقوف</option>
+                                <option value="مكتمل">مكتمل البيانات</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>تصنيف العميل</label>
+                            <select id="cust-type">
+                                <option value="فرد">فرد</option>
+                                <option value="شركة">شركة</option>
+                                <option value="مؤسسة">مؤسسة</option>
+                                <option value="VIP">عميل VIP</option>
+                                <option value="متعثر">عميل متعثر</option>
+                            </select>
+                        </div>
+
+                        <div class="section-title">رابعاً: ملاحظات إضافية</div>
+                        <div class="form-group full">
+                            <div id="notes-editor" style="height:120px;"></div>
+                        </div>
                     </div>
-                </div>
+                </form>
+            </div>
 
-                <h4 style="color:var(--primary); margin-bottom:10px;"><i class="fas fa-id-card"></i> البيانات الأساسية</h4>
-                <div class="form-grid">
-                    <div class="form-group half"><label>الاسم الكامل</label><input type="text" id="cust-name" required></div>
-                    <div class="form-group quarter"><label>الجوال</label><input type="text" id="cust-phone" required></div>
-                    <div class="form-group quarter"><label>البريد الإلكتروني</label><input type="email" id="cust-email"></div>
-                    <div class="form-group half">
-                        <label>الدولة (مفتاح الاتصال)</label>
-                        <select id="cust-country-select" class="select2-search" style="width:100%;">
-                            <option value="Saudi Arabia" data-code="+966" selected>السعودية (+966)</option>
-                            <option value="Kuwait" data-code="+965">الكويت (+965)</option>
-                            <option value="UAE" data-code="+971">الإمارات (+971)</option>
-                        </select>
-                    </div>
-                    <div class="form-group quarter"><label>تصنيف العميل</label>
-                        <select id="cust-category">
-                            <option value="عادي">عادي</option>
-                            <option value="vip">VIP</option>
-                            <option value="بلاك ليست">قائمة سوداء</option>
-                        </select>
-                    </div>
-                </div>
-
-                <h4 style="color:var(--primary); margin-top:20px; margin-bottom:10px;"><i class="fas fa-map-marker-alt"></i> العنوان الوطني</h4>
-                <div class="form-grid">
-                    <div class="form-group quarter"><label>المدينة</label><input type="text" id="cust-city"></div>
-                    <div class="form-group quarter"><label>الحي</label><input type="text" id="cust-district"></div>
-                    <div class="form-group quarter"><label>الشارع</label><input type="text" id="cust-street"></div>
-                    <div class="form-group quarter"><label>رقم المبنى</label><input type="text" id="cust-building"></div>
-                    <div class="form-group quarter"><label>الرقم الإضافي</label><input type="text" id="cust-additional"></div>
-                    <div class="form-group quarter"><label>الرمز البريدي</label><input type="text" id="cust-postal"></div>
-                    <div class="form-group half"><label>صندوق البريد</label><input type="text" id="cust-pobox"></div>
-                </div>
-
-                <h4 style="color:var(--primary); margin-top:20px; margin-bottom:10px;"><i class="fas fa-edit"></i> الملاحظات والطلبات (محرر نصوص)</h4>
-                <div class="form-group full">
-                    <div id="notes-editor" style="height:150px; background:#fff; border-radius:10px;"></div>
-                </div>
-
-                <div style="margin-top:20px; text-align:left; border-top:1px solid #e2e8f0; padding-top:15px;">
-                    <button type="button" class="btn btn-secondary" onclick="closeCustomerModal()">إلغاء</button>
-                    <button type="button" class="btn btn-primary" onclick="saveCustomerData()">حفظ التعديلات</button>
-                </div>
-            </form>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeCustomerModal()">إلغاء الأمر</button>
+                <button type="button" class="btn btn-primary" onclick="saveCustomerData()">
+                    <i class="fas fa-save"></i> حفظ البيانات والربط بالقاعدة
+                </button>
+            </div>
         </div>
     </div>
 
-    <div id="logs-modal" class="modal">
-        <div class="modal-content" style="max-width:700px;">
-            <h3 style="color:var(--primary);">سجل عمليات النظام</h3>
-            <div id="logs-container" style="max-height:400px; overflow-y:auto; background:#f8fafc; padding:15px; border-radius:10px;">
-                </div>
-            <button class="btn btn-secondary" style="margin-top:15px;" onclick="document.getElementById('logs-modal').style.display='none'">إغلاق</button>
-        </div>
-    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script type="module">
         import { initCustomersUI } from './js/modules/customers-ui.js';
-        document.addEventListener('DOMContentLoaded', () => {
-            initCustomersUI(document.getElementById('customers-module-container'));
-            // تفعيل ميزة البحث في الدول
-            $('.select2-search').select2({ dir: "rtl", placeholder: "ابحث عن الدولة..." });
-        });
-    </script>
 
+        // تهيئة النظام عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', () => {
+            // تشغيل واجهة الجدول
+            const container = document.getElementById('customers-module-container');
+            if (container) initCustomersUI(container);
+
+            // تشغيل محرر النصوص Quill
+            window.quill = new Quill('#notes-editor', {
+                theme: 'snow',
+                placeholder: 'اكتب ملاحظات العميل هنا...'
+            });
+
+            // تشغيل البحث في الدول Select2
+            $('.select2-search').select2({
+                dir: "rtl",
+                dropdownParent: $('#customer-modal')
+            });
+        });
+
+        // وظائف النافذة (Global لكي تعمل من أزرار HTML)
+        window.openCustomerModal = (title) => {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('customer-modal').style.display = 'flex';
+        };
+
+        window.closeCustomerModal = () => {
+            document.getElementById('customer-modal').style.display = 'none';
+        };
+    </script>
 </body>
 </html>
