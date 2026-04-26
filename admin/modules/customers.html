@@ -1,66 +1,25 @@
-<div id="customer-modal" class="modal">
-    <div class="modal-content glass-effect">
-        <div class="modal-header">
-            <h3 id="modal-title">إضافة عميل جديد</h3>
-            <button onclick="closeCustomerModal()">&times;</button>
+<div class="form-grid">
+    <div class="input-group">
+        <label>اسم العميل الكامل</label>
+        <input type="text" id="cust-name" placeholder="أدخل الاسم">
+    </div>
+    
+    <div class="input-group">
+        <label>مفتاح الدولة</label>
+        <input type="text" id="cust-countryCode" placeholder="+966">
+    </div>
+
+    <div class="input-group full-width image-upload-section">
+        <label>صورة العميل</label>
+        <div class="upload-controls">
+            <img id="cust-image-preview" src="assets/default-avatar.png" width="80">
+            <input type="file" id="cust-image-input" onchange="previewImage(this)">
+            <input type="hidden" id="cust-image-url">
         </div>
-        <form id="customer-form">
-            <div class="form-grid">
-                <div class="input-group">
-                    <label>اسم العميل الكامل</label>
-                    <input type="text" id="cust-name" required placeholder="أدخل الاسم الرباعي">
-                </div>
+    </div>
 
-                <div class="input-group">
-                    <label>مفتاح الدولة</label>
-                    <select id="cust-countryCode" class="select2-search">
-                        <option value="+966">السعودية (+966)</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label>رقم الجوال</label>
-                    <input type="number" id="cust-phone" required placeholder="5xxxxxxxx">
-                </div>
-
-                <div class="input-group">
-                    <label>البريد الإلكتروني</label>
-                    <input type="email" id="cust-email" placeholder="example@mail.com">
-                </div>
-
-                <div class="input-group">
-                    <label>تصنيف العميل (Tag)</label>
-                    <select id="cust-tag">
-                        <option value="regular">عميل عادي (Regular)</option>
-                        <option value="vip">عميل مميز (VIP)</option>
-                        <option value="company">شركة (Company)</option>
-                        <option value="individual">فرد (Individual)</option>
-                    </select>
-                </div>
-
-                <div class="address-section">
-                    <h4>بيانات العنوان الوطني</h4>
-                    <div class="grid-3">
-                        <div class="input-group"><label>الدولة</label><input type="text" id="cust-country"></div>
-                        <div class="input-group"><label>المدينة</label><input type="text" id="cust-city"></div>
-                        <div class="input-group"><label>الحي</label><input type="text" id="cust-district"></div>
-                        <div class="input-group"><label>الشارع</label><input type="text" id="cust-street"></div>
-                        <div class="input-group"><label>رقم المبنى</label><input type="text" id="cust-buildingNo"></div>
-                        <div class="input-group"><label>الرقم الإضافي</label><input type="text" id="cust-additionalNo"></div>
-                        <div class="input-group"><label>الرمز البريدي</label><input type="text" id="cust-postalCode"></div>
-                        <div class="input-group"><label>صندوق البريد</label><input type="text" id="cust-poBox"></div>
-                    </div>
-                </div>
-
-                <div class="input-group full-width">
-                    <label>الملاحظات (محرر نصوص احترافي)</label>
-                    <div id="editor-container" style="height: 200px; background: white;"></div>
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <button type="submit" class="btn-save">💾 حفظ بيانات العميل</button>
-            </div>
-        </form>
+    <div class="input-group full-width">
+        <label>الملاحظات الاحترافية</label>
+        <div id="editor-container"></div>
     </div>
 </div>
