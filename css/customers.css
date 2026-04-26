@@ -1,206 +1,75 @@
-/**
- * customers-v2.css - Fi-Khidmatik Professional UI
- * نظام متوافق مع 17 حقلاً ومحرك "تيرا جيت واي"
- */
-
+/* Fi-Khidmatik: Customers Modern Styles */
 :root {
-    --tera-primary: #2563eb;
-    --tera-bg: #f8fafc;
-    --glass-white: rgba(255, 255, 255, 0.85);
-    --glass-border: rgba(255, 255, 255, 0.4);
-    --radius: 14px;
-    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+    --primary-color: #2563eb;
+    --bg-glass: rgba(255, 255, 255, 0.8);
+    --border-glass: rgba(255, 255, 255, 0.3);
 }
 
-/* الحاوية الرئيسية */
-.cust-ui-wrapper {
-    padding: 25px;
-    background: var(--tera-bg);
-    min-height: 100vh;
-    font-family: 'Tajawal', sans-serif;
-}
+.cust-ui-wrapper { animation: fadeIn 0.5s ease; }
 
-/* شريط الإجراءات العلوي */
-.toolbar-card {
-    background: var(--glass-white);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--glass-border);
+/* بطاقات الأقسام داخل الـ Modal */
+.form-card-section {
+    background: #f8fafc;
+    border-radius: 12px;
     padding: 20px;
-    border-radius: var(--radius);
+    margin-bottom: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+.form-card-section h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--primary-color);
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 8px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
-    box-shadow: var(--shadow-sm);
+    gap: 10px;
 }
 
-/* تصميم الجدول الاحترافي */
-.table-container {
-    background: white;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-lg);
-    overflow-x: auto;
-    border: 1px solid #f1f5f9;
-}
-
-.tera-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 1300px; /* لضمان عدم ضغط الـ 17 حقل */
-}
-
-.tera-table th {
-    background: #f1f5f9;
-    color: #475569;
-    padding: 18px;
-    font-weight: 700;
-    text-align: right;
-    font-size: 0.9rem;
-    position: sticky;
-    top: 0;
-}
-
-.tera-table td {
-    padding: 15px 18px;
-    border-bottom: 1px solid #f1f5f9;
-    color: #1e293b;
-    vertical-align: middle;
-}
-
-/* تثبيت عمود الإجراءات (اليسار) */
-.sticky-actions {
-    position: sticky;
-    left: 0;
-    background: white;
-    z-index: 5;
-    border-right: 2px solid #f8fafc;
-    box-shadow: -5px 0 10px rgba(0,0,0,0.02);
-}
-
-tr:hover .sticky-actions { background: #fcfdfe; }
-
-/* أزرار الإجراءات مع Tooltips */
-.btn-action {
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    border: none;
-    cursor: pointer;
-    margin-left: 5px;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-}
-
-.btn-action.edit { background: #eff6ff; color: #2563eb; }
-.btn-action.delete { background: #fef2f2; color: #dc2626; }
-.btn-action:hover { transform: scale(1.1); filter: brightness(0.95); }
-
-/* --- تصميم النموذج (Modal Form) --- */
-.modal-content {
-    background: var(--glass-white);
-    backdrop-filter: blur(20px);
-    border-radius: 20px;
-    max-width: 900px;
-    width: 95%;
-    border: 1px solid var(--glass-border);
-}
-
-/* شبكة الحقول المستقلة */
+/* توزيع الحقول */
 .form-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 3 أعمدة في السطر الواحد */
-    gap: 20px;
-    padding: 25px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
 }
 
-.input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+.input-group { display: flex; flex-direction: column; gap: 5px; }
+.input-group label { font-size: 0.85rem; color: #475569; font-weight: 600; }
+.input-group input, .input-group select {
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: white;
 }
 
-.input-group label {
-    font-weight: 700;
-    color: #475569;
-    font-size: 0.85rem;
-    padding-right: 5px;
-}
+.full-width { grid-column: 1 / -1; }
 
-.input-group input, 
-.input-group select {
-    padding: 12px 15px;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.9);
-    transition: 0.3s;
-    font-family: inherit;
-}
-
-.input-group input:focus {
-    border-color: var(--tera-primary);
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
-    outline: none;
-}
-
-/* الحقول العريضة (الملاحظات والصور) */
-.full-width { grid-column: span 3; }
-
-/* قسم رفع صورة العميل (الحقل 17) */
-.image-upload-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    background: #fff;
-    padding: 15px;
-    border-radius: 12px;
-    border: 2px dashed #e2e8f0;
-}
-
-.preview-img {
-    width: 70px;
-    height: 70px;
+/* معاينة الصورة */
+.main-avatar-preview {
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid #fff;
-    box-shadow: var(--shadow-sm);
+    border: 3px solid var(--primary-color);
+    margin-bottom: 10px;
 }
 
-/* محرر النصوص الاحترافي */
-.ql-editor {
-    min-height: 180px;
-    background: white;
-    border-radius: 0 0 10px 10px;
-    font-size: 1rem;
+.readonly-input { background: #f1f5f9 !important; color: #64748b; cursor: not-allowed; }
+
+/* أزرار الحفظ */
+.btn-save-full {
+    background: var(--primary-color);
+    color: white;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    width: 100%;
+    transition: 0.3s;
 }
 
-.ql-toolbar {
-    background: #f8fafc;
-    border-radius: 10px 10px 0 0;
-    border-color: #e2e8f0 !important;
-}
+.btn-save-full:hover { background: #1e40af; transform: translateY(-2px); }
 
-/* شارات التصنيف (Tags) */
-.tag-badge {
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 800;
-}
-.tag-vip { background: #fae8ff; color: #a21caf; }
-.tag-company { background: #e0f2fe; color: #0369a1; }
-.tag-individual { background: #f1f5f9; color: #475569; }
-
-/* التوافق مع الشاشات الصغيرة */
-@media (max-width: 992px) {
-    .form-grid { grid-template-columns: repeat(2, 1fr); }
-    .full-width { grid-column: span 2; }
-}
-
-@media (max-width: 600px) {
-    .form-grid { grid-template-columns: 1fr; }
-    .full-width { grid-column: span 1; }
-}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
