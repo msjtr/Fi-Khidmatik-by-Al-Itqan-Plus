@@ -1,6 +1,7 @@
 /**
- * نظام إدارة العملاء الشامل - Tera Gateway
- * تنفيذ وربط فعلي لـ 17 حقلاً مع العمليات الحيوية
+ * js/modules/customers-ui.js
+ * موديول واجهة العملاء - Tera Gateway
+ * الإصلاح النهائي للأزرار وربط العمليات الحيوية
  */
 import * as Core from './customers-core.js';
 
@@ -9,7 +10,7 @@ let editingId = null;
 export async function initCustomersUI(container) {
     if (!container) return;
 
-    // 1. بناء واجهة الإحصائيات والبحث والأزرار الأساسية
+    // 1. بناء هيكل الواجهة
     container.innerHTML = `
         <div class="customers-dashboard" style="direction: rtl; font-family: 'Tajawal', sans-serif;">
             <div id="stats-container" class="stats-grid"></div>
@@ -21,19 +22,21 @@ export async function initCustomersUI(container) {
                 </div>
                 
                 <div class="filter-group" style="display:flex; gap:10px; flex-wrap: wrap;">
-                    <select id="filter-status" class="tera-input" style="width:150px;">
-                        <option value="">حالة العميل</option>
+                    <select id="filter-status" class="tera-input" style="width:120px;">
+                        <option value="">كل الحالات</option>
                         <option value="نشط">نشط</option>
                         <option value="معلق">معلق</option>
                         <option value="موقوف">موقوف</option>
                     </select>
-                    <select id="filter-type" class="tera-input" style="width:150px;">
-                        <option value="">التصنيف</option>
+                    <select id="filter-type" class="tera-input" style="width:120px;">
+                        <option value="">كل التصنيفات</option>
                         <option value="فرد">فرد</option>
                         <option value="شركة">شركة</option>
                         <option value="VIP">VIP</option>
                     </select>
-                    <button id="btn-add-customer" class="btn btn-primary"><i class="fas fa-user-plus"></i> إضافة عميل جديد</button>
+                    <button id="btn-add-customer" class="btn btn-primary" onclick="window.openAddCustomerAction()">
+                        <i class="fas fa-user-plus"></i> إضافة عميل
+                    </button>
                 </div>
             </div>
 
@@ -44,50 +47,39 @@ export async function initCustomersUI(container) {
                             <th>#</th>
                             <th>الاسم الكامل</th>
                             <th>الجوال</th>
-                            <th>المفتاح</th>
                             <th>البريد</th>
-                            <th>الدولة</th>
                             <th>المدينة</th>
                             <th>الحي</th>
-                            <th>الشارع</th>
-                            <th>رقم المبنى</th>
-                            <th>الإضافي</th>
-                            <th>الرمز البريدي</th>
-                            <th>ص.ب</th>
-                            <th>التاريخ</th>
                             <th>الحالة</th>
                             <th>التصنيف</th>
                             <th class="sticky-actions">الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody id="customers-tbody">
-                        <tr><td colspan="17" style="text-align:center; padding:50px;"><i class="fas fa-spinner fa-spin"></i> جاري جلب البيانات من القاعدة...</td></tr>
+                        <tr><td colspan="9" style="text-align:center; padding:50px;"><i class="fas fa-spinner fa-spin"></i> جاري جلب البيانات...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
     `;
 
-    // 2. ربط الأحداث (Event Listeners)
-    const addBtn = document.getElementById('btn-add-customer');
-    if (addBtn) addBtn.onclick = () => openFormModal();
-
+    // 2. ربط البحث الفوري
     const searchInput = document.getElementById('main-search');
-    if (searchInput) searchInput.oninput = debounce(() => refreshCustomerTable(), 300);
+    if (searchInput) searchInput.oninput = debounce(() => window.refreshCustomerTable(), 300);
 
-    const statusSelect = document.getElementById('filter-status');
-    const typeSelect = document.getElementById('filter-type');
-    if (statusSelect) statusSelect.onchange = () => refreshCustomerTable();
-    if (typeSelect) typeSelect.onchange = () => refreshCustomerTable();
+    const filterStatus = document.getElementById('filter-status');
+    const filterType = document.getElementById('filter-type');
+    if (filterStatus) filterStatus.onchange = () => window.refreshCustomerTable();
+    if (filterType) filterType.onchange = () => window.refreshCustomerTable();
 
-    // 3. تحميل البيانات لأول مرة
-    await refreshCustomerTable();
+    // 3. تحميل البيانات
+    await window.refreshCustomerTable();
 }
 
 /**
- * وظيفة: جلب البيانات وتحديث الجدول والإحصائيات مع الفلترة
+ * دالة تحديث الجدول (عالمية)
  */
-async function refreshCustomerTable() {
+window.refreshCustomerTable = async () => {
     const tbody = document.getElementById('customers-tbody');
     if (!tbody) return;
 
@@ -98,19 +90,15 @@ async function refreshCustomerTable() {
     try {
         const snapshot = await Core.fetchAllCustomers();
         let rowsHtml = '';
-        let stats = { total: 0, active: 0, pending: 0, incomplete: 0 };
+        let stats = { total: 0, active: 0, incomplete: 0 };
         let counter = 1;
 
         snapshot.forEach((docSnap) => {
             const d = docSnap.data();
             const id = docSnap.id;
 
-            // تطبيق الفلترة الحية
-            const matchesSearch = !searchTerm || 
-                d.name?.toLowerCase().includes(searchTerm) || 
-                d.phone?.includes(searchTerm) || 
-                d.city?.toLowerCase().includes(searchTerm);
-            
+            // تطبيق الفلترة
+            const matchesSearch = !searchTerm || d.name?.toLowerCase().includes(searchTerm) || d.phone?.includes(searchTerm);
             const matchesStatus = !statusFilter || d.status === statusFilter;
             const matchesType = !typeFilter || d.type === typeFilter;
 
@@ -120,183 +108,99 @@ async function refreshCustomerTable() {
                 if (!d.city || !d.district) stats.incomplete++;
 
                 rowsHtml += `
-                    <tr class="customer-row">
+                    <tr>
                         <td>${counter++}</td>
-                        <td style="font-weight:bold; color:var(--primary);">${d.name || '-'}</td>
-                        <td dir="ltr" style="text-align:right;">${d.phone || '-'}</td>
-                        <td dir="ltr">${d.countryKey || '+966'}</td>
-                        <td class="text-truncate" title="${d.email || ''}">${d.email || '-'}</td>
-                        <td>${d.country || 'السعودية'}</td>
+                        <td style="font-weight:bold;">${d.name || '-'}</td>
+                        <td dir="ltr">${d.phone || '-'}</td>
+                        <td>${d.email || '-'}</td>
                         <td>${d.city || '-'}</td>
                         <td>${d.district || '-'}</td>
-                        <td>${d.street || '-'}</td>
-                        <td>${d.buildingNo || '-'}</td>
-                        <td>${d.additionalNo || '-'}</td>
-                        <td>${d.zipCode || '-'}</td>
-                        <td>${d.poBox || '-'}</td>
-                        <td>${d.createdAt ? d.createdAt.substring(0,10) : '-'}</td>
                         <td><span class="badge status-${d.status || 'معلق'}">${d.status || 'معلق'}</span></td>
                         <td><span class="badge type-${d.type || 'فرد'}">${d.type || 'فرد'}</span></td>
                         <td class="sticky-actions">
-                            <button onclick="window.editCustomerAction('${id}')" class="btn-sm btn-edit" title="تعديل"><i class="fas fa-pen"></i></button>
-                            <button onclick="window.printCustomerAction('${id}')" class="btn-sm btn-print" title="طباعة"><i class="fas fa-print"></i></button>
-                            <button onclick="window.deleteCustomerAction('${id}', '${d.name}')" class="btn-sm btn-delete" title="حذف"><i class="fas fa-trash"></i></button>
+                            <button onclick="window.editCustomerAction('${id}')" class="btn-sm btn-edit"><i class="fas fa-pen"></i></button>
+                            <button onclick="window.printCustomerAction('${id}')" class="btn-sm btn-print"><i class="fas fa-print"></i></button>
+                            <button onclick="window.deleteCustomerAction('${id}', '${d.name}')" class="btn-sm btn-delete"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>`;
             }
         });
 
-        tbody.innerHTML = rowsHtml || '<tr><td colspan="17" style="text-align:center; padding:30px;">لا توجد نتائج تطابق البحث</td></tr>';
+        tbody.innerHTML = rowsHtml || '<tr><td colspan="9" style="text-align:center;">لا توجد نتائج</td></tr>';
         updateStatsUI(stats);
     } catch (err) {
-        console.error("Error refreshing table:", err);
-        tbody.innerHTML = `<tr><td colspan="17" style="color:red; text-align:center; padding:20px;">خطأ في تحميل البيانات من القاعدة</td></tr>`;
-    }
-}
-
-/**
- * وظيفة 1: فتح النافذة المنبثقة (إضافة/تعديل)
- */
-function openFormModal(data = null) {
-    editingId = data ? data.id : null;
-    if (window.openCustomerModal) {
-        window.openCustomerModal(editingId ? `تعديل بيانات: ${data.name}` : "إضافة عميل جديد للنظام");
-        const form = document.getElementById('customer-form');
-        if (form) {
-            form.reset();
-            if (window.quill) window.quill.setContents([]);
-            if (data) fillFormFields(data);
-        }
-    }
-}
-
-/**
- * وظيفة 2: التعديل
- */
-window.editCustomerAction = async (id) => {
-    try {
-        const data = await Core.fetchCustomerById(id);
-        if (data) openFormModal({ ...data, id });
-    } catch (err) {
-        alert("خطأ في جلب بيانات العميل.");
+        tbody.innerHTML = '<tr><td colspan="9" style="color:red; text-align:center;">خطأ في الاتصال بالخادم</td></tr>';
     }
 };
 
-function fillFormFields(data) {
-    const fields = {
-        'cust-name': data.name,
-        'cust-phone': data.phone,
-        'cust-key': data.countryKey,
-        'cust-email': data.email,
-        'cust-country': data.country,
-        'cust-city': data.city,
-        'cust-district': data.district,
-        'cust-street': data.street,
-        'cust-building': data.buildingNo,
-        'cust-additional': data.additionalNo,
-        'cust-zip': data.zipCode,
-        'cust-pobox': data.poBox,
-        'cust-status': data.status,
-        'cust-type': data.type
-    };
-
-    for (let id in fields) {
-        const el = document.getElementById(id);
-        if (el) el.value = fields[id] || '';
-    }
-    
-    if (data.notes && window.quill) {
-        window.quill.root.innerHTML = data.notes;
-    }
-}
-
 /**
- * وظيفة 3: الحفظ
+ * دوال الأزرار (عالمية لتعمل مع onclick)
  */
+window.openAddCustomerAction = () => {
+    editingId = null;
+    if (window.openCustomerModal) {
+        window.openCustomerModal("إضافة عميل جديد");
+        document.getElementById('customer-form')?.reset();
+    }
+};
+
+window.editCustomerAction = async (id) => {
+    try {
+        const data = await Core.fetchCustomerById(id);
+        if (data && window.openCustomerModal) {
+            editingId = id;
+            window.openCustomerModal(`تعديل بيانات: ${data.name}`);
+            fillFormFields(data);
+        }
+    } catch (err) { alert("خطأ في جلب البيانات"); }
+};
+
 window.saveCustomerData = async () => {
     const formData = gatherFormData();
     if (!formData.name || !formData.phone) return alert("الاسم والجوال حقول إجبارية.");
 
     try {
-        if (editingId) {
-            await Core.updateCustomer(editingId, formData);
-        } else {
-            await Core.addCustomer(formData);
-        }
+        if (editingId) await Core.updateCustomer(editingId, formData);
+        else await Core.addCustomer(formData);
         
         if (window.closeCustomerModal) window.closeCustomerModal();
-        await refreshCustomerTable();
-    } catch (err) {
-        alert("حدث خطأ أثناء الحفظ: " + err.message);
-    }
+        await window.refreshCustomerTable();
+    } catch (err) { alert("خطأ في الحفظ: " + err.message); }
 };
 
-/**
- * وظيفة 4: الحذف
- */
 window.deleteCustomerAction = async (id, name) => {
-    if (confirm(`هل أنت متأكد من حذف العميل "${name}"؟`)) {
-        try {
-            await Core.deleteCustomer(id);
-            await refreshCustomerTable();
-        } catch (err) {
-            alert("فشل الحذف");
-        }
+    if (confirm(`هل أنت متأكد من حذف "${name}"؟`)) {
+        await Core.deleteCustomer(id);
+        await window.refreshCustomerTable();
     }
 };
 
-/**
- * وظيفة 5: الطباعة
- */
 window.printCustomerAction = async (id) => {
     const data = await Core.fetchCustomerById(id);
     if (!data) return;
-    
     const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-        <html dir="rtl">
-        <head>
-            <title>تقرير عميل - ${data.name}</title>
-            <style>
-                body { font-family: 'Tajawal', sans-serif; padding: 40px; line-height: 1.6; }
-                .report-header { border-bottom: 2px solid #2563eb; margin-bottom: 30px; text-align: center; }
-                .data-row { margin-bottom: 12px; font-size: 1.1rem; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
-                .label { font-weight: bold; color: #2563eb; width: 150px; display: inline-block; }
-            </style>
-        </head>
-        <body onload="window.print()">
-            <div class="report-header">
-                <h1>بطاقة بيانات عميل</h1>
-                <p>نظام تيرا جيت واي (Tera Gateway)</p>
-            </div>
-            <div class="data-row"><span class="label">الاسم:</span> ${data.name}</div>
-            <div class="data-row"><span class="label">الجوال:</span> ${data.phone}</div>
-            <div class="data-row"><span class="label">المدينة:</span> ${data.city || '-'}</div>
-            <div class="data-row"><span class="label">الحالة:</span> ${data.status}</div>
-            <div class="data-row"><span class="label">تاريخ التسجيل:</span> ${data.createdAt || '-'}</div>
-        </body>
-        </html>
-    `);
+    printWindow.document.write(`<html dir="rtl"><body onload="window.print()"><h2>بطاقة عميل: ${data.name}</h2><hr><p>الجوال: ${data.phone}</p><p>المدينة: ${data.city}</p></body></html>`);
     printWindow.document.close();
 };
+
+// وظائف مساعدة
+function fillFormFields(data) {
+    const map = { 'cust-name': data.name, 'cust-phone': data.phone, 'cust-email': data.email, 'cust-city': data.city, 'cust-district': data.district, 'cust-status': data.status, 'cust-type': data.type };
+    for (let id in map) {
+        const el = document.getElementById(id);
+        if (el) el.value = map[id] || '';
+    }
+}
 
 function gatherFormData() {
     return {
         name: document.getElementById('cust-name')?.value,
         phone: document.getElementById('cust-phone')?.value,
-        countryKey: document.getElementById('cust-key')?.value || '+966',
         email: document.getElementById('cust-email')?.value,
-        country: document.getElementById('cust-country')?.value || 'السعودية',
         city: document.getElementById('cust-city')?.value,
         district: document.getElementById('cust-district')?.value,
-        street: document.getElementById('cust-street')?.value,
-        buildingNo: document.getElementById('cust-building')?.value,
-        additionalNo: document.getElementById('cust-additional')?.value,
-        zipCode: document.getElementById('cust-zip')?.value,
-        poBox: document.getElementById('cust-pobox')?.value,
         status: document.getElementById('cust-status')?.value || 'معلق',
         type: document.getElementById('cust-type')?.value || 'فرد',
-        notes: window.quill ? window.quill.root.innerHTML : '',
         updatedAt: new Date().toISOString()
     };
 }
@@ -306,16 +210,14 @@ function updateStatsUI(s) {
     if (container) {
         container.innerHTML = `
             <div class="stat-card"><span>إجمالي العملاء</span><strong>${s.total}</strong></div>
-            <div class="stat-card"><span>النشطين</span><strong style="color:#10b981">${s.active}</strong></div>
+            <div class="stat-card"><span>نشط</span><strong style="color:#10b981">${s.active}</strong></div>
             <div class="stat-card"><span>بيانات ناقصة</span><strong style="color:#ef4444">${s.incomplete}</strong></div>
         `;
     }
 }
 
-function debounce(func, timeout = 300) {
+function debounce(func, timeout) {
     let timer;
     return (...args) => {
         clearTimeout(timer);
-        timer = setTimeout(() => { func.apply(this, args); }, timeout);
-    };
-}
+        timer = setTimeout
