@@ -8,29 +8,84 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     
-    <link rel="stylesheet" href="css/admin.css">
-    
     <style>
-        :root { --sidebar-width: 280px; --header-height: 70px; }
-        body { margin: 0; font-family: 'Tajawal', sans-serif; background-color: #f8fafc; display: flex; height: 100vh; overflow: hidden; }
-        .main-wrapper { display: flex; width: 100%; height: 100%; }
-        #sidebar-placeholder { width: var(--sidebar-width); height: 100%; background: #fff; flex-shrink: 0; border-left: 1px solid #e2e8f0; }
-        .content-area { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
-        #header-placeholder { height: var(--header-height); flex-shrink: 0; }
-        #module-container { flex-grow: 1; padding: 25px; overflow-y: auto; background: #f8fafc; }
-        .loader-box { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #64748b; }
+        :root {
+            --sidebar-width: 280px;
+            --header-height: 70px;
+            --primary-bg: #f8fafc;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--primary-bg);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .main-wrapper {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        #sidebar-placeholder {
+            width: var(--sidebar-width);
+            height: 100%;
+            background: #fff;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+            border-left: 1px solid #e2e8f0;
+        }
+
+        .content-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #header-placeholder {
+            height: var(--header-height);
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        #module-container {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .loader-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #94a3b8;
+        }
+
+        /* استجابة الشاشات الصغيرة */
+        @media (max-width: 768px) {
+            #sidebar-placeholder { width: 0; overflow: hidden; }
+            .sidebar-open #sidebar-placeholder { width: var(--sidebar-width); }
+        }
     </style>
 </head>
 <body>
 
     <div class="main-wrapper">
         <div id="sidebar-placeholder"></div>
+
         <div class="content-area">
             <div id="header-placeholder"></div>
+
             <main id="module-container">
                 <div class="loader-box">
                     <i class="fas fa-circle-notch fa-spin fa-2x" style="color: #f97316;"></i>
-                    <p style="margin-top: 15px; font-weight: bold;">جاري تحميل نظام تيرا...</p>
+                    <p style="margin-top: 15px;">جاري تحميل لوحة تحكم تيرا...</p>
                 </div>
             </main>
         </div>
@@ -40,75 +95,62 @@
 
     <script>
         /**
-         * 1. وظائف المودال (لضمان استجابة الأزرار)
-         */
-        window.closeCustomerModal = () => { 
-            const m = document.getElementById('customer-modal'); 
-            if(m) m.style.display='none'; 
-        };
-        window.openCustomerModal = (title) => { 
-            const m = document.getElementById('customer-modal'); 
-            if(m) { 
-                m.style.display='flex'; 
-                const titleEl = document.getElementById('modal-title');
-                if(titleEl) titleEl.innerText = title; 
-            } 
-        };
-
-        /**
-         * 2. دالة تحميل المكونات (المسار الذي نجح سابقاً admin/components/)
+         * دالة تحميل المكونات من مجلد components
          */
         async function loadComponent(id, fileName) {
-            const path = `admin/components/${fileName}`; 
+            const path = `components/${fileName}`; // المسار النسبي كما في صورتك
             try {
                 const response = await fetch(path);
-                if (!response.ok) throw new Error(`Status: ${response.status}`);
+                if (!response.ok) throw new Error('File not found');
                 const html = await response.text();
                 document.getElementById(id).innerHTML = html;
-                console.log(`✅ تم تحميل المكون: ${path}`);
-            } catch (error) {
-                console.error(`❌ فشل تحميل المكون: ${path}`, error);
+                console.log(`✅ Loaded: ${path}`);
+            } catch (err) {
+                console.error(`❌ Error loading ${path}:`, err);
             }
         }
 
         /**
-         * 3. دالة تحميل الموديولات (تجربة المسارات المتاحة)
+         * دالة تحميل الصفحات (Modules)
          */
         async function loadModule(moduleName) {
             const container = document.getElementById('module-container');
-            const pathsToTry = [
-                `admin/modules/${moduleName}.html`,
-                `modules/${moduleName}.html`
-            ];
-
-            for (const path of pathsToTry) {
-                try {
-                    const response = await fetch(path);
-                    if (response.ok) {
-                        const html = await response.text();
-                        container.innerHTML = html;
-                        console.log(`✅ تم تحميل الموديول: ${path}`);
-                        return;
-                    }
-                } catch (e) {}
+            const path = `modules/${moduleName}.html`;
+            
+            try {
+                const response = await fetch(path);
+                if (!response.ok) throw new Error('Module not found');
+                const html = await response.text();
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = `<div style="text-align:center; padding:50px; color:#64748b;">
+                    <i class="fas fa-search fa-3x"></i>
+                    <p style="margin-top:15px;">لم نتمكن من العثور على موديول: ${moduleName}</p>
+                </div>`;
             }
-            container.innerHTML = `<div style="padding:20px; text-align:center; color:#ef4444;">تعذر العثور على ملف الموديول (${moduleName}.html)</div>`;
         }
 
-        /**
-         * 4. بدء التشغيل
-         */
+        // تشغيل التحميل عند فتح المتصفح
         window.addEventListener('DOMContentLoaded', async () => {
-            // تحميل المكونات الثابتة بالتوازي
-            await Promise.all([
-                loadComponent('sidebar-placeholder', 'sidebar.html'),
-                loadComponent('header-placeholder', 'header.html'),
-                loadComponent('modals-placeholder', 'modals.html')
-            ]);
+            // تحميل الأجزاء الثابتة من المجلد الظاهر في صورتك
+            await loadComponent('sidebar-placeholder', 'sidebar.html');
+            await loadComponent('header-placeholder', 'header.html');
+            await loadComponent('modals-placeholder', 'modals.html');
 
-            // تحميل الصفحة الافتراضية
-            loadModule('dashboard');
+            // تحميل الصفحة الرئيسية الافتراضية
+            // ملاحظة: يجب أن يكون لديك مجلد اسمه modules وبداخله dashboard.html
+            loadModule('dashboard'); 
         });
+
+        // دوال التحكم العالمية للمودال
+        window.openCustomerModal = (title) => {
+            const m = document.getElementById('customer-modal');
+            if(m) { m.style.display = 'flex'; document.getElementById('modal-title').innerText = title; }
+        };
+        window.closeCustomerModal = () => {
+            const m = document.getElementById('customer-modal');
+            if(m) m.style.display = 'none';
+        };
     </script>
 </body>
 </html>
