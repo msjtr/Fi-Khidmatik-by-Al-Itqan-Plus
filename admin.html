@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tera Gateway | لوحة التحكم</title>
     
-    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <link rel="icon" href="images/logo.svg" type="image/svg+xml">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
@@ -30,7 +30,7 @@
             display: flex;
             height: 100vh;
             width: 100vw;
-            overflow: hidden; /* ضروري لمنع التمرير المزدوج */
+            overflow: hidden;
         }
 
         .main-wrapper {
@@ -39,7 +39,7 @@
             height: 100%;
         }
 
-        /* منطقة القائمة الجانبية */
+        /* القائمة الجانبية */
         #sidebar-placeholder {
             width: var(--sidebar-width);
             height: 100%;
@@ -47,10 +47,10 @@
             flex-shrink: 0;
             border-left: 1px solid var(--border-color);
             z-index: 1000;
-            transition: width 0.3s ease;
+            transition: all 0.3s ease;
         }
 
-        /* منطقة المحتوى اليمينية */
+        /* منطقة المحتوى */
         .content-area {
             flex-grow: 1;
             display: flex;
@@ -60,7 +60,6 @@
             position: relative;
         }
 
-        /* الهيدر الثابت */
         #header-placeholder {
             height: var(--header-height);
             background: #fff;
@@ -69,16 +68,16 @@
             z-index: 999;
         }
 
-        /* الحاوية الديناميكية للموديولات */
+        /* حاوية الموديولات الديناميكية */
         #module-container {
             flex-grow: 1;
-            padding: 30px; /* مسافة داخلية مريحة للمحتوى */
-            overflow-y: auto; /* التمرير يكون داخل هذه الحاوية فقط */
+            padding: 25px;
+            overflow-y: auto;
             position: relative;
             scroll-behavior: smooth;
         }
 
-        /* حالة التحميل */
+        /* شاشة التحميل الذكية */
         .loading-state {
             display: flex;
             flex-direction: column;
@@ -86,24 +85,18 @@
             justify-content: center;
             height: 100%;
             width: 100%;
-            color: var(--primary-blue);
-            background: #fff;
+            background: var(--bg-body);
             position: absolute;
             top: 0;
             left: 0;
-            z-index: 50;
+            z-index: 100;
+            transition: opacity 0.4s ease;
         }
 
-        /* شريط التمرير الأنيق */
-        #module-container::-webkit-scrollbar { width: 6px; }
-        #module-container::-webkit-scrollbar-track { background: transparent; }
-        #module-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        #module-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        /* التجاوب مع الشاشات الصغيرة */
+        /* تحسين التجاوب */
         @media (max-width: 1024px) {
             :root { --sidebar-width: 80px; }
-            #sidebar-placeholder { width: var(--sidebar-width); }
+            .sidebar-text { display: none; }
         }
     </style>
 </head>
@@ -117,10 +110,8 @@
 
             <main id="module-container">
                 <div class="loading-state" id="main-loader">
-                    <div class="loader-icon">
-                        <i class="fas fa-circle-notch fa-spin fa-3x"></i>
-                    </div>
-                    <p style="margin-top: 20px; font-weight: 800; letter-spacing: 0.5px; color: #1e293b;">جاري تحضير النظام...</p>
+                    <i class="fas fa-circle-notch fa-spin fa-3x" style="color: var(--primary-blue);"></i>
+                    <p style="margin-top: 15px; font-weight: 700; color: #1e293b;">جاري تحميل نظام في خدمتك...</p>
                 </div>
             </main>
         </div>
@@ -130,48 +121,39 @@
 
     <script>
         /**
-         * دالة متطورة لتحميل المكونات مع معالجة الأخطاء
+         * دالة تحميل المكونات الثابتة (Sidebar, Header, Modals)
          */
-        async function loadComponent(id, fileName) {
+        async function loadStaticComponent(id, fileName) {
             const container = document.getElementById(id);
+            // المسار الصحيح بناءً على بنية مجلداتك admin/components/
             const path = `admin/components/${fileName}`;
             
             try {
-                const response = await fetch(`${path}?v=${new Date().getTime()}`);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const response = await fetch(`${path}?v=${Date.now()}`);
+                if (!response.ok) throw new Error(`Status: ${response.status}`);
                 const html = await response.text();
                 container.innerHTML = html;
                 return true;
             } catch (err) {
-                console.error(`❌ فشل تحميل المكون [${fileName}]:`, err);
-                container.innerHTML = `<div style="padding:20px; color:red;">خطأ في تحميل ${fileName}</div>`;
+                console.error(`❌ فشل تحميل: ${fileName}`, err);
                 return false;
             }
         }
 
-        // تشغيل التهيئة عند تحميل المستند
+        // بدء تحميل النظام
         window.addEventListener('DOMContentLoaded', async () => {
-            console.log("🚀 جاري تهيئة Tera Gateway...");
-            
-            // تحميل المكونات الأساسية الثلاثة
-            const results = await Promise.all([
-                loadComponent('sidebar-placeholder', 'sidebar.html'),
-                loadComponent('header-placeholder', 'header.html'),
-                loadComponent('modals-placeholder', 'modals.html')
+            // تحميل المكونات في وقت واحد لزيادة السرعة
+            await Promise.all([
+                loadStaticComponent('sidebar-placeholder', 'sidebar.html'),
+                loadStaticComponent('header-placeholder', 'header.html'),
+                loadStaticComponent('modals-placeholder', 'modals.html')
             ]);
 
-            // إخفاء شاشة التحميل بعد ثانية واحدة لإعطاء شعور بالسلاسة
-            setTimeout(() => {
-                const loader = document.getElementById('main-loader');
-                if (loader) {
-                    loader.style.opacity = '0';
-                    setTimeout(() => loader.remove(), 500);
-                }
-            }, 800);
-
-            // تفعيل نظام الـ Routing (الموجود في ملفات الـ JS)
-            if (window.updateActiveNav) {
-                window.updateActiveNav();
+            // إخفاء اللودر بمجرد جاهزية المكونات
+            const loader = document.getElementById('main-loader');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.remove(), 400);
             }
         });
     </script>
