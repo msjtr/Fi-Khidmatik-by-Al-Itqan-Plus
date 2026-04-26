@@ -12,7 +12,7 @@
         :root { --sidebar-width: 280px; --header-height: 70px; }
         body { margin: 0; font-family: 'Tajawal', sans-serif; background-color: #f8fafc; display: flex; height: 100vh; overflow: hidden; }
         .main-wrapper { display: flex; width: 100%; height: 100%; }
-        #sidebar-placeholder { width: var(--sidebar-width); height: 100%; background: #fff; border-left: 1px solid #e2e8f0; }
+        #sidebar-placeholder { width: var(--sidebar-width); height: 100%; background: #fff; border-left: 1px solid #e2e8f0; flex-shrink: 0; }
         .content-area { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
         #header-placeholder { height: var(--header-height); background: #fff; border-bottom: 1px solid #e2e8f0; }
         #module-container { flex-grow: 1; padding: 25px; overflow-y: auto; }
@@ -28,7 +28,7 @@
             <main id="module-container">
                 <div class="loader-box">
                     <i class="fas fa-circle-notch fa-spin fa-2x" style="color: #f97316;"></i>
-                    <p style="margin-top:15px;">جاري تشغيل Tera Gateway...</p>
+                    <p style="margin-top:15px;">جاري تحميل نظام تيرا من المسار الصحيح...</p>
                 </div>
             </main>
         </div>
@@ -37,49 +37,56 @@
     <div id="modals-placeholder"></div>
 
     <script>
-        // دالة تحميل المكونات (Sidebar, Header, Modals)
+        /**
+         * الحل الجذري: استخدام "./" قبل المسار
+         * هذا يخبر المتصفح بالبحث داخل مجلد admin الذي يوجد فيه هذا الملف حالياً
+         */
         async function loadComponent(id, fileName) {
-            const path = `components/${fileName}`; 
+            const path = `./components/${fileName}`; 
             try {
                 const response = await fetch(path);
-                if (!response.ok) throw new Error();
+                if (!response.ok) throw new Error(`Status: ${response.status}`);
                 document.getElementById(id).innerHTML = await response.text();
-                console.log(`✅ تم تحميل: ${path}`);
+                console.log(`✅ نجح تحميل: ${path}`);
             } catch (err) {
-                console.error(`❌ خطأ في مسار: ${path}`);
-                document.getElementById(id).innerHTML = `<div style="color:red; padding:10px;">خطأ في تحميل ${fileName}</div>`;
+                console.error(`❌ فشل المسار: ${path}`);
+                // محاولة أخيرة بمسار بديل بدون النقطة
+                try {
+                    const fallbackRes = await fetch(`components/${fileName}`);
+                    document.getElementById(id).innerHTML = await fallbackRes.text();
+                } catch(e) {
+                    document.getElementById(id).innerHTML = `<div style="color:red; font-size:12px;">خطأ 404 في: ${fileName}</div>`;
+                }
             }
         }
 
-        // دالة تحميل الموديول (Dashboard)
         async function loadModule(moduleName) {
             const container = document.getElementById('module-container');
-            const path = `modules/${moduleName}.html`;
+            const path = `./modules/${moduleName}.html`;
             try {
                 const response = await fetch(path);
                 if (!response.ok) throw new Error();
                 container.innerHTML = await response.text();
             } catch (err) {
                 container.innerHTML = `<div style="text-align:center; padding:50px;">
-                    <i class="fas fa-exclamation-circle fa-3x" style="color:#cbd5e1;"></i>
-                    <p>يرجى التأكد من إنشاء ملف ${moduleName}.html داخل مجلد modules</p>
+                    <i class="fas fa-exclamation-triangle fa-2x" style="color:#cbd5e1;"></i>
+                    <p>الملف ${moduleName}.html غير موجود في مجلد modules</p>
                 </div>`;
             }
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
-            // تحميل المكونات الثلاثة بالتوازي
+            // تحميل المكونات من المجلد المجاور للملف
             await Promise.all([
                 loadComponent('sidebar-placeholder', 'sidebar.html'),
                 loadComponent('header-placeholder', 'header.html'),
                 loadComponent('modals-placeholder', 'modals.html')
             ]);
 
-            // تحميل الصفحة الرئيسية
             loadModule('dashboard');
         });
 
-        // دوال المودال العالمية
+        // دوال عالمية
         window.openCustomerModal = (t) => {
             const m = document.getElementById('customer-modal');
             if(m) { m.style.display='flex'; document.getElementById('modal-title').innerText=t; }
