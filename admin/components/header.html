@@ -5,11 +5,11 @@
         </button>
         
         <div class="app-brand">
-            <img src="/fi-khidmatik/images/logo.svg" 
+            <img src="./images/logo.svg" 
                  alt="Tera Gateway" 
                  onerror="this.src='https://cdn-icons-png.flaticon.com/512/5968/5968322.png'"
-                 style="width: 42px; height: 42px; object-fit: contain;">
-            <span style="letter-spacing: -0.5px;">Tera Gateway</span>
+                 class="header-logo">
+            <span class="brand-text">Tera <b class="highlight">Gateway</b></span>
         </div>
     </div>
 
@@ -17,55 +17,129 @@
 </header>
 
 <style>
-    /* تحسينات إضافية للهيدر لضمان المظهر العصري */
+    /* تنسيقات الهيدر المرتبطة بملف admin.css */
     .app-header {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border-color);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0 20px;
+        padding: 0 25px;
         height: 70px;
         position: sticky;
         top: 0;
         z-index: 1010;
+        width: 100%;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .sidebar-trigger {
+        background: var(--primary-light);
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        color: var(--primary);
+        font-size: 1.1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition);
+    }
+
+    .sidebar-trigger:hover {
+        background: var(--primary);
+        color: white;
+        transform: scale(1.05);
+    }
+
+    .header-logo {
+        width: 38px;
+        height: 38px;
+        object-fit: contain;
+    }
+
+    .brand-text {
+        font-weight: 800;
+        font-size: 1.25rem;
+        color: var(--dark);
+        letter-spacing: -0.5px;
+    }
+
+    .brand-text .highlight {
+        color: var(--primary);
     }
 
     .header-clock {
         font-family: 'Tajawal', sans-serif;
         font-size: 0.85rem;
-        color: #64748b;
-        font-weight: 600;
-        background: #f8fafc;
-        padding: 8px 15px;
+        color: var(--text-muted);
+        font-weight: 700;
+        background: var(--bg-body);
+        padding: 8px 18px;
         border-radius: 50px;
-        border: 1px solid #edf2f7;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-inner);
+        min-width: 200px;
+        text-align: center;
+    }
+
+    /* تحسين المظهر على الجوال */
+    @media (max-width: 768px) {
+        .brand-text { display: none; }
+        .header-clock { font-size: 0.75rem; padding: 6px 12px; min-width: auto; }
     }
 </style>
 
 <script>
     /**
-     * تحديث وقت الهيدر بتنسيق بريطاني أنيق (en-GB)
-     * التنسيق: Saturday, 25 April 2026, 02:41 am
+     * تحديث وقت الهيدر بتنسيق أنيق
      */
     function updateHeaderTime() {
         const el = document.getElementById('header-datetime');
         if (el) {
             const now = new Date();
-            el.innerText = now.toLocaleDateString('en-GB', {
-                weekday: 'long',
+            // تنسيق: Sat, 26 Apr 2026 | 01:03 PM
+            const formatted = now.toLocaleDateString('en-GB', {
+                weekday: 'short',
                 day: 'numeric',
-                month: 'long',
+                month: 'short',
                 year: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: true
-            }).replace('at', '|'); // لمسة جمالية لفصل الوقت عن التاريخ
+            });
+            el.innerText = formatted.replace(',', ' |'); 
         }
     }
 
-    // التنفيذ الفوري ثم التكرار كل دقيقة (للحفاظ على موارد المتصفح)
+    // التنفيذ الفوري
     updateHeaderTime();
-    setInterval(updateHeaderTime, 60000); 
+
+    // منع تكرار الـ Interval عند إعادة تحميل المكون برمجياً
+    if (window.teraHeaderInterval) clearInterval(window.teraHeaderInterval);
+    window.teraHeaderInterval = setInterval(updateHeaderTime, 60000);
+
+    // تفعيل زر القائمة الجانبية
+    const toggleBtn = document.getElementById('sidebar-toggle');
+    if (toggleBtn) {
+        toggleBtn.onclick = function() {
+            // نبحث عن الحاوية الرئيسية للقائمة الجانبية
+            const sidebar = document.getElementById('sidebar-placeholder') || document.querySelector('.app-sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('collapsed');
+                // حفظ الحالة في المتصفح لتبقى ثابتة عند التنقل
+                const isCollapsed = sidebar.classList.contains('collapsed');
+                localStorage.setItem('sidebar-collapsed', isCollapsed);
+            }
+        };
+    }
 </script>
