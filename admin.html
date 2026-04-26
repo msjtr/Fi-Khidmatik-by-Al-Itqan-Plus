@@ -17,15 +17,20 @@
             --sidebar-width: 280px;
             --header-height: 70px;
             --primary-blue: #2563eb;
+            --bg-body: #f8fafc;
+            --border-color: #e2e8f0;
         }
+
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
             font-family: 'Tajawal', sans-serif;
-            background-color: #f8fafc;
+            background-color: var(--bg-body);
             display: flex;
             height: 100vh;
-            overflow: hidden;
+            width: 100vw;
+            overflow: hidden; /* ضروري لمنع التمرير المزدوج */
         }
 
         .main-wrapper {
@@ -34,47 +39,71 @@
             height: 100%;
         }
 
-        /* حاوية القائمة الجانبية */
+        /* منطقة القائمة الجانبية */
         #sidebar-placeholder {
             width: var(--sidebar-width);
             height: 100%;
             background: #fff;
             flex-shrink: 0;
-            border-left: 1px solid #e2e8f0;
-            z-index: 100;
+            border-left: 1px solid var(--border-color);
+            z-index: 1000;
+            transition: width 0.3s ease;
         }
 
+        /* منطقة المحتوى اليمينية */
         .content-area {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* لمنع تداخل المحتوى مع الهيدر */
-        }
-
-        /* حاوية الهيدر */
-        #header-placeholder {
-            height: var(--header-height);
-            background: #fff;
-            border-bottom: 1px solid #e2e8f0;
-            flex-shrink: 0;
-        }
-
-        /* الحاوية الرئيسية للموديولات (التي يتم التبديل داخلها) */
-        #module-container {
-            flex-grow: 1;
-            padding: 0; /* التنسيق يتم داخل الموديولات نفسها */
-            overflow-y: auto;
+            overflow: hidden;
+            background-color: var(--bg-body);
             position: relative;
         }
 
+        /* الهيدر الثابت */
+        #header-placeholder {
+            height: var(--header-height);
+            background: #fff;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+            z-index: 999;
+        }
+
+        /* الحاوية الديناميكية للموديولات */
+        #module-container {
+            flex-grow: 1;
+            padding: 30px; /* مسافة داخلية مريحة للمحتوى */
+            overflow-y: auto; /* التمرير يكون داخل هذه الحاوية فقط */
+            position: relative;
+            scroll-behavior: smooth;
+        }
+
+        /* حالة التحميل */
         .loading-state {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100%;
+            width: 100%;
             color: var(--primary-blue);
-            background: rgba(255, 255, 255, 0.8);
+            background: #fff;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 50;
+        }
+
+        /* شريط التمرير الأنيق */
+        #module-container::-webkit-scrollbar { width: 6px; }
+        #module-container::-webkit-scrollbar-track { background: transparent; }
+        #module-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        #module-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* التجاوب مع الشاشات الصغيرة */
+        @media (max-width: 1024px) {
+            :root { --sidebar-width: 80px; }
+            #sidebar-placeholder { width: var(--sidebar-width); }
         }
     </style>
 </head>
@@ -87,9 +116,11 @@
             <header id="header-placeholder"></header>
 
             <main id="module-container">
-                <div class="loading-state">
-                    <i class="fas fa-spinner fa-spin fa-2x"></i>
-                    <p style="margin-top: 15px; font-weight: bold;">جاري تهيئة النظام...</p>
+                <div class="loading-state" id="main-loader">
+                    <div class="loader-icon">
+                        <i class="fas fa-circle-notch fa-spin fa-3x"></i>
+                    </div>
+                    <p style="margin-top: 20px; font-weight: 800; letter-spacing: 0.5px; color: #1e293b;">جاري تحضير النظام...</p>
                 </div>
             </main>
         </div>
@@ -99,37 +130,53 @@
 
     <script>
         /**
-         * دالة تحميل المكونات الثابتة
+         * دالة متطورة لتحميل المكونات مع معالجة الأخطاء
          */
-        async function loadStaticComponent(id, fileName) {
+        async function loadComponent(id, fileName) {
+            const container = document.getElementById(id);
             const path = `admin/components/${fileName}`;
+            
             try {
-                const response = await fetch(`${path}?v=${Date.now()}`);
-                if (!response.ok) throw new Error('File not found');
+                const response = await fetch(`${path}?v=${new Date().getTime()}`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const html = await response.text();
-                document.getElementById(id).innerHTML = html;
-                console.log(`✅ تم تحميل: ${fileName}`);
+                container.innerHTML = html;
+                return true;
             } catch (err) {
-                console.error(`❌ فشل تحميل ${fileName}:`, err);
+                console.error(`❌ فشل تحميل المكون [${fileName}]:`, err);
+                container.innerHTML = `<div style="padding:20px; color:red;">خطأ في تحميل ${fileName}</div>`;
+                return false;
             }
         }
 
-        // تشغيل التحميل عند فتح الصفحة
+        // تشغيل التهيئة عند تحميل المستند
         window.addEventListener('DOMContentLoaded', async () => {
-            // تحميل المكونات الأساسية بالتوازي
-            await Promise.all([
-                loadStaticComponent('sidebar-placeholder', 'sidebar.html'),
-                loadStaticComponent('header-placeholder', 'header.html'),
-                loadStaticComponent('modals-placeholder', 'modals.html')
-            ]);
+            console.log("🚀 جاري تهيئة Tera Gateway...");
             
-            // بعد تحميل السايدبار، نتأكد من تفعيل نظام التوجيه
-            if (window.handleRoute) {
-                window.handleRoute(); 
+            // تحميل المكونات الأساسية الثلاثة
+            const results = await Promise.all([
+                loadComponent('sidebar-placeholder', 'sidebar.html'),
+                loadComponent('header-placeholder', 'header.html'),
+                loadComponent('modals-placeholder', 'modals.html')
+            ]);
+
+            // إخفاء شاشة التحميل بعد ثانية واحدة لإعطاء شعور بالسلاسة
+            setTimeout(() => {
+                const loader = document.getElementById('main-loader');
+                if (loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.remove(), 500);
+                }
+            }, 800);
+
+            // تفعيل نظام الـ Routing (الموجود في ملفات الـ JS)
+            if (window.updateActiveNav) {
+                window.updateActiveNav();
             }
         });
     </script>
 
+    <script src="js/admin.js"></script>
     <script type="module" src="js/main.js"></script>
 
 </body>
