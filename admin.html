@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     
-    <link rel="stylesheet" href="admin/css/admin.css">
+    <link rel="stylesheet" href="css/admin.css">
 
     <style>
         :root {
@@ -54,7 +54,7 @@
             border-bottom: 1px solid #e2e8f0;
         }
 
-        /* الحاوي الذي يحتاجه main.js */
+        /* الحاوي الرئيسي للموديولات */
         #module-container {
             flex-grow: 1;
             padding: 25px;
@@ -82,7 +82,7 @@
             <main id="module-container">
                 <div class="loading-state">
                     <i class="fas fa-spinner fa-spin fa-2x"></i>
-                    <p style="margin-top: 15px; font-weight: bold;">جاري تشغيل النظام...</p>
+                    <p style="margin-top: 15px; font-weight: bold;">جاري تحميل النظام والبيانات...</p>
                 </div>
             </main>
         </div>
@@ -92,7 +92,7 @@
 
     <script>
         /**
-         * دالة تحميل المكونات الثابتة
+         * تحميل المكونات الثابتة من مجلد admin/components
          */
         async function loadStatic(id, fileName) {
             const path = `admin/components/${fileName}`;
@@ -102,11 +102,10 @@
                 const html = await response.text();
                 document.getElementById(id).innerHTML = html;
             } catch (err) {
-                console.error(`❌ فشل تحميل المكون: ${path}`);
+                console.error(`❌ فشل تحميل: ${path}`);
             }
         }
 
-        // تحميل الهيكل الأساسي قبل تشغيل الـ JS الرئيسي
         window.addEventListener('DOMContentLoaded', async () => {
             await Promise.all([
                 loadStatic('sidebar-placeholder', 'sidebar.html'),
