@@ -1,6 +1,6 @@
 /**
  * main.js - Tera Gateway 
- * تم تصحيح مسارات CSS لتعمل على GitHub Pages
+ * تم تنظيف المسارات تماماً لتعمل على GitHub Pages
  */
 
 import { APP_CONFIG } from './core/firebase.js';
@@ -30,24 +30,25 @@ async function switchModule(moduleName) {
         const html = await response.text();
         container.innerHTML = html;
 
-        // --- السطر 51: معالجة التنسيق بالمسار الصحيح الذي حددته ---
         if (moduleName === 'customers') {
-            const stylePath = 'css/customers.css'; // تم التغيير من js/modules إلى css/
-            
-            // التأكد من عدم تكرار الربط
-            if (!document.querySelector(`link[href="${stylePath}"]`)) {
+            // السطر 31: الربط المباشر والآمن بملف الـ CSS في المجلد الصحيح
+            const styleId = 'module-customers-style';
+            if (!document.getElementById(styleId)) {
                 const link = document.createElement('link');
+                link.id = styleId;
                 link.rel = 'stylesheet';
-                link.href = stylePath; 
+                link.href = 'css/customers.css'; // تم التأكيد على المسار الصحيح هنا
                 document.head.appendChild(link);
             }
 
-            // تحميل كود الجافا سكريبت للموديول
-            const { initCustomersUI } = await import('./modules/customers-ui.js');
-            setTimeout(() => {
-                const contentDiv = document.getElementById('customers-module-content') || container;
-                initCustomersUI(contentDiv);
-            }, 50);
+            // تحميل كود التشغيل فقط
+            const module = await import('./modules/customers-ui.js');
+            if (module && module.initCustomersUI) {
+                setTimeout(() => {
+                    const contentDiv = document.getElementById('customers-module-content') || container;
+                    module.initCustomersUI(contentDiv);
+                }, 50);
+            }
         }
 
     } catch (error) {
@@ -58,15 +59,6 @@ async function switchModule(moduleName) {
 function handleRoute() {
     const hash = window.location.hash.replace('#', '') || 'dashboard';
     switchModule(hash);
-    updateActiveSidebarItem(hash);
-}
-
-function updateActiveSidebarItem(activeHash) {
-    document.querySelectorAll('.nav-link, .nav-item').forEach(item => {
-        const module = item.getAttribute('data-module') || (item.getAttribute('href') && item.getAttribute('href').replace('#', ''));
-        if (module === activeHash) item.classList.add('active');
-        else item.classList.remove('active');
-    });
 }
 
 window.addEventListener('load', handleRoute);
