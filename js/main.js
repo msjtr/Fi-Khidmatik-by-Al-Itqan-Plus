@@ -1,6 +1,6 @@
 /**
  * main.js - Fi-Khidmatik Core
- * تم تحديث المسار الصحيح للتنسيقات: css/customers.css
+ * تم اعتماد المسار: css/customers.css
  */
 
 const routes = {
@@ -11,9 +11,7 @@ const routes = {
     'inventory': 'admin/modules/inventory.html',
     'payments':  'admin/modules/payments.html',
     'invoice':   'admin/modules/invoice.html',
-    'settings':  'admin/modules/settings.html',
-    'backup':    'admin/modules/backup.html',
-    'general':   'admin/modules/general.html'
+    'settings':  'admin/modules/settings.html'
 };
 
 async function switchModule(moduleName) {
@@ -24,24 +22,18 @@ async function switchModule(moduleName) {
     if (!path) return;
 
     try {
-        // 1. تنظيف الحاوية تماماً لمنع تداخل الصفحات (حل مشكلة ظهور العملاء في الرئيسية)
+        // تنظيف الحاوية لمنع تداخل الصفحات
         container.innerHTML = `<div style="text-align:center; padding:100px;"><i class="fas fa-spinner fa-spin fa-2x" style="color:#2563eb;"></i></div>`;
 
-        // 2. تحديث روابط القائمة الجانبية
-        document.querySelectorAll('.sidebar-nav a').forEach(link => {
-            link.classList.toggle('active', link.getAttribute('href') === `#${moduleName}`);
-        });
-
-        // 3. تحميل محتوى الـ HTML
         const response = await fetch(`${path}?v=${Date.now()}`);
         if (!response.ok) throw new Error(`404: ${path}`);
         
         const html = await response.text();
         container.innerHTML = html;
 
-        // 4. معالجة موديول العملاء لضمان ظهور كافة العناصر
+        // التحقق من موديول العملاء
         if (moduleName === 'customers') {
-            await initializeCustomers(container);
+            await loadCustomersStyleAndScript(container);
         }
 
     } catch (error) {
@@ -49,35 +41,32 @@ async function switchModule(moduleName) {
     }
 }
 
-async function initializeCustomers(container) {
-    // المسار المؤكد: css/customers.css
+async function loadCustomersStyleAndScript(container) {
+    // 1. التأكد من مسار CSS الصحيح (fi-khidmatik/css/customers.css)
     const styleId = 'module-customers-style';
     if (!document.getElementById(styleId)) {
         const link = document.createElement('link');
         link.id = styleId;
         link.rel = 'stylesheet';
-        link.href = `css/customers.css?v=${Date.now()}`;
+        link.href = `css/customers.css?v=${Date.now()}`; // السطر الأهم للتصحيح
         document.head.appendChild(link);
     }
 
+    // 2. تحميل سكربت الواجهة الخاص بالعملاء
     try {
-        // تحميل السكربت المسؤول عن البيانات من مجلد modules
-        const modulePath = `./modules/customers-ui.js?v=${Date.now()}`;
-        const module = await import(modulePath);
-        
+        const module = await import(`./modules/customers-ui.js?v=${Date.now()}`);
         if (module && module.initCustomersUI) {
-            // ننتظر لحظة لضمان استقرار العناصر في الصفحة
             setTimeout(() => {
-                const target = document.getElementById('customers-module-container') || container;
+                const target = document.getElementById('customers-ui-root') || container;
                 module.initCustomersUI(target);
             }, 100);
         }
     } catch (err) {
-        console.warn("تعذر تحميل موديول البيانات الخاص بالعملاء.");
+        console.warn("Customer UI Script error:", err);
     }
 }
 
-// تشغيل النظام ومراقبة الروابط
+// مراقبة الروابط
 function handleRoute() {
     const hash = window.location.hash.replace('#', '') || 'dashboard';
     switchModule(hash);
