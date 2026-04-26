@@ -12,110 +12,149 @@
         </div>
     </div>
 
-    <div id="customers-toolbar-area"></div>
+    <div id="customers-toolbar-area" class="toolbar-card">
+        <div class="search-wrapper">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="customerSearchInput" placeholder="بحث برقم الجوال، الاسم، أو المدينة...">
+        </div>
+        <button class="btn-add-new" onclick="window.openCustomerModal('إضافة عميل جديد')">
+            <i class="fas fa-plus"></i> إضافة عميل
+        </button>
+    </div>
 
     <div id="customers-ui-root">
         <div class="loading-placeholder">
             <i class="fas fa-spinner fa-spin"></i>
-            <p>جاري استدعاء كافة عناصر المجموعة...</p>
+            <p>جاري استدعاء كافة عناصر المجموعة (رقم المبنى، الرمز البريدي، الرقم الإضافي)...</p>
         </div>
     </div>
 </div>
 
 <style>
-    /* تحسينات بصرية خاصة بواجهة العملاء */
+    /* المتغيرات والتحسينات المتوافقة مع Glassmorphism */
     :root {
         --tera-blue: #2563eb;
         --soft-gray: #f8fafc;
+        --glass-bg: rgba(255, 255, 255, 0.85);
+        --glass-border: rgba(226, 232, 240, 0.6);
     }
 
     .module-fade-in {
         animation: fadeIn 0.5s ease-in-out;
-        padding: 25px;
-        max-width: 1400px;
-        margin: 0 auto;
+        padding: 20px;
+        max-width: 100%; /* تمدد كامل ليتناسب مع 17 حقل */
     }
 
     .module-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 30px;
-        background: white;
-        padding: 25px;
+        margin-bottom: 20px;
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        padding: 20px;
         border-radius: 16px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--glass-border);
     }
 
     .header-title h2 {
         margin: 0;
-        color: #0f172a;
-        font-size: 1.6rem;
+        color: #1e293b;
+        font-size: 1.4rem;
         font-weight: 800;
         display: flex;
         align-items: center;
         gap: 12px;
     }
 
-    .header-title p {
-        margin: 8px 0 0;
-        color: #64748b;
-        font-size: 0.95rem;
+    /* منطقة الأدوات (Toolbar) */
+    .toolbar-card {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .search-wrapper {
+        position: relative;
+        flex-grow: 1;
+        max-width: 500px;
+    }
+
+    .search-icon {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+    }
+
+    #customerSearchInput {
+        width: 100%;
+        padding: 12px 45px 12px 15px;
+        border-radius: 12px;
+        border: 1px solid var(--glass-border);
+        background: white;
+        outline: none;
+        transition: 0.3s;
+    }
+
+    #customerSearchInput:focus {
+        border-color: var(--tera-blue);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+
+    .btn-add-new {
+        background: var(--tera-blue);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: 0.3s;
+    }
+
+    .btn-add-new:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px rgba(37, 99, 235, 0.2);
     }
 
     .stat-item {
-        min-width: 120px;
         background: linear-gradient(135deg, var(--tera-blue), #1d4ed8);
         color: white;
-        padding: 12px 24px;
+        padding: 10px 20px;
         border-radius: 12px;
         text-align: center;
-        box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2);
     }
 
-    .stat-label {
-        font-size: 0.7rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        display: block;
-        margin-bottom: 4px;
-        opacity: 0.85;
-    }
-
-    .stat-value {
-        font-size: 1.4rem;
-        font-weight: 700;
-    }
+    .stat-label { font-size: 0.75rem; opacity: 0.9; display: block; }
+    .stat-value { font-size: 1.2rem; font-weight: 700; }
 
     .loading-placeholder {
         background: white;
         border-radius: 16px;
-        padding: 80px;
+        padding: 60px;
         text-align: center;
         color: var(--tera-blue);
-        border: 2px dashed #e2e8f0;
-    }
-
-    .loading-placeholder i {
-        font-size: 2.5rem;
-        margin-bottom: 20px;
-    }
-
-    /* استجابة الشاشات الصغيرة */
-    @media (max-width: 768px) {
-        .module-header {
-            flex-direction: column;
-            gap: 20px;
-            text-align: center;
-        }
-        
-        .header-title h2 {
-            justify-content: center;
-        }
+        border: 2px dashed #cbd5e1;
     }
 
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(15px); }
+        from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+        .module-header, .toolbar-card {
+            flex-direction: column;
+            text-align: center;
+        }
+        .search-wrapper { max-width: 100%; width: 100%; }
+        .btn-add-new { width: 100%; justify-content: center; }
     }
 </style>
