@@ -1,160 +1,81 @@
-<div id="customers-module-container" class="module-fade-in">
-    <div class="module-header shadow-sm">
-        <div class="header-title">
-            <h2><i class="fas fa-address-card"></i> مجموعة العملاء (Customers)</h2>
-            <p>السجل الشامل للبيانات الشخصية والعناوين الوطنية</p>
+<div class="customers-dashboard">
+    
+    <div class="toolbar-card">
+        <div class="header-info">
+            <h1 class="page-title">قاعدة البيانات: <span id="current-group">customers</span></h1>
+            <p class="page-subtitle">إدارة سجلات العملاء والبيانات الجغرافية والاتصال</p>
         </div>
-        <div class="header-stats">
-            <div class="stat-item">
-                <span class="stat-label">إجمالي المسجلين</span>
-                <span id="total-customers-count" class="stat-value">0</span>
-            </div>
+        <div class="header-actions">
+            <button class="btn-primary" onclick="openAddCustomerModal()">
+                <i class="fas fa-user-plus"></i> إضافة عميل جديد
+            </button>
+            <button class="btn-secondary" onclick="exportToExcel()">
+                <i class="fas fa-file-export"></i> تصدير البيانات
+            </button>
         </div>
     </div>
 
-    <div id="customers-toolbar-area" class="toolbar-card">
-        <div class="search-wrapper">
-            <i class="fas fa-search search-icon"></i>
-            <input type="text" id="customerSearchInput" placeholder="بحث برقم الجوال، الاسم، أو المدينة...">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span>إجمالي العملاء</span>
+            <strong id="total-customers-count">0</strong>
         </div>
-        <button class="btn-add-new" onclick="window.openCustomerModal('إضافة عميل جديد')">
-            <i class="fas fa-plus"></i> إضافة عميل
-        </button>
+        <div class="stat-card">
+            <span>العملاء النشطين</span>
+            <strong id="active-customers-count" style="color: #16a34a;">0</strong>
+        </div>
     </div>
 
-    <div id="customers-ui-root">
-        <div class="loading-placeholder">
-            <i class="fas fa-spinner fa-spin"></i>
-            <p>جاري استدعاء كافة عناصر المجموعة (رقم المبنى، الرمز البريدي، الرقم الإضافي)...</p>
-        </div>
+    <div class="table-container">
+        <table id="main-customers-table">
+            <thead>
+                <tr>
+                    <th>#</th> <th>اسم العميل</th> <th>رقم الجوال</th> <th>مفتاح الدولة</th> <th>البريد الإلكتروني</th> <th>اسم الدولة</th> <th>المدينة</th> <th>الحي</th> <th>الشارع</th> <th>رقم المبنى</th> <th>الرقم الإضافي</th> <th>الرمز البريدي</th> <th>صندوق البريد</th> <th>تاريخ الإضافة</th> <th>حالة العميل</th> <th>تصنيف العميل</th> <th class="sticky-actions">الإجراءات</th> </tr>
+            </thead>
+            <tbody id="customers-data-rows">
+                <tr>
+                    <td colspan="17" class="loading-state">
+                        <div class="loader-content">
+                            <i class="fas fa-spinner fa-spin"></i> جاري مزامنة البيانات من المجموعة...
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
+
 </div>
 
 <style>
-    /* المتغيرات والتحسينات المتوافقة مع Glassmorphism */
-    :root {
-        --tera-blue: #2563eb;
-        --soft-gray: #f8fafc;
-        --glass-bg: rgba(255, 255, 255, 0.85);
-        --glass-border: rgba(226, 232, 240, 0.6);
+    .loading-state {
+        text-align: center;
+        padding: 50px !important;
+        color: #64748b;
+    }
+    .loader-content i {
+        margin-left: 10px;
+        color: #2563eb;
+    }
+    
+    /* منع التفاف النص في العناوين لضمان ظهور الأعمدة الـ 17 بشكل مرتب */
+    #main-customers-table th {
+        white-space: nowrap;
+        background: rgba(248, 250, 252, 0.8);
     }
 
-    .module-fade-in {
-        animation: fadeIn 0.5s ease-in-out;
-        padding: 20px;
-        max-width: 100%; /* تمدد كامل ليتناسب مع 17 حقل */
-    }
-
-    .module-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        background: var(--glass-bg);
-        backdrop-filter: blur(10px);
-        padding: 20px;
-        border-radius: 16px;
-        border: 1px solid var(--glass-border);
-    }
-
-    .header-title h2 {
-        margin: 0;
-        color: #1e293b;
-        font-size: 1.4rem;
-        font-weight: 800;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    /* منطقة الأدوات (Toolbar) */
-    .toolbar-card {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 20px;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .search-wrapper {
-        position: relative;
-        flex-grow: 1;
-        max-width: 500px;
-    }
-
-    .search-icon {
-        position: absolute;
-        right: 15px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #94a3b8;
-    }
-
-    #customerSearchInput {
-        width: 100%;
-        padding: 12px 45px 12px 15px;
-        border-radius: 12px;
-        border: 1px solid var(--glass-border);
-        background: white;
-        outline: none;
-        transition: 0.3s;
-    }
-
-    #customerSearchInput:focus {
-        border-color: var(--tera-blue);
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
-    }
-
-    .btn-add-new {
-        background: var(--tera-blue);
-        color: white;
-        border: none;
-        padding: 12px 25px;
-        border-radius: 12px;
-        font-weight: 600;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        transition: 0.3s;
-    }
-
-    .btn-add-new:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px rgba(37, 99, 235, 0.2);
-    }
-
-    .stat-item {
-        background: linear-gradient(135deg, var(--tera-blue), #1d4ed8);
-        color: white;
-        padding: 10px 20px;
-        border-radius: 12px;
+    /* تحسين شكل عمود الإجراءات الثابت */
+    .sticky-actions {
+        position: sticky;
+        left: 0;
+        background: #fff;
+        z-index: 5;
+        box-shadow: -2px 0 5px rgba(0,0,0,0.05);
         text-align: center;
     }
-
-    .stat-label { font-size: 0.75rem; opacity: 0.9; display: block; }
-    .stat-value { font-size: 1.2rem; font-weight: 700; }
-
-    .loading-placeholder {
+    
+    .table-container {
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         background: white;
-        border-radius: 16px;
-        padding: 60px;
-        text-align: center;
-        color: var(--tera-blue);
-        border: 2px dashed #cbd5e1;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    @media (max-width: 768px) {
-        .module-header, .toolbar-card {
-            flex-direction: column;
-            text-align: center;
-        }
-        .search-wrapper { max-width: 100%; width: 100%; }
-        .btn-add-new { width: 100%; justify-content: center; }
     }
 </style>
