@@ -1,7 +1,7 @@
 /**
- * customers-core.js - Tera Gateway
- * المحرك الرئيسي لإدارة مجموعة 'customers'
- * تم التحديث لدعم كافة الحقول ونظام السجلات (Logs)
+ * customers-core.js - Fi-Khidmatik Engine
+ * المحرك الرئيسي لإدارة مجموعة 'customers' ونظام الاستيراد والسجلات
+ * تم ضبط الحقول لتطابق معايير 'Tera Gateway'
  */
 
 import { db } from '../core/firebase.js'; 
@@ -15,29 +15,29 @@ import {
     getDoc, 
     query, 
     orderBy, 
-    serverTimestamp 
+    serverTimestamp,
+    writeBatch
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// المراجع الرئيسية
+// المراجع الرئيسية لقاعدة البيانات
 const customersRef = collection(db, "customers");
 const logsRef = collection(db, "system_logs");
 
 /**
- * جلب جميع العملاء
- * ملاحظة: تم استخدام catch للتعامل مع مشكلة الـ Index في Firestore
+ * جلب جميع العملاء مرتبين حسب الأحدث
  */
 export async function fetchAllCustomers() {
     try {
         const q = query(customersRef, orderBy("createdAt", "desc"));
         return await getDocs(q);
     } catch (error) {
-        console.warn("⚠️ جاري الجلب بدون ترتيب (يُرجى إنشاء فهرس في Firestore):", error.message);
+        console.warn("⚠️ جاري الجلب بدون ترتيب (يُرجى تفعيل Index في Firestore):", error.message);
         return await getDocs(customersRef);
     }
 }
 
 /**
- * جلب بيانات عميل واحد
+ * جلب بيانات عميل واحد بالكامل للتعديل
  */
 export async function fetchCustomerById(id) {
     if (!id) return null;
@@ -45,45 +45,45 @@ export async function fetchCustomerById(id) {
         const docSnap = await getDoc(doc(db, "customers", id));
         return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
     } catch (error) {
-        console.error("❌ خطأ fetchCustomerById:", error);
+        console.error("❌ فشل fetchCustomerById:", error);
         return null;
     }
 }
 
 /**
- * إضافة عميل جديد (17 حقلاً)
+ * إضافة عميل جديد مع الحقول الـ 16 كاملة
  */
 export async function addCustomer(customerData) {
     try {
         const payload = {
             ...customerData,
-            createdAt: new Date().toISOString(), // تنسيق نصي للفرز السهل
-            serverTime: serverTimestamp(),       // وقت الخادم للدقة
+            createdAt: serverTimestamp(), // التوقيت الرسمي للخادم
+            updatedAt: serverTimestamp(),
             system_origin: "Tera Gateway",
-            lastAction: "إنشاء ملف"
+            status: customerData.status || "نشط"
         };
         
         const docRef = await addDoc(customersRef, payload);
-        await logActivity(`إضافة عميل: ${customerData.name}`);
+        await logActivity(`إضافة عميل جديد: ${customerData.name}`, "نجاح");
         return docRef;
     } catch (error) {
         console.error("❌ فشل addCustomer:", error);
+        await logActivity(`فشل إضافة عميل: ${customerData.name}`, "فشل", error.message);
         throw error;
     }
 }
 
 /**
- * تحديث بيانات عميل
+ * تحديث بيانات العميل (تعديل كامل الحقول)
  */
 export async function updateCustomer(id, updatedData) {
     try {
         const docRef = doc(db, "customers", id);
         await updateDoc(docRef, {
             ...updatedData,
-            updatedAt: serverTimestamp(),
-            lastAction: "تحديث بيانات"
+            updatedAt: serverTimestamp() // تحديث تلقائي لتاريخ التعديل
         });
-        await logActivity(`تحديث بيانات العميل: ${updatedData.name || id}`);
+        await logActivity(`تعديل بيانات العميل: ${updatedData.name || id}`, "نجاح");
         return true;
     } catch (error) {
         console.error("❌ فشل updateCustomer:", error);
@@ -92,14 +92,13 @@ export async function updateCustomer(id, updatedData) {
 }
 
 /**
- * حذف عميل
- * ملاحظة: تم تغيير الاسم من removeCustomer إلى deleteCustomer ليتوافق مع الـ UI
+ * حذف العميل نهائياً من مجموعة customers
  */
 export async function deleteCustomer(id) {
     try {
         const docRef = doc(db, "customers", id);
         await deleteDoc(docRef);
-        await logActivity(`حذف نهائي للعميل ID: ${id}`);
+        await logActivity(`حذف العميل ID: ${id}`, "نجاح");
         return true;
     } catch (error) {
         console.error("❌ فشل deleteCustomer:", error);
@@ -108,18 +107,51 @@ export async function deleteCustomer(id) {
 }
 
 /**
- * نظام السجلات (Activity Logs)
- * متوافق مع طلبات الـ UI
+ * نظام استيراد العملاء الجماعي (Batch Import)
+ * مخصص لمعالجة ملفات Excel
  */
-export async function logActivity(message) {
+export async function importCustomersBatch(customersArray) {
+    const batch = writeBatch(db);
+    let count = 0;
+
+    customersArray.forEach((customer) => {
+        const newDocRef = doc(customersRef);
+        batch.set(newDocRef, {
+            ...customer,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            system_origin: "Excel Import"
+        });
+        count++;
+    });
+
+    try {
+        await batch.commit();
+        await logActivity(`استيراد جماعي: ${count} عميل`, "نجاح");
+        return { success: true, count };
+    } catch (error) {
+        console.error("❌ فشل الاستيراد الجماعي:", error);
+        await logActivity(`فشل الاستيراد الجماعي`, "فشل", error.message);
+        throw error;
+    }
+}
+
+/**
+ * سجل العمليات (Activity & System Logs)
+ * يوثق اسم المستخدم، التاريخ، الوقت، وحالة العملية
+ */
+export async function logActivity(action, status = "نجاح", errorDetail = "") {
     try {
         await addDoc(logsRef, {
-            action: message,
+            admin: "Mohammad Al-Shammari",
+            action: action,
+            status: status,
+            error: errorDetail,
             timestamp: serverTimestamp(),
-            admin: "Mohammad Al-Shammari", // توثيق المطور
-            region: "Hail"
+            region: "Hail",
+            client_platform: "Fi-Khidmatik Desktop"
         });
     } catch (e) {
-        console.error("⚠️ فشل التسجيل:", e);
+        console.warn("⚠️ تعذر تسجيل العملية في سجلات النظام:", e.message);
     }
 }
