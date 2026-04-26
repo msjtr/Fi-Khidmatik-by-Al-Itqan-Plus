@@ -1,88 +1,121 @@
 /**
- * main.js - Tera Gateway 
- * إصلاح تداخل الصفحات وتعطل الروابط
+ * main.js - Fi-Khidmatik Core
+ * نظام التوجيه الموحد لجميع الأقسام
  */
 
+// 1. تعريف جميع المسارات بناءً على بنية المجلدات لديك
 const routes = {
     'dashboard': 'admin/modules/orders-dashboard.html',
     'customers': 'admin/modules/customers.html',
     'orders':    'admin/modules/order-form.html',
     'products':  'admin/modules/products.html',
+    'inventory': 'admin/modules/inventory.html',
+    'payments':  'admin/modules/payments.html',
+    'invoice':   'admin/modules/invoice.html',
     'settings':  'admin/modules/settings.html',
-    'reports':   'admin/modules/reports.html'
+    'backup':    'admin/modules/backup.html',
+    'general':   'admin/modules/general.html'
 };
 
 async function switchModule(moduleName) {
     const container = document.getElementById('module-container');
-    if (!container) return;
+    if (!container) {
+        console.error("خطأ: لم يتم العثور على حاوية 'module-container' في صفحة admin.html");
+        return;
+    }
 
     const path = routes[moduleName];
-    if (!path) return;
+    if (!path) {
+        console.warn(`المسار ${moduleName} غير معرف في النظام.`);
+        return;
+    }
 
     try {
-        // 1. إفراغ الحاوية تماماً قبل تحميل أي محتوى جديد لمنع التداخل
-        container.innerHTML = `<div style="text-align:center; padding:100px; color:#2563eb;"><i class="fas fa-spinner fa-spin fa-2x"></i></div>`;
+        // الـ Firewall: تنظيف الحاوية تماماً قبل البدء لمنع التداخل
+        container.innerHTML = `
+            <div style="display:flex; justify-content:center; align-items:center; height:300px; flex-direction:column; gap:15px;">
+                <i class="fas fa-spinner fa-spin fa-2x" style="color:#2563eb;"></i>
+                <span style="color:#64748b; font-family:'Tajawal';">جاري تحميل ${moduleName}...</span>
+            </div>`;
 
-        // 2. تحديث كلاس "Active" في القائمة الجانبية ليعرف المستخدم أين هو
-        document.querySelectorAll('.sidebar-nav a').forEach(link => {
-            link.classList.remove('active');
-            if(link.getAttribute('href') === `#${moduleName}`) {
-                link.classList.add('active');
-            }
-        });
+        // تحديث حالة الأزرار في القائمة الجانبية (Sidebar)
+        updateSidebarUI(moduleName);
 
-        // 3. تحميل الملف الجديد مع كاسر التخزين المؤقت
+        // تحميل ملف الـ HTML المطلوب
         const response = await fetch(`${path}?v=${Date.now()}`);
-        if (!response.ok) throw new Error(`Failed to load ${moduleName}`);
+        if (!response.ok) throw new Error(`Status: ${response.status}`);
         
         const html = await response.text();
+        
+        // حقن المحتوى في الحاوية
         container.innerHTML = html;
 
-        // 4. تشغيل ملفات الـ JS الخاصة بكل موديول عند تحميله
-        if (moduleName === 'customers') {
-            loadCustomerModule(container);
-        }
+        // تنفيذ الدوال الخاصة بكل موديول إذا وجدت
+        handleModuleInitialization(moduleName, container);
 
     } catch (error) {
-        console.error("Navigation Error:", error);
-        container.innerHTML = `<div style="padding:20px; color:red;">خطأ في تحميل الصفحة.. يرجى المحاولة مرة أخرى.</div>`;
+        console.error("خطأ في الانتقال:", error);
+        container.innerHTML = `
+            <div style="padding:40px; text-align:center; color:#ef4444; background:rgba(239,68,68,0.05); border-radius:12px; border:1px dashed #ef4444; margin:20px;">
+                <i class="fas fa-exclamation-circle fa-3x"></i>
+                <h3 style="margin-top:15px;">تعذر تحميل القسم</h3>
+                <p>الملف ${path} قد يكون غير موجود أو هناك مشكلة في الاتصال.</p>
+                <button onclick="location.reload()" style="padding:8px 20px; background:#2563eb; color:white; border:none; border-radius:5px; cursor:pointer; margin-top:10px;">إعادة المحاولة</button>
+            </div>`;
     }
 }
 
-async function loadCustomerModule(container) {
-    // تحميل التنسيق برمجياً إذا لم يكن موجوداً
-    if (!document.getElementById('module-customers-style')) {
-        const link = document.createElement('link');
-        link.id = 'module-customers-style';
-        link.rel = 'stylesheet';
-        link.href = `css/customers.css?v=${Date.now()}`;
-        document.head.appendChild(link);
-    }
-
-    // استيراد الموديول وتشغيله
-    try {
-        const module = await import(`./modules/customers-ui.js?v=${Date.now()}`);
-        if (module && module.initCustomersUI) {
-            // ننتظر قليلاً لضمان أن DOM الـ HTML الجديد أصبح جاهزاً
-            setTimeout(() => {
-                const target = document.getElementById('customers-module-container') || container;
-                module.initCustomersUI(target);
-            }, 100);
+// دالة لتحديث واجهة القائمة الجانبية
+function updateSidebarUI(activeModule) {
+    document.querySelectorAll('.sidebar-nav a').forEach(link => {
+        const href = link.getAttribute('href');
+        if (href === `#${activeModule}`) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
         }
-    } catch (err) {
-        console.error("Module Loading Error:", err);
-    }
+    });
 }
 
-// معالجة الروابط
+// دالة لمعالجة تشغيل الـ JavaScript الخاص بكل صفحة بعد تحميلها
+async function handleModuleInitialization(moduleName, container) {
+    // حالة خاصة لقاعدة العملاء
+    if (moduleName === 'customers') {
+        try {
+            // تحميل التنسيق أولاً
+            if (!document.getElementById('module-customers-style')) {
+                const link = document.createElement('link');
+                link.id = 'module-customers-style';
+                link.rel = 'stylesheet';
+                link.href = `css/customers.css?v=${Date.now()}`;
+                document.head.appendChild(link);
+            }
+            
+            // تحميل وتشغيل ملف الـ UI
+            const module = await import(`./modules/customers-ui.js?v=${Date.now()}`);
+            if (module && module.initCustomersUI) {
+                setTimeout(() => {
+                    const target = document.getElementById('customers-module-container') || container;
+                    module.initCustomersUI(target);
+                }, 100);
+            }
+        } catch (err) {
+            console.error("تحذير: لم يتم العثور على موديول JS للعملاء، سيتم عرض الـ HTML فقط.");
+        }
+    }
+    
+    // يمكنك إضافة شروط مشابهة هنا لـ inventory أو payments إذا كان لها ملفات JS خاصة
+}
+
+// مراقبة التغير في الرابط (Hash)
 function handleRoute() {
     const hash = window.location.hash.replace('#', '') || 'dashboard';
     switchModule(hash);
 }
 
-// استماع للأحداث لضمان عمل الأزرار عند الضغط
+// بدء التشغيل
 window.addEventListener('load', handleRoute);
 window.addEventListener('hashchange', handleRoute);
 
-// جعل الدالة متاحة للأزرار التي تستخدم onclick
+// جعل الدالة متاحة عالمياً للأزرار التي تستخدم onclick
 window.switchModule = switchModule;
