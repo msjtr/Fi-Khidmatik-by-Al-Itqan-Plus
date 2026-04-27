@@ -46,6 +46,7 @@
             flex-shrink: 0;
             border-left: 1px solid var(--border-color);
             z-index: 1000;
+            transition: all 0.3s ease;
         }
 
         .content-area {
@@ -68,8 +69,10 @@
             flex-grow: 1;
             padding: 20px;
             overflow-y: auto;
+            scroll-behavior: smooth;
         }
 
+        /* شاشة التحميل المركزية */
         .loading-state {
             display: flex;
             flex-direction: column;
@@ -89,6 +92,10 @@
             opacity: 0;
             pointer-events: none;
         }
+
+        /* تخصيص شريط التمرير */
+        #module-container::-webkit-scrollbar { width: 6px; }
+        #module-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -102,7 +109,7 @@
             <main id="module-container">
                 <div class="loading-state" id="main-loader">
                     <i class="fas fa-circle-notch fa-spin fa-3x" style="color: var(--primary-blue);"></i>
-                    <p style="margin-top: 20px; font-weight: 700;">جاري تحميل النظام...</p>
+                    <p style="margin-top: 20px; font-weight: 700; color: #1e293b;">جاري تشغيل نظام تيرا جيت واي...</p>
                 </div>
             </main>
         </div>
@@ -114,11 +121,11 @@
 
     <script>
         /**
-         * دالة جلب المكونات من مجلد components الموجود داخل مجلد admin
+         * دالة جلب المكونات الثابتة (Header, Sidebar, Modals)
          */
         async function loadCoreComponent(id, fileName) {
             const container = document.getElementById(id);
-            // بما أننا داخل admin.html، مجلد components هو مجلد مجاور
+            // المسار بالنسبة لـ admin.html داخل مجلد admin
             const path = `components/${fileName}`;
             
             try {
@@ -128,23 +135,31 @@
                 container.innerHTML = html;
                 return true;
             } catch (err) {
-                console.error(`❌ خطأ في تحميل: ${fileName}`, err);
+                console.error(`❌ فشل تحميل المكون: ${fileName}`, err);
+                container.innerHTML = `<div style="color:red; padding:20px; text-align:center;">خطأ في تحميل ${fileName}</div>`;
                 return false;
             }
         }
 
+        // تشغيل العمليات عند جاهزية مستند الـ DOM
         window.addEventListener('DOMContentLoaded', async () => {
-            // تحميل المكونات من المجلد الحالي
+            // تحميل المكونات الهيكلية بالتوازي لسرعة التشغيل
             await Promise.all([
                 loadCoreComponent('sidebar-placeholder', 'sidebar.html'),
                 loadCoreComponent('header-placeholder', 'header.html'),
                 loadCoreComponent('modals-placeholder', 'modals.html')
             ]);
 
+            // إخفاء شاشة التحميل بعد جاهزية الواجهة
             const loader = document.getElementById('main-loader');
             if (loader) {
                 loader.classList.add('hidden');
                 setTimeout(() => loader.remove(), 600);
+            }
+
+            // تشغيل نظام الـ Routing الافتراضي إذا كان موجوداً في main.js
+            if (typeof window.handleRoute === 'function') {
+                window.handleRoute();
             }
         });
     </script>
