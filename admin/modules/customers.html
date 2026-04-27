@@ -1,37 +1,29 @@
-<div class="customers-module-wrapper">
-    <div class="glass-header">
-        <div class="title-zone">
-            <div class="icon-box">
-                <i class="fas fa-users-cog"></i>
-            </div>
-            <div class="text-box">
-                <h1>قاعدة بيانات العملاء</h1>
-                <p>إدارة سجلات مجموعة: <span class="badge-group">customers</span></p>
-            </div>
-        </div>
-
-        <div class="action-zone">
-            <div class="search-wrapper">
-                <i class="fas fa-search"></i>
-                <input type="text" id="customerSearch" placeholder="بحث بالاسم، الجوال، أو المدينة...">
-            </div>
-
-            <button class="btn-glass-add" onclick="window.openAddCustomerModal()">
-                <i class="fas fa-plus"></i> إضافة عميل جديد
-            </button>
-        </div>
+<div class="customers-module">
+    <div class="stats-grid">
+        <div class="stat-card"><h3>العدد الكلي</h3><p id="stat-total-customers">0</p></div>
+        <div class="stat-card"><h3>مكتملة البيانات</h3><p id="stat-complete-data">0</p></div>
+        <div class="stat-card"><h3>النشطين</h3><p id="stat-active-customers">0</p></div>
+        <div class="stat-card"><h3>عملاء VIP</h3><p id="stat-vip-count">0</p></div>
     </div>
 
-    <div class="glass-table-container">
-        <table class="modern-table" id="customersMainTable">
+    <div class="action-bar">
+        <button onclick="openCustomerModal('add')" class="btn-primary">إضافة عميل جديد +</button>
+        <button onclick="exportCustomers()" class="btn-secondary">تصدير (Excel/PDF)</button>
+        <button onclick="document.getElementById('import-file').click()" class="btn-secondary">استيراد بيانات</button>
+        <a href="assets/templates/customers_template.xlsx" class="btn-link">تحميل نموذج استيراد</a>
+        <input type="file" id="import-file" hidden onchange="handleImport(this)">
+    </div>
+
+    <div class="table-wrapper">
+        <table id="main-customers-table">
             <thead>
                 <tr>
-                    <th class="sticky-col">#</th>
-                    <th class="sticky-col-name">اسم العميل</th>
+                    <th>التسلسل</th>
+                    <th>اسم العميل</th>
                     <th>رقم الجوال</th>
-                    <th>المفتاح</th>
+                    <th>مفتاح الدولة</th>
                     <th>البريد الإلكتروني</th>
-                    <th>الدولة</th>
+                    <th>اسم الدولة</th>
                     <th>المدينة</th>
                     <th>الحي</th>
                     <th>الشارع</th>
@@ -40,22 +32,13 @@
                     <th>الرمز البريدي</th>
                     <th>صندوق البريد</th>
                     <th>تاريخ الإضافة</th>
-                    <th>الحالة</th>
-                    <th>التصنيف</th>
-                    <th class="sticky-actions-header">الإجراءات</th>
+                    <th>حالة العميل</th>
+                    <th>تصنيف العميل</th>
+                    <th>الإجراءات</th>
                 </tr>
             </thead>
-            
-            <tbody id="customers-data-rows">
-                <tr>
-                    <td colspan="17" style="text-align:center; padding:60px;">
-                        <div class="table-loader">
-                            <i class="fas fa-circle-notch fa-spin fa-2x"></i>
-                            <p style="margin-top:15px;">جاري استدعاء البيانات من خادم Firestore...</p>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
+            <tbody id="customers-data-body">
+                </tbody>
         </table>
     </div>
 </div>
