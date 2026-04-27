@@ -1,7 +1,6 @@
 /**
  * main.js - المحرك المركزي لنظام Tera Gateway
- * الإصدار: 2.4.0 - تحديث أبريل 2026
- * الوظيفة: إدارة التنقل مع جسر برمجي استباقي لمنع أخطاء التعريف
+ * الإصدار: 2.4.5 - تحديث أبريل 2026 (إصلاح جسر الموديولات)
  */
 
 const routes = {
@@ -20,14 +19,15 @@ const routes = {
 window.quillEditor = null;
 
 // --- [1] الجسر الاستباقي (Early Bridge) ---
-// تعريف الدوال عالمياً فور تشغيل الملف لمنع خطأ "is not a function"
+// منع خطأ "is not a function" عبر تعريف دوال مؤقتة تتبدل تلقائياً بعد تحميل الموديول
 window.openCustomerModal = function(mode = 'add', id = null) {
-    console.warn("جاري تهيئة الموديول... يرجى المحاولة مرة أخرى خلال لحظة.");
+    console.warn("⏳ جاري تهيئة موديول العملاء... يرجى الانتظار ثانية.");
 };
 window.openAddCustomer = () => window.openCustomerModal('add');
+window.editCustomer = (id) => window.openCustomerModal('edit', id);
 window.saveCustomer = (e) => { if(e) e.preventDefault(); };
 window.closeCustomerModal = () => {
-    const modal = document.getElementById('customer-modal') || document.getElementById('customerModal');
+    const modal = document.getElementById('customer-modal');
     if (modal) modal.style.display = 'none';
 };
 
@@ -63,47 +63,45 @@ async function switchModule(moduleName) {
 
         updateSidebarUI(moduleName);
 
-        // تشغيل المنطق البرمجي بناءً على القسم
+        // تشغيل المنطق البرمجي الخاص بموديول العملاء
         if (moduleName === 'customers') {
             await loadCustomersModule(container);
         }
 
     } catch (error) {
         console.error("❌ Navigation Error:", error);
-        container.innerHTML = `<div style="text-align:center; padding:80px; color:#ef4444;"><p>تعذر تحميل الموديول.</p></div>`;
+        container.innerHTML = `<div style="text-align:center; padding:80px; color:#ef4444;"><p>تعذر تحميل الموديول. تأكد من وجود الملف في المسار الصحيح.</p></div>`;
     }
 }
 
 /**
- * 4. موديول العملاء - التحميل وحقن الدوال الحقيقية
+ * 4. موديول العملاء - الاستيراد وحقن الدوال الحقيقية
  */
 async function loadCustomersModule(container) {
     try {
-        // استيراد الموديول
+        // استيراد الموديول مع كسر الكاش لضمان التحديث
         const module = await import(`./modules/customers-ui.js?v=${Date.now()}`);
         
-        if (module && module.initCustomersUI) {
-            module.initCustomersUI(container);
+        if (module) {
+            // تهيئة الواجهة
+            if (typeof module.initCustomersUI === 'function') {
+                module.initCustomersUI(container);
+            }
             
-            // --- تحديث الجسر بالدوال الحقيقية (Override) ---
+            // --- تحديث الجسر بالدوال الحقيقية المستوردة (Override) ---
             window.openCustomerModal = (mode, id) => module.openCustomerModal(mode, id);
             window.openAddCustomer = () => module.openCustomerModal('add');
             window.editCustomer = (id) => module.openCustomerModal('edit', id);
             window.saveCustomer = (e) => module.handleCustomerSubmit(e);
-            
-            window.closeCustomerModal = () => {
-                const modal = document.getElementById('customer-modal') || document.getElementById('customerModal');
-                if (modal) {
-                    modal.style.display = 'none';
-                    if (window.quillEditor) window.quillEditor.setContents([]);
-                }
-            };
+            window.closeCustomerModal = () => module.closeCustomerModal();
 
+            // تهيئة محرر الملاحظات Quill
             initQuillEditor();
-            console.log("✅ تم ربط الدوال الحقيقية لموديول العملاء");
+            
+            console.log("✅ تم حقن الدوال الحقيقية لموديول العملاء بنجاح.");
         }
     } catch (err) {
-        console.error("❌ فشل في استيراد موديول العملاء:", err);
+        console.error("❌ فشل في استيراد موديول العملاء. تأكد من وجود export قبل الدوال:", err);
     }
 }
 
@@ -113,7 +111,6 @@ async function loadCustomersModule(container) {
 function initQuillEditor() {
     const editorElem = document.getElementById('customer-notes-editor');
     if (editorElem) {
-        // تصفير المرجع القديم إذا وجد لمنع التكرار
         if (window.quillEditor) window.quillEditor = null;
         
         window.quillEditor = new Quill('#customer-notes-editor', {
@@ -131,7 +128,7 @@ function initQuillEditor() {
 }
 
 /**
- * 6. تحديث واجهة القائمة الجانبية
+ * 6. تحديث واجهة القائمة الجانبية (Sidebar)
  */
 function updateSidebarUI(moduleName) {
     document.querySelectorAll('.nav-item').forEach(link => {
@@ -152,7 +149,7 @@ function handleHashRoute() {
     switchModule(hash);
 }
 
-// تشغيل النظام
+// تشغيل النظام عند التحميل أو تغيير الـ Hash
 window.addEventListener('load', handleHashRoute);
 window.addEventListener('hashchange', handleHashRoute);
 
