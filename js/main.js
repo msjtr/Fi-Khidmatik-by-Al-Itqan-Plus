@@ -1,10 +1,10 @@
 /**
- * main.js - Tera Gateway Core Router
- * المحرك المركزي لإدارة التنقل وتحميل الموديولات
- * المسار: js/main.js
+ * main.js - المحرك المركزي لنظام Tera Gateway
+ * الإصدار: 2.1.0 - تحديث أبريل 2026
+ * الوظيفة: إدارة التنقل، ربط الموديولات، والجسر البرمجي للأزرار
  */
 
-// 1. خريطة المسارات المعتمدة حسب شجرة الملفات
+// 1. خريطة المسارات المعتمدة (تطابق شجرة الملفات admin/modules/)
 const routes = {
     'dashboard': 'admin/modules/orders-dashboard.html',
     'customers': 'admin/modules/customers.html',
@@ -18,103 +18,102 @@ const routes = {
     'general':   'admin/modules/general.html'
 };
 
-// متغيرات عالمية
+// متغيرات عالمية للوصول إليها من الموديولات
 window.quillEditor = null;
 
 /**
- * 2. دالة تبديل الأقسام (Core Switcher)
+ * 2. المحرك الرئيسي لتبديل الأقسام
  */
 async function switchModule(moduleName) {
     const container = document.getElementById('module-container');
     const path = routes[moduleName];
-    if (!container || !path) return;
+    
+    if (!container) return;
+    if (!path) {
+        console.error(`الموديول ${moduleName} غير معرف في المسارات.`);
+        return;
+    }
 
     try {
-        // إظهار مؤشر التحميل بتصميم تيرا
+        // إظهار واجهة التحميل اللطيفة
         container.innerHTML = `
-            <div class="loader-box" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:300px;">
-                <i class="fas fa-circle-notch fa-spin fa-3x" style="color:#2563eb;"></i>
-                <p style="margin-top:20px; font-weight:800; color:#1e293b;">جاري تحميل ${moduleName}...</p>
+            <div class="loader-wrapper" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:100px;">
+                <i class="fas fa-circle-notch fa-spin fa-3x" style="color:#2563eb; margin-bottom:20px;"></i>
+                <p style="font-weight:800; color:#1e293b;">جاري مزامنة بيانات ${moduleName}...</p>
             </div>`;
 
         const response = await fetch(`${path}?v=${Date.now()}`);
-        if (!response.ok) throw new Error(`Status: ${response.status}`);
+        if (!response.ok) throw new Error(`فشل التحميل: ${response.status}`);
         
         const html = await response.text();
         container.innerHTML = html;
 
-        // تحديث القائمة الجانبية
+        // تحديث حالة القائمة الجانبية (Active Class)
         updateSidebarUI(moduleName);
 
-        // تشغيل المنطق الخاص بكل صفحة (Initialization Logic)
-        initModuleLogic(moduleName);
+        // تشغيل المنطق البرمجي الخاص بكل موديول
+        await initializeModuleLogic(moduleName);
 
     } catch (error) {
         console.error("Navigation Error:", error);
         container.innerHTML = `
-            <div style="text-align:center; padding:100px;">
-                <i class="fas fa-exclamation-triangle fa-3x" style="color:#ef4444;"></i>
-                <p style="margin-top:20px; font-weight:bold;">عذراً، فشل تحميل القسم. تأكد من وجود الملف في: <br><code>${path}</code></p>
+            <div style="text-align:center; padding:80px; color:#ef4444;">
+                <i class="fas fa-exclamation-circle fa-3x"></i>
+                <p style="margin-top:15px; font-weight:bold;">حدث خطأ أثناء تحميل القسم. يرجى التأكد من مسار الملف:</p>
+                <code>${path}</code>
             </div>`;
     }
 }
 
 /**
- * 3. توزيع المنطق البرمجي بناءً على الصفحة المحملة
+ * 3. الجسر البرمجي (The Bridge) - ربط موديول العملاء
  */
-async function initModuleLogic(moduleName) {
-    switch (moduleName) {
-        case 'customers':
-            await loadModuleScript('js/modules/customers-ui.js', 'initCustomersUI');
-            initQuillEditor();
-            break;
-        
-        case 'products':
-            await loadModuleScript('js/modules/products-ui.js', 'initProductsUI');
-            break;
-
-        case 'orders-dashboard':
-        case 'dashboard':
-            await loadModuleScript('js/modules/orders-dashboard.js', 'initOrdersDashboard');
-            break;
-
-        case 'inventory':
-            await loadModuleScript('js/modules/inventory.js', 'initInventory');
-            break;
-
-        case 'payments':
-            await loadModuleScript('js/modules/payments.js', 'initPayments');
-            break;
+async function initializeModuleLogic(moduleName) {
+    if (moduleName === 'customers') {
+        try {
+            // استيراد موديول الواجهة ديناميكياً
+            const module = await import(`./modules/customers-ui.js?v=${Date.now()}`);
             
-        case 'settings':
-            await loadModuleScript('js/modules/settings.js', 'initSettings');
-            break;
-    }
-}
+            if (module && module.initCustomersUI) {
+                // تشغيل جلب البيانات ورسم الجدول
+                module.initCustomersUI();
 
-/**
- * 4. محرك استيراد الملفات البرمجية ديناميكياً
- */
-async function loadModuleScript(scriptPath, initFunctionName) {
-    try {
-        const module = await import(`../${scriptPath}?v=${Date.now()}`);
-        if (module && module[initFunctionName]) {
-            module[initFunctionName]();
+                // --- الجسر البرمجي: ربط أزرار الـ HTML بالدوال المعزولة داخل الموديول ---
+                window.openAddCustomer = () => module.openCustomerModal('add');
+                window.editCustomer = (id) => module.openCustomerModal('edit', id);
+                window.saveCustomer = (e) => module.handleCustomerSubmit(e);
+                window.deleteCust = (id) => module.deleteCust(id);
+                
+                // وظيفة إغلاق النافذة المنبثقة
+                window.closeCustomerModal = () => {
+                    const modal = document.getElementById('customer-modal');
+                    if (modal) {
+                        modal.style.display = 'none';
+                        if (window.quillEditor) window.quillEditor.setContents([]);
+                    }
+                };
+
+                // تهيئة محرر Quill للملاحظات
+                initQuillEditor();
+                console.log("✅ تم ربط جسر عمليات العملاء بنجاح");
+            }
+        } catch (err) {
+            console.error("فشل تحميل موديول العملاء:", err);
         }
-    } catch (err) {
-        console.warn(`⚠️ تنبيه: لم يتم العثور على وظيفة التشغيل في ${scriptPath}`);
     }
+    
+    // يمكن إضافة جسر موديولات أخرى هنا (مثل المنتجات أو الطلبات)
 }
 
 /**
- * 5. تهيئة محرر Quill (خاص بالعملاء والمنتجات)
+ * 4. تهيئة محرر النصوص (Quill)
  */
 function initQuillEditor() {
     const editorElem = document.getElementById('customer-notes-editor');
     if (editorElem) {
         window.quillEditor = new Quill('#customer-notes-editor', {
             theme: 'snow',
-            placeholder: 'سجل الملاحظات أو الشروط هنا...',
+            placeholder: 'سجل الملاحظات والشروط هنا...',
             modules: {
                 toolbar: [
                     ['bold', 'italic', 'underline'],
@@ -127,13 +126,13 @@ function initQuillEditor() {
 }
 
 /**
- * 6. التحكم في القائمة الجانبية (Sidebar)
+ * 5. تحديث القائمة الجانبية بصرياً
  */
 function updateSidebarUI(moduleName) {
     document.querySelectorAll('.nav-item').forEach(link => {
-        // نتحقق من الـ onclick أو الـ hash
-        const isCurrent = link.getAttribute('onclick')?.includes(`'${moduleName}'`);
-        if (isCurrent) {
+        // التحقق مما إذا كان الزر يستدعي الموديول الحالي
+        const clickAttr = link.getAttribute('onclick') || '';
+        if (clickAttr.includes(`'${moduleName}'`)) {
             link.classList.add('active');
         } else {
             link.classList.remove('active');
@@ -142,16 +141,16 @@ function updateSidebarUI(moduleName) {
 }
 
 /**
- * 7. نظام التوجيه عبر الـ Hash (#)
+ * 6. نظام التوجيه عبر الروابط (Hash Routing)
  */
 function handleHashRoute() {
     const hash = window.location.hash.replace('#', '') || 'dashboard';
     switchModule(hash);
 }
 
-// الاستماع للأحداث العالمية
+// الاستماع لأحداث التحميل وتغيير الرابط
 window.addEventListener('load', handleHashRoute);
 window.addEventListener('hashchange', handleHashRoute);
 
-// إتاحة الدوال عالمياً
+// إتاحة الدوال عالمياً للأزرار
 window.switchModule = switchModule;
