@@ -1,6 +1,6 @@
 /**
- * customers-ui.js - المحرك المطور والمتوافق مع نظام 17 حقل
- * المسار: js/modules/customers-ui.js
+ * customers-ui.js - المحرك المطور لنظام Tera Gateway
+ * المتوافق مع بروتوكول الـ 17 عنصراً ونظام الإحصائيات المتقدم
  */
 import { db } from '../core/firebase.js'; 
 import { 
@@ -14,19 +14,24 @@ export async function initCustomersUI() {
     const tableBody = document.getElementById('customers-data-rows');
     if (!tableBody) return;
 
+    // إظهار مؤشر التحميل
+    tableBody.innerHTML = `<tr><td colspan="17" style="text-align:center; padding:50px;">
+        <i class="fas fa-circle-notch fa-spin fa-2x" style="color:#2563eb;"></i><br>جاري مزامنة قاعدة البيانات...</td></tr>`;
+
     try {
         const customersRef = collection(db, "customers");
         const q = query(customersRef, orderBy("createdAt", "desc"));
         const querySnapshot = await getDocs(q);
 
-        tableBody.innerHTML = ''; // تنظيف الجدول
+        tableBody.innerHTML = ''; 
 
         if (querySnapshot.empty) {
-            tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center; padding:30px;">لا يوجد بيانات في مجموعة العملاء.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center; padding:30px; color:#64748b;">لا يوجد عملاء مسجلين حالياً.</td></tr>';
+            updateCustomersStats([]); // تصقير الإحصائيات
             return;
         }
 
-        // تحديث الإحصائيات في الأعلى
+        // تحديث شبكة الإحصائيات الـ 17
         updateCustomersStats(querySnapshot.docs);
 
         let index = 1;
@@ -35,14 +40,19 @@ export async function initCustomersUI() {
             const tr = document.createElement('tr');
             tr.className = "customer-row";
 
-            // بناء الـ 17 عموداً بدقة (مطابقة تماماً للـ HTML)
+            // بناء الصف مع تثبيت الأعمدة (Sticky) كما في CSS
             tr.innerHTML = `
                 <td class="sticky-col">${index++}</td>
-                <td class="sticky-col-name"><strong>${data.name || '---'}</strong></td>
-                <td>${data.phone || '---'}</td>
-                <td>${data.countryCode || '+966'}</td>
+                <td class="sticky-col-name">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <img src="admin/images/default-product.png" class="customer-avatar" style="width:30px; height:30px; border-radius:8px;">
+                        <span>${data.name || '---'}</span>
+                    </div>
+                </td>
+                <td><a href="tel:${data.phone}" style="text-decoration:none; color:inherit;">${data.phone || '---'}</a></td>
+                <td><span class="badge" style="background:#f1f5f9; padding:2px 8px; border-radius:5px;">${data.countryCode || '+966'}</span></td>
                 <td>${data.email || '---'}</td>
-                <td>${data.country || 'المملكة العربية السعودية'}</td>
+                <td>${data.country || 'السعودية'}</td>
                 <td>${data.city || '---'}</td>
                 <td>${data.district || '---'}</td>
                 <td>${data.street || '---'}</td>
@@ -50,13 +60,13 @@ export async function initCustomersUI() {
                 <td>${data.additionalNo || '---'}</td>
                 <td>${data.postalCode || '---'}</td>
                 <td>${data.poBox || '---'}</td>
-                <td>${formatDate(data.createdAt)}</td>
-                <td><span class="status-pill ${data.status === 'نشط' ? 'active' : 'inactive'}">${data.status || 'غير محدد'}</span></td>
-                <td><span class="tag-pill ${data.tag === 'VIP' ? 'vip' : 'normal'}">${data.tag || 'عادي'}</span></td>
-                <td class="sticky-actions">
-                    <div class="action-btns" style="display:flex; gap:5px;">
-                        <button onclick="window.openCustomerModal('edit', '${docSnap.id}')" class="btn-sm btn-edit"><i class="fas fa-edit"></i></button>
-                        <button onclick="window.deleteCust('${docSnap.id}')" class="btn-sm btn-delete"><i class="fas fa-trash"></i></button>
+                <td style="font-size:0.75rem; color:#64748b;">${formatDate(data.createdAt)}</td>
+                <td><span class="status-pill ${getStatusClass(data.status)}">${data.status || 'غير محدد'}</span></td>
+                <td><span class="status-pill ${data.tag === 'VIP' ? 'status-vip' : 'status-pending'}">${data.tag || 'عادي'}</span></td>
+                <td class="sticky-actions-cell">
+                    <div class="action-btns">
+                        <button onclick="window.openCustomerModal('edit', '${docSnap.id}')" class="btn-action btn-edit" title="تعديل"><i class="fas fa-pen"></i></button>
+                        <button onclick="window.deleteCust('${docSnap.id}')" class="btn-action btn-delete" title="حذف"><i class="fas fa-trash-alt"></i></button>
                     </div>
                 </td>
             `;
@@ -65,121 +75,88 @@ export async function initCustomersUI() {
 
     } catch (error) {
         console.error("Firestore Error:", error);
-        tableBody.innerHTML = `<tr><td colspan="17" style="text-align:center; color:red; padding:20px;">خطأ في الاتصال بقاعدة البيانات.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="17" style="text-align:center; color:#ef4444; padding:30px;">
+            <i class="fas fa-exclamation-triangle"></i> فشل الاتصال بقاعدة البيانات. تأكد من إعدادات Firebase.</td></tr>`;
     }
 }
 
 /**
- * 2. دالة معالجة الإضافة والتعديل (Handle Submit)
- * هذه الدالة تضمن حفظ الـ 17 عنصراً بالكامل
+ * 2. تحديث شبكة الإحصائيات المتقدمة
  */
-window.handleCustomerSubmit = async function(e) {
-    e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
-    const customerId = form.dataset.editId; // سنستخدم هذا في حال التعديل
-
-    // تجميع الكائن المكون من 17 عنصر
-    const customerData = {
-        name: formData.get('name'),
-        phone: formData.get('phone'),
-        countryCode: formData.get('countryCode'),
-        email: formData.get('email'),
-        country: formData.get('country'),
-        city: formData.get('city'),
-        district: formData.get('district'),
-        street: formData.get('street'),
-        buildingNo: formData.get('buildingNo'),
-        additionalNo: formData.get('additionalNo'),
-        postalCode: formData.get('postalCode'),
-        poBox: formData.get('poBox'),
-        status: formData.get('status'),
-        tag: formData.get('tag'),
-        notes: window.quillEditor ? window.quillEditor.root.innerHTML : "",
-        updatedAt: new Date().toISOString()
+function updateCustomersStats(docs) {
+    const data = docs.map(d => d.data());
+    
+    const stats = {
+        total: data.length,
+        active: data.filter(d => d.status === 'نشط').length,
+        suspended: data.filter(d => d.status === 'موقوف').length,
+        vip: data.filter(d => d.tag === 'VIP').length,
+        complete: data.filter(d => d.name && d.phone && d.city && d.district).length,
+        individuals: data.filter(d => d.type === 'فرد' || !d.type).length,
+        companies: data.filter(d => d.type === 'شركة').length
     };
 
-    try {
-        if (customerId) {
-            // تحديث عميل موجود
-            await updateDoc(doc(db, "customers", customerId), customerData);
-            alert("تم تحديث بيانات العميل بنجاح.");
-        } else {
-            // إضافة عميل جديد
-            customerData.createdAt = new Date().toISOString();
-            await addDoc(collection(db, "customers"), customerData);
-            alert("تمت إضافة العميل الجديد بنجاح.");
-        }
-        window.closeCustomerModal();
-        initCustomersUI(); // تحديث الجدول فوراً
-    } catch (error) {
-        console.error("Save Error:", error);
-        alert("فشل الحفظ في قاعدة البيانات.");
+    // ربط القيم بالعناصر في واجهة المستخدم (حسب IDs المحدثة في index.html)
+    const mappings = {
+        'stat-total': stats.total,
+        'stat-active': stats.active,
+        'stat-suspended': stats.suspended,
+        'stat-vip': stats.vip,
+        'stat-complete': stats.complete,
+        'stat-incomplete': stats.total - stats.complete,
+        'stat-individuals': stats.individuals,
+        'stat-companies': stats.companies
+    };
+
+    for (const [id, value] of Object.entries(mappings)) {
+        const el = document.getElementById(id);
+        if (el) el.innerText = value;
     }
-};
+}
 
 /**
- * 3. فتح النافذة المنبثقة (إضافة أو تعديل)
- */
-window.openCustomerModal = async function(mode, id = null) {
-    const modal = document.getElementById('customer-modal');
-    const form = document.getElementById('customer-form');
-    if (!modal || !form) return;
-
-    form.reset(); // تنظيف الحقول
-    if (window.quillEditor) window.quillEditor.root.innerHTML = '';
-    delete form.dataset.editId;
-
-    if (mode === 'edit' && id) {
-        document.getElementById('modal-title').innerText = "تعديل بيانات العميل";
-        form.dataset.editId = id;
-
-        // جلب البيانات من Firestore لتعبئتها في النموذج
-        const docSnap = await getDoc(doc(db, "customers", id));
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            // تعبئة كل حقل بالاسم (Name) الخاص به
-            Object.keys(data).forEach(key => {
-                const input = form.querySelector(`[name="${key}"]`);
-                if (input) input.value = data[key];
-            });
-            if (window.quillEditor) window.quillEditor.root.innerHTML = data.notes || '';
-        }
-    } else {
-        document.getElementById('modal-title').innerText = "إضافة بيانات العميل الكاملة";
-    }
-
-    modal.style.display = 'flex';
-};
-
-window.closeCustomerModal = function() {
-    const modal = document.getElementById('customer-modal');
-    if (modal) modal.style.display = 'none';
-};
-
-/**
- * 4. الحذف وتنسيق التاريخ
+ * 3. حذف عميل مع تأكيد
  */
 window.deleteCust = async function(id) {
-    if (confirm("هل أنت متأكد من حذف هذا العميل؟")) {
-        await deleteDoc(doc(db, "customers", id));
-        initCustomersUI();
+    if (confirm("⚠️ هل أنت متأكد من حذف هذا العميل نهائياً من قاعدة البيانات؟")) {
+        try {
+            await deleteDoc(doc(db, "customers", id));
+            // تحديث إحصائية "الحذف" برمجياً (لأغراض العرض)
+            const delEl = document.getElementById('stat-deletes');
+            if (delEl) delEl.innerText = parseInt(delEl.innerText) + 1;
+            
+            initCustomersUI(); // إعادة تحميل الجدول
+        } catch (error) {
+            alert("حدث خطأ أثناء الحذف.");
+        }
     }
 };
 
+/**
+ * 4. مساعدات التنسيق (Helpers)
+ */
 function formatDate(dateInput) {
     if (!dateInput) return '---';
     const date = new Date(dateInput);
-    return date.toLocaleDateString('ar-SA', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    return date.toLocaleDateString('ar-SA', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-function updateCustomersStats(docs) {
-    const total = docs.length;
-    const active = docs.filter(d => d.data().status === 'نشط').length;
-    const vip = docs.filter(d => d.data().tag === 'VIP').length;
-    
-    // ربط الإحصائيات بالـ IDs الموجودة في HTML
-    if (document.getElementById('stat-total-customers')) document.getElementById('stat-total-customers').innerText = total;
-    if (document.getElementById('stat-active-customers')) document.getElementById('stat-active-customers').innerText = active;
-    if (document.getElementById('stat-vip-count')) document.getElementById('stat-vip-count').innerText = vip;
+function getStatusClass(status) {
+    switch (status) {
+        case 'نشط': return 'status-active';
+        case 'موقوف': return 'status-inactive';
+        default: return 'status-pending';
+    }
 }
+
+// تشغيل المحرك عند الاستدعاء
+window.filterCustomersTable = function() {
+    const input = document.getElementById("customer-search");
+    const filter = input.value.toUpperCase();
+    const rows = document.querySelectorAll(".customer-row");
+
+    rows.forEach(row => {
+        const text = row.innerText.toUpperCase();
+        row.style.display = text.indexOf(filter) > -1 ? "" : "none";
+    });
+};
