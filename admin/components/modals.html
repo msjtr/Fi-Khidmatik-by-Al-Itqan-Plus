@@ -1,42 +1,55 @@
 <div id="customer-modal" class="modal-overlay" style="display: none;">
     <div class="modal-card shadow-lg">
         <div class="modal-header">
-            <h3 id="modal-title"><i class="fas fa-user-plus"></i> إضافة عميل جديد</h3>
+            <h3 id="modal-title"><i class="fas fa-user-plus"></i> إضافة عميل جديد - نظام تيرا</h3>
             <button class="close-btn" onclick="window.closeCustomerModal()">&times;</button>
         </div>
 
         <div class="modal-body">
             <form id="customer-form">
+                <div class="image-profile-upload">
+                    <div class="profile-preview">
+                        <img id="cust-img-preview" src="admin/images/default-product.png" alt="صورة العميل">
+                    </div>
+                    <div class="upload-controls">
+                        <label for="cust-image-file" class="btn-upload-label">
+                            <i class="fas fa-camera"></i> تغيير الصورة
+                        </label>
+                        <input type="file" id="cust-image-file" accept="image/*" style="display: none;" onchange="previewCustomerImage(event)">
+                        <small>صورة افتراضية في حال عدم الرفع</small>
+                    </div>
+                </div>
+
                 <div class="form-section-header">
                     <i class="fas fa-id-card"></i> البيانات الشخصية والاتصال
                 </div>
                 <div class="grid-3-cols">
                     <div class="input-group">
-                        <label>الاسم الكامل</label>
-                        <input type="text" id="cust-name" placeholder="الاسم الثلاثي كما في الهوية" required>
+                        <label>اسم العميل</label>
+                        <input type="text" id="cust-name" name="name" placeholder="محمد صالح جميعان الشمري" required>
                     </div>
                     <div class="input-group">
                         <label>رقم الجوال</label>
-                        <input type="tel" id="cust-phone" dir="ltr" placeholder="05xxxxxxxx" required>
+                        <input type="tel" id="cust-phone" name="phone" dir="ltr" placeholder="597771565" required>
                     </div>
                     <div class="input-group">
-                        <label>رقم الهوية / الإقامة</label>
-                        <input type="text" id="cust-national-id" placeholder="10xxxxxxxx" required>
+                        <label>مفتاح الدولة</label>
+                        <input type="text" id="cust-countryCode" name="countryCode" value="+966" readonly>
                     </div>
                     <div class="input-group">
                         <label>البريد الإلكتروني</label>
-                        <input type="email" id="cust-email" placeholder="mail@example.com">
+                        <input type="email" id="cust-email" name="email" placeholder="msjt301@gmail.com">
                     </div>
                     <div class="input-group">
-                        <label>تاريخ الميلاد</label>
-                        <input type="date" id="cust-dob">
-                    </div>
-                    <div class="input-group">
-                        <label>الجنس</label>
-                        <select id="cust-gender">
-                            <option value="ذكر">ذكر</option>
-                            <option value="أنثى">أنثى</option>
+                        <label>تصنيف العميل</label>
+                        <select id="cust-tag" name="tag">
+                            <option value="regular">REGULAR</option>
+                            <option value="vip">VIP</option>
                         </select>
+                    </div>
+                    <div class="input-group">
+                        <label>اسم الدولة</label>
+                        <input type="text" id="cust-country" name="country" value="المملكة العربية السعودية" readonly>
                     </div>
                 </div>
 
@@ -46,50 +59,39 @@
                 <div class="grid-4-cols">
                     <div class="input-group">
                         <label>المدينة</label>
-                        <input type="text" id="cust-city" placeholder="مثال: حائل">
+                        <input type="text" id="cust-city" name="city" placeholder="حائل">
                     </div>
                     <div class="input-group">
                         <label>الحي</label>
-                        <input type="text" id="cust-district">
+                        <input type="text" id="cust-district" name="district" placeholder="النقرة">
                     </div>
                     <div class="input-group">
                         <label>اسم الشارع</label>
-                        <input type="text" id="cust-street">
+                        <input type="text" id="cust-street" name="street" placeholder="سعد المشاط">
                     </div>
                     <div class="input-group">
-                        <label>رقم المبنى</label>
-                        <input type="text" id="cust-building-no" maxlength="4" placeholder="4 أرقام">
+                        <label>رقم المبنى (buildingNo)</label>
+                        <input type="text" id="cust-buildingNo" name="buildingNo" placeholder="88043">
+                    </div>
+                    <div class="input-group">
+                        <label>الرقم الإضافي (additionalNo)</label>
+                        <input type="text" id="cust-additionalNo" name="additionalNo" placeholder="7714">
+                    </div>
+                    <div class="input-group">
+                        <label>الرمز البريدي (postalCode)</label>
+                        <input type="text" id="cust-postalCode" name="postalCode" placeholder="54745">
+                    </div>
+                    <div class="input-group">
+                        <label>صندوق البريد (poBox)</label>
+                        <input type="text" id="cust-poBox" name="poBox">
                     </div>
                 </div>
 
                 <div class="form-section-header">
-                    <i class="fas fa-briefcase"></i> بيانات العمل والحالة المالية
-                </div>
-                <div class="grid-3-cols">
-                    <div class="input-group">
-                        <label>جهة العمل</label>
-                        <input type="text" id="cust-employer" placeholder="اسم الشركة أو الوزارة">
-                    </div>
-                    <div class="input-group">
-                        <label>الراتب الشهري (SAR)</label>
-                        <input type="number" id="cust-salary" placeholder="0.00">
-                    </div>
-                    <div class="input-group">
-                        <label>حالة الالتزام</label>
-                        <select id="cust-commitment">
-                            <option value="ملتزم">ملتزم</option>
-                            <option value="متعثر">متعثر</option>
-                            <option value="قائمة سوداء">قائمة سوداء</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-section-header">
-                    <i class="fas fa-sticky-note"></i> إضافات
+                    <i class="fas fa-sticky-note"></i> ملاحظات إضافية
                 </div>
                 <div class="input-group full-width">
-                    <label>ملاحظات إضافية</label>
-                    <textarea id="cust-notes" rows="3" placeholder="أي معلومات أخرى تخص العميل..."></textarea>
+                    <textarea id="cust-notes" name="notes" rows="2" placeholder="أي معلومات أخرى تخص العميل..."></textarea>
                 </div>
             </form>
         </div>
@@ -97,86 +99,53 @@
         <div class="modal-footer">
             <button type="button" class="btn-cancel" onclick="window.closeCustomerModal()">إلغاء</button>
             <button type="button" class="btn-save" id="btn-save-customer">
-                <i class="fas fa-save"></i> حفظ البيانات
+                <i class="fas fa-save"></i> حفظ البيانات الحقيقية
             </button>
         </div>
     </div>
 </div>
 
-<div id="confirm-modal" class="tera-modal-overlay" style="display: none;">
-    <div class="tera-confirm-content">
-        <div class="confirm-icon-circle"><i class="fas fa-exclamation-circle"></i></div>
-        <h3 id="confirm-title">تأكيد الإجراء</h3>
-        <p id="confirm-message">هل أنت متأكد من تنفيذ هذا الإجراء؟</p>
-        <div class="confirm-actions">
-            <button id="confirm-yes" class="btn-confirm-yes">نعم، استمر</button>
-            <button id="confirm-no" class="btn-confirm-no" onclick="window.closeConfirmModal()">تراجع</button>
-        </div>
-    </div>
-</div>
-
 <style>
-    /* التنسيقات العامة للمودال */
-    .modal-overlay, .tera-modal-overlay {
-        position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6);
-        backdrop-filter: blur(8px); z-index: 10000; display: none; align-items: center; justify-content: center;
-        padding: 20px;
+    /* تحسينات إضافية لتنسيق الصورة داخل المودال */
+    .image-profile-upload {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+        padding: 15px;
+        background: #f8fafc;
+        border-radius: 20px;
+        border: 1px dashed #cbd5e1;
     }
-
-    .modal-card { 
-        background: white; width: 100%; max-width: 950px; border-radius: 28px; 
-        max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;
-        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-        animation: modalSlideUp 0.4s ease-out;
+    .profile-preview img {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #2563eb;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-
-    @keyframes modalSlideUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
+    .btn-upload-label {
+        background: #2563eb;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: 0.3s;
     }
+    .btn-upload-label:hover { background: #1d4ed8; }
+</style>
 
-    .modal-header { 
-        padding: 20px 30px; border-bottom: 1px solid #f1f5f9; 
-        display: flex; justify-content: space-between; align-items: center;
-        background: #fff;
+<script>
+    // وظيفة معاينة الصورة قبل الرفع
+    function previewCustomerImage(event) {
+        const reader = new FileReader();
+        reader.onload = function(){
+            const output = document.getElementById('cust-img-preview');
+            output.src = reader.result;
+        };
+        reader.readAsDataURL(event.target.files[0]);
     }
-
-    .modal-header h3 { color: #2563eb; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 10px; }
-
-    .close-btn { background: #f1f5f9; border: none; font-size: 1.5rem; width: 35px; height: 35px; border-radius: 10px; cursor: pointer; color: #64748b; }
-
-    .modal-body { padding: 25px 35px; overflow-y: auto; flex: 1; background: #ffffff; }
-    
-    .form-section-header { 
-        padding: 10px 0; color: #1e293b; 
-        border-bottom: 2px solid #eff6ff; font-weight: 800;
-        margin: 25px 0 15px; font-size: 0.95rem; display: flex; align-items: center; gap: 10px;
-    }
-    .form-section-header i { color: #2563eb; }
-
-    .grid-3-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    .grid-4-cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-    
-    .input-group { display: flex; flex-direction: column; gap: 8px; }
-    .input-group label { font-size: 0.85rem; font-weight: 700; color: #475569; }
-    .input-group input, .input-group select, .input-group textarea {
-        padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 12px;
-        font-family: 'Tajawal', sans-serif; transition: 0.2s; background: #f8fafc;
-    }
-    .input-group input:focus { border-color: #2563eb; outline: none; background: #fff; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
-    
-    .full-width { grid-column: 1 / -1; }
-
-    .modal-footer { padding: 20px 35px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 12px; background: #f8fafc; }
-    
-    .btn-save { background: #2563eb; color: white; border: none; padding: 12px 30px; border-radius: 14px; font-weight: 800; cursor: pointer; transition: 0.3s; }
-    .btn-save:hover { background: #1d4ed8; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
-
-    .btn-cancel { background: white; color: #64748b; border: 1px solid #e2e8f0; padding: 12px 30px; border-radius: 14px; font-weight: 700; cursor: pointer; }
-
-    /* نافذة التأكيد */
-    .tera-confirm-content { background: white; padding: 40px; border-radius: 30px; text-align: center; max-width: 420px; width: 100%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-    .confirm-icon-circle { font-size: 3rem; color: #2563eb; margin-bottom: 20px; background: #eff6ff; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; border-radius: 50%; }
-    .confirm-actions { display: flex; gap: 12px; margin-top: 30px; }
-    .btn-confirm-yes { flex: 2; background: #2563eb; color: white; border: none; padding: 14px; border-radius: 15px; font-weight: 800; cursor: pointer; }
-    .btn-
+</script>
