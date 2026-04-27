@@ -1,162 +1,124 @@
-/**
- * customers-ui.js - المحرك المطور لنظام Tera Gateway
- * المتوافق مع بروتوكول الـ 17 عنصراً ونظام الإحصائيات المتقدم
- */
-import { db } from '../core/firebase.js'; 
-import { 
-    collection, getDocs, query, orderBy, deleteDoc, doc, getDoc, updateDoc, addDoc 
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+// js/modules/customers-ui.js
 
 /**
- * 1. تشغيل واجهة العملاء وجلب البيانات
+ * تهيئة واجهة المستخدم لموديول العملاء
+ * @param {HTMLElement} container - الحاوية التي سيتم عرض الجدول داخلها
  */
-export async function initCustomersUI() {
-    const tableBody = document.getElementById('customers-data-rows');
-    if (!tableBody) return;
+export async function initCustomersUI(container) {
+    console.log("تمت تهيئة واجهة العملاء بنجاح");
+    renderCustomersTable(container);
+}
 
-    // إظهار مؤشر التحميل
-    tableBody.innerHTML = `<tr><td colspan="17" style="text-align:center; padding:50px;">
-        <i class="fas fa-circle-notch fa-spin fa-2x" style="color:#2563eb;"></i><br>جاري مزامنة قاعدة البيانات...</td></tr>`;
+/**
+ * دالة فتح النافذة المنبثقة (إضافة أو تعديل)
+ * @param {string} mode - نمط النافذة ('add' أو 'edit')
+ * @param {string|null} id - معرف العميل في حال التعديل
+ */
+export function openCustomerModal(mode = 'add', id = null) {
+    const modal = document.getElementById('customer-modal');
+    const form = document.getElementById('customer-form');
+    const title = document.getElementById('modal-title');
 
-    try {
-        const customersRef = collection(db, "customers");
-        const q = query(customersRef, orderBy("createdAt", "desc"));
-        const querySnapshot = await getDocs(q);
+    if (!modal) {
+        console.error("خطأ: لم يتم العثور على عنصر customer-modal");
+        return;
+    }
 
-        tableBody.innerHTML = ''; 
+    // إعادة ضبط النموذج عند الفتح
+    if (form) form.reset();
 
-        if (querySnapshot.empty) {
-            tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center; padding:30px; color:#64748b;">لا يوجد عملاء مسجلين حالياً.</td></tr>';
-            updateCustomersStats([]); // تصقير الإحصائيات
-            return;
-        }
+    if (mode === 'edit' && id) {
+        if (title) title.innerHTML = '<i class="fas fa-edit"></i> تعديل بيانات العميل';
+        console.log(`جاري جلب بيانات العميل للتعديل: ${id}`);
+        fetchAndFillCustomerData(id);
+    } else {
+        if (title) title.innerHTML = '<i class="fas fa-user-plus"></i> إضافة بيانات العميل الكاملة';
+    }
 
-        // تحديث شبكة الإحصائيات الـ 17
-        updateCustomersStats(querySnapshot.docs);
+    modal.style.display = 'flex';
+}
 
-        let index = 1;
-        querySnapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            const tr = document.createElement('tr');
-            tr.className = "customer-row";
-
-            // بناء الصف مع تثبيت الأعمدة (Sticky) كما في CSS
-            tr.innerHTML = `
-                <td class="sticky-col">${index++}</td>
-                <td class="sticky-col-name">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <img src="admin/images/default-product.png" class="customer-avatar" style="width:30px; height:30px; border-radius:8px;">
-                        <span>${data.name || '---'}</span>
-                    </div>
-                </td>
-                <td><a href="tel:${data.phone}" style="text-decoration:none; color:inherit;">${data.phone || '---'}</a></td>
-                <td><span class="badge" style="background:#f1f5f9; padding:2px 8px; border-radius:5px;">${data.countryCode || '+966'}</span></td>
-                <td>${data.email || '---'}</td>
-                <td>${data.country || 'السعودية'}</td>
-                <td>${data.city || '---'}</td>
-                <td>${data.district || '---'}</td>
-                <td>${data.street || '---'}</td>
-                <td>${data.buildingNo || '---'}</td>
-                <td>${data.additionalNo || '---'}</td>
-                <td>${data.postalCode || '---'}</td>
-                <td>${data.poBox || '---'}</td>
-                <td style="font-size:0.75rem; color:#64748b;">${formatDate(data.createdAt)}</td>
-                <td><span class="status-pill ${getStatusClass(data.status)}">${data.status || 'غير محدد'}</span></td>
-                <td><span class="status-pill ${data.tag === 'VIP' ? 'status-vip' : 'status-pending'}">${data.tag || 'عادي'}</span></td>
-                <td class="sticky-actions-cell">
-                    <div class="action-btns">
-                        <button onclick="window.openCustomerModal('edit', '${docSnap.id}')" class="btn-action btn-edit" title="تعديل"><i class="fas fa-pen"></i></button>
-                        <button onclick="window.deleteCust('${docSnap.id}')" class="btn-action btn-delete" title="حذف"><i class="fas fa-trash-alt"></i></button>
-                    </div>
-                </td>
-            `;
-            tableBody.appendChild(tr);
-        });
-
-    } catch (error) {
-        console.error("Firestore Error:", error);
-        tableBody.innerHTML = `<tr><td colspan="17" style="text-align:center; color:#ef4444; padding:30px;">
-            <i class="fas fa-exclamation-triangle"></i> فشل الاتصال بقاعدة البيانات. تأكد من إعدادات Firebase.</td></tr>`;
+/**
+ * دالة إغلاق النافذة المنبثقة
+ */
+export function closeCustomerModal() {
+    const modal = document.getElementById('customer-modal');
+    if (modal) {
+        modal.style.display = 'none';
     }
 }
 
 /**
- * 2. تحديث شبكة الإحصائيات المتقدمة
+ * معالجة إرسال النموذج (حفظ أو تحديث)
  */
-function updateCustomersStats(docs) {
-    const data = docs.map(d => d.data());
+export async function handleCustomerSubmit(event) {
+    event.preventDefault();
     
-    const stats = {
-        total: data.length,
-        active: data.filter(d => d.status === 'نشط').length,
-        suspended: data.filter(d => d.status === 'موقوف').length,
-        vip: data.filter(d => d.tag === 'VIP').length,
-        complete: data.filter(d => d.name && d.phone && d.city && d.district).length,
-        individuals: data.filter(d => d.type === 'فرد' || !d.type).length,
-        companies: data.filter(d => d.type === 'شركة').length
+    const formData = {
+        name: document.getElementById('cust-name').value,
+        phone: document.getElementById('cust-phone').value,
+        national_id: document.getElementById('cust-id').value,
+        email: document.getElementById('cust-email').value,
+        dob: document.getElementById('cust-dob').value,
+        gender: document.getElementById('cust-gender').value,
+        classification: document.getElementById('cust-classification').value, // حقل التصنيف الجديد
+        city: document.getElementById('cust-city').value,
+        district: document.getElementById('cust-district').value,
+        street: document.getElementById('cust-street').value,
+        building_no: document.getElementById('cust-building').value,
+        additional_no: document.getElementById('cust-additional').value,    // حقل الرقم الإضافي الجديد
+        zip_code: document.getElementById('cust-zip').value,                // حقل الرمز البريدي الجديد
+        po_box: document.getElementById('cust-pobox').value,                // حقل صندوق البريد الجديد
+        employer: document.getElementById('cust-employer').value,
+        salary: document.getElementById('cust-salary').value,
+        status: document.getElementById('cust-status').value,
+        updatedAt: new Date()
     };
 
-    // ربط القيم بالعناصر في واجهة المستخدم (حسب IDs المحدثة في index.html)
-    const mappings = {
-        'stat-total': stats.total,
-        'stat-active': stats.active,
-        'stat-suspended': stats.suspended,
-        'stat-vip': stats.vip,
-        'stat-complete': stats.complete,
-        'stat-incomplete': stats.total - stats.complete,
-        'stat-individuals': stats.individuals,
-        'stat-companies': stats.companies
-    };
-
-    for (const [id, value] of Object.entries(mappings)) {
-        const el = document.getElementById(id);
-        if (el) el.innerText = value;
-    }
+    console.log("البيانات الجاهزة للحفظ:", formData);
+    // هنا يتم استدعاء دالة الحفظ في Firestore من ملف firebase.js
+    // example: await saveToFirestore('customers', formData);
+    
+    closeCustomerModal();
 }
 
 /**
- * 3. حذف عميل مع تأكيد
+ * دالة افتراضية لعرض الجدول (يمكنك ربطها ببيانات Firebase الحقيقية)
  */
-window.deleteCust = async function(id) {
-    if (confirm("⚠️ هل أنت متأكد من حذف هذا العميل نهائياً من قاعدة البيانات؟")) {
-        try {
-            await deleteDoc(doc(db, "customers", id));
-            // تحديث إحصائية "الحذف" برمجياً (لأغراض العرض)
-            const delEl = document.getElementById('stat-deletes');
-            if (delEl) delEl.innerText = parseInt(delEl.innerText) + 1;
-            
-            initCustomersUI(); // إعادة تحميل الجدول
-        } catch (error) {
-            alert("حدث خطأ أثناء الحذف.");
-        }
-    }
-};
+function renderCustomersTable(container) {
+    container.innerHTML = `
+        <div class="table-container">
+            <table id="customers-table">
+                <thead>
+                    <tr>
+                        <th>العميل</th>
+                        <th>رقم الجوال</th>
+                        <th>المدينة</th>
+                        <th>التصنيف</th>
+                        <th>رقم المبنى</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="customers-body">
+                    </tbody>
+            </table>
+        </div>
+    `;
+}
 
 /**
- * 4. مساعدات التنسيق (Helpers)
+ * دالة محاكاة لجلب بيانات عميل وتعبئتها في النموذج عند التعديل
  */
-function formatDate(dateInput) {
-    if (!dateInput) return '---';
-    const date = new Date(dateInput);
-    return date.toLocaleDateString('ar-SA', { day: '2-digit', month: '2-digit', year: 'numeric' });
+async function fetchAndFillCustomerData(id) {
+    // محاكاة جلب بيانات
+    // const data = await getCustomerFromDB(id);
+    // document.getElementById('cust-name').value = data.name;
+    // ... إلخ
 }
 
-function getStatusClass(status) {
-    switch (status) {
-        case 'نشط': return 'status-active';
-        case 'موقوف': return 'status-inactive';
-        default: return 'status-pending';
+// ربط حدث الإرسال بالنموذج عند تحميل الموديول
+document.addEventListener('submit', (e) => {
+    if (e.target && e.target.id === 'customer-form') {
+        handleCustomerSubmit(e);
     }
-}
-
-// تشغيل المحرك عند الاستدعاء
-window.filterCustomersTable = function() {
-    const input = document.getElementById("customer-search");
-    const filter = input.value.toUpperCase();
-    const rows = document.querySelectorAll(".customer-row");
-
-    rows.forEach(row => {
-        const text = row.innerText.toUpperCase();
-        row.style.display = text.indexOf(filter) > -1 ? "" : "none";
-    });
-};
+});
