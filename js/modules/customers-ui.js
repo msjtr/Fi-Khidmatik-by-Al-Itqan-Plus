@@ -1,156 +1,107 @@
 /**
- * موديول واجهة مستخدم العملاء - النسخة المطابقة لبيانات Firestore
+ * js/modules/customers-ui.js 
+ * نسخة مطورة مع معالجة أخطاء الاتصال والتحقق من العناصر
  */
 
-// 1. دالة تهيئة موديول العملاء
 export async function initCustomersUI(container) {
-    console.log("تنشيط واجهة العملاء...");
+    console.log("🚀 تنشيط واجهة العملاء... جاري التحقق من المكونات");
     
-    // التأكد من وجود عنصر الجدول قبل البدء
-    const tableBody = container.querySelector('#customers-tbody');
-    if (tableBody) {
-        await renderCustomersTable(container);
-    } else {
-        // في حال تأخر تحميل DOM المكونات
-        setTimeout(() => renderCustomersTable(document), 200);
+    // 1. التأكد من وجود الحاوية والجدول
+    const tableBody = container.querySelector('#customers-tbody') || document.querySelector('#customers-tbody');
+    
+    if (!tableBody) {
+        console.warn("⚠️ لم يتم العثور على #customers-tbody، جاري المحاولة مرة أخرى بعد قليل...");
+        setTimeout(() => initCustomersUI(container), 500);
+        return;
     }
+
+    // 2. التحقق من وجود Firebase
+    if (!window.db) {
+        console.error("❌ خطأ: لم يتم تهيئة Firebase (window.db غير موجود)");
+        tableBody.innerHTML = '<tr><td colspan="9" style="color:red; text-align:center;">خطأ في الاتصال بقاعدة البيانات</td></tr>';
+        return;
+    }
+
+    await renderCustomersTable(tableBody);
 }
 
-// 2. دالة جلب البيانات من Firestore وعرضها في الجدول
-export async function renderCustomersTable(context = document) {
-    const tableBody = context.querySelector('#customers-tbody');
-    if (!tableBody) return;
-
-    // رسالة تحميل للمستخدم
-    tableBody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:20px;">جاري جلب بيانات العملاء...</td></tr>';
+async function renderCustomersTable(tableBody) {
+    tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;">جاري جلب بيانات العملاء...</td></tr>';
 
     try {
-        // التحقق من اتصال قاعدة البيانات
-        if (!window.db) throw new Error("قاعدة البيانات غير متصلة");
-
-        const querySnapshot = await window.db.collection("customers").orderBy("name").get();
+        // جلب البيانات من مجموعة "customers"
+        const snapshot = await window.db.collection("customers").orderBy("name").get();
         
-        if (querySnapshot.empty) {
-            tableBody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:20px;">لا يوجد سجلات عملاء حالياً.</td></tr>';
+        if (snapshot.empty) {
+            tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px;">لا يوجد عملاء مسجلين حالياً.</td></tr>';
             return;
         }
 
-        let rowsHTML = '';
-        querySnapshot.forEach((doc) => {
+        let html = '';
+        snapshot.forEach(doc => {
             const data = doc.data();
             const id = doc.id;
 
-            // معالجة القيم لتجنب ظهور undefined
+            // معالجة البيانات لتجنب undefined (مهم جداً لظهور البيانات)
             const name = data.name || '---';
             const phone = data.phone || '---';
             const city = data.city || '---';
-            const classification = data.classification || 'REGULAR';
+            const classification = data.classification || 'عادي';
             const building = data.building_no || '---';
             const additional = data.additional_no || '---';
             const zip = data.zip_code || '---';
             const pobox = data.po_box || '---';
 
-            rowsHTML += `
-                <tr id="row-${id}">
-                    <td class="customer-name-cell">
-                        <div class="avatar-sm">${name.charAt(0)}</div>
-                        <span>${name}</span>
+            html += `
+                <tr class="customer-row">
+                    <td>
+                        <div class="cust-info-cell">
+                            <div class="avatar-circle">${name.charAt(0)}</div>
+                            <span class="cust-name">${name}</span>
+                        </div>
                     </td>
                     <td dir="ltr">${phone}</td>
                     <td>${city}</td>
-                    <td><span class="badge ${classification.toLowerCase()}">${classification}</span></td>
+                    <td><span class="status-badge ${classification === 'VIP' ? 'vip-style' : 'reg-style'}">${classification}</span></td>
                     <td>${building}</td>
                     <td>${additional}</td>
                     <td>${zip}</td>
                     <td>${pobox}</td>
-                    <td class="actions-cell">
-                        <div class="action-buttons">
-                            <button onclick="window.editCustomer('${id}')" class="btn-icon edit" title="تعديل"><i class="fas fa-edit"></i></button>
-                            <button onclick="window.printCustomer('${id}')" class="btn-icon print" title="طباعة"><i class="fas fa-print"></i></button>
-                            <button onclick="window.deleteCustomer('${id}')" class="btn-icon delete" title="حذف"><i class="fas fa-trash"></i></button>
+                    <td>
+                        <div class="action-btns">
+                            <button onclick="window.editCustomer('${id}')" class="edit-btn"><i class="fas fa-edit"></i></button>
+                            <button onclick="window.deleteCustomer('${id}')" class="del-btn"><i class="fas fa-trash-alt"></i></button>
                         </div>
                     </td>
                 </tr>
             `;
         });
 
-        tableBody.innerHTML = rowsHTML;
+        tableBody.innerHTML = html;
+        console.log(`✅ تم تحميل ${snapshot.size} عميل بنجاح.`);
 
     } catch (error) {
-        console.error("Firestore Error:", error);
-        tableBody.innerHTML = `<tr><td colspan="12" style="color:red; text-align:center;">خطأ في تحميل البيانات: ${error.message}</td></tr>`;
+        console.error("❌ فشل جلب العملاء من Firestore:", error);
+        tableBody.innerHTML = `<tr><td colspan="9" style="color:red; text-align:center;">حدث خطأ أثناء تحميل البيانات: ${error.message}</td></tr>`;
     }
 }
 
-// 3. الدوال العالمية للتحكم (إضافة/تعديل/حذف)
-
-window.openCustomerModal = function(mode = 'add', id = null) {
-    const modal = document.getElementById('customer-modal');
-    const form = document.getElementById('customer-form');
-    if (!modal || !form) return;
-
-    form.reset();
-    form.dataset.mode = mode;
-    form.dataset.id = id || '';
-
-    if (mode === 'edit' && id) {
-        document.getElementById('modal-title').innerText = 'تعديل بيانات العميل الكاملة';
-        loadCustomerToForm(id);
-    } else {
-        document.getElementById('modal-title').innerText = 'إضافة بيانات العميل الكاملة';
+// الدوال العالمية للتحكم (أضفها لتعمل الأزرار داخل الجدول)
+window.editCustomer = (id) => {
+    if (typeof window.openCustomerModal === 'function') {
+        window.openCustomerModal('edit', id);
     }
-
-    modal.style.display = 'flex';
 };
 
-// تحميل البيانات للنموذج عند التعديل
-async function loadCustomerToForm(id) {
-    try {
-        const doc = await window.db.collection("customers").doc(id).get();
-        if (doc.exists) {
-            const data = doc.data();
-            const form = document.getElementById('customer-form');
-            // ملء الحقول بناءً على الـ ID في modals.html
-            form.elements['name'].value = data.name || '';
-            form.elements['phone'].value = data.phone || '';
-            form.elements['national_id'].value = data.national_id || '';
-            form.elements['classification'].value = data.classification || 'REGULAR';
-            form.elements['city'].value = data.city || '';
-            form.elements['building_no'].value = data.building_no || '';
-            // إضافة باقي الحقول حسب الحاجة...
-        }
-    } catch (e) { console.error("Error loading customer:", e); }
-}
-
-window.deleteCustomer = async function(id) {
-    if (confirm("هل أنت متأكد من حذف هذا العميل نهائياً؟")) {
+window.deleteCustomer = async (id) => {
+    if (confirm("هل أنت متأكد من حذف هذا العميل؟")) {
         try {
             await window.db.collection("customers").doc(id).delete();
-            renderCustomersTable(); // تحديث الجدول بعد الحذف
-        } catch (e) { alert("خطأ في الحذف: " + e.message); }
+            // إعادة التحديث
+            const tbody = document.querySelector('#customers-tbody');
+            if (tbody) renderCustomersTable(tbody);
+        } catch (e) {
+            alert("فشل الحذف: " + e.message);
+        }
     }
 };
-
-export async function handleCustomerSubmit(e) {
-    e.preventDefault();
-    const form = e.target;
-    const mode = form.dataset.mode;
-    const id = form.dataset.id;
-    
-    const formData = new FormData(form);
-    const customerData = Object.fromEntries(formData.entries());
-    customerData.updatedAt = new Date();
-
-    try {
-        if (mode === 'edit') {
-            await window.db.collection("customers").doc(id).update(customerData);
-        } else {
-            customerData.createdAt = new Date();
-            await window.db.collection("customers").add(customerData);
-        }
-        window.closeCustomerModal();
-        renderCustomersTable();
-    } catch (error) {
-        alert("فشل الحفظ: " + error.message);
-    }
-}
