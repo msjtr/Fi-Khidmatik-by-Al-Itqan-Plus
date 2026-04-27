@@ -3,26 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام في خدمتك | لوحة التحكم</title>
+    <title>نظام في خدمتك | لوحة الإدارة الذكية</title>
     
-    <link rel="icon" href="images/logo.svg" type="image/svg+xml">
+    <link rel="icon" href="../images/logo.svg" type="image/svg+xml">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="../css/customers.css">
 
     <style>
         :root {
             --sidebar-width: 280px;
             --header-height: 70px;
             --primary-blue: #2563eb;
-            --bg-body: #f1f5f9; /* لون خلفية أهدأ للعين */
+            --bg-body: #f1f5f9;
             --border-color: #e2e8f0;
         }
-
-        * { box-sizing: border-box; }
 
         body {
             margin: 0;
@@ -40,7 +39,7 @@
             height: 100%;
         }
 
-        /* حاوية القائمة الجانبية */
+        /* منطقة القائمة الجانبية */
         #sidebar-placeholder {
             width: var(--sidebar-width);
             height: 100%;
@@ -48,10 +47,9 @@
             flex-shrink: 0;
             border-left: 1px solid var(--border-color);
             z-index: 1000;
-            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* منطقة المحتوى */
+        /* منطقة المحتوى الديناميكي */
         .content-area {
             flex-grow: 1;
             display: flex;
@@ -60,27 +58,22 @@
             position: relative;
         }
 
-        /* الهيدر */
         #header-placeholder {
             height: var(--header-height);
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border-color);
-            flex-shrink: 0;
             z-index: 999;
         }
 
-        /* حاوية الموديولات (الجداول والإحصائيات) */
         #module-container {
             flex-grow: 1;
             padding: 20px;
             overflow-y: auto;
-            overflow-x: hidden; /* نمنع التمرير الأفقي هنا لأن الجدول سيتكفل به */
-            position: relative;
             scroll-behavior: smooth;
         }
 
-        /* شاشة التحميل الذكية */
+        /* شاشة التحميل الاحترافية */
         .loading-state {
             display: flex;
             flex-direction: column;
@@ -93,25 +86,19 @@
             top: 0;
             left: 0;
             z-index: 9999;
-            transition: opacity 0.5s ease, visibility 0.5s;
+            transition: opacity 0.5s ease;
         }
 
         .loading-state.hidden {
             opacity: 0;
-            visibility: hidden;
+            pointer-events: none;
         }
 
-        /* تحسينات الشاشات المتوسطة */
+        /* تحسينات التجاوب */
         @media (max-width: 1024px) {
             :root { --sidebar-width: 80px; }
             .sidebar-text { display: none; }
         }
-
-        /* تخصيص شريط التمرير (Scrollbar) */
-        #module-container::-webkit-scrollbar { width: 6px; height: 6px; }
-        #module-container::-webkit-scrollbar-track { background: transparent; }
-        #module-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        #module-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body>
@@ -124,11 +111,8 @@
 
             <main id="module-container">
                 <div class="loading-state" id="main-loader">
-                    <div class="loader-icon">
-                        <i class="fas fa-circle-notch fa-spin fa-3x" style="color: var(--primary-blue);"></i>
-                    </div>
-                    <p style="margin-top: 20px; font-weight: 800; color: #334155; font-size: 1.2rem;">جاري تشغيل نظام في خدمتك...</p>
-                    <small style="color: #64748b;">جاري جلب البيانات السحابية من Firebase</small>
+                    <i class="fas fa-circle-notch fa-spin fa-3x" style="color: var(--primary-blue);"></i>
+                    <p style="margin-top: 20px; font-weight: 700; color: #1e293b;">جاري مزامنة بيانات تيرا جيت واي...</p>
                 </div>
             </main>
         </div>
@@ -140,11 +124,12 @@
 
     <script>
         /**
-         * دالة تحميل المكونات الديناميكية
+         * دالة جلب المكونات الثابتة (Header, Sidebar, Modals)
          */
-        async function loadStaticComponent(id, fileName) {
+        async function loadCoreComponent(id, fileName) {
             const container = document.getElementById(id);
-            const path = `admin/components/${fileName}`;
+            // المسار بالنسبة لمجلد admin/
+            const path = `components/${fileName}`;
             
             try {
                 const response = await fetch(`${path}?v=${Date.now()}`);
@@ -153,34 +138,32 @@
                 container.innerHTML = html;
                 return true;
             } catch (err) {
-                console.error(`❌ فشل في تحميل المكون: ${fileName}`, err);
-                container.innerHTML = `<div style="color:red; padding:10px;">فشل تحميل ${fileName}</div>`;
+                console.error(`❌ خطأ في تحميل: ${fileName}`, err);
                 return false;
             }
         }
 
-        // تشغيل المحرك عند جاهزية الصفحة
         window.addEventListener('DOMContentLoaded', async () => {
-            // تحميل الأجزاء الثابتة أولاً
+            // تحميل المكونات الأساسية بالتوازي لسرعة الأداء
             await Promise.all([
-                loadStaticComponent('sidebar-placeholder', 'sidebar.html'),
-                loadStaticComponent('header-placeholder', 'header.html'),
-                loadStaticComponent('modals-placeholder', 'modals.html')
+                loadCoreComponent('sidebar-placeholder', 'sidebar.html'),
+                loadCoreComponent('header-placeholder', 'header.html'),
+                loadCoreComponent('modals-placeholder', 'modals.html')
             ]);
 
-            // إخفاء شاشة التحميل بنعومة
+            // إخفاء الـ Loader بعد التأكد من تحميل المكونات
             const loader = document.getElementById('main-loader');
             if (loader) {
                 loader.classList.add('hidden');
                 setTimeout(() => loader.remove(), 600);
             }
             
-            // التأكد من عمل نظام الـ Routing بعد تحميل المكونات
+            // استدعاء نظام التوجيه لبدء عرض الصفحة الافتراضية
             if (window.handleRoute) window.handleRoute();
         });
     </script>
 
-    <script type="module" src="js/main.js"></script>
+    <script type="module" src="../js/main.js"></script>
 
 </body>
 </html>
