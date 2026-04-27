@@ -1,25 +1,58 @@
-<div class="customers-module">
+<div class="customers-module-wrapper">
+    
     <div class="stats-grid">
-        <div class="stat-card"><h3>العدد الكلي</h3><p id="stat-total-customers">0</p></div>
-        <div class="stat-card"><h3>مكتملة البيانات</h3><p id="stat-complete-data">0</p></div>
-        <div class="stat-card"><h3>النشطين</h3><p id="stat-active-customers">0</p></div>
-        <div class="stat-card"><h3>عملاء VIP</h3><p id="stat-vip-count">0</p></div>
+        <div class="stat-card">
+            <h3>العدد الكلي للعملاء</h3>
+            <p id="stat-total-customers">0</p>
+        </div>
+        <div class="stat-card">
+            <h3>مكتملة البيانات</h3>
+            <p id="stat-complete-data" style="color: #10b981;">0</p>
+        </div>
+        <div class="stat-card">
+            <h3>العملاء النشطين</h3>
+            <p id="stat-active-customers">0</p>
+        </div>
+        <div class="stat-card">
+            <h3>عملاء VIP</h3>
+            <p id="stat-vip-count" style="color: #f59e0b;">0</p>
+        </div>
     </div>
 
-    <div class="action-bar">
-        <button onclick="openCustomerModal('add')" class="btn-primary">إضافة عميل جديد +</button>
-        <button onclick="exportCustomers()" class="btn-secondary">تصدير (Excel/PDF)</button>
-        <button onclick="document.getElementById('import-file').click()" class="btn-secondary">استيراد بيانات</button>
-        <a href="assets/templates/customers_template.xlsx" class="btn-link">تحميل نموذج استيراد</a>
-        <input type="file" id="import-file" hidden onchange="handleImport(this)">
+    <div class="glass-header">
+        <div class="title-zone">
+            <div class="icon-box"><i class="fas fa-users"></i></div>
+            <div>
+                <h2 style="margin:0; font-size: 1.2rem;">إدارة العملاء</h2>
+                <small style="color: #64748b;">مجموعة Firestore: customers</small>
+            </div>
+        </div>
+
+        <div class="action-zone">
+            <div class="search-wrapper">
+                <i class="fas fa-search"></i>
+                <input type="text" id="customer-search" placeholder="بحث باسم العميل، الجوال، أو المدينة..." onkeyup="filterCustomersTable()">
+            </div>
+            
+            <button onclick="window.openCustomerModal('add')" class="btn-glass btn-add">
+                <i class="fas fa-plus"></i> إضافة عميل جديد
+            </button>
+            <button onclick="exportCustomersToExcel()" class="btn-glass btn-export">
+                <i class="fas fa-file-excel"></i> تصدير
+            </button>
+            <button onclick="document.getElementById('import-file').click()" class="btn-glass btn-import">
+                <i class="fas fa-upload"></i> استيراد
+            </button>
+            <input type="file" id="import-file" hidden accept=".xlsx, .xls">
+        </div>
     </div>
 
-    <div class="table-wrapper">
-        <table id="main-customers-table">
+    <div class="glass-table-container">
+        <table class="modern-table" id="main-customers-table">
             <thead>
                 <tr>
-                    <th>التسلسل</th>
-                    <th>اسم العميل</th>
+                    <th class="sticky-col">التسلسل</th>
+                    <th class="sticky-col-name">اسم العميل</th>
                     <th>رقم الجوال</th>
                     <th>مفتاح الدولة</th>
                     <th>البريد الإلكتروني</th>
@@ -34,11 +67,29 @@
                     <th>تاريخ الإضافة</th>
                     <th>حالة العميل</th>
                     <th>تصنيف العميل</th>
-                    <th>الإجراءات</th>
+                    <th class="sticky-actions-header">الإجراءات</th>
                 </tr>
             </thead>
-            <tbody id="customers-data-body">
+            <tbody id="customers-data-rows">
                 </tbody>
         </table>
     </div>
+
+    <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+        <small style="color: #64748b;">* يتم تحديث البيانات تلقائياً من Firebase Cloud Firestore.</small>
+        <a href="assets/templates/customers_template.xlsx" style="font-size: 0.8rem; color: #2563eb; text-decoration: none;">
+            <i class="fas fa-download"></i> تحميل نموذج استيراد إكسل
+        </a>
+    </div>
 </div>
+
+<script type="module">
+    import { initCustomersUI } from '../../js/modules/customers-ui.js';
+    
+    // التأكد من أن النظام يبدأ الجلب فوراً
+    try {
+        initCustomersUI();
+    } catch (err) {
+        console.error("خطأ في تشغيل استدعاء البيانات:", err);
+    }
+</script>
