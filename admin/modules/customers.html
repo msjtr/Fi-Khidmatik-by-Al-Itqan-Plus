@@ -1,21 +1,25 @@
 <div class="customers-module-wrapper">
     
-    <div class="stats-grid">
-        <div class="stat-card shadow-sm">
-            <h3>إجمالي العملاء</h3>
-            <p id="stat-total-customers">0</p>
+    <div class="stats-grid-container">
+        <div class="stats-group-title"><i class="fas fa-chart-pie"></i> إحصائيات قاعدة البيانات</div>
+        <div class="stats-grid">
+            <div class="stat-card"><h3>إجمالي العملاء</h3><p id="stat-total">0</p></div>
+            <div class="stat-card"><h3>بيانات مكتملة</h3><p id="stat-complete" style="color: #10b981;">0</p></div>
+            <div class="stat-card"><h3>بيانات ناقصة</h3><p id="stat-incomplete" style="color: #ef4444;">0</p></div>
+            <div class="stat-card"><h3>النشطين</h3><p id="stat-active" style="color: #2563eb;">0</p></div>
+            <div class="stat-card"><h3>الموقوفين</h3><p id="stat-suspended" style="color: #64748b;">0</p></div>
+            <div class="stat-card"><h3>عملاء VIP</h3><p id="stat-vip" style="color: #f59e0b;">0</p></div>
+            <div class="stat-card"><h3>أفراد</h3><p id="stat-individuals">0</p></div>
+            <div class="stat-card"><h3>شركات</h3><p id="stat-companies">0</p></div>
         </div>
-        <div class="stat-card shadow-sm">
-            <h3>ملفات مكتملة</h3>
-            <p id="stat-complete-data" style="color: #10b981;">0</p>
-        </div>
-        <div class="stat-card shadow-sm">
-            <h3>العملاء النشطين</h3>
-            <p id="stat-active-customers" style="color: #2563eb;">0</p>
-        </div>
-        <div class="stat-card shadow-sm">
-            <h3>قائمة VIP</h3>
-            <p id="stat-vip-count" style="color: #f59e0b;">0</p>
+        
+        <div class="stats-group-title"><i class="fas fa-sync-alt"></i> سجل العمليات</div>
+        <div class="stats-grid mini">
+            <div class="stat-card mini"><h3>إضافات</h3><p id="stat-adds">0</p></div>
+            <div class="stat-card mini"><h3>تعديلات</h3><p id="stat-edits">0</p></div>
+            <div class="stat-card mini"><h3>حذف</h3><p id="stat-deletes">0</p></div>
+            <div class="stat-card mini"><h3>استيراد</h3><p id="stat-imports">0</p></div>
+            <div class="stat-card mini"><h3>تصدير</h3><p id="stat-exports">0</p></div>
         </div>
     </div>
 
@@ -23,38 +27,38 @@
         <div class="title-zone">
             <div class="icon-box-blue"><i class="fas fa-address-book"></i></div>
             <div>
-                <h2 style="margin:0; font-size: 1.25rem; font-weight: 800; color: #1e293b;">إدارة قاعدة بيانات العملاء</h2>
-                <small style="color: #64748b; font-weight: 500;">المزامنة النشطة: Cloud Firestore / customers</small>
+                <h2 style="margin:0; font-size: 1.25rem; font-weight: 800; color: #1e293b;">إدارة عملاء تيرا جيت واي</h2>
+                <small style="color: #64748b;">Cloud Firestore: <span style="color:#2563eb;">/customers</span></small>
             </div>
         </div>
 
         <div class="action-zone">
             <div class="search-wrapper">
                 <i class="fas fa-search"></i>
-                <input type="text" id="customer-search" placeholder="ابحث بالاسم، الجوال، المدينة، أو الحي..." onkeyup="if(typeof filterCustomersTable === 'function') filterCustomersTable()">
+                <input type="text" id="customer-search" placeholder="ابحث بالاسم، الجوال، المدينة..." onkeyup="window.filterCustomersTable()">
             </div>
             
             <div class="button-group">
                 <button onclick="window.openCustomerModal('add')" class="btn-primary-custom">
-                    <i class="fas fa-plus-circle"></i> إضافة عميل جديد
+                    <i class="fas fa-plus-circle"></i> إضافة عميل
                 </button>
-                <button onclick="if(typeof exportCustomersToExcel === 'function') exportCustomersToExcel()" class="btn-outline-custom">
-                    <i class="fas fa-download"></i> تصدير Excel
+                <button onclick="window.exportCustomersToExcel()" class="btn-outline-custom">
+                    <i class="fas fa-file-export"></i> تصدير Excel
                 </button>
                 <button onclick="document.getElementById('import-file').click()" class="btn-outline-custom">
-                    <i class="fas fa-upload"></i> استيراد بيانات
+                    <i class="fas fa-file-import"></i> استيراد
                 </button>
             </div>
-            <input type="file" id="import-file" hidden accept=".xlsx, .xls">
+            <input type="file" id="import-file" hidden accept=".xlsx, .xls" onchange="window.handleImport(event)">
         </div>
     </div>
 
-    <div class="glass-table-container" style="overflow-x: auto;">
+    <div class="glass-table-container">
         <table class="modern-table" id="main-customers-table">
             <thead>
                 <tr>
                     <th class="sticky-col">#</th>
-                    <th class="sticky-col-name">اسم العميل الكامل</th>
+                    <th class="sticky-col-name">اسم العميل</th>
                     <th>رقم الجوال</th>
                     <th>مفتاح الدولة</th>
                     <th>البريد الإلكتروني</th>
@@ -66,95 +70,50 @@
                     <th>الرقم الإضافي</th>
                     <th>الرمز البريدي</th>
                     <th>صندوق البريد</th>
-                    <th>تاريخ التسجيل</th>
+                    <th>تاريخ الإضافة</th>
                     <th>حالة العميل</th>
                     <th>التصنيف</th>
                     <th class="sticky-actions-header">الإجراءات</th>
                 </tr>
             </thead>
             <tbody id="customers-data-rows">
-                <tr id="loading-row">
-                    <td colspan="17" style="text-align: center; padding: 60px;">
-                        <div class="loading-spinner">
-                            <i class="fas fa-circle-notch fa-spin fa-2x"></i>
-                            <p style="margin-top: 15px; font-weight: 600; color: #64748b;">جاري مزامنة بيانات العملاء...</p>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
+                </tbody>
         </table>
     </div>
 
-    <div class="module-footer">
-        <div class="status-badge">
-            <span class="pulse-green"></span>
-            <small>قاعدة البيانات متصلة: **Firebase Cloud Firestore**</small>
-        </div>
-        <div class="template-download">
-            <a href="assets/templates/customers_template.xlsx">
-                <i class="fas fa-file-excel"></i> تحميل نموذج تعبئة البيانات (Excel)
-            </a>
-        </div>
+    <div class="import-log-section">
+        <h3><i class="fas fa-history"></i> سجل عمليات الاستيراد</h3>
+        <div id="import-history-list" class="mini-log-grid">
+            </div>
     </div>
 </div>
 
-<script type="module">
-    import { initCustomersUI } from '../../js/modules/customers-ui.js';
-    
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => startModule());
-    } else {
-        startModule();
-    }
-
-    function startModule() {
-        try {
-            // تشغيل المحرك المطور الذي يدعم الـ 17 عنصراً
-            initCustomersUI();
-            console.log("Customer Module: 17-Element Protocol Active.");
-        } catch (err) {
-            console.error("Customer Module Error:", err);
-            const container = document.getElementById('customers-data-rows');
-            if (container) {
-                container.innerHTML = `<tr><td colspan="17" style="color:#e11d48; text-align:center; padding:30px; font-weight:bold;">
-                    <i class="fas fa-exclamation-triangle"></i> فشل مزامنة البيانات.
-                </td></tr>`;
-            }
-        }
-    }
-</script>
-
 <style>
-    /* تحسينات بصرية لهوية تيرا - Tera Gateway */
-    .icon-box-blue {
-        width: 45px; height: 45px; background: #2563eb; color: #fff; 
-        border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
-    }
-    .btn-primary-custom {
-        background: #2563eb; color: white; border: none; padding: 10px 20px; 
-        border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s;
-    }
-    .btn-outline-custom {
-        background: white; color: #475569; border: 1px solid #e2e8f0; padding: 10px 18px; 
-        border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.3s;
-    }
-    .btn-primary-custom:hover { background: #1d4ed8; transform: translateY(-1px); }
-    .btn-outline-custom:hover { background: #f8fafc; border-color: #cbd5e1; }
+    /* تنسيق شبكة الإحصائيات المتطور */
+    .stats-grid-container { background: #fff; border-radius: 20px; padding: 20px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+    .stats-group-title { font-size: 0.85rem; font-weight: 800; color: #64748b; margin: 15px 0 10px; text-transform: uppercase; letter-spacing: 1px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; }
+    .stats-grid.mini { grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); }
     
-    .pulse-green {
-        width: 10px; height: 10px; background: #10b981; border-radius: 50%;
-        display: inline-block; margin-left: 8px; animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-        0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-        70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-    }
-    .module-footer {
-        margin-top: 15px; display: flex; justify-content: space-between; 
-        align-items: center; background: #fff; padding: 12px 25px; border-radius: 15px; border: 1px solid #e2e8f0;
-    }
-    /* تثبيت الأعمدة المهمة لسهولة القراءة */
-    .sticky-col { position: sticky; right: 0; background: #f8fafc; z-index: 2; }
-    .sticky-col-name { position: sticky; right: 50px; background: #f8fafc; z-index: 2; border-left: 2px solid #e2e8f0; }
+    .stat-card { background: #f8fafc; padding: 15px; border-radius: 15px; text-align: center; border: 1px solid #f1f5f9; transition: 0.3s; }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+    .stat-card h3 { font-size: 0.75rem; color: #475569; margin-bottom: 5px; }
+    .stat-card p { font-size: 1.4rem; font-weight: 900; color: #1e293b; margin: 0; }
+    .stat-card.mini { padding: 10px; background: #fff; }
+    .stat-card.mini p { font-size: 1.1rem; }
+
+    /* الجدول والتحكم */
+    .glass-table-container { background: white; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    .sticky-col { position: sticky; right: 0; background: #f8fafc !important; z-index: 10; border-left: 1px solid #e2e8f0; }
+    .sticky-col-name { position: sticky; right: 40px; background: #f8fafc !important; z-index: 10; border-left: 2px solid #e2e8f0; }
 </style>
+
+<script type="module">
+    import { initCustomersModule } from '../../js/modules/customers-core.js';
+    
+    // تشغيل النظام والتأكد من ربط كافة الأزرار
+    document.addEventListener('DOMContentLoaded', () => {
+        window.customersModule = initCustomersModule();
+        console.log("Tera Gateway: Customers Engine Fully Operational.");
+    });
+</script>
