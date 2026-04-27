@@ -59,7 +59,6 @@ async function switchModule(moduleName) {
  * تهيئة موديول العملاء: تحميل CSS و JS الموديول
  */
 async function initializeCustomers(container) {
-    // تحميل ملف التنسيق الخاص بالعملاء (17 عنصر)
     if (!document.getElementById('module-customers-style')) {
         const link = document.createElement('link');
         link.id = 'module-customers-style';
@@ -69,12 +68,10 @@ async function initializeCustomers(container) {
     }
 
     try {
-        // استيراد موديول الواجهة برمجياً
         const modulePath = `./modules/customers-ui.js?v=${Date.now()}`;
         const module = await import(modulePath);
         
         if (module && module.initCustomersUI) {
-            // تأخير بسيط لضمان استقرار العناصر في الـ DOM
             setTimeout(() => {
                 const target = document.getElementById('customers-module-container') || container;
                 module.initCustomersUI(target);
@@ -86,16 +83,27 @@ async function initializeCustomers(container) {
 }
 
 /**
- * حل مشكلة Uncaught ReferenceError لزر "إضافة عميل"
+ * إدارة النوافذ المنبثقة (Modals)
+ * حل مشكلة: Uncaught TypeError: window.closeCustomerModal is not a function
  */
+
+// دالة فتح النافذة
 window.openAddCustomerModal = function() {
     const modal = document.getElementById('customer-modal');
     if (modal) {
-        modal.style.display = 'block';
+        modal.style.display = 'flex'; // استخدام flex لضمان التمركز إذا كان التصميم يدعمه
     } else {
-        // إذا لم يكن الـ Modal موجوداً في الصفحة الحالية، يمكن توجيهه لصفحة الإضافة
-        console.warn("عنصر الـ Modal غير موجود.");
-        alert("فتح واجهة إضافة عميل جديد...");
+        console.warn("عنصر الـ Modal باسم 'customer-modal' غير موجود.");
+    }
+};
+
+// دالة إغلاق النافذة (تمت إضافتها لحل المشكلة)
+window.closeCustomerModal = function() {
+    const modal = document.getElementById('customer-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    } else {
+        console.warn("تعذر إغلاق النافذة: العنصر غير موجود.");
     }
 };
 
@@ -125,5 +133,5 @@ function handleRoute() {
 window.addEventListener('load', handleRoute);
 window.addEventListener('hashchange', handleRoute);
 
-// إتاحة الدالة عالمياً لاستدعائها من الـ Sidebar (onclick)
+// إتاحة الدالة عالمياً
 window.switchModule = switchModule;
