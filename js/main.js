@@ -1,156 +1,184 @@
 /**
- * main.js - المحرك المركزي لنظام Tera Gateway
- * الإصدار: 2.4.5 - تحديث أبريل 2026 (إصلاح جسر الموديولات)
+ * js/modules/customers-ui.js
+ * موديول واجهة مستخدم العملاء - النسخة المحدثة لربط كافة الحقول
  */
 
-const routes = {
-    'dashboard': 'admin/modules/orders-dashboard.html',
-    'customers': 'admin/modules/customers.html',
-    'order-form': 'admin/modules/order-form.html',
-    'products':  'admin/modules/products.html',
-    'inventory': 'admin/modules/inventory.html',
-    'payments':  'admin/modules/payments.html',
-    'invoice':   'admin/modules/invoice.html',
-    'settings':  'admin/modules/settings.html',
-    'backup':    'admin/modules/backup.html',
-    'general':   'admin/modules/general.html'
-};
+// 1. دالة تهيئة الواجهة وعرض الجدول
+export async function initCustomersUI(container) {
+    console.log("تنشيط واجهة العملاء...");
+    await renderCustomersTable(container);
+}
 
-window.quillEditor = null;
+// 2. دالة جلب وعرض بيانات العملاء في الجدول
+export async function renderCustomersTable(container) {
+    const tableBody = container.querySelector('#customers-tbody');
+    if (!tableBody) {
+        console.error("خطأ: لم يتم العثور على #customers-tbody في الصفحة");
+        return;
+    }
 
-// --- [1] الجسر الاستباقي (Early Bridge) ---
-// منع خطأ "is not a function" عبر تعريف دوال مؤقتة تتبدل تلقائياً بعد تحميل الموديول
-window.openCustomerModal = function(mode = 'add', id = null) {
-    console.warn("⏳ جاري تهيئة موديول العملاء... يرجى الانتظار ثانية.");
-};
-window.openAddCustomer = () => window.openCustomerModal('add');
-window.editCustomer = (id) => window.openCustomerModal('edit', id);
-window.saveCustomer = (e) => { if(e) e.preventDefault(); };
-window.closeCustomerModal = () => {
-    const modal = document.getElementById('customer-modal');
-    if (modal) modal.style.display = 'none';
-};
-
-/**
- * 2. الجسر العالمي للتنقل
- */
-window.handleNavClick = function(element, moduleName) {
-    if (window.event) window.event.preventDefault();
-    window.location.hash = moduleName;
-};
-
-/**
- * 3. المحرك الرئيسي لتبديل الأقسام
- */
-async function switchModule(moduleName) {
-    const container = document.getElementById('module-container');
-    const path = routes[moduleName];
-    
-    if (!container || !path) return;
+    tableBody.innerHTML = '<tr><td colspan="12" class="loading-msg">جاري تحميل قاعدة البيانات...</td></tr>';
 
     try {
-        container.innerHTML = `
-            <div class="loader-wrapper" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:100px;">
-                <i class="fas fa-circle-notch fa-spin fa-3x" style="color:#2563eb; margin-bottom:20px;"></i>
-                <p style="font-weight:800; color:#1e293b;">جاري مزامنة بيانات ${moduleName}...</p>
-            </div>`;
-
-        const response = await fetch(`${path}?v=${Date.now()}`);
-        if (!response.ok) throw new Error(`فشل التحميل: ${response.status}`);
+        // التأكد من استدعاء Firestore من النطاق العالمي
+        const querySnapshot = await window.db.collection("customers").orderBy("name").get();
         
-        const html = await response.text();
-        container.innerHTML = html;
-
-        updateSidebarUI(moduleName);
-
-        // تشغيل المنطق البرمجي الخاص بموديول العملاء
-        if (moduleName === 'customers') {
-            await loadCustomersModule(container);
+        if (querySnapshot.empty) {
+            tableBody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:20px;">لا يوجد عملاء مسجلين حالياً.</td></tr>';
+            return;
         }
+
+        let rows = '';
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const id = doc.id;
+
+            // معالجة رقم الجوال لتجنب ظهور undefined
+            const phoneDisplay = data.phone ? data.phone : '---';
+
+            rows += `
+                <tr>
+                    <td>
+                        <div class="user-info">
+                            <div class="user-avatar">${(data.name || 'C').charAt(0)}</div>
+                            <span>${data.name || '---'}</span>
+                        </div>
+                    </td>
+                    <td dir="ltr">${phoneDisplay}</td>
+                    <td>${data.city || '---'}</td>
+                    <td>
+                        <span class="badge ${data.classification === 'VIP' ? 'vip' : 'regular'}">
+                            ${data.classification || 'REGULAR'}
+                        </span>
+                    </td>
+                    <td>${data.building_no || '---'}</td>
+                    <td>${data.additional_no || '---'}</td>
+                    <td>${data.zip_code || '---'}</td>
+                    <td>${data.po_box || '---'}</td>
+                    <td>
+                        <div class="table-actions">
+                            <button onclick="window.editCustomer('${id}')" title="تعديل"><i class="fas fa-edit"></i></button>
+                            <button onclick="window.printCustomer('${id}')" title="طباعة"><i class="fas fa-print"></i></button>
+                            <button onclick="window.deleteCustomer('${id}')" class="delete" title="حذف"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        tableBody.innerHTML = rows;
 
     } catch (error) {
-        console.error("❌ Navigation Error:", error);
-        container.innerHTML = `<div style="text-align:center; padding:80px; color:#ef4444;"><p>تعذر تحميل الموديول. تأكد من وجود الملف في المسار الصحيح.</p></div>`;
+        console.error("Firestore Error:", error);
+        tableBody.innerHTML = `<tr><td colspan="12" style="color:red; text-align:center;">حدث خطأ أثناء جلب البيانات: ${error.message}</td></tr>`;
     }
 }
 
-/**
- * 4. موديول العملاء - الاستيراد وحقن الدوال الحقيقية
- */
-async function loadCustomersModule(container) {
+// 3. دالة فتح النافذة المنبثقة (إضافة / تعديل)
+export function openCustomerModal(mode = 'add', id = null) {
+    const modal = document.getElementById('customer-modal');
+    const form = document.getElementById('customer-form');
+    const title = document.getElementById('modal-title');
+
+    if (!modal || !form) return;
+
+    form.reset();
+    form.dataset.mode = mode;
+    form.dataset.editId = id || '';
+
+    if (mode === 'edit' && id) {
+        title.innerHTML = '<i class="fas fa-user-edit"></i> تعديل بيانات العميل';
+        loadCustomerDataToForm(id);
+    } else {
+        title.innerHTML = '<i class="fas fa-user-plus"></i> إضافة عميل جديد';
+    }
+
+    modal.style.display = 'flex';
+}
+
+// 4. دالة تحميل بيانات عميل معين إلى النموذج عند التعديل
+async function loadCustomerDataToForm(id) {
     try {
-        // استيراد الموديول مع كسر الكاش لضمان التحديث
-        const module = await import(`./modules/customers-ui.js?v=${Date.now()}`);
-        
-        if (module) {
-            // تهيئة الواجهة
-            if (typeof module.initCustomersUI === 'function') {
-                module.initCustomersUI(container);
-            }
+        const doc = await window.db.collection("customers").doc(id).get();
+        if (doc.exists) {
+            const data = doc.data();
+            const f = document.getElementById('customer-form').elements;
             
-            // --- تحديث الجسر بالدوال الحقيقية المستوردة (Override) ---
-            window.openCustomerModal = (mode, id) => module.openCustomerModal(mode, id);
-            window.openAddCustomer = () => module.openCustomerModal('add');
-            window.editCustomer = (id) => module.openCustomerModal('edit', id);
-            window.saveCustomer = (e) => module.handleCustomerSubmit(e);
-            window.closeCustomerModal = () => module.closeCustomerModal();
-
-            // تهيئة محرر الملاحظات Quill
-            initQuillEditor();
-            
-            console.log("✅ تم حقن الدوال الحقيقية لموديول العملاء بنجاح.");
+            f['name'].value = data.name || '';
+            f['phone'].value = data.phone || '';
+            f['national_id'].value = data.national_id || '';
+            f['email'].value = data.email || '';
+            f['dob'].value = data.dob || '';
+            f['gender'].value = data.gender || 'ذكر';
+            f['classification'].value = data.classification || 'REGULAR';
+            f['city'].value = data.city || '';
+            f['district'].value = data.district || '';
+            f['street'].value = data.street || '';
+            f['building_no'].value = data.building_no || '';
+            f['additional_no'].value = data.additional_no || '';
+            f['zip_code'].value = data.zip_code || '';
+            f['po_box'].value = data.po_box || '';
+            f['employer'].value = data.employer || '';
+            f['salary'].value = data.salary || '';
+            f['commitment_status'].value = data.commitment_status || 'ملتزم';
         }
-    } catch (err) {
-        console.error("❌ فشل في استيراد موديول العملاء. تأكد من وجود export قبل الدوال:", err);
+    } catch (error) {
+        console.error("Error loading customer:", error);
     }
 }
 
-/**
- * 5. تهيئة محرر Quill
- */
-function initQuillEditor() {
-    const editorElem = document.getElementById('customer-notes-editor');
-    if (editorElem) {
-        if (window.quillEditor) window.quillEditor = null;
-        
-        window.quillEditor = new Quill('#customer-notes-editor', {
-            theme: 'snow',
-            placeholder: 'سجل الملاحظات والشروط هنا...',
-            modules: {
-                toolbar: [
-                    ['bold', 'italic', 'underline'],
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    ['clean']
-                ]
-            }
-        });
-    }
-}
+// 5. دالة معالجة إرسال النموذج (حفظ أو تحديث)
+export async function handleCustomerSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const mode = form.dataset.mode;
+    const editId = form.dataset.editId;
+    
+    const f = form.elements;
+    const customerData = {
+        name: f['name'].value,
+        phone: f['phone'].value,
+        national_id: f['national_id'].value,
+        email: f['email'].value,
+        dob: f['dob'].value,
+        gender: f['gender'].value,
+        classification: f['classification'].value,
+        city: f['city'].value,
+        district: f['district'].value,
+        street: f['street'].value,
+        building_no: f['building_no'].value,
+        additional_no: f['additional_no'].value,
+        zip_code: f['zip_code'].value,
+        po_box: f['po_box'].value,
+        employer: f['employer'].value,
+        salary: f['salary'].value,
+        commitment_status: f['commitment_status'].value,
+        updatedAt: new Date()
+    };
 
-/**
- * 6. تحديث واجهة القائمة الجانبية (Sidebar)
- */
-function updateSidebarUI(moduleName) {
-    document.querySelectorAll('.nav-item').forEach(link => {
-        const clickAttr = link.getAttribute('onclick') || '';
-        if (clickAttr.includes(`'${moduleName}'`)) {
-            link.classList.add('active');
+    try {
+        if (mode === 'edit') {
+            await window.db.collection("customers").doc(editId).update(customerData);
         } else {
-            link.classList.remove('active');
+            customerData.createdAt = new Date();
+            await window.db.collection("customers").add(customerData);
         }
-    });
+        
+        window.closeCustomerModal();
+        renderCustomersTable(document.getElementById('module-container'));
+    } catch (error) {
+        alert("فشل في حفظ البيانات: " + error.message);
+    }
 }
 
-/**
- * 7. معالج المسارات (Hash Routing)
- */
-function handleHashRoute() {
-    const hash = window.location.hash.replace('#', '') || 'dashboard';
-    switchModule(hash);
-}
-
-// تشغيل النظام عند التحميل أو تغيير الـ Hash
-window.addEventListener('load', handleHashRoute);
-window.addEventListener('hashchange', handleHashRoute);
-
-window.switchModule = switchModule;
+// ربط الدوال بالنطاق العالمي لضمان عمل أزرار onclick في الجدول
+window.editCustomer = (id) => openCustomerModal('edit', id);
+window.deleteCustomer = async (id) => {
+    if (confirm("هل أنت متأكد من حذف هذا العميل نهائياً؟")) {
+        try {
+            await window.db.collection("customers").doc(id).delete();
+            renderCustomersTable(document.getElementById('module-container'));
+        } catch (error) {
+            alert("خطأ في الحذف: " + error.message);
+        }
+    }
+};
