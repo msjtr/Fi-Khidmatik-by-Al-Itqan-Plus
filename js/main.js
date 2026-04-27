@@ -1,7 +1,7 @@
 /**
  * main.js - المحرك المركزي لنظام Tera Gateway
- * الإصدار: 2.3.0 - تحديث أبريل 2026
- * الوظيفة: إدارة التنقل (Routing) والجسر البرمجي للعمليات
+ * الإصدار: 2.4.0 - تحديث أبريل 2026
+ * الوظيفة: إدارة التنقل مع جسر برمجي استباقي لمنع أخطاء التعريف
  */
 
 const routes = {
@@ -19,8 +19,20 @@ const routes = {
 
 window.quillEditor = null;
 
+// --- [1] الجسر الاستباقي (Early Bridge) ---
+// تعريف الدوال عالمياً فور تشغيل الملف لمنع خطأ "is not a function"
+window.openCustomerModal = function(mode = 'add', id = null) {
+    console.warn("جاري تهيئة الموديول... يرجى المحاولة مرة أخرى خلال لحظة.");
+};
+window.openAddCustomer = () => window.openCustomerModal('add');
+window.saveCustomer = (e) => { if(e) e.preventDefault(); };
+window.closeCustomerModal = () => {
+    const modal = document.getElementById('customer-modal') || document.getElementById('customerModal');
+    if (modal) modal.style.display = 'none';
+};
+
 /**
- * 1. الجسر العالمي للتنقل من القائمة الجانبية
+ * 2. الجسر العالمي للتنقل
  */
 window.handleNavClick = function(element, moduleName) {
     if (window.event) window.event.preventDefault();
@@ -28,7 +40,7 @@ window.handleNavClick = function(element, moduleName) {
 };
 
 /**
- * 2. المحرك الرئيسي لتبديل الأقسام
+ * 3. المحرك الرئيسي لتبديل الأقسام
  */
 async function switchModule(moduleName) {
     const container = document.getElementById('module-container');
@@ -54,8 +66,6 @@ async function switchModule(moduleName) {
         // تشغيل المنطق البرمجي بناءً على القسم
         if (moduleName === 'customers') {
             await loadCustomersModule(container);
-        } else {
-            // منطق الموديولات الأخرى يمكن إضافته هنا
         }
 
     } catch (error) {
@@ -65,43 +75,47 @@ async function switchModule(moduleName) {
 }
 
 /**
- * 3. موديول العملاء - التحميل والجسر البرمجي لإصلاح الأزرار
+ * 4. موديول العملاء - التحميل وحقن الدوال الحقيقية
  */
 async function loadCustomersModule(container) {
     try {
+        // استيراد الموديول
         const module = await import(`./modules/customers-ui.js?v=${Date.now()}`);
+        
         if (module && module.initCustomersUI) {
-            // تشغيل الواجهة
             module.initCustomersUI(container);
             
-            // --- الجسر البرمجي لإصلاح الأزرار (The Bridge) ---
+            // --- تحديث الجسر بالدوال الحقيقية (Override) ---
+            window.openCustomerModal = (mode, id) => module.openCustomerModal(mode, id);
             window.openAddCustomer = () => module.openCustomerModal('add');
             window.editCustomer = (id) => module.openCustomerModal('edit', id);
             window.saveCustomer = (e) => module.handleCustomerSubmit(e);
             
             window.closeCustomerModal = () => {
-                const modal = document.getElementById('customer-modal');
+                const modal = document.getElementById('customer-modal') || document.getElementById('customerModal');
                 if (modal) {
                     modal.style.display = 'none';
                     if (window.quillEditor) window.quillEditor.setContents([]);
                 }
             };
 
-            // تهيئة المحرر
             initQuillEditor();
-            console.log("✅ تم تفعيل جسر عمليات العملاء بنجاح");
+            console.log("✅ تم ربط الدوال الحقيقية لموديول العملاء");
         }
     } catch (err) {
-        console.error("❌ تعذر ربط أزرار العمليات:", err);
+        console.error("❌ فشل في استيراد موديول العملاء:", err);
     }
 }
 
 /**
- * 4. تهيئة محرر Quill
+ * 5. تهيئة محرر Quill
  */
 function initQuillEditor() {
     const editorElem = document.getElementById('customer-notes-editor');
     if (editorElem) {
+        // تصفير المرجع القديم إذا وجد لمنع التكرار
+        if (window.quillEditor) window.quillEditor = null;
+        
         window.quillEditor = new Quill('#customer-notes-editor', {
             theme: 'snow',
             placeholder: 'سجل الملاحظات والشروط هنا...',
@@ -117,7 +131,7 @@ function initQuillEditor() {
 }
 
 /**
- * 5. تحديث حالة القائمة الجانبية
+ * 6. تحديث واجهة القائمة الجانبية
  */
 function updateSidebarUI(moduleName) {
     document.querySelectorAll('.nav-item').forEach(link => {
@@ -131,7 +145,7 @@ function updateSidebarUI(moduleName) {
 }
 
 /**
- * 6. معالج المسارات (Hash Routing)
+ * 7. معالج المسارات (Hash Routing)
  */
 function handleHashRoute() {
     const hash = window.location.hash.replace('#', '') || 'dashboard';
