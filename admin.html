@@ -8,7 +8,7 @@
     <link rel="icon" href="images/logo.svg" type="image/svg+xml">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="css/customers.css">
@@ -24,11 +24,11 @@
                 <span>تيرا جيت واي</span>
             </div>
             <nav class="nav-menu" id="main-nav">
-                <a href="#dashboard" class="nav-item active"><i class="fas fa-chart-line"></i> الرئيسية</a>
-                <a href="#customers" class="nav-item"><i class="fas fa-users"></i> قاعدة العملاء</a>
-                <a href="#orders" class="nav-item"><i class="fas fa-file-invoice-dollar"></i> الطلبات والفواتير</a>
-                <a href="#inventory" class="nav-item"><i class="fas fa-boxes"></i> المخزن</a>
-                <a href="#settings" class="nav-item"><i class="fas fa-cog"></i> الإعدادات</a>
+                <a href="#dashboard" class="nav-item active" data-route="dashboard"><i class="fas fa-chart-line"></i> الرئيسية</a>
+                <a href="#customers" class="nav-item" data-route="customers"><i class="fas fa-users"></i> قاعدة العملاء</a>
+                <a href="#orders" class="nav-item" data-route="orders"><i class="fas fa-file-invoice-dollar"></i> الطلبات والفواتير</a>
+                <a href="#inventory" class="nav-item" data-route="inventory"><i class="fas fa-boxes"></i> المخزن</a>
+                <a href="#settings" class="nav-item" data-route="settings"><i class="fas fa-cog"></i> الإعدادات</a>
             </nav>
         </aside>
 
@@ -43,14 +43,14 @@
                         <span class="user-name">محمد بن صالح</span>
                         <span class="user-role">مدير النظام</span>
                     </div>
-                    <img src="admin/images/default-product.png" class="avatar" alt="Admin">
+                    <img src="admin/images/default-product.png" class="avatar" alt="Admin Profile">
                 </div>
             </header>
 
             <section id="module-container" class="content-body">
-                <div class="loading-state" style="text-align: center; padding: 100px;">
+                <div class="loading-state" id="main-loader" style="text-align: center; padding: 100px;">
                     <div class="spinner"></div>
-                    <p style="margin-top: 20px; font-family: 'Cairo';">جاري مزامنة محرك تيرا جيت واي...</p>
+                    <p style="margin-top: 20px; font-family: 'Cairo'; font-weight: 600;">جاري مزامنة محرك تيرا جيت واي...</p>
                 </div>
             </section>
         </main>
@@ -59,18 +59,21 @@
     <div id="modal-placeholder"></div>
 
     <script type="module">
-        // 1. تحميل المحرك والتهيئة (بالترتيب الصحيح)
+        // استيراد بالترتيب لضمان وجود window.db قبل تشغيل main.js
         import './js/core/firebase.js';
         import './js/core/config.js';
         import './js/main.js';
 
-        // 2. جسر الربط العالمي
+        // جسر الربط العالمي للوظائف التي تستدعى من HTML مباشرة
         window.closeCustomerModal = () => {
-            const modal = document.getElementById('customer-modal') || document.getElementById('customerModal');
-            if (modal) modal.style.display = 'none';
+            const modal = document.querySelector('.modal-wrapper') || document.getElementById('customer-modal');
+            if (modal) {
+                modal.style.opacity = '0';
+                setTimeout(() => modal.remove(), 300); // إزالة من الـ DOM لتحسين الأداء
+            }
         };
 
-        console.log("✅ Tera Gateway: UI Engine v12.12.1 Loaded.");
+        console.log("✅ Tera Gateway: UI Engine v12.12.1 Fully Loaded.");
     </script>
 
     <script type="module" src="js/utils/helpers.js" defer></script>
