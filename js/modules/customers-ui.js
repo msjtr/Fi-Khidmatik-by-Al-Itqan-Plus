@@ -1,26 +1,33 @@
 /**
- * موديول واجهة مستخدم العملاء - النسخة المعتمدة لمنصة تيرا جيت واي
- * يتوافق مع هيكلية Firestore ونظام الإحصائيات المتقدم
+ * موديول واجهة مستخدم العملاء - إصدار Tera Engine V12.12.1
+ * متوافق مع Firebase Modular SDK ونظام الجداول المتطور
  */
 
-export async function initCustomersUI(container) {
-    console.log("🚀 تنشيط واجهة العملاء... جاري التحقق من المكونات");
+// استيراد الدوال البرمجية مباشرة من الإصدار 12.12.1 لضمان التوافق مع firebase.js
+import { 
+    collection, 
+    getDocs, 
+    doc, 
+    deleteDoc, 
+    query, 
+    orderBy 
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-    // التأكد من جاهزية اتصال قاعدة البيانات قبل البدء
+export async function initCustomersUI(container) {
+    console.log("🚀 Tera Gateway: جاري تشغيل موديول العملاء المحدث...");
+
+    // استخدام window.db المعرف في ملف firebase.js الخاص بك
     const db = window.db;
     if (!db) {
-        console.warn("⚠️ انتظار تهيئة Firebase...");
-        setTimeout(() => initCustomersUI(container), 250);
+        console.error("❌ خطأ: لم يتم العثور على اتصال قاعدة البيانات (window.db).");
         return;
     }
 
-    // البحث عن المعرف الصحيح للجدول كما هو في الـ HTML الخاص بك
     const tableBody = document.getElementById('customers-data-rows');
-
     if (tableBody) {
         await renderCustomersTable(db, tableBody);
     } else {
-        // في حال لم يتم حقن الجدول بعد، نستخدم MutationObserver للمراقبة
+        // مراقبة تحميل الواجهة في حال تأخر حقن الـ HTML
         const observer = new MutationObserver((mutations, obs) => {
             const target = document.getElementById('customers-data-rows');
             if (target) {
@@ -33,14 +40,16 @@ export async function initCustomersUI(container) {
 }
 
 async function renderCustomersTable(db, tableBody) {
-    tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center; padding:20px;">جاري مزامنة بيانات العملاء...</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center; padding:30px;">جاري مزامنة بيانات العملاء...</td></tr>';
 
     try {
-        // جلب البيانات من مجموعة customers
-        const querySnapshot = await db.collection("customers").get();
+        // استخدام أسلوب الـ Modular لطلب البيانات
+        const customersRef = collection(db, "customers");
+        const q = query(customersRef, orderBy("name"));
+        const querySnapshot = await getDocs(q);
         
         if (querySnapshot.empty) {
-            tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center; padding:30px;">قاعدة البيانات فارغة حالياً.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center; padding:30px;">لا يوجد سجلات في قاعدة البيانات حالياً.</td></tr>';
             updateStats({ total: 0, vip: 0, complete: 0, incomplete: 0, active: 0 });
             return;
         }
@@ -49,20 +58,18 @@ async function renderCustomersTable(db, tableBody) {
         let stats = { total: 0, vip: 0, complete: 0, incomplete: 0, active: 0 };
         let index = 1;
 
-        querySnapshot.forEach(doc => {
-            const data = doc.data();
-            const id = doc.id;
+        querySnapshot.forEach((customerDoc) => {
+            const data = customerDoc.data();
+            const id = customerDoc.id;
 
-            // تحديث منطق الإحصائيات
+            // حساب الإحصائيات الحية
             stats.total++;
-            if (data.classification === 'VIP' || data.tag === 'vip') stats.vip++;
+            if (data.classification === 'VIP') stats.vip++;
             if (data.status === 'نشط' || data.status === 'active') stats.active++;
             
-            // فحص اكتمال البيانات الأساسية (الاسم، الجوال، المدينة)
             const isComplete = data.name && data.phone && data.city;
             isComplete ? stats.complete++ : stats.incomplete++;
 
-            // بناء الصفوف لتطابق الـ 17 عموداً في الواجهة
             html += `
                 <tr class="customer-row">
                     <td class="sticky-col">${index++}</td>
@@ -83,8 +90,8 @@ async function renderCustomersTable(db, tableBody) {
                     <td><span class="badge ${data.classification === 'VIP' ? 'vip' : 'reg'}">${data.classification || 'عادي'}</span></td>
                     <td class="sticky-actions">
                         <div class="table-actions">
-                            <button onclick="window.editCustomer('${id}')" class="action-btn edit" title="تعديل"><i class="fas fa-edit"></i></button>
-                            <button onclick="window.deleteCustomer('${id}')" class="action-btn delete" title="حذف"><i class="fas fa-trash"></i></button>
+                            <button onclick="window.editCustomer('${id}')" class="action-btn edit"><i class="fas fa-edit"></i></button>
+                            <button onclick="window.deleteCustomer('${id}')" class="action-btn delete"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>
@@ -93,15 +100,14 @@ async function renderCustomersTable(db, tableBody) {
 
         tableBody.innerHTML = html;
         updateStats(stats);
-        console.log(`✅ تم تحميل ${querySnapshot.size} عميل بنجاح.`);
+        console.log(`✅ تم تحديث جدول العملاء بنجاح (${querySnapshot.size} عميل).`);
 
     } catch (error) {
-        console.error("🔴 خطأ أثناء جلب مجموعة customers:", error);
-        tableBody.innerHTML = `<tr><td colspan="17" style="color:red; text-align:center; padding:20px;">خطأ في الوصول للبيانات: ${error.message}</td></tr>`;
+        console.error("🔴 خطأ أثناء معالجة البيانات:", error);
+        tableBody.innerHTML = `<tr><td colspan="17" style="color:red; text-align:center;">فشل جلب البيانات: ${error.message}</td></tr>`;
     }
 }
 
-// دالة تحديث بطاقات الإحصائيات
 function updateStats(s) {
     const fields = ['total', 'vip', 'complete', 'incomplete', 'active'];
     fields.forEach(f => {
@@ -110,23 +116,22 @@ function updateStats(s) {
     });
 }
 
-/**
- * ربط الأزرار بالعالم الخارجي (Global Scope)
- * لضمان عمل onclick من داخل الجدول
- */
-window.editCustomer = (id) => {
-    if (window.openCustomerModal) window.openCustomerModal('edit', id);
+// الدوال العالمية لربط الأزرار (Global Scope)
+window.deleteCustomer = async (id) => {
+    if (confirm("هل أنت متأكد من حذف هذا العميل نهائياً؟")) {
+        try {
+            const docRef = doc(window.db, "customers", id);
+            await deleteDoc(docRef);
+            // إعادة تحميل الجدول فوراً
+            renderCustomersTable(window.db, document.getElementById('customers-data-rows'));
+        } catch (e) {
+            alert("خطأ في عملية الحذف: " + e.message);
+        }
+    }
 };
 
-window.deleteCustomer = async (id) => {
-    if (confirm("هل أنت متأكد من حذف هذا العميل من قاعدة البيانات؟")) {
-        try {
-            await window.db.collection("customers").doc(id).delete();
-            // تحديث الجدول فوراً بعد الحذف
-            const tb = document.getElementById('customers-data-rows');
-            if (tb) renderCustomersTable(window.db, tb);
-        } catch (e) {
-            alert("خطأ أثناء الحذف: " + e.message);
-        }
+window.editCustomer = (id) => {
+    if (typeof window.openCustomerModal === 'function') {
+        window.openCustomerModal('edit', id);
     }
 };
