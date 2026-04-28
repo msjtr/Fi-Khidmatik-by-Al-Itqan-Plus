@@ -59,21 +59,20 @@
     <div id="modal-placeholder"></div>
 
     <script type="module">
-        // 1. تحميل المحرك والتهيئة
+        // 1. تحميل المحرك والتهيئة (بالترتيب الصحيح)
         import './js/core/firebase.js';
         import './js/core/config.js';
         import './js/main.js';
 
-        // 2. جسر الربط العالمي (لضمان عمل أزرار onclick في الملفات الخارجية)
+        // 2. جسر الربط العالمي
         window.closeCustomerModal = () => {
             const modal = document.getElementById('customer-modal') || document.getElementById('customerModal');
             if (modal) modal.style.display = 'none';
         };
 
-        // دالة تنظيف الكاش عند التحديث
         console.log("✅ Tera Gateway: UI Engine v12.12.1 Loaded.");
     </script>
 
-    <script src="js/utils/helpers.js" defer></script>
+    <script type="module" src="js/utils/helpers.js" defer></script>
 </body>
 </html>
