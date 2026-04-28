@@ -1,5 +1,6 @@
 /**
  * js/core/firebase.js - الإصدار 12.12.1 الحديث
+ * المطور: محمد بن صالح الشمري
  */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
@@ -15,14 +16,20 @@ const firebaseConfig = {
     measurementId: "G-NDVGC9GPQZ"
 };
 
-// تهيئة التطبيق
-const app = initializeApp(firebaseConfig);
+// 1. تهيئة التطبيق وتصديره صراحةً لإصلاح خطأ config.js
+export const app = initializeApp(firebaseConfig);
 
-// تهيئة الخدمات وتصديرها
+// 2. تهيئة الخدمات وتصديرها
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 
-// تأمين الوصول العالمي للملفات التي لم تُحدث بعد
+// 3. تأمين الوصول العالمي (لحل مشكلة التنبيه الأصفر في main.js)
+window.app = app;
 window.db = db;
+window.auth = auth;
 
 console.log("🚀 Tera Engine: Firebase V12.12.1 Ready.");
+
+// 4. تصدير افتراضي وتصدير مجمع لضمان التوافق مع كافة الملفات
+export { initializeApp, getFirestore, getAuth };
+export default app;
