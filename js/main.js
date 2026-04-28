@@ -25,10 +25,9 @@ window.handleRoute = async () => {
 
     if (!route || !container) return;
 
-    // تحديث عنوان الصفحة وواجهة المستخدم
     document.title = `تيرا جيت واي | ${route.title}`;
     
-    // إظهار مؤشر تحميل "تيرا" المخصص
+    // إظهار مؤشر تحميل تيرا المخصص
     container.innerHTML = `
         <div class="loader-container" style="text-align:center; padding:100px;">
             <div class="spinner-border text-primary" role="status"></div>
@@ -36,17 +35,16 @@ window.handleRoute = async () => {
         </div>`;
 
     try {
-        // تحميل محتوى الـ HTML للموديول من المسار المعتمد admin/modules/
         const response = await fetch(`admin/modules/${route.file}?v=${Date.now()}`);
         if (!response.ok) throw new Error("فشل تحميل ملف الموديول");
         
         const html = await response.text();
         container.innerHTML = html;
 
-        // تهيئة الموديول برمجياً بعد حقن الـ DOM
-        initModuleLogic(hash, container);
+        // تهيئة الموديول برمجياً
+        await initModuleLogic(hash, container);
 
-        // تحديث حالة القائمة الجانبية (Active Class)
+        // تحديث حالة القائمة الجانبية
         updateSidebarUI(hash);
 
     } catch (error) {
@@ -69,19 +67,22 @@ async function initModuleLogic(hash, container) {
                 if (custModule.initCustomersUI) {
                     await custModule.initCustomersUI(container);
                 }
-                // ربط الدوال بالنافذة العالمية لدعم الـ HTML onclick
-                window.openCustomerModal = custModule.openCustomerModal;
-                window.handleCustomerSubmit = custModule.handleCustomerSubmit;
+                
+                // الجسر البرمجي للأزرار (Bridge)
+                window.openAddCustomer = () => custModule.openAddCustomerModal?.();
+                window.handleCustomerSubmit = () => custModule.handleCustomerSubmit?.();
+                window.editCustomer = (id) => custModule.editCustomer?.(id);
+                window.deleteCustomer = (id) => custModule.deleteCustomer?.(id);
                 break;
             
             case 'dashboard':
                 const dashModule = await import(`./modules/dashboard.js?v=${Date.now()}`);
-                if (dashModule.initDashboard) dashModule.initDashboard();
+                if (dashModule.initDashboard) await dashModule.initDashboard();
                 break;
 
             case 'orders':
                 const orderModule = await import(`./modules/orders-dashboard.js?v=${Date.now()}`);
-                if (orderModule.initOrders) orderModule.initOrders(container);
+                if (orderModule.initOrders) await orderModule.initOrders(container);
                 break;
         }
     } catch (err) {
@@ -101,14 +102,22 @@ function updateSidebarUI(activeHash) {
 
 // 5. دوال الخدمات العامة
 window.closeCustomerModal = () => {
-    const modal = document.getElementById('customer-modal');
-    if (modal) modal.style.display = 'none';
+    const modal = document.getElementById('customer-modal') || document.getElementById('customerModal');
+    if (modal) {
+        modal.style.display = 'none';
+        const form = modal.querySelector('form');
+        if (form) form.reset();
+    }
 };
 
 /**
- * دالة مساعدة لجلب البيانات بنظام V12 Modern
+ * دالة مساعدة عالمية لجلب البيانات بنظام V12 Modern
  */
 window.getCollectionData = async (collectionName) => {
+    if (!db) {
+        console.error("Database not ready");
+        return [];
+    }
     try {
         const querySnapshot = await getDocs(collection(db, collectionName));
         return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -118,8 +127,13 @@ window.getCollectionData = async (collectionName) => {
     }
 };
 
-// 6. تشغيل النظام
-window.addEventListener('DOMContentLoaded', () => {
+// 6. تشغيل النظام عند الجاهزية
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('hashchange', window.handleRoute);
+        window.handleRoute();
+    });
+} else {
     window.addEventListener('hashchange', window.handleRoute);
     window.handleRoute();
-});
+}
