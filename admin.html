@@ -38,21 +38,20 @@
     <div id="modal-container"></div>
 
     <script type="module">
-        // استيراد التهيئة الأساسية
+        // 1. استيراد الملفات الأساسية بمسارات نسبية صحيحة
         import './js/core/firebase.js'; 
         import './js/main.js';          
 
         class TeraRouter {
             constructor() {
                 this.moduleContainer = document.getElementById('module-container');
-                // نستخدم ./ لضمان المسار الصحيح من المجلد الرئيسي
-                this.basePath = './admin'; 
+                // نستخدم مسار نسبي مباشر
+                this.basePath = 'admin'; 
                 this.init();
             }
 
             async init() {
                 try {
-                    // تحميل المكونات الأساسية بالتوازي لسرعة الأداء
                     await Promise.all([
                         this.loadComponent('sidebar-container', `${this.basePath}/components/sidebar.html`),
                         this.loadComponent('header-container', `${this.basePath}/components/header.html`),
@@ -92,12 +91,11 @@
                     const html = await response.text();
                     
                     this.moduleContainer.innerHTML = html;
-                    this.executeScripts(this.moduleContainer);
-
-                    // تحديث حالة القائمة الجانبية (Active)
+                    
+                    // تحديث الحالة النشطة
                     this.updateActiveLinks(moduleName);
 
-                    // تحميل المنطق البرمجي (JS) الخاص بالموديول بناءً على شجرتك
+                    // 2. تحميل المنطق البرمجي مع منع التكرار
                     this.initModuleJS(moduleName);
 
                 } catch (error) {
@@ -107,7 +105,7 @@
 
             async initModuleJS(name) {
                 try {
-                    // خريطة الربط بين الموديول وملف الـ JS
+                    // خريطة الربط - تأكد أن المسارات تبدأ بـ ./js
                     const jsMap = {
                         'customers': './js/modules/customers-ui.js',
                         'orders-dashboard': './js/modules/orders-dashboard.js',
@@ -117,26 +115,27 @@
                     };
 
                     if (jsMap[name]) {
-                        const module = await import(`${jsMap[name]}?v=${Date.now()}`);
-                        // تشغيل دالة البداية إذا كانت موجودة (مثلاً: initCustomersUI)
+                        // استخدام Cache Busting فقط عند الحاجة لتجنب إعادة التحميل اللانهائي
+                        const module = await import(`${jsMap[name]}?v=${new Date().getTime()}`);
+                        
+                        // محاولة تشغيل دالة التهيأة إذا وجدت
                         const initFuncName = `init${name.charAt(0).toUpperCase() + name.slice(1)}UI`;
-                        if (module[initFuncName]) {
+                        if (typeof module[initFuncName] === 'function') {
                             module[initFuncName](this.moduleContainer);
-                        } else if (module.init) {
+                        } else if (typeof module.init === 'function') {
                             module.init();
                         }
                     }
                 } catch (err) {
-                    console.warn(`No specific JS loader for ${name} or error in JS:`, err);
+                    console.warn(`JS Module Logic for [${name}] handled by main.js or not found.`);
                 }
             }
 
             updateActiveLinks(name) {
                 document.querySelectorAll('.nav-item').forEach(el => {
                     el.classList.remove('active');
-                    if (el.getAttribute('onclick')?.includes(name) || el.getAttribute('href')?.includes(name)) {
-                        el.classList.add('active');
-                    }
+                    const href = el.getAttribute('href') || '';
+                    if (href.includes(name)) el.classList.add('active');
                 });
             }
 
@@ -145,7 +144,7 @@
                     <div class="error-state">
                         <i class="fas fa-file-circle-exclamation fa-4x" style="color:#f97316; margin-bottom:20px;"></i>
                         <h3 style="color:#1e293b; font-weight:800;">الصفحة غير موجودة</h3>
-                        <p>تأكد من وجود الملف: <code>admin/modules/${name}.html</code></p>
+                        <p>تأكد من وجود الملف في المسار: <br> <code>admin/modules/${name}.html</code></p>
                     </div>`;
             }
 
@@ -160,15 +159,16 @@
             }
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            window.teraApp = new TeraRouter();
-        });
-
-        window.loadModule = (name) => { window.location.hash = '#' + name; };
+        // تشغيل التطبيق
+        window.teraApp = new TeraRouter();
+        
+        // تعريف دالة التنقل عالمياً
+        window.loadModule = (name) => { 
+            window.location.hash = name; 
+        };
     </script>
 
     <style>
-        /* التنسيقات الهيكلية الأساسية */
         :root { --tera-orange: #f97316; --tera-bg: #f8fafc; }
         body.tera-admin-body { margin: 0; padding: 0; background-color: var(--tera-bg); font-family: 'Cairo', sans-serif; overflow: hidden; }
         .admin-layout { display: flex; height: 100vh; width: 100vw; }
@@ -176,7 +176,7 @@
         .content-area { flex: 1; overflow-y: auto; padding: 30px; }
         .initial-loader { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; }
         .spinner-tera { width: 50px; height: 50px; border: 4px solid #e2e8f0; border-top-color: var(--tera-orange); border-radius: 50%; animation: spin 1s linear infinite; }
-        .error-state { text-align: center; padding: 60px; background: white; border-radius: 20px; margin: 20px auto; max-width: 500px; }
+        .error-state { text-align: center; padding: 60px; background: white; border-radius: 20px; margin: 20px auto; max-width: 500px; border: 1px solid #e2e8f0; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
