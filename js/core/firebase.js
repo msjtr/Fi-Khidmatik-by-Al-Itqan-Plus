@@ -1,16 +1,13 @@
 /**
  * js/core/firebase.js
- * الملف المركزي لتهيئة Firebase ونظام الكاش المتطور لمنصة تيرا
- * تم التحديث لإصلاح أخطاء الاتصال (404/400) عبر Long Polling
+ * نسخة التوافق (Compat) - تربط قوة v10 مع سهولة v8
+ * تمنحك الوصول العالمي عبر window.db وتدعم .collection()
  */
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { 
-    initializeFirestore, 
-    persistentLocalCache, 
-    persistentMultipleTabManager 
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+// 1. استيراد نسخ التوافق (Compat) حصراً
+import firebase from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js";
+import "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js";
+import "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js";
 
 // إعدادات مشروع منصة تيرا
 const firebaseConfig = {
@@ -22,37 +19,37 @@ const firebaseConfig = {
     appId: "1:186209858482:web:186ca610780799ef562aab"
 };
 
-// 1. تهيئة التطبيق الأساسي
-const app = initializeApp(firebaseConfig);
+// 2. تهيئة التطبيق بنمط التوافق
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 
-/**
- * 2. تهيئة Firestore بنظام الكاش المتعدد + إجبار الاتصال المستقر
- * تم إضافة experimentalForceLongPolling لحل مشكلة الـ WebChannel Connection Errored
- */
-const db = initializeFirestore(app, {
-    localCache: persistentLocalCache({
-        tabManager: persistentMultipleTabManager()
-    }),
-    experimentalForceLongPolling: true // الإصلاح الجذري لأخطاء RPC 'Listen' stream
+// 3. تهيئة Firestore مع نظام الكاش و Long Polling (حل مشاكل الاتصال)
+const db = firebase.firestore();
+
+db.settings({
+    cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED,
+    merge: true,
+    experimentalForceLongPolling: true // الإصلاح الجذري الذي طلبته لأخطاء RPC
 });
 
-// 3. تهيئة نظام المصادقة
-const auth = getAuth(app);
+// 4. جعل قاعدة البيانات متاحة عالمياً (هذا أهم سطر لعمل main.js)
+window.db = db;
+window.firebase = firebase; // للوصول لأي أدوات إضافية
 
-// 4. ثوابت النظام
+// 5. تهيئة نظام المصادقة
+const auth = firebase.auth();
+window.auth = auth;
+
+// ثوابت النظام
 export const APP_CONFIG = {
     name: "Tera Gateway",
     region: "Hail",
-    version: "2.0.1"
+    version: "2.0.2" // تحديث النسخة
 };
 
-/**
- * 5. التصدير الموحد والمباشر
- * لضمان عدم حدوث خطأ SyntaxError
- */
-export { app, db, auth };
+// التصدير للموديولات الأخرى
+export { db, auth, firebase };
+export default firebase;
 
-// أداة انتظار الجاهزية
-export const waitForFirebase = () => Promise.resolve(true);
-
-export default { app, db, auth, APP_CONFIG };
+console.log("✅ Tera Engine: Firebase Compat Mode Activated & window.db is ready.");
