@@ -1,15 +1,15 @@
 /**
  * js/core/config.js
- * إعدادات النظام العامة والتكوينات - نسخة الإصلاح
+ * إعدادات النظام العامة والتكوينات - نسخة الإصلاح الشاملة
  */
 
-// 1. استيراد كائنات Firebase أولاً
-import { db, auth, app } from './firebase.js';
+// 1. استيراد الكائنات الصحيحة (تم تغيير app إلى firebase ليتوافق مع نسخة Compat)
+import { db, auth, firebase } from './firebase.js';
 
 // 2. تعريف الإعدادات كـ constants
 export const APP_CONFIG = {
     name: 'Tera Gateway',
-    version: '2.0.0',
+    version: '2.0.2', // تحديث النسخة لمطابقة التعديلات الأخيرة
     company: 'Tera Gateway',
     debug: true
 };
@@ -28,15 +28,12 @@ export const FIREBASE_CONFIG = {
     }
 };
 
-// --- يمكنك إضافة بقية الـ CONFIGS هنا (CURRENCY, DATE, إلخ) ---
-
-// 3. تعريف الدوال **قبل** استدعائها
+// 3. تعريف الدوال
 export function getAllConfig() {
     return {
         app: APP_CONFIG,
         tax: TAX_CONFIG,
         firebase: FIREBASE_CONFIG
-        // أضف البقية هنا إذا احتجت
     };
 }
 
@@ -51,21 +48,21 @@ export function loadConfigFromLocalStorage() {
         try {
             const config = JSON.parse(saved);
             if (config.app) Object.assign(APP_CONFIG, config.app);
-            console.log('✅ تم تحميل الإعدادات المحفوظة');
+            console.log('✅ Tera Engine: تم تحميل الإعدادات من التخزين المحلي');
         } catch (e) {
-            console.warn('⚠️ فشل تحميل الإعدادات:', e);
+            console.warn('⚠️ Tera Engine: فشل تحميل الإعدادات المحفوظة:', e);
         }
     }
 }
 
-// 4. الآن استدعاء الدالة بعد تعريفها
+// 4. استدعاء الدالة
 loadConfigFromLocalStorage();
 
-// 5. التصدير النهائي
-export { db, auth, app };
+// 5. التصدير النهائي (تأكد من تصدير الأجسام الصحيحة)
+export { db, auth, firebase };
 
 export default {
-    db, auth, app,
+    db, auth, firebase,
     APP_CONFIG,
     getAllConfig,
     loadConfigFromLocalStorage
