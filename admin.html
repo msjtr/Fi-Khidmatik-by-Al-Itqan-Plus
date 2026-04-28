@@ -20,7 +20,7 @@
             --sidebar-width: 280px;
             --header-height: 70px;
             --primary-blue: #2563eb;
-            --bg-body: #f8fafc; /* خلفية أفتح وأكثر حداثة */
+            --bg-body: #f8fafc;
             --border-color: #e2e8f0;
             --glass-bg: rgba(255, 255, 255, 0.8);
         }
@@ -41,7 +41,6 @@
             height: 100%; 
         }
 
-        /* تنسيق الجوانب الثابتة */
         #sidebar-placeholder { 
             width: var(--sidebar-width); 
             height: 100%; 
@@ -71,7 +70,6 @@
             align-items: center;
         }
 
-        /* حاوية الموديولات المتغيرة */
         #module-container { 
             flex-grow: 1; 
             padding: 25px; 
@@ -79,7 +77,6 @@
             scroll-behavior: smooth; 
         }
 
-        /* حالة التحميل الأولية */
         .loading-state { 
             display: flex; 
             flex-direction: column; 
@@ -101,7 +98,6 @@
             transform: scale(1.05);
         }
 
-        /* تخصيص السكرول بار */
         #module-container::-webkit-scrollbar { width: 6px; }
         #module-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
@@ -109,12 +105,10 @@
 <body>
 
     <div class="main-wrapper">
-        <aside id="sidebar-placeholder">
-            </aside>
+        <aside id="sidebar-placeholder"></aside>
         
         <div class="content-area">
-            <header id="header-placeholder">
-                </header>
+            <header id="header-placeholder"></header>
             
             <main id="module-container">
                 <div class="loading-state" id="main-loader">
@@ -131,6 +125,12 @@
 
     <div id="modals-placeholder"></div>
 
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+    <script type="module" src="js/core/firebase.js"></script>
+
     <script type="module" src="js/main.js"></script>
 
     <script>
@@ -139,8 +139,9 @@
          */
         async function loadCoreComponent(id, fileName) {
             const container = document.getElementById(id);
-            const path = `admin/components/${fileName}`;
+            if (!container) return false;
             
+            const path = `admin/components/${fileName}`;
             try {
                 const response = await fetch(`${path}?v=${Date.now()}`);
                 if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
@@ -149,29 +150,28 @@
                 return true;
             } catch (err) {
                 console.error(`❌ فشل تحميل المكون الهيكلي: ${fileName}`, err);
-                container.innerHTML = `<div style="color:red; padding:20px; text-align:center;">خطأ في تحميل ${fileName}</div>`;
+                container.innerHTML = `<div style="color:red; padding:10px;">خطأ في ${fileName}</div>`;
                 return false;
             }
         }
 
-        // تشغيل النظام عند اكتمال تحميل الهيكل
+        // تشغيل تحميل الهيكل فوراً
         window.addEventListener('DOMContentLoaded', async () => {
-            // 1. تحميل الهيكل الأساسي (Header, Sidebar, Modals)
+            // تحميل الهيكل الأساسي بالتوازي
             await Promise.all([
                 loadCoreComponent('sidebar-placeholder', 'sidebar.html'),
                 loadCoreComponent('header-placeholder', 'header.html'),
                 loadCoreComponent('modals-placeholder', 'modals.html')
             ]);
 
-            // 2. إخفاء شاشة التحميل بانسيابية
+            // إخفاء شاشة التحميل بعد أن يجهز الهيكل
             const loader = document.getElementById('main-loader');
             if (loader) {
-                loader.classList.add('hidden');
-                setTimeout(() => loader.remove(), 800);
+                setTimeout(() => {
+                    loader.classList.add('hidden');
+                    setTimeout(() => loader.remove(), 800);
+                }, 500); // مهلة بسيطة لضمان انسيابية الظهور
             }
-
-            // 3. التحقق من توفر نظام التوجيه في main.js وتشغيله
-            // ملاحظة: handleHashRoute يتم استدعاؤه تلقائياً في main.js عبر حدث load
         });
     </script>
 
