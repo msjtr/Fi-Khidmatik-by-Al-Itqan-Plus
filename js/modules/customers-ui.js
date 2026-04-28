@@ -1,76 +1,85 @@
 /**
- * js/modules/customers-ui.js 
- * نسخة مطورة مع معالجة أخطاء الاتصال والتحقق من العناصر
+ * موديول إدارة عملاء تيرا جيت واي - النسخة الاحترافية المحدثة
+ * متوافق مع الجدول ذو الـ 17 عموداً ونظام الإحصائيات
  */
 
 export async function initCustomersUI(container) {
-    console.log("🚀 تنشيط واجهة العملاء... جاري التحقق من المكونات");
+    console.log("🚀 Tera Gateway: جاري تشغيل محرك العملاء...");
     
-    // 1. التأكد من وجود الحاوية والجدول
-    const tableBody = container.querySelector('#customers-tbody') || document.querySelector('#customers-tbody');
+    // استخدام ID الجديد الذي وضعته في الـ HTML
+    const tableBody = container.querySelector('#customers-data-rows');
     
     if (!tableBody) {
-        console.warn("⚠️ لم يتم العثور على #customers-tbody، جاري المحاولة مرة أخرى بعد قليل...");
-        setTimeout(() => initCustomersUI(container), 500);
-        return;
+        // إذا لم يجد الجدول، ينتظر تحميل الـ DOM (حل لمشكلة التوقيت)
+        const observer = new MutationObserver((mutations, obs) => {
+            const target = container.querySelector('#customers-data-rows');
+            if (target) {
+                renderCustomersTable(target);
+                obs.disconnect();
+            }
+        });
+        observer.observe(container, { childList: true, subtree: true });
+    } else {
+        await renderCustomersTable(tableBody);
     }
-
-    // 2. التحقق من وجود Firebase
-    if (!window.db) {
-        console.error("❌ خطأ: لم يتم تهيئة Firebase (window.db غير موجود)");
-        tableBody.innerHTML = '<tr><td colspan="9" style="color:red; text-align:center;">خطأ في الاتصال بقاعدة البيانات</td></tr>';
-        return;
-    }
-
-    await renderCustomersTable(tableBody);
 }
 
 async function renderCustomersTable(tableBody) {
-    tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;">جاري جلب بيانات العملاء...</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center; padding:30px;">جاري مزامنة البيانات مع Firestore...</td></tr>';
 
     try {
-        // جلب البيانات من مجموعة "customers"
         const snapshot = await window.db.collection("customers").orderBy("name").get();
         
         if (snapshot.empty) {
-            tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px;">لا يوجد عملاء مسجلين حالياً.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center; padding:30px;">لا يوجد عملاء في قاعدة البيانات حالياً.</td></tr>';
+            updateStats({ total: 0, vip: 0, complete: 0, incomplete: 0 });
             return;
         }
 
         let html = '';
+        let stats = { total: 0, vip: 0, complete: 0, incomplete: 0, active: 0, individuals: 0, companies: 0 };
+        let index = 1;
+
         snapshot.forEach(doc => {
             const data = doc.data();
             const id = doc.id;
 
-            // معالجة البيانات لتجنب undefined (مهم جداً لظهور البيانات)
-            const name = data.name || '---';
-            const phone = data.phone || '---';
-            const city = data.city || '---';
-            const classification = data.classification || 'عادي';
-            const building = data.building_no || '---';
-            const additional = data.additional_no || '---';
-            const zip = data.zip_code || '---';
-            const pobox = data.po_box || '---';
+            // حساب الإحصائيات أثناء المرور على البيانات
+            stats.total++;
+            if (data.classification === 'VIP') stats.vip++;
+            if (data.status === 'نشط' || data.status === 'active') stats.active++;
+            
+            // فحص اكتمال البيانات (الاسم، الجوال، المدينة، العنوان الوطني)
+            const isComplete = data.name && data.phone && data.city && data.building_no;
+            isComplete ? stats.complete++ : stats.incomplete++;
 
+            // بناء الصف (مطابق لترتيب الـ THEAD الخاص بك)
             html += `
                 <tr class="customer-row">
+                    <td class="sticky-col">${index++}</td>
+                    <td class="sticky-col-name"><strong>${data.name || '---'}</strong></td>
+                    <td dir="ltr">${data.phone || '---'}</td>
+                    <td>${data.country_key || '+966'}</td>
+                    <td>${data.email || '---'}</td>
+                    <td>${data.country || 'السعودية'}</td>
+                    <td>${data.city || '---'}</td>
+                    <td>${data.district || '---'}</td>
+                    <td>${data.street || '---'}</td>
+                    <td>${data.building_no || '---'}</td>
+                    <td>${data.additional_no || '---'}</td>
+                    <td>${data.zip_code || '---'}</td>
+                    <td>${data.po_box || '---'}</td>
+                    <td>${data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString('ar-SA') : '---'}</td>
                     <td>
-                        <div class="cust-info-cell">
-                            <div class="avatar-circle">${name.charAt(0)}</div>
-                            <span class="cust-name">${name}</span>
-                        </div>
+                        <span class="status-badge ${data.status === 'active' ? 'status-active' : 'status-inactive'}">
+                            ${data.status || 'نشط'}
+                        </span>
                     </td>
-                    <td dir="ltr">${phone}</td>
-                    <td>${city}</td>
-                    <td><span class="status-badge ${classification === 'VIP' ? 'vip-style' : 'reg-style'}">${classification}</span></td>
-                    <td>${building}</td>
-                    <td>${additional}</td>
-                    <td>${zip}</td>
-                    <td>${pobox}</td>
-                    <td>
-                        <div class="action-btns">
-                            <button onclick="window.editCustomer('${id}')" class="edit-btn"><i class="fas fa-edit"></i></button>
-                            <button onclick="window.deleteCustomer('${id}')" class="del-btn"><i class="fas fa-trash-alt"></i></button>
+                    <td><span class="badge ${data.classification === 'VIP' ? 'vip' : 'regular'}">${data.classification || 'عادي'}</span></td>
+                    <td class="sticky-actions-header">
+                        <div class="table-actions">
+                            <button onclick="window.editCustomer('${id}')" class="action-btn edit" title="تعديل"><i class="fas fa-edit"></i></button>
+                            <button onclick="window.deleteCustomer('${id}')" class="action-btn delete" title="حذف"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>
@@ -78,15 +87,29 @@ async function renderCustomersTable(tableBody) {
         });
 
         tableBody.innerHTML = html;
-        console.log(`✅ تم تحميل ${snapshot.size} عميل بنجاح.`);
+        updateStats(stats); // تحديث عدادات الإحصائيات في الأعلى
 
     } catch (error) {
-        console.error("❌ فشل جلب العملاء من Firestore:", error);
-        tableBody.innerHTML = `<tr><td colspan="9" style="color:red; text-align:center;">حدث خطأ أثناء تحميل البيانات: ${error.message}</td></tr>`;
+        console.error("خطأ جلب البيانات:", error);
+        tableBody.innerHTML = `<tr><td colspan="17" style="color:red; text-align:center;">فشل الاتصال: ${error.message}</td></tr>`;
     }
 }
 
-// الدوال العالمية للتحكم (أضفها لتعمل الأزرار داخل الجدول)
+// دالة تحديث الإحصائيات في الـ UI
+function updateStats(s) {
+    const safeUpdate = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = val;
+    };
+    
+    safeUpdate('stat-total', s.total);
+    safeUpdate('stat-vip', s.vip);
+    safeUpdate('stat-complete', s.complete);
+    safeUpdate('stat-incomplete', s.incomplete);
+    safeUpdate('stat-active', s.active);
+}
+
+// ربط العمليات بالنطاق العالمي
 window.editCustomer = (id) => {
     if (typeof window.openCustomerModal === 'function') {
         window.openCustomerModal('edit', id);
@@ -94,14 +117,14 @@ window.editCustomer = (id) => {
 };
 
 window.deleteCustomer = async (id) => {
-    if (confirm("هل أنت متأكد من حذف هذا العميل؟")) {
+    if (confirm("هل أنت متأكد من حذف هذا العميل من منصة تيرا؟")) {
         try {
             await window.db.collection("customers").doc(id).delete();
-            // إعادة التحديث
-            const tbody = document.querySelector('#customers-tbody');
-            if (tbody) renderCustomersTable(tbody);
+            // تحديث الجدول بعد الحذف
+            const tb = document.querySelector('#customers-data-rows');
+            if (tb) renderCustomersTable(tb);
         } catch (e) {
-            alert("فشل الحذف: " + e.message);
+            alert("حدث خطأ أثناء الحذف: " + e.message);
         }
     }
 };
