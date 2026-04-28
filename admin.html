@@ -38,14 +38,12 @@
     <div id="modal-container"></div>
 
     <script type="module">
-        // 1. استيراد الملفات الأساسية بمسارات نسبية صحيحة
         import './js/core/firebase.js'; 
         import './js/main.js';          
 
         class TeraRouter {
             constructor() {
                 this.moduleContainer = document.getElementById('module-container');
-                // نستخدم مسار نسبي مباشر
                 this.basePath = 'admin'; 
                 this.init();
             }
@@ -66,12 +64,16 @@
             }
 
             async loadComponent(containerId, path) {
-                const response = await fetch(path);
-                if (!response.ok) throw new Error(`Missing ${path}`);
-                const html = await response.text();
-                const container = document.getElementById(containerId);
-                container.innerHTML = html;
-                this.executeScripts(container);
+                try {
+                    const response = await fetch(path);
+                    if (!response.ok) throw new Error(`Missing ${path}`);
+                    const html = await response.text();
+                    const container = document.getElementById(containerId);
+                    if (container) {
+                        container.innerHTML = html;
+                        this.executeScripts(container);
+                    }
+                } catch (e) { console.error(e); }
             }
 
             async handleRouting() {
@@ -91,11 +93,9 @@
                     const html = await response.text();
                     
                     this.moduleContainer.innerHTML = html;
+                    this.executeScripts(this.moduleContainer);
                     
-                    // تحديث الحالة النشطة
                     this.updateActiveLinks(moduleName);
-
-                    // 2. تحميل المنطق البرمجي مع منع التكرار
                     this.initModuleJS(moduleName);
 
                 } catch (error) {
@@ -105,7 +105,6 @@
 
             async initModuleJS(name) {
                 try {
-                    // خريطة الربط - تأكد أن المسارات تبدأ بـ ./js
                     const jsMap = {
                         'customers': './js/modules/customers-ui.js',
                         'orders-dashboard': './js/modules/orders-dashboard.js',
@@ -115,28 +114,36 @@
                     };
 
                     if (jsMap[name]) {
-                        // استخدام Cache Busting فقط عند الحاجة لتجنب إعادة التحميل اللانهائي
-                        const module = await import(`${jsMap[name]}?v=${new Date().getTime()}`);
+                        // استخدام الطابع الزمني لضمان تحميل أحدث نسخة من الملف
+                        const module = await import(`${jsMap[name]}?v=${Date.now()}`);
                         
-                        // محاولة تشغيل دالة التهيأة إذا وجدت
-                        const initFuncName = `init${name.charAt(0).toUpperCase() + name.slice(1)}UI`;
+                        // تصحيح: معالجة الأسماء التي تحتوي على فواصل (مثل orders-dashboard)
+                        const camelCaseName = name.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
+                        const initFuncName = `init${camelCaseName}UI`;
+
                         if (typeof module[initFuncName] === 'function') {
-                            module[initFuncName](this.moduleContainer);
+                            await module[initFuncName](this.moduleContainer);
+                            console.log(`✅ Module [${name}] initialized via ${initFuncName}`);
                         } else if (typeof module.init === 'function') {
-                            module.init();
+                            await module.init(this.moduleContainer);
                         }
                     }
                 } catch (err) {
-                    console.warn(`JS Module Logic for [${name}] handled by main.js or not found.`);
+                    console.warn(`⚠️ Tera Router: [${name}] logic error or missing entry point.`, err);
                 }
             }
 
             updateActiveLinks(name) {
-                document.querySelectorAll('.nav-item').forEach(el => {
-                    el.classList.remove('active');
-                    const href = el.getAttribute('href') || '';
-                    if (href.includes(name)) el.classList.add('active');
-                });
+                // تحديث القائمة الجانبية إذا كانت الدالة موجودة في main.js
+                if (window.updateSidebarUI) {
+                    window.updateSidebarUI(name);
+                } else {
+                    document.querySelectorAll('.nav-item').forEach(el => {
+                        el.classList.remove('active');
+                        const link = el.getAttribute('href') || el.getAttribute('onclick') || '';
+                        if (link.includes(name)) el.classList.add('active');
+                    });
+                }
             }
 
             showError(name) {
@@ -144,7 +151,7 @@
                     <div class="error-state">
                         <i class="fas fa-file-circle-exclamation fa-4x" style="color:#f97316; margin-bottom:20px;"></i>
                         <h3 style="color:#1e293b; font-weight:800;">الصفحة غير موجودة</h3>
-                        <p>تأكد من وجود الملف في المسار: <br> <code>admin/modules/${name}.html</code></p>
+                        <p>تأكد من وجود الملف: <code>admin/modules/${name}.html</code></p>
                     </div>`;
             }
 
@@ -159,13 +166,8 @@
             }
         }
 
-        // تشغيل التطبيق
         window.teraApp = new TeraRouter();
-        
-        // تعريف دالة التنقل عالمياً
-        window.loadModule = (name) => { 
-            window.location.hash = name; 
-        };
+        window.loadModule = (name) => { window.location.hash = name; };
     </script>
 
     <style>
