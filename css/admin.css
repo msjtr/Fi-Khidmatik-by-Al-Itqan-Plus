@@ -1,115 +1,248 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tera Gateway | لوحة التحكم</title>
+/* * Tera Gateway - Main Administrative Stylesheet
+ * الإصدار: 1.0.2 | التصميم: Modern Premium (RTL)
+ */
+
+:root {
+    /* الألوان الرئيسية - هوية تيرا */
+    --primary-color: #f97316;    /* برتقالي تيرا */
+    --primary-hover: #ea580c;
+    --secondary-color: #1e293b;  /* كحلي غامق للنصوص */
+    --accent-color: #3b82f6;     /* أزرق للنظام */
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    /* ألوان الخلفيات */
+    --bg-main: #f8fafc;
+    --bg-sidebar: #ffffff;
+    --bg-glass: rgba(255, 255, 255, 0.8);
     
-    <link rel="stylesheet" href="css/admin.css">
+    /* الأبعاد */
+    --sidebar-width: 280px;
+    --header-height: 75px;
     
-    <style>
-        :root { --sidebar-width: 280px; --header-height: 70px; }
-        body { margin: 0; font-family: 'Tajawal', sans-serif; background-color: #f8fafc; display: flex; height: 100vh; overflow: hidden; }
-        .main-wrapper { display: flex; width: 100%; height: 100%; }
-        #sidebar-placeholder { width: var(--sidebar-width); height: 100%; background: #fff; flex-shrink: 0; border-left: 1px solid #e2e8f0; }
-        .content-area { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
-        #header-placeholder { height: var(--header-height); flex-shrink: 0; }
-        #module-container { flex-grow: 1; padding: 25px; overflow-y: auto; background: #f8fafc; }
-        .loader-box { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #64748b; }
-    </style>
-</head>
-<body>
+    /* التأثيرات */
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.3);
+    --radius-lg: 18px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-    <div class="main-wrapper">
-        <div id="sidebar-placeholder"></div>
-        <div class="content-area">
-            <div id="header-placeholder"></div>
-            <main id="module-container">
-                <div class="loader-box">
-                    <i class="fas fa-circle-notch fa-spin fa-2x" style="color: #f97316;"></i>
-                    <p style="margin-top: 15px; font-weight: bold;">جاري تحميل نظام تيرا...</p>
-                </div>
-            </main>
-        </div>
-    </div>
+/* الإعدادات العامة */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-    <div id="modals-placeholder"></div>
+body {
+    font-family: 'Tajawal', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--secondary-color);
+    direction: rtl;
+    overflow: hidden; /* لمنع شريط التمرير المزدوج */
+}
 
-    <script>
-        /**
-         * 1. وظائف المودال الأساسية
-         */
-        window.closeCustomerModal = () => { 
-            const m = document.getElementById('customer-modal'); 
-            if(m) m.style.display='none'; 
-        };
-        window.openCustomerModal = (title) => { 
-            const m = document.getElementById('customer-modal'); 
-            if(m) { 
-                m.style.display='flex'; 
-                const titleEl = document.getElementById('modal-title');
-                if(titleEl) titleEl.innerText = title; 
-            } 
-        };
+/* الحاوية الرئيسية */
+.main-wrapper {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
 
-        /**
-         * 2. دالة تحميل المكونات (المسار المعتمد admin/components/)
-         */
-        async function loadComponent(id, fileName) {
-            const path = `admin/components/${fileName}`; 
-            try {
-                const response = await fetch(path);
-                if (!response.ok) throw new Error(`Status: ${response.status}`);
-                const html = await response.text();
-                document.getElementById(id).innerHTML = html;
-                console.log(`✅ تم تحميل المكون: ${path}`);
-            } catch (error) {
-                console.error(`❌ فشل في تحميل المكون: ${path}`, error);
-            }
-        }
+/* القائمة الجانبية (Sidebar) */
+.sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-sidebar);
+    border-left: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+}
 
-        /**
-         * 3. دالة تحميل الموديولات (محاولة المسارين بناءً على التجربة)
-         */
-        async function loadModule(moduleName) {
-            const container = document.getElementById('module-container');
-            // سنحاول البحث في المجلد الرئيسي ثم مجلد admin
-            const pathsToTry = [
-                `modules/${moduleName}.html`,
-                `admin/modules/${moduleName}.html`
-            ];
+.logo-section {
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    padding: 0 25px;
+    gap: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
 
-            for (const path of pathsToTry) {
-                try {
-                    const response = await fetch(path);
-                    if (response.ok) {
-                        const html = await response.text();
-                        container.innerHTML = html;
-                        console.log(`✅ تم تحميل الموديول: ${path}`);
-                        return;
-                    }
-                } catch (e) {}
-            }
-            container.innerHTML = `<div style="padding:20px; text-align:center; color:red;">تعذر العثور على ملف الموديول (${moduleName}.html)</div>`;
-        }
+.logo-section img {
+    width: 40px;
+    height: 40px;
+}
 
-        /**
-         * 4. التشغيل عند جاهزية الصفحة
-         */
-        window.addEventListener('DOMContentLoaded', async () => {
-            // تحميل المكونات الثابتة
-            await Promise.all([
-                loadComponent('sidebar-placeholder', 'sidebar.html'),
-                loadComponent('header-placeholder', 'header.html'),
-                loadComponent('modals-placeholder', 'modals.html')
-            ]);
+.logo-section span {
+    font-weight: 900;
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    letter-spacing: -0.5px;
+}
 
-            // تحميل موديول لوحة البيانات الافتراضي
-            loadModule('dashboard');
-        });
-    </script>
-</body>
-</html>
+/* القائمة البرمجية */
+.nav-menu {
+    padding: 20px 15px;
+    flex-grow: 1;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 18px;
+    margin-bottom: 8px;
+    border-radius: 12px;
+    text-decoration: none;
+    color: #64748b;
+    font-weight: 600;
+    transition: var(--transition);
+    gap: 12px;
+}
+
+.nav-item i {
+    width: 20px;
+    font-size: 1.1rem;
+}
+
+.nav-item:hover {
+    background: #f1f5f9;
+    color: var(--primary-color);
+    transform: translateX(-5px);
+}
+
+.nav-item.active {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    color: #fff;
+    box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.3);
+}
+
+/* المحتوى الرئيسي */
+.content-area {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* الشريط العلوي (Header) */
+.top-bar {
+    height: var(--header-height);
+    background: var(--bg-glass);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 30px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.search-box {
+    position: relative;
+    width: 350px;
+}
+
+.search-box i {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 10px 45px 10px 15px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    font-family: 'Tajawal';
+    outline: none;
+    transition: var(--transition);
+}
+
+.search-box input:focus {
+    border-color: var(--primary-color);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1);
+}
+
+/* معلومات المستخدم */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-text {
+    text-align: left; /* لعرض الدور تحت الاسم */
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.user-role {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 2px solid #fff;
+    box-shadow: var(--shadow-sm);
+}
+
+/* حاوية الموديولات الديناميكية */
+#module-container {
+    padding: 25px;
+    overflow-y: auto;
+    height: calc(100vh - var(--header-height));
+}
+
+/* حالات التحميل (Loader) */
+.loader-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.spinner {
+    width: 45px;
+    height: 45px;
+    border: 4px solid #e2e8f0;
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* أزرار مخصصة (Custom Buttons) */
+.btn-primary-custom {
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+}
+
+.btn-primary-custom:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(249, 115, 22, 0.4);
+}
