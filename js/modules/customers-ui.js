@@ -1,88 +1,90 @@
 /**
- * موديول واجهة مستخدم العملاء - Tera Gateway
- * نسخة معالجة خطأ كائن Firestore v12
+ * موديول واجهة مستخدم العملاء - النسخة المعتمدة لمنصة تيرا جيت واي
+ * يتوافق مع هيكلية Firestore ونظام الإحصائيات المتقدم
  */
 
-import { 
-    collection, 
-    getDocs, 
-    query, 
-    orderBy, 
-    doc, 
-    deleteDoc 
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
-
 export async function initCustomersUI(container) {
-    console.log("🚀 جاري فحص محرك البيانات...");
+    console.log("🚀 تنشيط واجهة العملاء... جاري التحقق من المكونات");
 
-    // التأكد من أن window.db هو كائن Firestore صحيح وليس مجرد نص أو undefined
-    if (!window.db || typeof window.db !== 'object') {
-        console.error("❌ خطأ: window.db ليس كائن Firestore صالح. راجع ملف main.js");
+    // التأكد من جاهزية اتصال قاعدة البيانات قبل البدء
+    const db = window.db;
+    if (!db) {
+        console.warn("⚠️ انتظار تهيئة Firebase...");
+        setTimeout(() => initCustomersUI(container), 250);
         return;
     }
 
-    const tableBody = container.querySelector('#customers-data-rows');
+    // البحث عن المعرف الصحيح للجدول كما هو في الـ HTML الخاص بك
+    const tableBody = document.getElementById('customers-data-rows');
+
     if (tableBody) {
-        await renderCustomersTable(tableBody);
+        await renderCustomersTable(db, tableBody);
+    } else {
+        // في حال لم يتم حقن الجدول بعد، نستخدم MutationObserver للمراقبة
+        const observer = new MutationObserver((mutations, obs) => {
+            const target = document.getElementById('customers-data-rows');
+            if (target) {
+                renderCustomersTable(db, target);
+                obs.disconnect();
+            }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
     }
 }
 
-async function renderCustomersTable(tableBody) {
-    tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center; padding:20px;">جاري سحب البيانات من السحابة...</td></tr>';
+async function renderCustomersTable(db, tableBody) {
+    tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center; padding:20px;">جاري مزامنة بيانات العملاء...</td></tr>';
 
     try {
-        // التأكد من تمرير window.db كأول معامل للدالة collection
-        const db = window.db; 
-        const customersRef = collection(db, "customers"); 
-        const q = query(customersRef, orderBy("name", "asc"));
-        const querySnapshot = await getDocs(q);
+        // جلب البيانات من مجموعة customers
+        const querySnapshot = await db.collection("customers").get();
         
         if (querySnapshot.empty) {
-            tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center; padding:30px;">قاعدة بيانات العملاء فارغة.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center; padding:30px;">قاعدة البيانات فارغة حالياً.</td></tr>';
+            updateStats({ total: 0, vip: 0, complete: 0, incomplete: 0, active: 0 });
             return;
         }
 
         let html = '';
-        let stats = { total: 0, vip: 0, complete: 0, incomplete: 0 };
+        let stats = { total: 0, vip: 0, complete: 0, incomplete: 0, active: 0 };
         let index = 1;
 
-        querySnapshot.forEach((customerDoc) => {
-            const data = customerDoc.data();
-            const id = customerDoc.id;
+        querySnapshot.forEach(doc => {
+            const data = doc.data();
+            const id = doc.id;
 
-            // تحديث الإحصائيات بناءً على حقولك الحقيقية
+            // تحديث منطق الإحصائيات
             stats.total++;
-            if (data.tag === 'vip') stats.vip++;
+            if (data.classification === 'VIP' || data.tag === 'vip') stats.vip++;
+            if (data.status === 'نشط' || data.status === 'active') stats.active++;
             
-            // فحص اكتمال البيانات الأساسية
-            const isComplete = data.name && data.phone && data.city && data.buildingNo;
+            // فحص اكتمال البيانات الأساسية (الاسم، الجوال، المدينة)
+            const isComplete = data.name && data.phone && data.city;
             isComplete ? stats.complete++ : stats.incomplete++;
 
-            // تنسيق التاريخ من String إلى مقروء
-            const dateDisplay = data.createdAt ? new Date(data.createdAt).toLocaleDateString('ar-SA') : '---';
-
+            // بناء الصفوف لتطابق الـ 17 عموداً في الواجهة
             html += `
                 <tr class="customer-row">
                     <td class="sticky-col">${index++}</td>
                     <td class="sticky-col-name"><strong>${data.name || '---'}</strong></td>
                     <td dir="ltr">${data.phone || '---'}</td>
-                    <td>${data.countryCode || '+966'}</td>
+                    <td>${data.country_key || '+966'}</td>
                     <td>${data.email || '---'}</td>
-                    <td>${data.country || 'المملكة العربية السعودية'}</td>
+                    <td>${data.country || 'السعودية'}</td>
                     <td>${data.city || '---'}</td>
                     <td>${data.district || '---'}</td>
                     <td>${data.street || '---'}</td>
-                    <td>${data.buildingNo || '---'}</td>
-                    <td>${data.additionalNo || '---'}</td>
-                    <td>${data.postalCode || '---'}</td>
-                    <td>${data.poBox || '---'}</td>
-                    <td>${dateDisplay}</td>
-                    <td><span class="status-badge status-active">نشط</span></td>
-                    <td><span class="badge ${data.tag === 'vip' ? 'vip' : 'reg'}">${data.tag || 'عادي'}</span></td>
+                    <td>${data.building_no || '---'}</td>
+                    <td>${data.additional_no || '---'}</td>
+                    <td>${data.zip_code || '---'}</td>
+                    <td>${data.po_box || '---'}</td>
+                    <td>${data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString('ar-SA') : '---'}</td>
+                    <td><span class="status-badge status-active">${data.status || 'نشط'}</span></td>
+                    <td><span class="badge ${data.classification === 'VIP' ? 'vip' : 'reg'}">${data.classification || 'عادي'}</span></td>
                     <td class="sticky-actions">
                         <div class="table-actions">
-                            <button onclick="window.editCustomer('${id}')" class="action-btn edit"><i class="fas fa-edit"></i></button>
-                            <button onclick="window.deleteCustomer('${id}')" class="action-btn delete"><i class="fas fa-trash"></i></button>
+                            <button onclick="window.editCustomer('${id}')" class="action-btn edit" title="تعديل"><i class="fas fa-edit"></i></button>
+                            <button onclick="window.deleteCustomer('${id}')" class="action-btn delete" title="حذف"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>
@@ -91,29 +93,40 @@ async function renderCustomersTable(tableBody) {
 
         tableBody.innerHTML = html;
         updateStats(stats);
+        console.log(`✅ تم تحميل ${querySnapshot.size} عميل بنجاح.`);
 
     } catch (error) {
-        console.error("🔴 فشل العرض النهائي:", error);
-        tableBody.innerHTML = `<tr><td colspan="17" style="color:red; text-align:center;">خطأ في Firestore: ${error.message}</td></tr>`;
+        console.error("🔴 خطأ أثناء جلب مجموعة customers:", error);
+        tableBody.innerHTML = `<tr><td colspan="17" style="color:red; text-align:center; padding:20px;">خطأ في الوصول للبيانات: ${error.message}</td></tr>`;
     }
 }
 
+// دالة تحديث بطاقات الإحصائيات
 function updateStats(s) {
-    const fields = ['total', 'vip', 'complete', 'incomplete'];
+    const fields = ['total', 'vip', 'complete', 'incomplete', 'active'];
     fields.forEach(f => {
         const el = document.getElementById(`stat-${f}`);
         if (el) el.innerText = s[f] || 0;
     });
 }
 
-// الدوال العالمية
-window.deleteCustomer = async (id) => {
-    if (confirm("هل تريد حذف بيانات العميل نهائياً؟")) {
-        try {
-            await deleteDoc(doc(window.db, "customers", id));
-            renderCustomersTable(document.getElementById('customers-data-rows'));
-        } catch (e) { alert("فشل الحذف: " + e.message); }
-    }
+/**
+ * ربط الأزرار بالعالم الخارجي (Global Scope)
+ * لضمان عمل onclick من داخل الجدول
+ */
+window.editCustomer = (id) => {
+    if (window.openCustomerModal) window.openCustomerModal('edit', id);
 };
 
-window.editCustomer = (id) => window.openCustomerModal?.('edit', id);
+window.deleteCustomer = async (id) => {
+    if (confirm("هل أنت متأكد من حذف هذا العميل من قاعدة البيانات؟")) {
+        try {
+            await window.db.collection("customers").doc(id).delete();
+            // تحديث الجدول فوراً بعد الحذف
+            const tb = document.getElementById('customers-data-rows');
+            if (tb) renderCustomersTable(window.db, tb);
+        } catch (e) {
+            alert("خطأ أثناء الحذف: " + e.message);
+        }
+    }
+};
