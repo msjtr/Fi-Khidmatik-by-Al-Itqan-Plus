@@ -1,7 +1,9 @@
-/* fi-khidmatik/css/customers.css */
+/* * Tera Gateway - Customers Module Styles
+ * نظام إدارة العملاء - متوافق مع الجدول العملاق (17 عمود)
+ */
 
 :root {
-    --glass-white: rgba(255, 255, 255, 0.9);
+    --glass-white: rgba(255, 255, 255, 0.95);
     --accent-blue: #2563eb;
     --accent-green: #10b981;
     --accent-gold: #f59e0b;
@@ -15,48 +17,50 @@
 
 .customers-module-wrapper {
     padding: 25px;
-    font-family: 'Tajawal', sans-serif;
     animation: slideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    background: var(--bg-main);
 }
 
-/* 1. شبكة الإحصائيات (Stats Grid) - مطورة لـ 17 مؤشر */
+/* 1. شبكة الإحصائيات (Stats Grid) - استجابة مرنة */
+.stats-grid-container {
+    background: #fff;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 25px;
+    border: 1px solid var(--border-glass);
+}
+
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 15px;
-    margin-bottom: 25px;
 }
 
 .stat-card {
-    background: white;
-    border: 1px solid var(--border-glass);
-    border-radius: 18px;
-    padding: 18px;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 16px;
+    padding: 15px;
     text-align: center;
-    box-shadow: var(--shadow-soft);
     transition: all 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
 }
 
 .stat-card:hover { 
     transform: translateY(-5px); 
+    background: #fff;
     border-color: var(--accent-blue);
-    box-shadow: 0 15px 30px rgba(37, 99, 235, 0.1);
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.08);
 }
 
-.stat-card h3 { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px; font-weight: 700; }
-.stat-card p { font-size: 1.4rem; font-weight: 900; color: var(--text-main); margin: 0; }
+.stat-card h3 { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 700; }
+.stat-card p { font-size: 1.5rem; font-weight: 900; color: var(--text-main); margin: 0; }
 
-/* 2. الرأس الزجاجي (Control Header) */
+/* 2. التحكم والبحث (Control Header) */
 .glass-header {
     background: var(--glass-white);
     backdrop-filter: blur(12px);
     border: 1px solid var(--border-glass);
-    border-radius: 24px;
-    padding: 20px 25px;
+    border-radius: 20px;
+    padding: 15px 25px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -66,8 +70,7 @@
 
 .search-wrapper {
     position: relative;
-    flex: 1;
-    max-width: 400px;
+    flex: 0 1 400px;
 }
 
 .search-wrapper i {
@@ -81,9 +84,8 @@
 .search-wrapper input {
     width: 100%;
     padding: 12px 45px 12px 15px;
-    border-radius: 15px;
-    border: 1.5px solid #e2e8f0;
-    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
     font-family: 'Tajawal', sans-serif;
     transition: 0.3s;
 }
@@ -94,141 +96,134 @@
     outline: none;
 }
 
-/* 3. الجدول العملاق (The Master Table) */
+/* 3. حاوية الجدول (Table Glass Container) */
 .glass-table-container {
     background: white;
-    border-radius: 24px;
+    border-radius: 20px;
     border: 1px solid var(--border-glass);
-    overflow-x: auto;
     box-shadow: var(--shadow-soft);
     position: relative;
+    overflow: hidden; /* لمنع خروج الـ sticky عن الحدود */
+}
+
+.table-scroll-wrapper {
+    overflow-x: auto;
+    width: 100%;
 }
 
 .modern-table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
-    min-width: 2600px; /* لتغطية الـ 17 عموداً بوضوح */
+    min-width: 2800px; /* ضمان عرض الـ 17 عمود بوضوح */
 }
 
 .modern-table th {
-    background: #f8fafc;
-    padding: 20px 15px;
+    background: #f1f5f9;
+    padding: 18px 15px;
     text-align: right;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     font-weight: 800;
     color: var(--text-muted);
-    border-bottom: 2px solid #f1f5f9;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    border-bottom: 2px solid #e2e8f0;
+    white-space: nowrap;
 }
 
 .modern-table td {
-    padding: 16px 15px;
+    padding: 14px 15px;
     border-bottom: 1px solid #f1f5f9;
-    font-size: 0.88rem;
+    font-size: 0.9rem;
     color: var(--text-main);
-    transition: background 0.2s;
 }
 
-.modern-table tbody tr:hover td {
-    background: #fbfcfe;
-}
+/* 4. منطق التثبيت (RTL Sticky Strategy) */
 
-/* 4. تثبيت الأعمدة الذكي (Sticky Strategy) */
-/* عمود التسلسل # */
+/* عمود الرقم والتسلسل */
 .sticky-col { 
     position: sticky; 
     right: 0; 
     background: #f8fafc !important; 
-    z-index: 20; 
+    z-index: 10; 
     border-left: 1px solid #e2e8f0;
-    min-width: 50px;
+    width: 50px;
 }
 
-/* عمود اسم العميل */
+/* عمود اسم العميل - تثبيت بجانب الرقم */
 .sticky-col-name { 
     position: sticky; 
     right: 50px; 
-    background: white !important; 
-    z-index: 20; 
+    background: #f8fafc !important; 
+    z-index: 10; 
     border-left: 3px solid var(--accent-blue);
-    min-width: 220px;
-    font-weight: 700;
+    min-width: 250px;
+    font-weight: 800;
 }
 
-/* عمود الإجراءات (يسار الجدول) */
+/* عمود الإجراءات - تثبيت يسار الجدول */
 .sticky-actions-header, .sticky-actions-cell {
     position: sticky;
     left: 0;
     background: #f8fafc !important;
-    z-index: 20;
-    border-right: 1px solid #e2e8f0;
+    z-index: 10;
+    border-right: 2px solid #e2e8f0;
     text-align: center !important;
-    min-width: 150px;
+    width: 120px;
 }
 
 .sticky-actions-cell {
     background: white !important;
-    box-shadow: 5px 0 15px rgba(0,0,0,0.03);
+    box-shadow: -5px 0 10px rgba(0,0,0,0.02);
 }
 
 /* 5. شارات الحالة والتصنيف */
-.status-pill {
-    padding: 5px 12px;
-    border-radius: 10px;
-    font-size: 0.72rem;
+.badge {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
     font-weight: 800;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
+    display: inline-block;
 }
 
 .status-active { background: #dcfce7; color: #15803d; }
-.status-vip { 
-    background: #fff7ed; 
+.badge.vip { 
+    background: linear-gradient(135deg, #fff7ed, #ffedd5); 
     color: #c2410c; 
     border: 1px solid #fdba74;
-    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.1);
 }
-.status-pending { background: #fefce8; color: #a16207; }
+.badge.reg { background: #f1f5f9; color: #475569; }
 
-/* 6. أزرار العمليات الصغيرة */
-.action-btns {
+/* 6. أزرار العمليات */
+.table-actions {
     display: flex;
-    gap: 6px;
+    gap: 8px;
     justify-content: center;
 }
 
-.btn-action {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
+.action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: none;
-    cursor: pointer;
-    transition: 0.2s all;
+    transition: 0.2s;
 }
 
-.btn-edit { background: #eff6ff; color: var(--accent-blue); }
-.btn-print { background: #f8fafc; color: #64748b; }
-.btn-delete { background: #fef2f2; color: var(--accent-red); }
+.action-btn.edit { background: #eff6ff; color: var(--accent-blue); }
+.action-btn.delete { background: #fef2f2; color: var(--accent-red); }
 
-.btn-action:hover {
-    transform: scale(1.1) translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
+.action-btn:hover { transform: scale(1.1); filter: brightness(0.95); }
 
-/* 7. استجابة الهواتف */
-@media (max-width: 1024px) {
-    .stats-grid { grid-template-columns: repeat(2, 1fr); }
-    .glass-header { flex-direction: column; gap: 15px; }
-    .action-zone { width: 100%; justify-content: center; }
-}
-
+/* أنيميشن الدخول */
 @keyframes slideIn {
-    from { opacity: 0; transform: translateY(15px); }
+    from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* استجابة الشاشات */
+@media (max-width: 1024px) {
+    .glass-header { flex-direction: column; gap: 15px; align-items: stretch; }
+    .search-wrapper { max-width: 100%; }
 }
