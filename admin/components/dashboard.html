@@ -1,119 +1,196 @@
 <div class="dashboard-content" style="animation: fadeIn 0.6s ease-out; padding: 10px;">
     
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+    <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
         <div>
-            <h2 style="color: #1e293b; margin: 0; font-weight: 800; font-size: 1.5rem;">نظرة عامة على النظام</h2>
-            <p style="color: #64748b; margin: 5px 0 0; font-size: 0.9rem;">مرحباً بك مجدداً، إليك ملخص نشاطك اليوم.</p>
+            <h2 style="color: #1e293b; margin: 0; font-weight: 900; font-size: 1.6rem; letter-spacing: -0.5px;">نظرة عامة على النظام</h2>
+            <p style="color: #64748b; margin: 5px 0 0; font-size: 0.95rem; font-weight: 600;">مرحباً بك مجدداً، محمد. إليك ملخص نشاط تيرا جيت واي اليوم.</p>
         </div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-             <span style="background: #eff6ff; color: #2563eb; padding: 8px 16px; border-radius: 12px; font-size: 13px; font-weight: bold; border: 1px solid rgba(37, 99, 235, 0.1);">
-                <i class="fas fa-signal" style="margin-left: 5px;"></i> مباشر
+        <div class="live-status">
+             <span class="status-pulse">
+                <i class="fas fa-circle" style="font-size: 8px; margin-left: 8px;"></i> مباشر الآن
             </span>
         </div>
     </div>
     
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 25px;">
+    <div class="stats-container">
         
-        <div class="stat-card" style="border-bottom: 4px solid #2563eb;">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <div class="icon-box" style="background: #eff6ff; color: #2563eb;">
-                    <i class="fas fa-users fa-lg"></i>
+        <div class="stat-card orange-glow">
+            <div class="stat-inner">
+                <div class="icon-box-new bg-orange-soft">
+                    <i class="fas fa-users"></i>
                 </div>
-                <div>
-                    <p class="stat-label">إجمالي العملاء</p>
-                    <h3 class="stat-value">0</h3>
+                <div class="stat-info">
+                    <p class="stat-label-new">إجمالي العملاء</p>
+                    <h3 class="stat-value-new" id="total-customers-count">0</h3>
                 </div>
             </div>
+            <div class="stat-progress-bar bg-orange"></div>
         </div>
 
-        <div class="stat-card" style="border-bottom: 4px solid #8b5cf6;">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <div class="icon-box" style="background: #f5f3ff; color: #8b5cf6;">
-                    <i class="fas fa-credit-card fa-lg"></i>
+        <div class="stat-card purple-glow">
+            <div class="stat-inner">
+                <div class="icon-box-new bg-purple-soft">
+                    <i class="fas fa-file-invoice-dollar"></i>
                 </div>
-                <div>
-                    <p class="stat-label">أقساط مستحقة</p>
-                    <h3 class="stat-value">0</h3>
+                <div class="stat-info">
+                    <p class="stat-label-new">أقساط مستحقة اليوم</p>
+                    <h3 class="stat-value-new" id="due-installments-count">0</h3>
                 </div>
             </div>
+            <div class="stat-progress-bar bg-purple"></div>
         </div>
 
-        <div class="stat-card" style="border-bottom: 4px solid #10b981;">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <div class="icon-box" style="background: #ecfdf5; color: #10b981;">
-                    <i class="fas fa-sim-card fa-lg"></i>
+        <div class="stat-card green-glow">
+            <div class="stat-inner">
+                <div class="icon-box-new bg-green-soft">
+                    <i class="fas fa-sim-card"></i>
                 </div>
-                <div>
-                    <p class="stat-label">رصيد Sawa</p>
-                    <h3 class="stat-value">متوفر</h3>
+                <div class="stat-info">
+                    <p class="stat-label-new">رصيد Sawa المتاح</p>
+                    <h3 class="stat-value-new" id="sawa-balance">متوفر</h3>
                 </div>
             </div>
+            <div class="stat-progress-bar bg-green"></div>
         </div>
 
     </div>
 
-    <div class="welcome-section">
-        <div style="margin-bottom: 20px; opacity: 0.2;">
-            <i class="fas fa-chart-line fa-5x"></i>
+    <div class="action-welcome-section">
+        <div class="welcome-icon-wrap">
+            <i class="fas fa-rocket fa-4x"></i>
         </div>
-        <h3 style="color: #1e293b; margin-bottom: 10px;">ابدأ العمل الآن</h3>
-        <p style="color: #64748b; max-width: 400px; margin: 0 auto; line-height: 1.6;">
-            يمكنك إضافة عملاء جدد، إدارة الأقساط، أو مراجعة المخزون من خلال القائمة الجانبية. جميع بياناتك محمية ومشفرة.
+        <h3 style="color: #1e293b; font-weight: 800; margin-bottom: 12px; font-size: 1.4rem;">انطلق بإنتاجية أعلى</h3>
+        <p style="color: #64748b; max-width: 450px; margin: 0 auto; line-height: 1.7; font-weight: 500;">
+            يمكنك الآن إضافة عملاء جدد لبرنامج التقسيط، إدارة فواتير Sawa، أو مراجعة التقارير المالية. جميع العمليات تتم بمزامنة فورية مع قاعدة البيانات.
         </p>
-        <button onclick="location.hash='#customers'" style="margin-top: 25px; padding: 12px 25px; background: #2563eb; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.3s;">
-            <i class="fas fa-user-plus" style="margin-left: 8px;"></i> الانتقال لقاعدة العملاء
-        </button>
+        <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
+            <button onclick="loadModule('customers', this)" class="btn-dashboard primary">
+                <i class="fas fa-user-plus"></i> قاعدة العملاء
+            </button>
+            <button onclick="loadModule('orders', this)" class="btn-dashboard secondary">
+                <i class="fas fa-plus-circle"></i> طلب جديد
+            </button>
+        </div>
     </div>
 </div>
 
 <style>
+    /* المتغيرات المحلية للهوية */
+    :root {
+        --tera-orange: #f97316;
+        --tera-purple: #8b5cf6;
+        --tera-green: #10b981;
+    }
+
+    .stats-container {
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+        gap: 25px;
+    }
+
     .stat-card {
         background: white;
         padding: 25px;
-        border-radius: 24px;
-        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.03);
-        transition: transform 0.3s ease;
+        border-radius: 20px;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #f1f5f9;
+        box-shadow: 0 10px 30px -10px rgba(0,0,0,0.04);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .stat-card:hover {
-        transform: translateY(-5px);
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px -15px rgba(0,0,0,0.08);
     }
 
-    .icon-box {
-        width: 55px;
-        height: 55px;
-        border-radius: 16px;
+    .stat-inner { display: flex; align-items: center; gap: 20px; }
+
+    /* أيقونات مطورة */
+    .icon-box-new {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 1.4rem;
     }
 
-    .stat-label {
-        color: #64748b;
-        margin: 0;
-        font-size: 14px;
-        font-weight: 600;
-    }
+    .bg-orange-soft { background: #fff7ed; color: var(--tera-orange); }
+    .bg-purple-soft { background: #f5f3ff; color: var(--tera-purple); }
+    .bg-green-soft { background: #ecfdf5; color: var(--tera-green); }
 
-    .stat-value {
-        margin: 5px 0 0;
-        font-size: 26px;
-        color: #1e293b;
-        font-weight: 800;
-    }
+    .stat-label-new { color: #64748b; margin: 0; font-size: 0.9rem; font-weight: 700; }
+    .stat-value-new { margin: 4px 0 0; font-size: 1.8rem; color: #1e293b; font-weight: 900; }
 
-    .welcome-section {
-        margin-top: 30px;
-        background: rgba(255, 255, 255, 0.6);
-        backdrop-filter: blur(10px);
-        padding: 60px 40px;
-        border-radius: 30px;
+    /* شريط الحالة الملون في أسفل كل بطاقة */
+    .stat-progress-bar { position: absolute; bottom: 0; right: 0; height: 4px; width: 100%; }
+    .bg-orange { background: var(--tera-orange); }
+    .bg-purple { background: var(--tera-purple); }
+    .bg-green { background: var(--tera-green); }
+
+    /* قسم الترحيب */
+    .action-welcome-section {
+        margin-top: 35px;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        padding: 60px 30px;
+        border-radius: 24px;
         text-align: center;
-        border: 2px dashed #e2e8f0;
+        border: 1px solid #e2e8f0;
+    }
+
+    .welcome-icon-wrap { color: var(--tera-orange); margin-bottom: 20px; opacity: 0.8; }
+
+    /* أزرار لوحة التحكم */
+    .btn-dashboard {
+        padding: 14px 28px;
+        border-radius: 14px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: 0.3s;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: 'Tajawal', sans-serif;
+    }
+
+    .btn-dashboard.primary {
+        background: var(--tera-orange);
+        color: white;
+        box-shadow: 0 8px 20px rgba(249, 115, 22, 0.25);
+    }
+
+    .btn-dashboard.secondary {
+        background: #fff;
+        color: #1e293b;
+        border: 1px solid #e2e8f0;
+    }
+
+    .btn-dashboard:hover { transform: translateY(-3px); filter: brightness(1.1); }
+
+    /* نبض المباشر */
+    .status-pulse {
+        background: #ecfdf5;
+        color: #059669;
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.6; }
+        100% { opacity: 1; }
     }
 
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(15px); }
+        from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
     }
 </style>
