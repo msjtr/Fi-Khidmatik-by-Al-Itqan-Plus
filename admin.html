@@ -3,127 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام تيرا جيت واي | Tera Gateway</title>
+    <title>لوحة تحكم تيرا جيت واي | Tera Gateway</title>
     
-    <link rel="icon" href="images/logo.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
-
-    <link rel="stylesheet" href="css/admin.css">
-    <link rel="stylesheet" href="css/customers.css">
-
-    <style>
-        :root {
-            --sidebar-width: 280px;
-            --header-height: 70px;
-            --primary-blue: #2563eb;
-            --bg-body: #f8fafc;
-            --border-color: #e2e8f0;
-            --glass-bg: rgba(255, 255, 255, 0.8);
-        }
-
-        body { 
-            margin: 0; 
-            font-family: 'Tajawal', sans-serif; 
-            background-color: var(--bg-body); 
-            display: flex; 
-            height: 100vh; 
-            width: 100vw; 
-            overflow: hidden; 
-        }
-
-        .main-wrapper { 
-            display: flex; 
-            width: 100%; 
-            height: 100%; 
-        }
-
-        #sidebar-placeholder { 
-            width: var(--sidebar-width); 
-            height: 100%; 
-            background: #fff; 
-            flex-shrink: 0; 
-            border-left: 1px solid var(--border-color); 
-            z-index: 1000; 
-            box-shadow: 10px 0 30px rgba(0,0,0,0.02);
-        }
-
-        .content-area { 
-            flex-grow: 1; 
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden; 
-            position: relative; 
-        }
-
-        #header-placeholder { 
-            height: var(--header-height); 
-            background: var(--glass-bg); 
-            backdrop-filter: blur(12px); 
-            border-bottom: 1px solid var(--border-color); 
-            z-index: 999; 
-            padding: 0 30px;
-            display: flex;
-            align-items: center;
-        }
-
-        #module-container { 
-            flex-grow: 1; 
-            padding: 25px; 
-            overflow-y: auto; 
-            scroll-behavior: smooth; 
-        }
-
-        .loading-state { 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            height: 100%; 
-            width: 100%; 
-            background: #fff; 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            z-index: 9999; 
-            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); 
-        }
-
-        .loading-state.hidden { 
-            opacity: 0; 
-            visibility: hidden;
-            transform: scale(1.05);
-        }
-
-        #module-container::-webkit-scrollbar { width: 6px; }
-        #module-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-    </style>
+    <link rel="stylesheet" href="css/admin-style.css">
+    <link rel="stylesheet" href="css/customers-module.css">
 </head>
 <body>
 
-    <div class="main-wrapper">
-        <aside id="sidebar-placeholder"></aside>
-        
-        <div class="content-area">
-            <header id="header-placeholder"></header>
-            
-            <main id="module-container">
-                <div class="loading-state" id="main-loader">
-                    <div class="loader-content" style="text-align: center;">
-                        <img src="images/logo.svg" alt="Tera" style="width: 80px; margin-bottom: 20px;">
-                        <br>
-                        <i class="fas fa-circle-notch fa-spin fa-2x" style="color: var(--primary-blue);"></i>
-                        <p style="margin-top: 20px; font-weight: 800; color: #1e293b; letter-spacing: 1px;">TERA GATEWAY OS</p>
-                    </div>
+    <div class="admin-wrapper">
+        <aside class="sidebar">
+            <div class="logo-section">
+                <img src="admin/images/tera-logo.png" alt="Tera Logo">
+                <span>تيرا جيت واي</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="#dashboard" class="nav-item active"><i class="fas fa-home"></i> الرئيسية</a>
+                <a href="#customers" class="nav-item"><i class="fas fa-users"></i> قاعدة العملاء</a>
+                <a href="#orders" class="nav-item"><i class="fas fa-file-invoice-dollar"></i> الطلبات والفواتير</a>
+                <a href="#settings" class="nav-item"><i class="fas fa-cog"></i> الإعدادات</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="search-box">
+                    <input type="text" id="global-search" placeholder="ابحث باسم العميل، الجوال، المدينة...">
                 </div>
-            </main>
-        </div>
+                <div class="user-profile">
+                    <span id="admin-name">مرحبًا، محمد بن صالح</span>
+                    <img src="admin/images/avatar.png" class="avatar">
+                </div>
+            </header>
+
+            <section id="module-container" class="content-body">
+                <div class="loading-state">جاري تحميل النظام...</div>
+            </section>
+        </main>
     </div>
 
-    <div id="modals-placeholder"></div>
+    <div id="customer-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeCustomerModal()">&times;</span>
+            <h2 id="modal-title">إضافة عميل جديد</h2>
+            <form id="customer-form">
+                <div class="form-grid">
+                    <input type="text" name="name" placeholder="الاسم الكامل كما في الهوية" required>
+                    <input type="text" name="phone" placeholder="رقم الجوال (05xxxxxxxx)" required>
+                    <input type="text" name="city" placeholder="المدينة">
+                    <input type="text" name="district" placeholder="الحي">
+                    <input type="text" name="building_no" placeholder="رقم المبنى">
+                    <select name="classification">
+                        <option value="عادي">عميل عادي</option>
+                        <option value="VIP">عميل VIP</option>
+                    </select>
+                </div>
+                <button type="submit" class="save-btn">حفظ البيانات</button>
+            </form>
+        </div>
+    </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -132,48 +72,6 @@
     <script type="module" src="js/core/firebase.js"></script>
 
     <script type="module" src="js/main.js"></script>
-
-    <script>
-        /**
-         * دالة جلب المكونات الهيكلية
-         */
-        async function loadCoreComponent(id, fileName) {
-            const container = document.getElementById(id);
-            if (!container) return false;
-            
-            const path = `admin/components/${fileName}`;
-            try {
-                const response = await fetch(`${path}?v=${Date.now()}`);
-                if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-                const html = await response.text();
-                container.innerHTML = html;
-                return true;
-            } catch (err) {
-                console.error(`❌ فشل تحميل المكون الهيكلي: ${fileName}`, err);
-                container.innerHTML = `<div style="color:red; padding:10px;">خطأ في ${fileName}</div>`;
-                return false;
-            }
-        }
-
-        // تشغيل تحميل الهيكل فوراً
-        window.addEventListener('DOMContentLoaded', async () => {
-            // تحميل الهيكل الأساسي بالتوازي
-            await Promise.all([
-                loadCoreComponent('sidebar-placeholder', 'sidebar.html'),
-                loadCoreComponent('header-placeholder', 'header.html'),
-                loadCoreComponent('modals-placeholder', 'modals.html')
-            ]);
-
-            // إخفاء شاشة التحميل بعد أن يجهز الهيكل
-            const loader = document.getElementById('main-loader');
-            if (loader) {
-                setTimeout(() => {
-                    loader.classList.add('hidden');
-                    setTimeout(() => loader.remove(), 800);
-                }, 500); // مهلة بسيطة لضمان انسيابية الظهور
-            }
-        });
-    </script>
 
 </body>
 </html>
