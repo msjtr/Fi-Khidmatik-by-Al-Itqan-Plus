@@ -1,9 +1,9 @@
 /**
  * js/modules/customers-ui.js
- * موديول واجهة مستخدم العملاء - متوافق مع Firebase V12 (Modular SDK)
+ * موديول واجهة مستخدم العملاء - متوافق مع Firebase V12 (Modular)
+ * مخصص لمجموعة: customers
  */
 
-// استيراد الدوال المطلوبة مباشرة من مكتبة Firestore v12
 import { 
     collection, 
     getDocs, 
@@ -14,12 +14,11 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 export async function initCustomersUI(container) {
-    console.log("🚀 Tera Gateway: محرك العملاء V12 قيد التشغيل...");
+    console.log("🚀 Tera Gateway: جاري تهيئة موديول العملاء V12...");
 
-    // وظيفة للانتظار حتى يتم حقن window.db من ملف firebase.js
-    const getFirestoreInstance = () => {
+    // دالة الانتظار لضمان جاهزية اتصال Firestore
+    const getDbInstance = () => {
         return new Promise((resolve) => {
-            if (window.db) return resolve(window.db);
             const interval = setInterval(() => {
                 if (window.db) {
                     clearInterval(interval);
@@ -30,31 +29,31 @@ export async function initCustomersUI(container) {
     };
 
     try {
-        const db = await getFirestoreInstance();
-        // استخدام المعرف الصحيح لجدول البيانات المكون من 17 عموداً
+        const db = await getDbInstance();
+        // البحث عن جسم الجدول المخصص للعملاء
         const tableBody = container.querySelector('#customers-data-rows');
         
         if (tableBody) {
             await renderCustomersTable(db, tableBody);
         } else {
-            console.warn("⚠️ لم يتم العثور على #customers-data-rows في DOM");
+            console.error("❌ خطأ: لم يتم العثور على #customers-data-rows في واجهة العملاء.");
         }
     } catch (error) {
-        console.error("❌ فشل تشغيل موديول V12:", error);
+        console.error("❌ فشل بدء الموديول:", error);
     }
 }
 
 async function renderCustomersTable(db, tableBody) {
-    tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center; padding:30px;">جاري المزامنة مع Firestore V12...</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center; padding:30px;">جاري سحب البيانات من مجموعة customers...</td></tr>';
 
     try {
-        // تنفيذ الاستعلام بنظام الموديولات الجديد
-        const customersCol = collection(db, "customers");
-        const q = query(customersCol, orderBy("name"));
+        // الوصول للمجموعة باستخدام النظام الجديد لـ v12
+        const customersRef = collection(db, "customers");
+        const q = query(customersRef, orderBy("name", "asc"));
         const querySnapshot = await getDocs(q);
         
         if (querySnapshot.empty) {
-            tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center; padding:30px;">قاعدة البيانات فارغة حالياً.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center; padding:30px;">لا يوجد عملاء مسجلين في النظام حالياً.</td></tr>';
             return;
         }
 
@@ -81,12 +80,16 @@ async function renderCustomersTable(db, tableBody) {
                     <td>${data.zip_code || '---'}</td>
                     <td>${data.po_box || '---'}</td>
                     <td>${data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString('ar-SA') : '---'}</td>
-                    <td><span class="status-badge ${data.status === 'active' ? 'active' : 'inactive'}">${data.status || 'نشط'}</span></td>
+                    <td>
+                        <span class="status-badge ${data.status === 'نشط' ? 'active' : 'inactive'}">
+                            ${data.status || 'نشط'}
+                        </span>
+                    </td>
                     <td><span class="badge ${data.classification === 'VIP' ? 'vip' : 'reg'}">${data.classification || 'عادي'}</span></td>
                     <td class="sticky-actions">
                         <div class="table-actions">
-                            <button onclick="window.editCustomer('${id}')" class="action-btn edit"><i class="fas fa-edit"></i></button>
-                            <button onclick="window.deleteCustomer('${id}')" class="action-btn delete"><i class="fas fa-trash"></i></button>
+                            <button onclick="window.editCustomer('${id}')" class="action-btn edit" title="تعديل"><i class="fas fa-edit"></i></button>
+                            <button onclick="window.deleteCustomer('${id}')" class="action-btn delete" title="حذف"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>
@@ -94,32 +97,29 @@ async function renderCustomersTable(db, tableBody) {
         });
 
         tableBody.innerHTML = html;
-        
-        // تحديث إحصائيات الواجهة
-        const totalStat = document.getElementById('stat-total');
-        if (totalStat) totalStat.innerText = querySnapshot.size;
+        console.log(`✅ تم تحميل ${querySnapshot.size} عميل بنجاح.`);
 
     } catch (error) {
-        console.error("🔴 خطأ V12 أثناء جلب البيانات:", error);
-        tableBody.innerHTML = `<tr><td colspan="17" style="color:red; text-align:center;">فشل الاتصال: ${error.message}</td></tr>`;
+        console.error("🔴 خطأ أثناء جلب مجموعة customers:", error);
+        tableBody.innerHTML = `<tr><td colspan="17" style="color:red; text-align:center; padding:20px;">خطأ في الوصول للبيانات: ${error.message}</td></tr>`;
     }
 }
 
-// تعريف الدوال العالمية للتحكم من الأزرار مباشرة
+// ربط الأزرار بالعالم الخارجي
 window.editCustomer = (id) => {
     if (window.openCustomerModal) window.openCustomerModal('edit', id);
 };
 
 window.deleteCustomer = async (id) => {
-    if (confirm("حذف العميل نهائياً من نظام تيرا؟")) {
+    if (confirm("هل أنت متأكد من حذف هذا العميل من قاعدة البيانات؟")) {
         try {
-            const customerRef = doc(window.db, "customers", id);
-            await deleteDoc(customerRef);
-            // إعادة تحميل الجدول تلقائياً
+            const customerDocRef = doc(window.db, "customers", id);
+            await deleteDoc(customerDocRef);
+            // تحديث الجدول فورياً
             const tb = document.querySelector('#customers-data-rows');
             if (tb) renderCustomersTable(window.db, tb);
         } catch (e) {
-            alert("خطأ أثناء الحذف: " + e.message);
+            alert("حدث خطأ أثناء الحذف: " + e.message);
         }
     }
 };
