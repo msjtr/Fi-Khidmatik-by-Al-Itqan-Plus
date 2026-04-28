@@ -1,5 +1,4 @@
 <div class="customers-module-wrapper">
-    
     <div class="stats-grid-container">
         <div class="stats-group-title"><i class="fas fa-chart-pie"></i> إحصائيات قاعدة البيانات</div>
         <div class="stats-grid">
@@ -13,7 +12,7 @@
             <div class="stat-card"><h3>شركات</h3><p id="stat-companies">0</p></div>
         </div>
         
-        <div class="stats-group-title"><i class="fas fa-sync-alt"></i> سجل العمليات</div>
+        <div class="stats-group-title"><i class="fas fa-sync-alt"></i> سجل العمليات الحية</div>
         <div class="stats-grid mini">
             <div class="stat-card mini"><h3>إضافات</h3><p id="stat-adds">0</p></div>
             <div class="stat-card mini"><h3>تعديلات</h3><p id="stat-edits">0</p></div>
@@ -28,14 +27,14 @@
             <div class="icon-box-blue"><i class="fas fa-address-book"></i></div>
             <div>
                 <h2 style="margin:0; font-size: 1.25rem; font-weight: 800; color: #1e293b;">إدارة عملاء تيرا جيت واي</h2>
-                <small style="color: #64748b;">Cloud Firestore: <span style="color:#2563eb;">/customers</span></small>
+                <small style="color: #64748b;">قاعدة البيانات النشطة: <span style="color:#2563eb;">Firestore/customers</span></small>
             </div>
         </div>
 
         <div class="action-zone">
             <div class="search-wrapper">
                 <i class="fas fa-search"></i>
-                <input type="text" id="customer-search" placeholder="ابحث بالاسم، الجوال، المدينة..." onkeyup="window.filterCustomersTable()">
+                <input type="text" id="customer-search" placeholder="ابحث بالاسم، الجوال، المدينة..." onkeyup="if(window.filterCustomersTable) window.filterCustomersTable()">
             </div>
             
             <div class="button-group">
@@ -54,66 +53,82 @@
     </div>
 
     <div class="glass-table-container">
-        <table class="modern-table" id="main-customers-table">
-            <thead>
-                <tr>
-                    <th class="sticky-col">#</th>
-                    <th class="sticky-col-name">اسم العميل</th>
-                    <th>رقم الجوال</th>
-                    <th>مفتاح الدولة</th>
-                    <th>البريد الإلكتروني</th>
-                    <th>الدولة</th>
-                    <th>المدينة</th>
-                    <th>الحي</th>
-                    <th>الشارع</th>
-                    <th>رقم المبنى</th>
-                    <th>الرقم الإضافي</th>
-                    <th>الرمز البريدي</th>
-                    <th>صندوق البريد</th>
-                    <th>تاريخ الإضافة</th>
-                    <th>حالة العميل</th>
-                    <th>التصنيف</th>
-                    <th class="sticky-actions-header">الإجراءات</th>
-                </tr>
-            </thead>
-            <tbody id="customers-data-rows">
+        <div class="table-scroll-wrapper" style="overflow-x: auto;">
+            <table class="modern-table" id="main-customers-table">
+                <thead>
+                    <tr>
+                        <th class="sticky-col">#</th>
+                        <th class="sticky-col-name">اسم العميل</th>
+                        <th>رقم الجوال</th>
+                        <th>مفتاح الدولة</th>
+                        <th>البريد الإلكتروني</th>
+                        <th>الدولة</th>
+                        <th>المدينة</th>
+                        <th>الحي</th>
+                        <th>الشارع</th>
+                        <th>رقم المبنى</th>
+                        <th>الرقم الإضافي</th>
+                        <th>الرمز البريدي</th>
+                        <th>صندوق البريد</th>
+                        <th>تاريخ الإضافة</th>
+                        <th>الحالة</th>
+                        <th>التصنيف</th>
+                        <th class="sticky-actions-header">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="customers-data-rows">
+                    <tr><td colspan="17" style="text-align:center; padding:40px;">جاري تحميل محرك العملاء...</td></tr>
                 </tbody>
-        </table>
-    </div>
-
-    <div class="import-log-section">
-        <h3><i class="fas fa-history"></i> سجل عمليات الاستيراد</h3>
-        <div id="import-history-list" class="mini-log-grid">
-            </div>
+            </table>
+        </div>
     </div>
 </div>
 
 <style>
-    /* تنسيق شبكة الإحصائيات المتطور */
+    /* التنسيقات العامة والمتقدمة */
     .stats-grid-container { background: #fff; border-radius: 20px; padding: 20px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
     .stats-group-title { font-size: 0.85rem; font-weight: 800; color: #64748b; margin: 15px 0 10px; text-transform: uppercase; letter-spacing: 1px; }
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; }
-    .stats-grid.mini { grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
+    .stats-grid.mini { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
     
     .stat-card { background: #f8fafc; padding: 15px; border-radius: 15px; text-align: center; border: 1px solid #f1f5f9; transition: 0.3s; }
     .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
     .stat-card h3 { font-size: 0.75rem; color: #475569; margin-bottom: 5px; }
     .stat-card p { font-size: 1.4rem; font-weight: 900; color: #1e293b; margin: 0; }
-    .stat-card.mini { padding: 10px; background: #fff; }
-    .stat-card.mini p { font-size: 1.1rem; }
 
-    /* الجدول والتحكم */
-    .glass-table-container { background: white; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-    .sticky-col { position: sticky; right: 0; background: #f8fafc !important; z-index: 10; border-left: 1px solid #e2e8f0; }
-    .sticky-col-name { position: sticky; right: 40px; background: #f8fafc !important; z-index: 10; border-left: 2px solid #e2e8f0; }
+    /* التحكم في ثبات الأعمدة (Sticky Columns) */
+    .glass-table-container { background: white; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; }
+    
+    /* للغة العربية: التثبيت جهة اليمين */
+    .sticky-col { position: sticky; right: 0; background: #f8fafc !important; z-index: 5; border-left: 1px solid #e2e8f0; }
+    .sticky-col-name { position: sticky; right: 45px; background: #f8fafc !important; z-index: 5; border-left: 2px solid #e2e8f0; font-weight: bold; }
+    .sticky-actions-header, .sticky-actions-cell { position: sticky; left: 0; background: #f8fafc !important; z-index: 5; border-right: 1px solid #e2e8f0; }
+
+    /* تحسين شكل الجدول */
+    .modern-table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+    .modern-table th { background: #f1f5f9; padding: 15px; text-align: right; font-size: 0.85rem; color: #475569; }
+    .modern-table td { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
 </style>
 
 <script type="module">
-    import { initCustomersModule } from '../../js/modules/customers-core.js';
+    // استيراد الموديول مع معالجة خطأ المسار
+    import { initCustomersUI } from '../../js/modules/customers-ui.js';
     
-    // تشغيل النظام والتأكد من ربط كافة الأزرار
-    document.addEventListener('DOMContentLoaded', () => {
-        window.customersModule = initCustomersModule();
-        console.log("Tera Gateway: Customers Engine Fully Operational.");
-    });
+    async function startEngine() {
+        try {
+            console.log("🚀 Tera Gateway: Initializing Customers Module...");
+            const container = document.querySelector('.customers-module-wrapper');
+            await initCustomersUI(container);
+            console.log("✅ Tera Gateway: Customers Engine Fully Operational.");
+        } catch (error) {
+            console.error("❌ Tera Engine Error:", error);
+        }
+    }
+
+    // التشغيل
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startEngine);
+    } else {
+        startEngine();
+    }
 </script>
