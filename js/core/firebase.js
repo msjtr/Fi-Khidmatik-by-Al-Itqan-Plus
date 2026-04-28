@@ -1,11 +1,9 @@
 /**
- * js/core/firebase.js
+ * js/core/firebase.js - الإصدار 12.12.1 الحديث
  */
-
-// 1. استيراد النسخة المتوافقة
-import firebase from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js";
-import "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js";
-import "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
@@ -13,31 +11,18 @@ const firebaseConfig = {
     projectId: "msjt301-974bb",
     storageBucket: "msjt301-974bb.firebasestorage.app",
     messagingSenderId: "186209858482",
-    appId: "1:186209858482:web:186ca610780799ef562aab"
+    appId: "1:186209858482:web:186ca610780799ef562aab",
+    measurementId: "G-NDVGC9GPQZ"
 };
 
-// 2. تهيئة التطبيق
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
+// تهيئة التطبيق
+const app = initializeApp(firebaseConfig);
 
-// 3. تعريف الكائنات وتجهيزها للتصدير
-const db = firebase.firestore();
-const auth = firebase.auth();
+// تهيئة الخدمات وتصديرها
+export const db = getFirestore(app);
+export const auth = getAuth(app);
 
-db.settings({
-    cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED,
-    experimentalForceLongPolling: true,
-    merge: true 
-});
-
-// 4. الحقن العالمي (لضمان عمل main.js والملفات القديمة)
+// تأمين الوصول العالمي للملفات التي لم تُحدث بعد
 window.db = db;
-window.auth = auth;
-window.firebase = firebase;
 
-console.log("✅ Tera Engine: Firebase Ready & window.db is active.");
-
-// 5. التصدير الصحيح (هنا تم حل المشكلة)
-export { db, auth, firebase };
-export default firebase;
+console.log("🚀 Tera Engine: Firebase V12.12.1 Ready.");
