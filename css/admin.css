@@ -1,21 +1,25 @@
 /* * Tera Gateway - Main Administrative Stylesheet
- * الإصدار: 1.0.2 | التصميم: Modern Premium (RTL)
+ * الإصدار: 1.0.3 | التصميم: Modern Premium (RTL)
  */
+
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
 
 :root {
     /* الألوان الرئيسية - هوية تيرا */
-    --primary-color: #f97316;    /* برتقالي تيرا */
+    --primary-color: #f97316;    
     --primary-hover: #ea580c;
-    --secondary-color: #1e293b;  /* كحلي غامق للنصوص */
-    --accent-color: #3b82f6;     /* أزرق للنظام */
+    --primary-soft: rgba(249, 115, 22, 0.1);
+    --secondary-color: #1e293b;  
+    --accent-color: #3b82f6;     
     
     /* ألوان الخلفيات */
     --bg-main: #f8fafc;
     --bg-sidebar: #ffffff;
-    --bg-glass: rgba(255, 255, 255, 0.8);
+    --bg-glass: rgba(255, 255, 255, 0.9);
     
     /* الأبعاد */
     --sidebar-width: 280px;
+    --sidebar-collapsed-width: 90px; /* إضافة لدعم الانكماش */
     --header-height: 75px;
     
     /* التأثيرات */
@@ -38,81 +42,36 @@ body {
     background-color: var(--bg-main);
     color: var(--secondary-color);
     direction: rtl;
-    overflow: hidden; /* لمنع شريط التمرير المزدوج */
+    overflow: hidden; 
 }
 
-/* الحاوية الرئيسية */
 .main-wrapper {
     display: flex;
     height: 100vh;
     width: 100vw;
 }
 
-/* القائمة الجانبية (Sidebar) */
+/* --- القائمة الجانبية المحدثة --- */
 .sidebar {
     width: var(--sidebar-width);
     background: var(--bg-sidebar);
     border-left: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
-    z-index: 100;
-}
-
-.logo-section {
-    height: var(--header-height);
-    display: flex;
-    align-items: center;
-    padding: 0 25px;
-    gap: 12px;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.logo-section img {
-    width: 40px;
-    height: 40px;
-}
-
-.logo-section span {
-    font-weight: 900;
-    font-size: 1.2rem;
-    color: var(--primary-color);
-    letter-spacing: -0.5px;
-}
-
-/* القائمة البرمجية */
-.nav-menu {
-    padding: 20px 15px;
-    flex-grow: 1;
-}
-
-.nav-item {
-    display: flex;
-    align-items: center;
-    padding: 12px 18px;
-    margin-bottom: 8px;
-    border-radius: 12px;
-    text-decoration: none;
-    color: #64748b;
-    font-weight: 600;
+    z-index: 1000;
     transition: var(--transition);
-    gap: 12px;
+    position: relative;
 }
 
-.nav-item i {
-    width: 20px;
-    font-size: 1.1rem;
+/* دعم حالة الانكماش */
+.sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
 }
 
-.nav-item:hover {
-    background: #f1f5f9;
-    color: var(--primary-color);
-    transform: translateX(-5px);
-}
-
-.nav-item.active {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
-    color: #fff;
-    box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.3);
+.sidebar.collapsed .logo-section span,
+.sidebar.collapsed .nav-item span,
+.sidebar.collapsed .nav-divider span {
+    display: none;
 }
 
 /* المحتوى الرئيسي */
@@ -121,20 +80,23 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    width: 100%;
 }
 
-/* الشريط العلوي (Header) */
+/* الشريط العلوي */
 .top-bar {
     height: var(--header-height);
     background: var(--bg-glass);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 30px;
     border-bottom: 1px solid #e2e8f0;
+    z-index: 99;
 }
 
+/* تعديل صندوق البحث */
 .search-box {
     position: relative;
     width: 350px;
@@ -142,7 +104,7 @@ body {
 
 .search-box i {
     position: absolute;
-    right: 15px;
+    right: 15px; /* RTL */
     top: 50%;
     transform: translateY(-50%);
     color: #94a3b8;
@@ -150,22 +112,22 @@ body {
 
 .search-box input {
     width: 100%;
-    padding: 10px 45px 10px 15px;
-    border-radius: 12px;
+    padding: 12px 45px 12px 15px;
+    border-radius: 14px;
     border: 1px solid #e2e8f0;
-    background: #f8fafc;
+    background: #f1f5f9;
     font-family: 'Tajawal';
     outline: none;
     transition: var(--transition);
 }
 
 .search-box input:focus {
-    border-color: var(--primary-color);
     background: #fff;
-    box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px var(--primary-soft);
 }
 
-/* معلومات المستخدم */
+/* معلومات المستخدم - تحسين المحاذاة */
 .user-info {
     display: flex;
     align-items: center;
@@ -173,76 +135,58 @@ body {
 }
 
 .user-text {
-    text-align: left; /* لعرض الدور تحت الاسم */
+    text-align: right; /* تعديل لـ RTL */
     display: flex;
     flex-direction: column;
 }
 
 .user-name {
-    font-weight: 700;
-    font-size: 0.95rem;
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: var(--secondary-color);
 }
 
 .user-role {
-    font-size: 0.75rem;
-    color: #64748b;
+    font-size: 0.7rem;
+    color: #94a3b8;
+    font-weight: 600;
 }
 
-.avatar {
-    width: 45px;
-    height: 45px;
-    border-radius: 12px;
-    object-fit: cover;
-    border: 2px solid #fff;
-    box-shadow: var(--shadow-sm);
-}
-
-/* حاوية الموديولات الديناميكية */
+/* حاوية الموديولات مع تمرير ناعم */
 #module-container {
-    padding: 25px;
+    padding: 30px;
     overflow-y: auto;
     height: calc(100vh - var(--header-height));
+    scroll-behavior: smooth;
 }
 
-/* حالات التحميل (Loader) */
-.loader-box {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
+/* تخصيص شريط التمرير (Scrollbar) ليناسب التصميم */
+#module-container::-webkit-scrollbar {
+    width: 6px;
+}
+#module-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
 }
 
-.spinner {
-    width: 45px;
-    height: 45px;
-    border: 4px solid #e2e8f0;
-    border-top: 4px solid var(--primary-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* أزرار مخصصة (Custom Buttons) */
-.btn-primary-custom {
-    background: var(--primary-color);
+/* أزرار مخصصة متطورة */
+.btn-tera {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
     color: #fff;
     border: none;
-    padding: 10px 20px;
-    border-radius: 12px;
+    padding: 12px 24px;
+    border-radius: 14px;
     font-weight: 700;
+    font-family: 'Tajawal';
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     transition: var(--transition);
+    box-shadow: 0 4px 12px var(--primary-soft);
 }
 
-.btn-primary-custom:hover {
-    background: var(--primary-hover);
+.btn-tera:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(249, 115, 22, 0.4);
+    box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3);
 }
