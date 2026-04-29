@@ -2,15 +2,15 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tera Gateway | الإصدار 12.12.6</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tera Gateway | نظام إدارة التقسيط الذكي</title>
     
-    <!-- الروابط الأساسية -->
-    <link rel="icon" href="images/logo.svg" type="image/svg+xml">
+    <!-- الروابط الأساسية والأيقونات -->
+    <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
     
-    <!-- استدعاء ملفات الستايل مع وسم النسخة لكسر الكاش -->
+    <!-- استدعاء ملفات الستايل المحدثة v12.12.6 -->
     <link rel="stylesheet" href="css/admin.css?v=12.12.6">
     <link rel="stylesheet" href="css/sidebar.css?v=12.12.6"> 
     <link rel="stylesheet" href="css/table.css?v=12.12.6">
@@ -18,73 +18,110 @@
 
     <style>
         :root { 
-            --tera-blue: #f97316; /* تم التعديل للبرتقالي ليتوافق مع هوية تيرا */
+            --tera-orange: #f97316; /* الهوية الرسمية */
+            --tera-orange-deep: #ea580c;
             --tera-bg: #f8fafc; 
+            --tera-sidebar-width: 280px;
         }
+        
         body { 
             font-family: 'Tajawal', sans-serif; 
             background-color: var(--tera-bg); 
             margin: 0; 
-            overflow: hidden; /* التحكم بالسكول داخل الموديولات فقط */
+            overflow: hidden; /* تحويل التمرير للمحتوى الداخلي فقط */
+            color: #1e293b;
         }
         
+        /* تصميم شاشة التحميل (Splash Screen) */
         .loader-box {
             display: flex; flex-direction: column; align-items: center;
-            justify-content: center; height: 60vh; color: var(--tera-blue);
+            justify-content: center; height: 100vh; background: #fff;
         }
-        .spinner-tera {
-            width: 50px; height: 50px; 
-            border: 4px solid #f1f5f9;
-            border-top: 4px solid var(--tera-blue); 
-            border-radius: 50%;
-            animation: spin 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        .admin-layout { display: flex; height: 100vh; width: 100vw; overflow: hidden; }
-        .main-wrapper { display: flex; flex-direction: column; flex: 1; min-width: 0; background: var(--tera-bg); }
+        .spinner-tera {
+            width: 60px; height: 60px; 
+            border: 5px solid #f1f5f9;
+            border-top: 5px solid var(--tera-orange); 
+            border-radius: 50%;
+            animation: spin-tera 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            box-shadow: 0 10px 20px rgba(249, 115, 22, 0.1);
+        }
+        
+        @keyframes spin-tera { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* الهيكل الرئيسي (Main Layout) */
+        .admin-layout { 
+            display: flex; 
+            height: 100vh; 
+            width: 100vw; 
+            overflow: hidden; 
+        }
+        
+        .main-wrapper { 
+            display: flex; 
+            flex-direction: column; 
+            flex: 1; 
+            min-width: 0; 
+            background: var(--tera-bg); 
+            position: relative;
+        }
+        
         .content-area { 
-            flex: 1; padding: 30px; overflow-y: auto; 
-            animation: fadeIn 0.4s ease-out; 
-            scrollbar-width: thin;
+            flex: 1; 
+            padding: 25px; 
+            overflow-y: auto; 
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            animation: module-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes module-slide-in { 
+            from { opacity: 0; transform: translateY(15px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        /* تحسينات السكرول بار العام */
+        .content-area::-webkit-scrollbar { width: 6px; }
+        .content-area::-webkit-scrollbar-track { background: transparent; }
+        .content-area::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
-<body class="tera-admin-body">
+<body class="tera-gateway-v12">
 
     <div class="admin-layout">
-        <!-- حاوية القائمة الجانبية -->
-        <aside id="sidebar-container" class="sidebar-wrapper"></aside>
+        <!-- حاوية القائمة الجانبية (يتم حقنها برمجياً) -->
+        <aside id="sidebar-container"></aside>
         
         <main class="main-wrapper">
-            <!-- الهيدر العلوي -->
-            <header id="header-container" class="top-bar"></header>
+            <!-- الهيدر العلوي (يتم حقنه برمجياً) -->
+            <header id="header-container"></header>
             
-            <!-- منطقة حقن الموديولات -->
+            <!-- منطقة حقن الموديولات الديناميكية -->
             <section id="module-container" class="content-area">
                 <div class="loader-box">
                     <div class="spinner-tera"></div>
-                    <p style="margin-top: 20px; font-weight: 800; color: #1e293b; letter-spacing: 0.5px;">
-                        جاري تشغيل محرك تيرا جيت واي 12.12.6...
+                    <p style="margin-top: 25px; font-weight: 800; color: #334155; font-size: 1.1rem;">
+                        جاري تشغيل محرك تيرا جيت واي...
                     </p>
+                    <small style="color: #94a3b8; margin-top: 5px;">إصدار حائل المستقر 12.12.6</small>
                 </div>
             </section>
         </main>
     </div>
 
-    <!-- استدعاء المكونات الإضافية (مثل المودالات) بشكل مخفي -->
+    <!-- حاوية المودالات والرسائل المنبثقة -->
     <div id="modals-placeholder"></div>
+    <div id="toast-container" style="position: fixed; top: 20px; left: 20px; z-index: 10000;"></div>
 
     <script type="module">
-        import { db, auth, ensureDbReady } from './js/core/config.js';
+        import { db, ensureDbReady } from './js/core/config.js';
 
         class TeraApp {
             constructor() {
                 this.container = document.getElementById('module-container');
                 this.version = "12.12.6";
                 
+                // تحديد المسار الأساسي (Base URL) لدعم استضافة GitHub Pages
                 const isGithub = window.location.hostname.includes('github.io');
                 this.baseUrl = isGithub ? '/fi-khidmatik' : '';
                 
@@ -93,107 +130,106 @@
 
             async init() {
                 try {
+                    // التأكد من اتصال قاعدة البيانات قبل البدء
                     await ensureDbReady();
 
-                    // 1. تحميل المكونات الثابتة (Sidebar, Header, Modals)
+                    // 1. تحميل المكونات الهيكلية الثابتة
                     await Promise.all([
-                        this.fetchToElement('sidebar-container', `${this.baseUrl}/admin/components/sidebar.html`),
-                        this.fetchToElement('header-container', `${this.baseUrl}/admin/components/header.html`),
-                        this.fetchToElement('modals-placeholder', `${this.baseUrl}/admin/components/modals.html`)
+                        this.loadComponent('sidebar-container', `${this.baseUrl}/admin/components/sidebar.html`),
+                        this.loadComponent('header-container', `${this.baseUrl}/admin/components/header.html`),
+                        this.loadComponent('modals-placeholder', `${this.baseUrl}/admin/components/modals.html`)
                     ]);
 
-                    // 2. تفعيل نظام التوجيه
-                    window.addEventListener('hashchange', () => this.route());
-                    this.route(); 
+                    // 2. تفعيل نظام التوجيه (Routing)
+                    window.addEventListener('hashchange', () => this.handleRouting());
+                    this.handleRouting(); 
 
-                    window.handleSidebarClick = (module) => {
+                    // تعريف دالة التنقل عالمياً
+                    window.navigateTo = (module) => {
                         window.location.hash = `#${module}`;
                     };
 
                 } catch (err) {
                     console.error("Critical System Failure:", err);
+                    this.container.innerHTML = `<div class="error-state">فشل في بدء تشغيل النظام. يرجى التحديث.</div>`;
                 }
             }
 
-            async fetchToElement(id, path) {
+            async loadComponent(id, path) {
                 try {
-                    const cleanPath = path.replace(/\/+/g, '/');
-                    const res = await fetch(`${cleanPath}?v=${this.version}`);
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const res = await fetch(`${path.replace(/\/+/g, '/')}?v=${this.version}`);
+                    if (!res.ok) throw new Error(`Status: ${res.status}`);
                     const html = await res.text();
-                    document.getElementById(id).innerHTML = html;
-                    
-                    // تنفيذ السكربتات في المكونات الثابتة (مثل أزرار الـ Sidebar)
-                    this.executeScripts(document.getElementById(id));
+                    const el = document.getElementById(id);
+                    el.innerHTML = html;
+                    this.executeInjectedScripts(el);
                 } catch (e) {
-                    console.error(`Failed to load component: ${path}`, e);
+                    console.error(`Component Load Error [${path}]:`, e);
                 }
             }
 
-            async route() {
+            async handleRouting() {
                 const hash = window.location.hash || '#dashboard';
                 const moduleName = hash.replace('#', '');
                 
+                // تحديد المسار: لوحة التحكم في components، والباقي في modules
                 const folder = (moduleName === 'dashboard') ? 'components' : 'modules';
                 const targetPath = `${this.baseUrl}/admin/${folder}/${moduleName}.html`.replace(/\/+/g, '/');
 
                 try {
+                    // إظهار اللودر أثناء الانتقال
                     this.container.innerHTML = '<div class="loader-box"><div class="spinner-tera"></div></div>';
                     
                     const res = await fetch(`${targetPath}?v=${this.version}`);
-                    if (!res.ok) throw new Error("Module Not Found");
+                    if (!res.ok) throw new Error("Module Missing");
 
                     const html = await res.text();
                     this.container.innerHTML = html;
                     
-                    // تنفيذ السكربتات وحل مشكلة undefined (toUpperCase)
-                    // نقوم بالتأخير قليلاً لضمان حقن الـ DOM بالكامل
+                    // تنفيذ السكربتات الخاصة بالموديول
                     setTimeout(() => {
-                        this.executeScripts(this.container);
-                        this.syncSidebar(moduleName);
+                        this.executeInjectedScripts(this.container);
+                        this.updateSidebarUI(moduleName);
                     }, 50);
 
                 } catch (e) {
                     this.container.innerHTML = `
-                        <div class="loader-box" style="color:#dc2626;">
-                            <i class="fas fa-exclamation-circle fa-3x"></i>
-                            <h3 style="margin-top:20px;">عذراً، هذا القسم قيد التطوير أو غير موجود</h3>
-                            <button onclick="window.location.hash='#dashboard'" class="btn-tera" style="margin-top:15px; background:var(--tera-blue); color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">العودة للرئيسية</button>
+                        <div class="loader-box" style="color:#dc2626; text-align:center;">
+                            <i class="fas fa-rocket-launch fa-4x" style="color:#cbd5e1; margin-bottom:20px;"></i>
+                            <h3>القسم "${moduleName}" قيد التحديث</h3>
+                            <p>نعمل حالياً على تحسين هذه الواجهة للإصدار الجديد.</p>
+                            <button onclick="window.location.hash='#dashboard'" class="btn-primary-gradient" style="margin-top:20px;">
+                                العودة للوحة التحكم
+                            </button>
                         </div>`;
                 }
             }
 
-            executeScripts(container) {
+            executeInjectedScripts(container) {
                 const scripts = container.querySelectorAll('script');
                 scripts.forEach(oldScript => {
                     const newScript = document.createElement('script');
-                    // نسخ جميع الصفات (src, type, etc.)
                     Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
                     
                     if (oldScript.src) {
-                        // إذا كان السكربت خارجي
                         newScript.src = `${oldScript.src.split('?')[0]}?v=${this.version}`;
                     } else {
-                        // إذا كان السكربت داخلي
-                        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                        newScript.textContent = oldScript.textContent;
                     }
                     
                     oldScript.parentNode.replaceChild(newScript, oldScript);
                 });
             }
 
-            syncSidebar(activeModule) {
+            updateSidebarUI(activeModule) {
                 document.querySelectorAll('.nav-item').forEach(nav => {
-                    nav.classList.remove('active');
-                    if (nav.getAttribute('data-module') === activeModule) {
-                        nav.classList.add('active');
-                    }
+                    nav.classList.toggle('active', nav.getAttribute('data-module') === activeModule);
                 });
             }
         }
 
-        // إقلاع محرك تيرا
-        window.TeraInstance = new TeraApp();
+        // تشغيل النسخة الفريدة من محرك تيرا
+        window.Tera = new TeraApp();
     </script>
 </body>
 </html>
