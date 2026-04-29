@@ -11,14 +11,15 @@ class CustomersUI {
         this.modal = document.getElementById('customerModal');
         this.form = document.getElementById('customerForm');
         this.tableBody = document.getElementById('customersList');
-        this.searchTerm = '';
+        // استخدام رابط خارجي للأفاتار لتجنب أخطاء 404 في GitHub Pages
+        this.defaultAvatar = "https://ui-avatars.com/api/?background=f97316&color=fff&name=";
         
         this.init();
     }
 
     init() {
         // تسجيل الوظائف في النطاق العالمي لسهولة الوصول من HTML
-        window.openCustomerModal = () => this.openModal();
+        window.openCustomerModal = (id = null) => this.openModal(id);
         window.closeCustomerModal = () => this.closeModal();
         window.handleCustomerSubmit = (e) => this.handleSubmit(e);
         window.filterCustomers = () => this.handleSearch();
@@ -30,17 +31,21 @@ class CustomersUI {
 
     // --- إدارة النافذة المنبثقة (Modal) ---
     
-    openModal(customerId = null) {
-        if (this.modal) {
-            this.modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden'; // منع التمرير في الخلفية
-            
-            if (customerId) {
-                this.prepareEditMode(customerId);
-            } else {
-                this.form.reset();
-                document.getElementById('imagePreview').style.backgroundImage = "url('images/default-avatar.png')";
-            }
+    async openModal(customerId = null) {
+        if (!this.modal) return;
+
+        this.modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; 
+        
+        if (customerId && typeof customerId === 'string') {
+            await this.prepareEditMode(customerId);
+        } else {
+            this.form.reset();
+            this.form.dataset.mode = 'add';
+            delete this.form.dataset.editId;
+            // تعيين صورة افتراضية نظيفة
+            const preview = document.getElementById('imagePreview');
+            if (preview) preview.style.backgroundImage = `url('${this.defaultAvatar}New+User')`;
         }
     }
 
@@ -56,9 +61,9 @@ class CustomersUI {
 
     async loadCustomers() {
         try {
-            // إظهار لودر بسيط داخل الجدول
-            this.tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center">جاري تحميل بيانات العملاء...</td></tr>';
+            this.tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center">جاري تحميل بيانات العملاء من تيرا...</td></tr>';
             
+            // جلب البيانات مع ترتيبها حسب التاريخ الأحدث
             const snapshot = await db.collection('customers').orderBy('createdAt', 'desc').get();
             const customers = [];
             snapshot.forEach(doc => customers.push({ id: doc.id, ...doc.data() }));
@@ -66,32 +71,35 @@ class CustomersUI {
             this.renderTable(customers);
         } catch (error) {
             console.error("Error loading customers:", error);
-            this.tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">فشل تحميل البيانات. تأكد من الاتصال.</td></tr>';
+            this.tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">خطأ في الاتصال: ${error.message}</td></tr>`;
         }
     }
 
     renderTable(customers) {
         if (customers.length === 0) {
-            this.tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center">لا يوجد عملاء مسجلين حالياً.</td></tr>';
+            this.tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center">لا يوجد عملاء في قاعدة بيانات حائل حالياً.</td></tr>';
             return;
         }
 
-        this.tableBody.innerHTML = customers.map(cust => `
+        this.tableBody.innerHTML = customers.map(cust => {
+            const date = cust.createdAt ? new Date(cust.createdAt.seconds * 1000).toLocaleDateString('ar-SA') : '-';
+            const avatarUrl = `${this.defaultAvatar}${encodeURIComponent(cust.name || 'User')}`;
+
+            return `
             <tr class="animate-row">
                 <td>
                     <div class="user-info">
-                        <div class="avatar-circle" style="background: ${this.getRandomColor()}">
-                            ${cust.name ? cust.name.substring(0, 2) : '??'}
+                        <div class="avatar-circle" style="background-image: url('${avatarUrl}'); background-size: cover;">
                         </div>
                         <div class="name-details">
-                            <strong>${cust.name}</strong>
+                            <strong>${cust.name || 'بدون اسم'}</strong>
                             <small>${cust.type === 'vip' ? '💎 عميل VIP' : 'فرد'}</small>
                         </div>
                     </div>
                 </td>
                 <td>
                     <div class="contact-col">
-                        <span><i class="fas fa-phone"></i> ${cust.phone}</span>
+                        <span><i class="fas fa-phone"></i> ${cust.phone || '-'}</span>
                         <small>${cust.email || 'بدون بريد'}</small>
                     </div>
                 </td>
@@ -101,7 +109,7 @@ class CustomersUI {
                         <small>${cust.street || '-'}</small>
                     </div>
                 </td>
-                <td>${cust.createdAt ? new Date(cust.createdAt.seconds * 1000).toLocaleDateString('ar-SA') : '-'}</td>
+                <td>${date}</td>
                 <td><span class="badge-type">${cust.type || 'عادي'}</span></td>
                 <td><span class="status-pill active">نشط</span></td>
                 <td>
@@ -114,17 +122,18 @@ class CustomersUI {
                         </button>
                     </div>
                 </td>
-            </tr>
-        `).join('');
+            </tr>`;
+        }).join('');
     }
 
     async handleSubmit(e) {
         e.preventDefault();
         const btn = e.target.querySelector('.btn-save');
+        const formData = new FormData(this.form);
+        
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
-        const formData = new FormData(this.form);
         const customerData = {
             name: formData.get('name'),
             phone: formData.get('phone'),
@@ -138,52 +147,70 @@ class CustomersUI {
         };
 
         try {
-            await db.collection('customers').add({
-                ...customerData,
-                createdAt: new Date()
-            });
+            if (this.form.dataset.mode === 'edit') {
+                await db.collection('customers').doc(this.form.dataset.editId).update(customerData);
+            } else {
+                await db.collection('customers').add({
+                    ...customerData,
+                    createdAt: new Date()
+                });
+            }
             
             this.closeModal();
-            this.loadCustomers(); // تحديث الجدول
-            // يمكنك إضافة تنبيه نجاح هنا (مثل Toast)
+            await this.loadCustomers(); 
         } catch (error) {
-            alert("حدث خطأ أثناء الحفظ: " + error.message);
+            alert("حدث خطأ في منصة تيرا: " + error.message);
         } finally {
             btn.disabled = false;
             btn.innerText = 'حفظ البيانات';
         }
     }
 
-    // --- وظائف مساعدة ---
+    async prepareEditMode(id) {
+        try {
+            const doc = await db.collection('customers').doc(id).get();
+            if (doc.exists) {
+                const data = doc.data();
+                this.form.dataset.mode = 'edit';
+                this.form.dataset.editId = id;
+                
+                // تعبئة الحقول
+                Object.keys(data).forEach(key => {
+                    const input = this.form.querySelector(`[name="${key}"]`);
+                    if (input) input.value = data[key];
+                });
+
+                const preview = document.getElementById('imagePreview');
+                if (preview) preview.style.backgroundImage = `url('${this.defaultAvatar}${encodeURIComponent(data.name)}')`;
+            }
+        } catch (error) {
+            console.error("Error fetching customer:", error);
+        }
+    }
 
     handleSearch() {
         const input = document.getElementById('customerSearch').value.toLowerCase();
         const rows = this.tableBody.getElementsByTagName('tr');
 
-        for (let row of rows) {
+        Array.from(rows).forEach(row => {
             const text = row.textContent.toLowerCase();
             row.style.display = text.includes(input) ? '' : 'none';
-        }
-    }
-
-    getRandomColor() {
-        const colors = ['#f97316', '#0ea5e9', '#8b5cf6', '#10b981', '#ef4444'];
-        return colors[Math.floor(Math.random() * colors.length)];
+        });
     }
 
     async confirmDelete(id) {
-        if (confirm("هل أنت متأكد من حذف هذا العميل؟ لا يمكن التراجع عن هذا الإجراء.")) {
+        if (confirm("تنبيه أبا صالح: هل أنت متأكد من حذف هذا العميل نهائياً؟")) {
             try {
                 await db.collection('customers').doc(id).delete();
-                this.loadCustomers();
+                await this.loadCustomers();
             } catch (error) {
-                alert("خطأ في الحذف: " + error.message);
+                alert("فشل الحذف: " + error.message);
             }
         }
     }
 }
 
-// تشغيل الموديول
+// تشغيل الموديول عند جاهزية الصفحة
 document.addEventListener('DOMContentLoaded', () => {
     window.CustomersModule = new CustomersUI();
 });
