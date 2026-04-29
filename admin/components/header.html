@@ -1,9 +1,11 @@
 <header class="app-header">
     <div class="header-right">
+        <!-- زر التحكم في السايدبار -->
         <button id="sidebar-toggle" class="sidebar-trigger" aria-label="Toggle Sidebar">
             <i class="fas fa-bars-staggered"></i>
         </button>
         
+        <!-- الهوية والبذوغ -->
         <div class="app-brand">
             <img src="images/logo.svg" 
                  alt="Tera Gateway" 
@@ -13,6 +15,7 @@
         </div>
     </div>
 
+    <!-- الساعة والتاريخ الحية -->
     <div id="header-datetime" class="header-clock">
         <i class="far fa-clock"></i>
         <span id="time-display">جاري التحميل...</span>
@@ -21,9 +24,9 @@
 
 <style>
     :root {
-        --primary-tera: #2563eb; /* تم التغيير للأزرق المعتمد في موديول العملاء لتوحيد الهوية */
+        --primary-tera: #2563eb; 
         --primary-soft: rgba(37, 99, 235, 0.08);
-        --header-bg: rgba(255, 255, 255, 0.8);
+        --header-bg: rgba(255, 255, 255, 0.85);
         --border-color: #e2e8f0;
         --tera-dark: #1e293b;
     }
@@ -41,39 +44,32 @@
         position: sticky;
         top: 0;
         z-index: 1000;
-        transition: all 0.3s;
     }
 
-    .header-right {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-    }
+    .header-right { display: flex; align-items: center; gap: 20px; }
 
     .sidebar-trigger {
         background: var(--primary-soft);
         border: 1px solid rgba(37, 99, 235, 0.1);
-        width: 42px;
-        height: 42px;
+        width: 42px; height: 42px;
         border-radius: 12px;
         color: var(--primary-tera);
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: flex; align-items: center; justify-content: center;
         transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .sidebar-trigger:hover {
         background: var(--primary-tera);
         color: white;
-        transform: rotate(180deg);
+        transform: rotate(90deg); /* تدوير خفيف بدلاً من 180 لجمالية الحركة */
     }
 
+    .app-brand { display: flex; align-items: center; gap: 12px; }
+
     .header-logo {
-        width: 35px;
-        height: 35px;
+        width: 35px; height: 35px;
         filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
     }
 
@@ -89,30 +85,30 @@
     .header-clock {
         font-family: 'Cairo', sans-serif;
         font-size: 0.85rem;
-        color: #64748b;
+        color: #475569;
         font-weight: 700;
         background: white;
         padding: 8px 18px;
-        border-radius: 50px; /* شكل كبسولة */
+        border-radius: 50px;
         border: 1px solid var(--border-color);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        display: flex; align-items: center; gap: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
     }
 
-    .header-clock i { color: var(--primary-tera); font-size: 1rem; }
+    .header-clock i { color: var(--primary-tera); }
 
+    /* تحسينات الجوال */
     @media (max-width: 768px) {
         .brand-text { display: none; }
-        .header-clock { min-width: auto; padding: 6px 12px; font-size: 0.75rem; }
+        .header-clock { padding: 6px 12px; font-size: 0.75rem; }
+        .app-header { padding: 0 15px; }
     }
 </style>
 
 <script>
     (function() {
         /**
-         * تحديث الساعة والتاريخ بالتنسيق العربي
+         * تحديث الساعة والتاريخ بالتنسيق العربي - السعودية
          */
         function updateHeaderTime() {
             const timeEl = document.getElementById('time-display');
@@ -120,31 +116,35 @@
 
             const now = new Date();
             
-            // تنسيق التاريخ والوقت (العربية - السعودية)
-            const formatter = new Intl.DateTimeFormat('ar-SA', {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true
-            });
+            try {
+                const formatter = new Intl.DateTimeFormat('ar-SA', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                });
 
-            timeEl.innerText = formatter.format(now).replace('،', ' | ');
+                // تجميل النص: استبدال الفاصلة بعلامة | وتصحيح العرض
+                let formatted = formatter.format(now).replace(/،/g, ' |');
+                timeEl.innerText = formatted;
+            } catch (e) {
+                timeEl.innerText = now.toLocaleTimeString('ar-SA');
+            }
         }
 
-        // مسح أي تكرار سابق لضمان الأداء
-        if (window.headerClockInterval) clearInterval(window.headerClockInterval);
+        // تنظيف أي مؤقت سابق قبل البدء
+        if (window.teraClock) clearInterval(window.teraClock);
         
         updateHeaderTime();
-        window.headerClockInterval = setInterval(updateHeaderTime, 1000);
+        window.teraClock = setInterval(updateHeaderTime, 1000);
 
-        // تفعيل الـ Sidebar Toggle مع الحفظ في الـ LocalStorage
+        // التحكم في السايدبار (Sidebar Toggle)
         const toggleBtn = document.getElementById('sidebar-toggle');
         if (toggleBtn) {
             toggleBtn.onclick = function() {
-                // استهداف الحاوية الرئيسية في admin.html
                 const sidebar = document.getElementById('sidebar-container');
                 const mainWrapper = document.querySelector('.main-wrapper');
 
@@ -152,8 +152,9 @@
                     sidebar.classList.toggle('collapsed');
                     if (mainWrapper) mainWrapper.classList.toggle('expanded');
                     
+                    // حفظ الحالة في المتصفح ليبقى النظام على آخر وضع اختاره المستخدم
                     const isCollapsed = sidebar.classList.contains('collapsed');
-                    localStorage.setItem('sidebar-state', isCollapsed ? 'collapsed' : 'expanded');
+                    localStorage.setItem('tera_sidebar_state', isCollapsed ? 'collapsed' : 'expanded');
                 }
             };
         }
