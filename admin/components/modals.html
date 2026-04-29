@@ -1,4 +1,4 @@
-<!-- نافذة إضافة/تعديل عميل -->
+<!-- نافذة إضافة/تعديل عميل - إصدار تيرا جيت واي 12.12.4 -->
 <div id="customer-modal" class="modal-overlay" style="display: none;">
     <div class="modal-card tera-premium-shadow">
         <!-- الهيدر -->
@@ -9,7 +9,7 @@
                 </div>
                 <div>
                     <h3 id="modal-title">إضافة عميل جديد</h3>
-                    <p class="subtitle">نظام إدارة سجلات تيرا جيت واي</p>
+                    <p class="subtitle">نظام إدارة سجلات تيرا جيت واي | النسخة المحدثة</p>
                 </div>
             </div>
             <button class="close-btn-tera" onclick="closeCustomerModal()">&times;</button>
@@ -18,7 +18,7 @@
         <!-- البودي -->
         <div class="modal-body-tera">
             <form id="customer-form">
-                <!-- رفع الصورة -->
+                <!-- رفع الصورة بتصميم الدائرة الاحترافي -->
                 <div class="image-profile-upload-tera">
                     <div class="profile-preview-wrapper">
                         <img id="cust-img-preview" src="admin/images/default-avatar.png" 
@@ -31,7 +31,7 @@
                     </div>
                     <div class="upload-info">
                         <span class="main-label">صورة الهوية أو العميل</span>
-                        <span class="sub-label">يفضل أن تكون بصيغة PNG أو JPG</span>
+                        <span class="sub-label">سيتم تخزينها في Firebase Storage</span>
                     </div>
                 </div>
 
@@ -41,7 +41,7 @@
                     <div class="grid-layout cols-3">
                         <div class="input-group-tera">
                             <label>اسم العميل الكامل</label>
-                            <input type="text" id="cust-name" name="name" placeholder="محمد صالح الشمري" required>
+                            <input type="text" id="cust-name" name="name" placeholder="مثال: محمد صالح الشمري" required>
                         </div>
                         <div class="input-group-tera">
                             <label>رقم الجوال</label>
@@ -54,24 +54,24 @@
                             <label>تصنيف العميل</label>
                             <select id="cust-tag" name="tag">
                                 <option value="regular">عميل عادي (Regular)</option>
-                                <option value="vip">عميل مميز (VIP)</option>
-                                <option value="blacklisted">قائمة سوداء</option>
+                                <option value="vip" style="color: gold; font-weight: bold;">عميل مميز (VIP) ✨</option>
+                                <option value="blacklisted" style="color: red;">قائمة سوداء</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
-                <!-- العنوان الوطني -->
+                <!-- العنوان الوطني (العنوان الذكي) -->
                 <div class="form-section-tera bg-light">
                     <div class="section-title"><i class="fas fa-map-marked-alt"></i> العنوان الوطني (SPL)</div>
                     <div class="grid-layout cols-4">
                         <div class="input-group-tera">
                             <label>المدينة</label>
-                            <input type="text" id="cust-city" name="city" value="حائل">
+                            <input type="text" id="cust-city" name="city" value="حائل" class="readonly-style">
                         </div>
                         <div class="input-group-tera">
                             <label>الحي</label>
-                            <input type="text" id="cust-district" name="district">
+                            <input type="text" id="cust-district" name="district" placeholder="النقرة، برزان...">
                         </div>
                         <div class="input-group-tera">
                             <label>الشارع</label>
@@ -79,14 +79,14 @@
                         </div>
                         <div class="input-group-tera">
                             <label>رقم المبنى</label>
-                            <input type="text" id="cust-buildingNo" name="buildingNo">
+                            <input type="text" id="cust-buildingNo" name="buildingNo" maxlength="4">
                         </div>
                     </div>
                 </div>
 
                 <div class="input-group-tera full-width" style="margin-top: 15px;">
-                    <label>ملاحظات إضافية</label>
-                    <textarea id="cust-notes" name="notes" rows="2" placeholder="اكتب أي تفاصيل أخرى هنا..."></textarea>
+                    <label>ملاحظات إضافية (سجل الالتزام)</label>
+                    <textarea id="cust-notes" name="notes" rows="2" placeholder="اكتب أي تفاصيل أخرى عن العميل هنا..."></textarea>
                 </div>
             </form>
         </div>
@@ -95,49 +95,71 @@
         <div class="modal-footer-tera">
             <button type="button" class="btn-tera secondary" onclick="closeCustomerModal()">إلغاء</button>
             <button type="button" class="btn-tera primary" id="btn-save-customer">
-                <i class="fas fa-save"></i> حفظ العميل
+                <i class="fas fa-save"></i> حفظ في القاعدة السحابية
             </button>
         </div>
     </div>
 </div>
 
 <style>
-    /* تحسينات التصحيح للـ Grid والـ Overlay */
+    /* تصميم الفخامة (Premium Shadow) */
+    .tera-premium-shadow {
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 15px rgba(37, 99, 235, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
     .modal-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(15, 23, 42, 0.7);
-        backdrop-filter: blur(8px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-        padding: 20px;
+        position: fixed; inset: 0;
+        background: rgba(15, 23, 42, 0.85); /* تعميق الخلفية للتركيز على المودال */
+        backdrop-filter: blur(10px);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 9999; padding: 20px;
     }
 
     .modal-card {
-        background: white;
-        width: 100%;
-        max-width: 900px;
-        border-radius: 24px;
+        background: #ffffff;
+        width: 100%; max-width: 850px;
+        border-radius: 28px; /* زوايا أكثر نعومة */
         overflow: hidden;
-        animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        animation: teraSlideUp 0.5s cubic-bezier(0.19, 1, 0.22, 1);
     }
 
-    @keyframes slideUp {
-        from { transform: translateY(30px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
+    @keyframes teraSlideUp {
+        from { transform: translateY(50px) scale(0.95); opacity: 0; }
+        to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    .modal-header-tera {
+        background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+        padding: 25px 30px;
+        display: flex; justify-content: space-between; align-items: center;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .header-title-wrap { display: flex; align-items: center; gap: 15px; }
+    .icon-circle {
+        background: var(--primary-tera); color: white;
+        width: 45px; height: 45px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
     }
 
     .grid-layout { display: grid; gap: 20px; }
     .grid-layout.cols-3 { grid-template-columns: repeat(3, 1fr); }
     .grid-layout.cols-4 { grid-template-columns: repeat(4, 1fr); }
 
-    .bg-light { background: #f8fafc; padding: 20px; border-radius: 16px; margin: 15px 0; }
+    .bg-light { 
+        background: #f1f5f9; 
+        padding: 25px; 
+        border-radius: 20px; 
+        margin: 20px 0;
+        border: 1px dashed #cbd5e1;
+    }
 
-    /* تحسينات الموبايل */
+    .readonly-style { background: #e2e8f0 !important; font-weight: bold; color: #475569; }
+
+    /* تحسينات الجوال */
     @media (max-width: 768px) {
         .grid-layout.cols-3, .grid-layout.cols-4 { grid-template-columns: 1fr; }
-        .modal-card { height: 100%; border-radius: 0; overflow-y: auto; }
+        .modal-card { height: 95vh; border-radius: 20px 20px 0 0; position: absolute; bottom: 0; overflow-y: auto; }
     }
 </style>
