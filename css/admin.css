@@ -1,214 +1,45 @@
-/* 
- * Tera Gateway - Main Administrative Stylesheet
- * الإصدار: 12.12.6 | التصميم: Modern Premium (RTL)
- * التحديث: دعم موديول العملاء المطور وإحصائيات حائل
- */
-
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Inter:wght@400;700&display=swap');
-
-:root {
-    /* الألوان الرئيسية - هوية تيرا جيت واي المحدثة */
-    --primary-color: #f97316;    /* برتقالي تيرا الأساسي */
-    --primary-hover: #ea580c;
-    --primary-soft: rgba(249, 115, 22, 0.08);
-    --secondary-color: #0f172a;  /* كحلي غامق للنصوص والعناصر */
-    --accent-blue: #3b82f6;      
-    --accent-green: #10b981;     /* للأرقام والأسعار الموجبة */
-    
-    /* ألوان الأنظمة */
-    --success: #22c55e;
-    --danger: #ef4444;
-    --warning: #f59e0b;
-    
-    /* ألوان الخلفيات بنمط Glassmorphism */
-    --bg-main: #f8fafc;
-    --bg-sidebar: #ffffff;
-    --bg-glass: rgba(255, 255, 255, 0.92);
-    --bg-card: #ffffff;
-    
-    /* الأبعاد المزامنة مع موديول sidebar.css */
-    --sidebar-width: 280px;
-    --sidebar-collapsed-width: 88px; 
-    --header-height: 75px;
-    
-    /* التأثيرات الفاخرة */
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-    --shadow-md: 0 4px 20px -2px rgba(0,0,0,0.08);
-    --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
-    --glass-border: 1px solid rgba(226, 232, 240, 0.8);
-    --radius-lg: 20px;
-    --radius-md: 12px;
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* تنسيقات موديول العملاء المطور 12.12.6 */
+.tera-premium-shadow {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* الإعدادات العامة والتهيئة */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
+.modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999;
 }
 
-body {
-    font-family: 'Tajawal', sans-serif;
-    background-color: var(--bg-main);
-    color: var(--secondary-color);
-    direction: rtl;
-    overflow: hidden; /* التحكم بالسكول يكون داخل الحاويات فقط */
-    line-height: 1.6;
+.image-profile-upload-tera {
+    display: flex; align-items: center; gap: 20px;
+    margin-bottom: 25px; background: #f8fafc; padding: 15px; border-radius: 15px;
 }
 
-/* الهيكل الرئيسي (Layout) */
-.admin-layout {
-    display: flex;
-    height: 100vh;
-    width: 100vw;
-    background: #f1f5f9;
+.profile-preview-wrapper {
+    position: relative; width: 80px; height: 80px;
 }
 
-/* الحاوية الرئيسية للمحتوى */
-.main-wrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-width: 0; 
-    position: relative;
-    transition: var(--transition);
+.profile-preview-wrapper img {
+    width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+    border: 3px solid #fff; box-shadow: var(--shadow-sm);
 }
 
-/* شريط الأدوات العلوي (Top Bar) المطور */
-.top-bar {
-    height: var(--header-height);
-    background: var(--bg-glass);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 40px;
-    border-bottom: var(--glass-border);
-    z-index: 100;
+.upload-badge {
+    position: absolute; bottom: 0; right: 0;
+    background: var(--primary-color); color: white;
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 0.7rem;
 }
 
-/* نظام البحث الذكي */
-.search-box-wrapper {
-    position: relative;
-    width: 400px;
+.btn-primary-gradient {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    color: white; border: none; padding: 10px 25px; border-radius: 10px;
+    font-weight: 700; transition: 0.3s;
 }
 
-.search-box-wrapper i {
-    position: absolute;
-    right: 18px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #64748b;
-    font-size: 0.9rem;
-}
-
-.search-box-wrapper input {
-    width: 100%;
-    padding: 12px 48px 12px 20px;
-    border-radius: var(--radius-md);
-    border: 1.5px solid #e2e8f0;
-    background: #f8fafc;
-    font-family: 'Tajawal';
-    font-size: 0.9rem;
-    transition: var(--transition);
-}
-
-.search-box-wrapper input:focus {
-    background: #fff;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 4px var(--primary-soft);
-    outline: none;
-}
-
-/* منطقة العمل (Workspace Area) */
-.content-area {
-    flex: 1;
-    padding: 35px 40px;
-    overflow-y: auto;
-    background: radial-gradient(circle at top right, rgba(249, 115, 22, 0.02), transparent 400px),
-                var(--bg-main);
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 transparent;
-}
-
-/* كروت الإحصائيات السريعة (Stats Cards) */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 25px;
-    margin-bottom: 35px;
-}
-
-.stat-card {
-    background: var(--bg-card);
-    padding: 25px;
-    border-radius: var(--radius-lg);
-    border: var(--glass-border);
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    transition: var(--transition);
-}
-
-.stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-md);
-}
-
-/* الأزرار بنمط تيرا (Tera Buttons) */
-.btn-tera {
-    padding: 12px 24px;
-    border-radius: var(--radius-md);
-    font-weight: 700;
-    font-family: 'Tajawal';
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    transition: var(--transition);
-    border: none;
-}
-
-.btn-tera.primary {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
-    color: #fff;
-}
-
-.btn-tera.primary:hover {
-    box-shadow: 0 10px 20px -5px rgba(249, 115, 22, 0.4);
-    filter: brightness(1.1);
-}
-
-/* تخصيص السكرول بار ليناسب Glassmorphism */
-::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 10px;
-}
-::-webkit-scrollbar-thumb:hover {
-    background: var(--primary-color);
-}
-
-/* تحسينات العرض على الجوال */
-@media (max-width: 768px) {
-    .top-bar { padding: 0 20px; }
-    .search-box-wrapper { display: none; } 
-    .content-area { padding: 20px; }
-    .stats-grid { grid-template-columns: 1fr; }
-}
-
-/* تحسين شكل الأرقام المالية */
-.amount {
-    font-family: 'Inter', 'Tajawal', sans-serif;
-    font-weight: 700;
+.btn-primary-gradient:hover {
+    transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.3);
 }
