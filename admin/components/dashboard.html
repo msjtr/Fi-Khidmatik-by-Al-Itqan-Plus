@@ -1,5 +1,6 @@
 <div class="dashboard-content" style="animation: fadeIn 0.6s ease-out; padding: 10px;">
     
+    <!-- الهيدر العلوي للوحة التحكم -->
     <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
         <div>
             <h2 style="color: #1e293b; margin: 0; font-weight: 900; font-size: 1.6rem; letter-spacing: -0.5px;">نظرة عامة على النظام</h2>
@@ -12,6 +13,7 @@
         </div>
     </div>
     
+    <!-- كروت الإحصائيات -->
     <div class="stats-container">
         
         <div class="stat-card orange-glow">
@@ -21,7 +23,7 @@
                 </div>
                 <div class="stat-info">
                     <p class="stat-label-new">إجمالي العملاء</p>
-                    <h3 class="stat-value-new" id="total-customers-count">...</h3>
+                    <h3 class="stat-value-new" id="dash-total-customers">...</h3>
                 </div>
             </div>
             <div class="stat-progress-bar bg-orange"></div>
@@ -34,7 +36,7 @@
                 </div>
                 <div class="stat-info">
                     <p class="stat-label-new">أقساط مستحقة اليوم</p>
-                    <h3 class="stat-value-new" id="due-installments-count">0</h3>
+                    <h3 class="stat-value-new" id="dash-due-installments">0</h3>
                 </div>
             </div>
             <div class="stat-progress-bar bg-purple"></div>
@@ -47,7 +49,7 @@
                 </div>
                 <div class="stat-info">
                     <p class="stat-label-new">رصيد السلسلة</p>
-                    <h3 class="stat-value-new" id="sawa-balance">متوفر</h3>
+                    <h3 class="stat-value-new" id="dash-sawa-balance">متوفر</h3>
                 </div>
             </div>
             <div class="stat-progress-bar bg-green"></div>
@@ -55,28 +57,49 @@
 
     </div>
 
+    <!-- قسم الإجراءات السريعة -->
     <div class="action-welcome-section">
         <div class="welcome-icon-wrap">
             <i class="fas fa-rocket fa-4x"></i>
         </div>
         <h3 style="color: #1e293b; font-weight: 800; margin-bottom: 12px; font-size: 1.4rem;">انطلق بإنتاجية أعلى</h3>
         <p style="color: #64748b; max-width: 450px; margin: 0 auto; line-height: 1.7; font-weight: 500;">
-            يمكنك الآن إضافة عملاء جدد لبرنامج التقسيط، إدارة المخزون، أو مراجعة التقارير المالية. جميع العمليات تتم بمزامنة فورية مع السحابة.
+            يمكنك إضافة عملاء جدد لبرنامج التقسيط، إدارة المخزون، أو مراجعة التقارير المالية. جميع العمليات تتم بمزامنة فورية مع السحابة.
         </p>
         <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
-            <!-- الإصلاح: تغيير onclick لتستخدم نظام الـ Hash الجديد -->
-            <button onclick="window.handleNavClick('customers')" class="btn-dashboard primary">
+            <!-- الإصلاح: الربط مع محرك التنقل المركزي -->
+            <button onclick="window.handleSidebarClick(null, 'customers')" class="btn-dashboard primary">
                 <i class="fas fa-user-plus"></i> قاعدة العملاء
             </button>
-            <button onclick="window.handleNavClick('inventory')" class="btn-dashboard secondary">
+            <button onclick="window.handleSidebarClick(null, 'inventory')" class="btn-dashboard secondary">
                 <i class="fas fa-boxes"></i> المخزون
             </button>
         </div>
     </div>
+
+    <!-- كود جلب البيانات الحية من Firebase -->
+    <script type="module">
+        import { db } from '../js/core/config.js';
+        import { collection, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        async function updateDashboardStats() {
+            try {
+                // جلب عدد العملاء الفعلي من Firestore
+                const coll = collection(db, "customers");
+                const snapshot = await getCountFromServer(coll);
+                document.getElementById('dash-total-customers').innerText = snapshot.data().count;
+            } catch (error) {
+                console.error("Dashboard Stats Error:", error);
+                document.getElementById('dash-total-customers').innerText = "0";
+            }
+        }
+
+        updateDashboardStats();
+    </script>
 </div>
 
 <style>
-    /* المتغيرات المحلية للهوية */
+    /* الإبقاء على الستايل الخاص بك مع تحسينات طفيفة للهوية */
     :root {
         --tera-orange: #f97316;
         --tera-purple: #8b5cf6;
@@ -108,13 +131,8 @@
     .stat-inner { display: flex; align-items: center; gap: 20px; }
 
     .icon-box-new {
-        width: 55px;
-        height: 55px;
-        border-radius: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.3rem;
+        width: 55px; height: 55px; border-radius: 14px;
+        display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
     }
 
     .bg-orange-soft { background: #fff7ed; color: var(--tera-orange); }
@@ -130,61 +148,32 @@
     .bg-green { background: var(--tera-green); }
 
     .action-welcome-section {
-        margin-top: 30px;
-        background: white;
-        padding: 50px 20px;
-        border-radius: 24px;
-        text-align: center;
-        border: 1px solid #e2e8f0;
+        margin-top: 30px; background: white; padding: 50px 20px;
+        border-radius: 24px; text-align: center; border: 1px solid #e2e8f0;
     }
 
     .welcome-icon-wrap { color: var(--tera-orange); margin-bottom: 15px; }
 
     .btn-dashboard {
-        padding: 12px 25px;
-        border-radius: 12px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: 0.2s;
-        border: none;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-family: 'Cairo', sans-serif;
+        padding: 12px 25px; border-radius: 12px; font-weight: 700;
+        cursor: pointer; transition: 0.2s; border: none;
+        display: flex; align-items: center; gap: 8px; font-family: 'Cairo', sans-serif;
     }
 
-    .btn-dashboard.primary {
-        background: var(--tera-orange);
-        color: white;
-    }
-
-    .btn-dashboard.secondary {
-        background: #f8fafc;
-        color: #1e293b;
-        border: 1px solid #e2e8f0;
-    }
+    .btn-dashboard.primary { background: var(--tera-orange); color: white; }
+    .btn-dashboard.secondary { background: #f8fafc; color: #1e293b; border: 1px solid #e2e8f0; }
 
     .btn-dashboard:hover { opacity: 0.9; transform: scale(1.02); }
 
     .status-pulse {
-        background: #ecfdf5;
-        color: #059669;
-        padding: 6px 14px;
-        border-radius: 50px;
-        font-size: 0.75rem;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        animation: pulse 2s infinite;
+        background: #ecfdf5; color: #059669; padding: 6px 14px;
+        border-radius: 50px; font-size: 0.75rem; font-weight: 700;
+        display: flex; align-items: center; animation: pulse 2s infinite;
     }
 
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes fadeIn { 
+        from { opacity: 0; transform: translateY(10px); } 
+        to { opacity: 1; transform: translateY(0); } 
     }
 </style>
