@@ -5,6 +5,7 @@
  */
 
 // 1. استيراد الخدمات المهيأة من ملف المحرك الأساسي (Firebase 10.7.1)
+// استخدام مسار نسبي لضمان التوافق مع GitHub Pages ومنع خطأ 404
 import { db, auth, app, storage } from './firebase.js';
 
 // 2. الثوابت الأساسية للمنصة
@@ -16,7 +17,9 @@ export const APP_CONFIG = {
     location: 'Hail, KSA',
     region: 'منطقة حائل',
     owner: 'Mohammed Al-Shammari',
-    debug: window.location.hostname === 'localhost' // تفعيل وضع التصحيح آلياً في البيئة المحلية
+    // تحسين كشف البيئة لضمان عمل المسارات بشكل صحيح
+    isGithub: window.location.hostname.includes('github.io'),
+    baseUrl: window.location.hostname.includes('github.io') ? '/fi-khidmatik' : ''
 };
 
 // 3. تكوين أسماء المجموعات (Collections) لضمان المركزية
@@ -30,27 +33,27 @@ export const COLLECTIONS = {
     logs: 'audit_logs'
 };
 
-// 4. الإعدادات المالية (سوق التقسيط السعودي)
+// 4. الإعدادات المالية (سوق التقسيط السعودي - كروت Sawa)
 export const FINANCIAL_CONFIG = {
     currency: 'SAR',
     currencySymbol: 'ر.س',
     taxRate: 0.15,
     minInstallment: 500,  // الحد الأدنى للتقسيط
-    maxInstallment: 2500, // الحد الأقصى للتقسيط حسب طلبك السابق
-    lateFees: 0           // رسوم التأخير (حسب سياسة المنصة)
+    maxInstallment: 2500, // الحد الأقصى للتقسيط (حسب فئات 500 إلى 2500)
+    lateFees: 0           // رسوم التأخير
 };
 
 /**
  * تحسين: دالة التحقق من جاهزية قاعدة البيانات
- * تقوم الآن بإرسال "نبضة" بسيطة للتأكد من أن الاتصال نشط
+ * تضمن استقرار الاتصال قبل بدء عمليات الاستعلام
  */
 export async function ensureDbReady() {
     try {
         if (!db) throw new Error("Firestore instance is null");
         
-        // التحقق من حالة الاتصال بالإنترنت أولاً
+        // التحقق من حالة الاتصال بالإنترنت
         if (!navigator.onLine) {
-            console.warn("⚠️ Tera Gateway: المتصفح في وضع عدم الاتصال.");
+            console.warn("⚠️ Tera Gateway: الجهاز غير متصل بالإنترنت.");
             return false;
         }
 
@@ -62,7 +65,7 @@ export async function ensureDbReady() {
 }
 
 /**
- * دالة جلب الإعدادات الكاملة
+ * دالة جلب الإعدادات الكاملة لسهولة الاستخدام في الموديولات
  */
 export function getAllConfig() {
     return { 
@@ -72,10 +75,10 @@ export function getAllConfig() {
     };
 }
 
-// 5. إعادة تصدير الخدمات لضمان سهولة الاستيراد من ملف واحد (Single Source of Truth)
+// 5. إعادة تصدير الخدمات ليكون هذا الملف هو المرجع الوحيد (Single Source of Truth)
 export { db, auth, app, storage };
 
-// التصدير الافتراضي المجمع
+// التصدير الافتراضي المجمع لسهولة الاستدعاء
 export default {
     db, 
     auth, 
