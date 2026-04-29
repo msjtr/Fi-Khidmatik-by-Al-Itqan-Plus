@@ -1,7 +1,15 @@
 /* 
  * Tera Gateway - Customers Module Premium Styling (v12.12.6)
- * تصميم مخصص لواجهة إدارة العملاء - حائل
+ * المطور: محمد بن صالح الشمري
  */
+
+:root {
+    --tera-orange: #f97316;
+    --tera-orange-deep: #ea580c;
+    --tera-orange-soft: rgba(249, 115, 22, 0.15);
+    --tera-bg-light: #f8fafc;
+    --tera-border-dashed: #e2e8f0;
+}
 
 /* الظلال والحدود المميزة (Premium UI) */
 .tera-premium-shadow {
@@ -11,11 +19,11 @@
     backdrop-filter: blur(12px);
 }
 
-/* غطاء الموديل (Modal Overlay) بنمط ضبابي حديث */
+/* غطاء المودال بنمط ضبابي حديث */
 .modal-overlay {
     position: fixed; 
     inset: 0;
-    background: rgba(15, 23, 42, 0.6); /* تعتيم أقل لإبراز الـ Blur */
+    background: rgba(15, 23, 42, 0.6);
     backdrop-filter: blur(10px);
     display: flex; 
     align-items: center; 
@@ -35,10 +43,10 @@
     align-items: center; 
     gap: 20px;
     margin-bottom: 25px; 
-    background: #f8fafc; 
+    background: var(--tera-bg-light); 
     padding: 18px; 
     border-radius: 20px;
-    border: 1px dashed #e2e8f0;
+    border: 1px dashed var(--tera-border-dashed);
     transition: all 0.3s ease;
 }
 
@@ -55,6 +63,7 @@
     flex-shrink: 0;
 }
 
+/* تصحيح مسار الصورة الافتراضية في حال فشل التحميل */
 .profile-preview-wrapper img {
     width: 100%; 
     height: 100%; 
@@ -63,6 +72,7 @@
     border: 4px solid #fff; 
     box-shadow: 0 10px 20px rgba(0,0,0,0.08);
     transition: transform 0.3s ease;
+    background-color: #eee;
 }
 
 /* أيقونة رفع الصورة */
@@ -90,10 +100,10 @@
     background: var(--tera-orange-deep);
 }
 
-/* زر الـ Action المتدرج (Tera Signature Button) */
+/* زر الـ Action المتدرج */
 .btn-primary-gradient {
-    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-    color: white; 
+    background: linear-gradient(135deg, var(--tera-orange) 0%, var(--tera-orange-deep) 100%);
+    color: white !important; 
     border: none; 
     padding: 12px 28px; 
     border-radius: 12px;
@@ -103,6 +113,7 @@
     display: inline-flex;
     align-items: center;
     gap: 10px;
+    text-decoration: none;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.2);
 }
@@ -113,18 +124,9 @@
     filter: brightness(1.1);
 }
 
-.btn-primary-gradient:active {
-    transform: translateY(0);
-}
-
-/* حماية إضافية للخطوط والأيقونات داخل الأزرار */
-.btn-primary-gradient i {
-    font-size: 1.1rem;
-}
-
-/* تنسيق حقول الإدخال عند التركيز (Focus) */
+/* تنسيق حقول الإدخال */
 .tera-input:focus {
-    border-color: var(--tera-orange);
-    box-shadow: 0 0 0 4px var(--tera-orange-soft);
+    border-color: var(--tera-orange) !important;
+    box-shadow: 0 0 0 4px var(--tera-orange-soft) !important;
     outline: none;
 }
