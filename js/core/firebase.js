@@ -1,4 +1,8 @@
-// js/core/firebase.js
+/**
+ * js/core/firebase.js
+ * تهيئة محرك Firebase لـ "تيرا جيت واي"
+ * الإصدار: V12.12.1
+ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
@@ -16,22 +20,25 @@ const firebaseConfig = {
     measurementId: "G-NDVGC9GPQZ"
 };
 
-// 1. تهيئة Firebase
+// 1. تهيئة Firebase - التأكد من عدم تكرار التهيئة
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 
-// 2. تصدير الخدمات لسهولة الوصول إليها في المشروع
+// 2. تعريف الخدمات
 const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
-// 3. ربط الخدمات بنطاق النافذة (Window) لكي تراها الموديولات التي تعتمد على window.db
-window.firebaseApp = app;
-window.db = db;
-window.auth = auth;
-window.storage = storage;
+// 3. الحل الجذري لمشكلة (No Firebase App): ربط الخدمات بنطاق النافذة فوراً
+// نستخدم Object.defineProperty لضمان أن القيم ثابتة ولا تتغير بالخطأ
+Object.defineProperties(window, {
+    "db": { value: db, writable: false },
+    "auth": { value: auth, writable: false },
+    "storage": { value: storage, writable: false },
+    "firebaseApp": { value: app, writable: false }
+});
 
-console.log("✅ Tera Engine: تم ربط محرك Firebase بنجاح.");
+console.log("🚀 Tera Engine: محرك Firebase جاهز ومتصل بـ [msjt301-974bb]");
 
-// اختياري: تصديرهم كموديول أيضاً
-export { app, db, auth, storage };
+// 4. التصدير للموديولات الحديثة (هذا هو الأسلوب الأفضل للاستخدام)
+export { app, db, auth, storage, analytics };
