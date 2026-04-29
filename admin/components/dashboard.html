@@ -3,7 +3,7 @@
     <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
         <div>
             <h2 style="color: #1e293b; margin: 0; font-weight: 900; font-size: 1.6rem; letter-spacing: -0.5px;">نظرة عامة على النظام</h2>
-            <p style="color: #64748b; margin: 5px 0 0; font-size: 0.95rem; font-weight: 600;">مرحباً بك مجدداً، محمد. إليك ملخص نشاط تيرا جيت واي اليوم.</p>
+            <p style="color: #64748b; margin: 5px 0 0; font-size: 0.95rem; font-weight: 600;">مرحباً بك مجدداً. إليك ملخص نشاط تيرا جيت واي اليوم.</p>
         </div>
         <div class="live-status">
              <span class="status-pulse">
@@ -21,7 +21,7 @@
                 </div>
                 <div class="stat-info">
                     <p class="stat-label-new">إجمالي العملاء</p>
-                    <h3 class="stat-value-new" id="total-customers-count">0</h3>
+                    <h3 class="stat-value-new" id="total-customers-count">...</h3>
                 </div>
             </div>
             <div class="stat-progress-bar bg-orange"></div>
@@ -46,7 +46,7 @@
                     <i class="fas fa-sim-card"></i>
                 </div>
                 <div class="stat-info">
-                    <p class="stat-label-new">رصيد Sawa المتاح</p>
+                    <p class="stat-label-new">رصيد السلسلة</p>
                     <h3 class="stat-value-new" id="sawa-balance">متوفر</h3>
                 </div>
             </div>
@@ -61,14 +61,15 @@
         </div>
         <h3 style="color: #1e293b; font-weight: 800; margin-bottom: 12px; font-size: 1.4rem;">انطلق بإنتاجية أعلى</h3>
         <p style="color: #64748b; max-width: 450px; margin: 0 auto; line-height: 1.7; font-weight: 500;">
-            يمكنك الآن إضافة عملاء جدد لبرنامج التقسيط، إدارة فواتير Sawa، أو مراجعة التقارير المالية. جميع العمليات تتم بمزامنة فورية مع قاعدة البيانات.
+            يمكنك الآن إضافة عملاء جدد لبرنامج التقسيط، إدارة المخزون، أو مراجعة التقارير المالية. جميع العمليات تتم بمزامنة فورية مع السحابة.
         </p>
         <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
-            <button onclick="loadModule('customers', this)" class="btn-dashboard primary">
+            <!-- الإصلاح: تغيير onclick لتستخدم نظام الـ Hash الجديد -->
+            <button onclick="window.handleNavClick('customers')" class="btn-dashboard primary">
                 <i class="fas fa-user-plus"></i> قاعدة العملاء
             </button>
-            <button onclick="loadModule('orders', this)" class="btn-dashboard secondary">
-                <i class="fas fa-plus-circle"></i> طلب جديد
+            <button onclick="window.handleNavClick('inventory')" class="btn-dashboard secondary">
+                <i class="fas fa-boxes"></i> المخزون
             </button>
         </div>
     </div>
@@ -84,8 +85,8 @@
 
     .stats-container {
         display: grid; 
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-        gap: 25px;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+        gap: 20px;
     }
 
     .stat-card {
@@ -95,26 +96,25 @@
         position: relative;
         overflow: hidden;
         border: 1px solid #f1f5f9;
-        box-shadow: 0 10px 30px -10px rgba(0,0,0,0.04);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
     }
 
     .stat-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 20px 40px -15px rgba(0,0,0,0.08);
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px -10px rgba(0,0,0,0.1);
     }
 
     .stat-inner { display: flex; align-items: center; gap: 20px; }
 
-    /* أيقونات مطورة */
     .icon-box-new {
-        width: 60px;
-        height: 60px;
-        border-radius: 15px;
+        width: 55px;
+        height: 55px;
+        border-radius: 14px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.4rem;
+        font-size: 1.3rem;
     }
 
     .bg-orange-soft { background: #fff7ed; color: var(--tera-orange); }
@@ -122,75 +122,69 @@
     .bg-green-soft { background: #ecfdf5; color: var(--tera-green); }
 
     .stat-label-new { color: #64748b; margin: 0; font-size: 0.9rem; font-weight: 700; }
-    .stat-value-new { margin: 4px 0 0; font-size: 1.8rem; color: #1e293b; font-weight: 900; }
+    .stat-value-new { margin: 4px 0 0; font-size: 1.7rem; color: #1e293b; font-weight: 900; }
 
-    /* شريط الحالة الملون في أسفل كل بطاقة */
     .stat-progress-bar { position: absolute; bottom: 0; right: 0; height: 4px; width: 100%; }
     .bg-orange { background: var(--tera-orange); }
     .bg-purple { background: var(--tera-purple); }
     .bg-green { background: var(--tera-green); }
 
-    /* قسم الترحيب */
     .action-welcome-section {
-        margin-top: 35px;
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        padding: 60px 30px;
+        margin-top: 30px;
+        background: white;
+        padding: 50px 20px;
         border-radius: 24px;
         text-align: center;
         border: 1px solid #e2e8f0;
     }
 
-    .welcome-icon-wrap { color: var(--tera-orange); margin-bottom: 20px; opacity: 0.8; }
+    .welcome-icon-wrap { color: var(--tera-orange); margin-bottom: 15px; }
 
-    /* أزرار لوحة التحكم */
     .btn-dashboard {
-        padding: 14px 28px;
-        border-radius: 14px;
-        font-weight: 800;
+        padding: 12px 25px;
+        border-radius: 12px;
+        font-weight: 700;
         cursor: pointer;
-        transition: 0.3s;
+        transition: 0.2s;
         border: none;
         display: flex;
         align-items: center;
-        gap: 10px;
-        font-family: 'Tajawal', sans-serif;
+        gap: 8px;
+        font-family: 'Cairo', sans-serif;
     }
 
     .btn-dashboard.primary {
         background: var(--tera-orange);
         color: white;
-        box-shadow: 0 8px 20px rgba(249, 115, 22, 0.25);
     }
 
     .btn-dashboard.secondary {
-        background: #fff;
+        background: #f8fafc;
         color: #1e293b;
         border: 1px solid #e2e8f0;
     }
 
-    .btn-dashboard:hover { transform: translateY(-3px); filter: brightness(1.1); }
+    .btn-dashboard:hover { opacity: 0.9; transform: scale(1.02); }
 
-    /* نبض المباشر */
     .status-pulse {
         background: #ecfdf5;
         color: #059669;
-        padding: 8px 16px;
+        padding: 6px 14px;
         border-radius: 50px;
-        font-size: 0.8rem;
-        font-weight: 800;
+        font-size: 0.75rem;
+        font-weight: 700;
         display: flex;
         align-items: center;
         animation: pulse 2s infinite;
     }
 
     @keyframes pulse {
-        0% { opacity: 1; }
-        50% { opacity: 0.6; }
-        100% { opacity: 1; }
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
     }
 
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
+        from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
     }
 </style>
