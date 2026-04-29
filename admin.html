@@ -36,18 +36,22 @@
 
     <!-- المحرك الرئيسي للنظام -->
     <script type="module">
-        // استيراد الإعدادات والمحرك الرئيسي
-        // ملاحظة: تأكد من تعطيل التوجيه في js/main.js كما فعلنا سابقاً
         import { db, auth } from './js/core/config.js';
         import './js/main.js';
+
+        // --- إصلاح مهم: تعريف دالة التنقل عالمياً لتعمل مع onclick في القائمة الجانبية ---
+        window.handleNavClick = (view) => {
+            window.location.hash = view;
+        };
 
         class TeraRouter {
             constructor() {
                 this.moduleContainer = document.getElementById('module-container');
                 
-                // تحديد المسار الأساسي بدقة (GitHub vs Local)
+                // تحديد المسار الأساسي بدقة
                 const isGitHub = window.location.hostname.includes('github.io');
                 this.repoName = 'fi-khidmatik';
+                // تأكد من وجود السلاش في البداية والنهاية لـ GitHub
                 this.baseUrl = isGitHub ? `/${this.repoName}` : '';
                 
                 this.version = Date.now();
@@ -56,7 +60,7 @@
 
             async init() {
                 try {
-                    // تحميل المكونات الثابتة (يتم البحث عنها في مجلد admin/components)
+                    // تحميل المكونات الثابتة
                     await Promise.all([
                         this.loadComponent('sidebar-container', `${this.baseUrl}/admin/components/sidebar.html`),
                         this.loadComponent('header-container', `${this.baseUrl}/admin/components/header.html`)
@@ -75,7 +79,7 @@
                     if (!response.ok) throw new Error(`Status: ${response.status}`);
                     const html = await response.text();
                     document.getElementById(containerId).innerHTML = html;
-                    console.log(`✅ Loaded: ${path}`);
+                    console.log(`✅ Loaded Component: ${path}`);
                 } catch (e) {
                     console.error(`❌ Failed to load component: ${path}`, e);
                 }
@@ -92,25 +96,32 @@
                     </div>`;
                 
                 try {
-                    // بناء المسار بناءً على هيكلة المجلدات لديك: admin/modules/NAME.html
+                    // بناء المسار: موديول الداشبورد أو غيره
                     const modulePath = `${this.baseUrl}/admin/modules/${moduleName}.html`;
+                    
                     const response = await fetch(`${modulePath}?v=${this.version}`);
                     
-                    if (!response.ok) throw new Error('Module Not Found');
+                    if (!response.ok) {
+                        throw new Error(`Module ${moduleName} not found at ${modulePath}`);
+                    }
                     
                     const html = await response.text();
                     this.moduleContainer.innerHTML = html;
                     
+                    // تحديث الحالة النشطة في القائمة الجانبية (Sidebar)
+                    if (window.syncNavigationUI) window.syncNavigationUI(hash);
+
                     // تشغيل ملف الـ JavaScript المرتبط بالموديول
                     await this.initModuleJS(moduleName);
                 } catch (e) {
+                    console.error("🔴 Routing Error:", e);
                     this.renderError(moduleName);
                 }
             }
 
             async initModuleJS(name) {
-                // خريطة الربط بين اسم الموديول وملف الـ JS الخاص به في js/modules/
                 const jsMap = {
+                    'dashboard': './js/modules/dashboard.js', // إضافة الداشبورد هنا
                     'customers': './js/modules/customers-ui.js',
                     'orders-dashboard': './js/modules/orders-dashboard.js',
                     'inventory': './js/modules/inventory.js',
@@ -123,8 +134,7 @@
                         const moduleUrl = `${jsMap[name]}?v=${this.version}`;
                         const module = await import(moduleUrl);
                         
-                        // محاولة تشغيل دالة التهيئة (مثلاً: initCustomersUI)
-                        // قمنا بتبسيط عملية بناء الاسم ليكون أكثر مرونة
+                        // محاولة تشغيل دالة التهيئة تلقائياً
                         const formattedName = name.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('');
                         const funcName = `init${formattedName}UI`;
                         
@@ -133,7 +143,7 @@
                             console.log(`🚀 Logic Active: ${funcName}`);
                         }
                     } catch (err) {
-                        console.error(`🔴 JS Logic Error [${name}]:`, err);
+                        console.warn(`ℹ️ JS Module Notice [${name}]: ملف الـ JS قد لا يحتوي على دالة init أو غير موجود.`);
                     }
                 }
             }
@@ -142,8 +152,8 @@
                 this.moduleContainer.innerHTML = `
                     <div style="text-align:center; padding:100px 20px;">
                         <i class="fas fa-exclamation-circle fa-4x" style="color:#f97316; margin-bottom:20px;"></i>
-                        <h2 style="color:#1e293b">الموديول [${module}] غير متاح</h2>
-                        <p style="color:#64748b">تأكد من وجود الملف في: <b>admin/modules/${module}.html</b></p>
+                        <h2 style="color:#1e293b">الموديول [${module}] غير متاح حالياً</h2>
+                        <p style="color:#64748b">تأكد من نقل ملف <b>${module}.html</b> إلى مجلد <b>admin/modules/</b></p>
                         <button onclick="window.location.hash='#dashboard'" class="btn-back">العودة للرئيسية</button>
                     </div>`;
             }
