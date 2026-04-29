@@ -1,8 +1,8 @@
 /**
  * js/main.js
- * المحرك الرئيسي لإدارة نظام "تيرا جيت واي" - الإصدار V12.12.2
+ * المحرك الرئيسي لإدارة نظام "تيرا جيت واي" - الإصدار V12.12.3
  * المطور: محمد بن صالح الشمري
- * الوظيفة: الإدارة المركزية للمنطق، الربط بـ Firebase، والتنقل بدون قيود الدخول حالياً.
+ * الوظيفة: الإدارة المركزية مع دعم مسارات GitHub Pages الذكية.
  */
 
 import { db, auth } from './core/config.js';
@@ -10,13 +10,17 @@ import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 import { navigateTo } from './dashboard-core.js';
 
-console.log("⚙️ Tera Engine Core: جاري تشغيل المحرك في وضع التطوير...");
+// تحديد مسار المشروع لـ GitHub Pages
+const IS_GITHUB = window.location.hostname.includes('github.io');
+const REPO_NAME = '/fi-khidmatik/';
+const BASE_PATH = IS_GITHUB ? REPO_NAME : '/';
+
+console.log(`⚙️ Tera Engine Core: جاري التشغيل على ${IS_GITHUB ? 'GitHub Pages' : 'Localhost'}`);
 
 /**
  * 1. الدوال العالمية المساعدة (Global Utilities)
  */
 
-// جلب البيانات مع معالجة ذكية للتواريخ
 window.getCollectionData = async (collectionName) => {
     if (!db) {
         console.error("❌ Tera Engine: قاعدة البيانات غير متصلة.");
@@ -29,7 +33,6 @@ window.getCollectionData = async (collectionName) => {
             const data = doc.data();
             let formattedDate = '---';
 
-            // معالجة التاريخ سواء كان Firebase Timestamp أو string
             if (data.createdAt) {
                 const dateObj = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
                 formattedDate = dateObj.toLocaleDateString('ar-SA');
@@ -47,7 +50,6 @@ window.getCollectionData = async (collectionName) => {
     }
 };
 
-// إغلاق المودالات وتنظيف الذاكرة البصرية
 window.closeAllModals = () => {
     const modals = document.querySelectorAll('.modal, .tera-modal, [role="dialog"]');
     modals.forEach(modal => {
@@ -70,7 +72,6 @@ window.closeAllModals = () => {
 window.handleNavigation = (hash) => {
     const view = hash.replace('#', '') || 'dashboard';
     
-    // تحديث الحالة البصرية للقائمة الجانبية
     document.querySelectorAll('.nav-item, .sidebar-link').forEach(item => {
         item.classList.remove('active');
         const href = item.getAttribute('href');
@@ -81,11 +82,8 @@ window.handleNavigation = (hash) => {
         }
     });
 
-    // استدعاء الموجه الرئيسي لتبديل المحتوى
     if (typeof navigateTo === 'function') {
         navigateTo(view);
-    } else {
-        console.warn("⚠️ Tera Router: دالة navigateTo غير معرفة في dashboard-core.js");
     }
 };
 
@@ -97,18 +95,19 @@ window.handleNavClick = (view) => {
  * 3. تشغيل المحرك والخدمات الأساسية
  */
 function initCoreEngine() {
-    // أ- مراقبة حالة المستخدم (معطلة مؤقتاً للتطوير)
+    // مراقبة الحالة بدون تحويل إجباري لصفحة اللوجين
     onAuthStateChanged(auth, (user) => {
         if (!user) {
-            console.info("ℹ️ Tera Auth: وضع التطوير نشط - الدخول متاح بدون تسجيل.");
+            console.info("ℹ️ Tera Auth: وضع التطوير نشط. الدخول لـ login.html معطل برمجياً.");
+            // ملاحظة: لا نضع window.location.href هنا لتجنب خطأ الـ 404
         }
     });
 
-    // ب- تحديث الفوتر تلقائياً
+    // تحديث السنة
     const yearEl = document.getElementById('current-year');
     if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-    // ج- مستمعات الأحداث
+    // مستمعات الأحداث
     window.addEventListener('hashchange', () => {
         window.handleNavigation(window.location.hash);
     });
@@ -117,17 +116,17 @@ function initCoreEngine() {
         if (e.key === 'Escape') window.closeAllModals();
     });
 
-    // د- التوجيه الأولي عند فتح الصفحة
+    // التشغيل الأولي
     window.handleNavigation(window.location.hash);
 
-    console.log("🚀 Tera Engine Core: النظام جاهز ومستقر (وضع التطوير).");
+    console.log("🚀 Tera Engine Core: المحرك جاهز.");
 }
 
-// البدء عند جاهزية المتصفح
+// الانطلاق
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initCoreEngine);
 } else {
     initCoreEngine();
 }
 
-export { initCoreEngine };
+export { initCoreEngine, BASE_PATH };
