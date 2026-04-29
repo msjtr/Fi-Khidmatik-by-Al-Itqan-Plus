@@ -10,7 +10,7 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-// إعدادات المشروع الخاصة بك
+// إعدادات المشروع (Tera Gateway)
 const firebaseConfig = {
     apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
     authDomain: "msjt301-974bb.firebaseapp.com",
@@ -21,7 +21,7 @@ const firebaseConfig = {
     measurementId: "G-NDVGC9GPQZ"
 };
 
-// 1. تهيئة التطبيق
+// 1. تهيئة التطبيق (Initialization)
 const app = initializeApp(firebaseConfig);
 
 // 2. تهيئة الخدمات الأساسية
@@ -31,15 +31,18 @@ const storage = getStorage(app);
 const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 
 /**
- * تصدير للنافذة (window) لضمان التوافق مع السكربتات القديمة
- * وجداول البيانات التي تعتمد على الوصول المباشر
+ * تصحيح المسار: تصدير الكائنات للنافذة (window)
+ * لضمان عمل السكربتات التي لا تستخدم نظام الموديولات (Legacy Scripts)
  */
 window.db = db;
 window.auth = auth;
 window.storage = storage;
-window.teraApp = app;
+window.firebaseApp = app;
 
-console.log("%c✅ Tera Engine:", "color: #2563eb; font-weight: bold;", "تم تصحيح الروابط والمحرك متصل الآن بـ Firebase v10.7.1");
+console.log("%c✅ Tera Core Connected:", "color: #f97316; font-weight: bold;", "المحرك متصل بنجاح بـ Firebase [msjt301]");
 
-// 3. التصدير للموديولات الحديثة (Core Config)
-export { app, db, auth, storage, analytics };
+/**
+ * 3. التصدير للموديولات الحديثة (ES Modules)
+ * ملاحظة: استخدم هذا التصدير في ملفات مثل customers-ui.js
+ */
+export { app, db, auth, storage, analytics, firebaseConfig };
