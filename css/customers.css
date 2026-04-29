@@ -1,61 +1,109 @@
-/* --- تحسينات إضافية للجدول العملاق --- */
+/* --- تحسينات Tera Gateway المتقدمة للجداول العملاقة --- */
 
-/* تأثير الظل للأعمدة المثبتة عند التمرير */
+/* الحاوية الرئيسية مع منع اهتزاز المحتوى */
 .table-scroll-wrapper {
-    scrollbar-gutter: stable; /* يمنع اهتزاز الصفحة عند ظهور السكرول */
+    scrollbar-gutter: stable; 
+    border-radius: 16px;
+    border: 1px solid #eef2f6;
+    overflow-x: auto;
+    background: #ffffff;
+    position: relative;
 }
 
-/* تمييز الصفوف الزوجية لسهولة التتبع البصري */
+/* تنسيق الجدول العصري */
+.modern-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+/* تمييز الصفوف الزوجية بتدرج لوني ناعم */
 .modern-table tbody tr:nth-child(even) {
-    background-color: #fbfcfd;
+    background-color: #f8fafc;
+}
+
+/* تأثير التحويم (Hover) الاحترافي */
+.modern-table tbody tr {
+    transition: all 0.2s ease;
 }
 
 .modern-table tbody tr:hover td {
-    background-color: #f1f5f9 !important; /* تغيير لون الصف بالكامل عند التحويم */
-    cursor: default;
+    background-color: #f1f5f9 !important;
+    transform: scale(1.001); /* تأثير دفع خفيف */
+    box-shadow: inset 0 0 1px rgba(0,0,0,0.05);
+    cursor: pointer;
 }
 
-/* تحسين شكل السكرول بار ليناسب لغة التصميم */
+/* تخصيص السكرول بار (Scrollbar) بتصميم Apple-Style */
 .table-scroll-wrapper::-webkit-scrollbar {
-    height: 8px; /* ارتفاع السكرول الأفقي */
+    height: 6px; /* أنحف وأكثر أناقة */
+    width: 6px;
 }
 
 .table-scroll-wrapper::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 10px;
+    background: transparent;
 }
 
 .table-scroll-wrapper::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 10px;
-    border: 2px solid #f1f5f9;
+    background: #d1d5db;
+    border-radius: 20px;
 }
 
 .table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
-    background: var(--accent-blue);
+    background: #94a3b8; /* لون أغمق عند التفاعل */
 }
 
-/* إضافة لمعة احترافية لعمود اسم العميل */
+/* الأعمدة المثبتة (Sticky Columns) مع تأثير الظل المنفصل */
+.sticky-col-name {
+    position: sticky;
+    right: 0; /* للغة العربية */
+    background: white;
+    z-index: 10;
+    font-weight: 600;
+}
+
+/* لمعة الظل لعمود العميل عند التمرير الأفقي */
 .sticky-col-name::after {
     content: '';
     position: absolute;
-    left: -5px;
+    left: -12px; /* لتغطية الحافة عند التمرير */
     top: 0;
     bottom: 0;
-    width: 5px;
-    background: linear-gradient(to left, rgba(0,0,0,0.05), transparent);
+    width: 12px;
+    background: linear-gradient(to right, transparent, rgba(0,0,0,0.03));
     pointer-events: none;
 }
 
-/* تنسيق المبالغ المالية داخل الجدول */
+/* تنسيق المبالغ المالية (Inter Font للأرقام) */
 .price-cell {
-    font-family: 'Inter', sans-serif; /* أرقام أوضح */
-    font-weight: 700;
-    color: var(--accent-green);
+    font-family: 'Inter', 'Tajawal', sans-serif;
+    font-weight: 800;
+    color: #10b981; /* أخضر مريح للعين */
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums; /* محاذاة الأرقام تحت بعضها */
 }
 
 .price-cell::after {
     content: ' ر.س';
-    font-size: 0.7rem;
-    color: var(--text-muted);
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: #94a3b8;
+    margin-right: 4px;
+}
+
+/* تأثير التنبيه البصري للـ VIP داخل الجدول */
+.vip-row {
+    border-right: 4px solid #f59e0b; /* علامة ذهبية جانبية */
+}
+
+/* تحسينات إضافية لرؤوس الجداول */
+.modern-table th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    padding: 15px;
+    border-bottom: 2px solid #e2e8f0;
 }
