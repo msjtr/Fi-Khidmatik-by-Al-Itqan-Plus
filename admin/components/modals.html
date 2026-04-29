@@ -1,4 +1,5 @@
-<div id="customer-modal" class="modal-overlay" style="display: none; animation: fadeIn 0.3s ease;">
+<!-- نافذة إضافة/تعديل عميل -->
+<div id="customer-modal" class="modal-overlay" style="display: none;">
     <div class="modal-card tera-premium-shadow">
         <!-- الهيدر -->
         <div class="modal-header-tera">
@@ -11,7 +12,7 @@
                     <p class="subtitle">نظام إدارة سجلات تيرا جيت واي</p>
                 </div>
             </div>
-            <button class="close-btn-tera" onclick="window.closeCustomerModal()">&times;</button>
+            <button class="close-btn-tera" onclick="closeCustomerModal()">&times;</button>
         </div>
 
         <!-- البودي -->
@@ -20,7 +21,9 @@
                 <!-- رفع الصورة -->
                 <div class="image-profile-upload-tera">
                     <div class="profile-preview-wrapper">
-                        <img id="cust-img-preview" src="admin/images/default-avatar.png" alt="صورة العميل" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+                        <img id="cust-img-preview" src="admin/images/default-avatar.png" 
+                             alt="صورة العميل" 
+                             onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
                         <label for="cust-image-file" class="upload-badge">
                             <i class="fas fa-camera"></i>
                             <input type="file" id="cust-image-file" accept="image/*" style="display: none;" onchange="previewCustomerImage(event)">
@@ -32,9 +35,10 @@
                     </div>
                 </div>
 
+                <!-- البيانات الأساسية -->
                 <div class="form-section-tera">
                     <div class="section-title"><i class="fas fa-id-card"></i> البيانات الشخصية والاتصال</div>
-                    <div class="grid-3-cols">
+                    <div class="grid-layout cols-3">
                         <div class="input-group-tera">
                             <label>اسم العميل الكامل</label>
                             <input type="text" id="cust-name" name="name" placeholder="محمد صالح الشمري" required>
@@ -57,9 +61,10 @@
                     </div>
                 </div>
 
+                <!-- العنوان الوطني -->
                 <div class="form-section-tera bg-light">
                     <div class="section-title"><i class="fas fa-map-marked-alt"></i> العنوان الوطني (SPL)</div>
-                    <div class="grid-4-cols">
+                    <div class="grid-layout cols-4">
                         <div class="input-group-tera">
                             <label>المدينة</label>
                             <input type="text" id="cust-city" name="city" value="حائل">
@@ -88,7 +93,7 @@
 
         <!-- الفوتر -->
         <div class="modal-footer-tera">
-            <button type="button" class="btn-tera secondary" onclick="window.closeCustomerModal()">إلغاء</button>
+            <button type="button" class="btn-tera secondary" onclick="closeCustomerModal()">إلغاء</button>
             <button type="button" class="btn-tera primary" id="btn-save-customer">
                 <i class="fas fa-save"></i> حفظ العميل
             </button>
@@ -97,37 +102,42 @@
 </div>
 
 <style>
-    /* التكملة والإصلاحات للـ CSS */
-    .grid-3-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-    .grid-4-cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-    .full-width { width: 100%; }
-    .mt-15 { margin-top: 15px; }
-
-    .modal-footer-tera {
-        padding: 20px 30px;
-        background: #f8fafc;
-        border-top: 1px solid #f1f5f9;
+    /* تحسينات التصحيح للـ Grid والـ Overlay */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(8px);
         display: flex;
-        justify-content: flex-end;
-        gap: 12px;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 20px;
     }
 
-    .btn-tera {
-        padding: 12px 25px;
-        border-radius: 12px;
-        font-weight: 700;
-        cursor: pointer;
-        border: none;
-        font-family: 'Cairo', sans-serif;
-        transition: 0.3s;
+    .modal-card {
+        background: white;
+        width: 100%;
+        max-width: 900px;
+        border-radius: 24px;
+        overflow: hidden;
+        animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .btn-tera.primary { background: #f97316; color: white; }
-    .btn-tera.secondary { background: #e2e8f0; color: #475569; }
-    .btn-tera:hover { transform: translateY(-2px); opacity: 0.9; }
+    @keyframes slideUp {
+        from { transform: translateY(30px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
 
+    .grid-layout { display: grid; gap: 20px; }
+    .grid-layout.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-layout.cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+    .bg-light { background: #f8fafc; padding: 20px; border-radius: 16px; margin: 15px 0; }
+
+    /* تحسينات الموبايل */
     @media (max-width: 768px) {
-        .grid-3-cols, .grid-4-cols { grid-template-columns: 1fr; }
-        .modal-card { max-height: 95vh; border-radius: 0; }
+        .grid-layout.cols-3, .grid-layout.cols-4 { grid-template-columns: 1fr; }
+        .modal-card { height: 100%; border-radius: 0; overflow-y: auto; }
     }
 </style>
