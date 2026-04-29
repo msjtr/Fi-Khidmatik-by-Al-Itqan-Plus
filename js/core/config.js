@@ -4,37 +4,41 @@
  * المطور: محمد بن صالح الشمري
  */
 
-// 1. استيراد الكائنات من ملف firebase.js 
-// تأكد من استخدام المسار النسبي الصحيح (./firebase.js)
-import { db, auth, app } from './firebase.js';
+// 1. استيراد الخدمات المهيأة من الملف الأساسي
+// نستخدم المسار النسبي المباشر لضمان التوافق مع المتصفحات
+import { db, auth, app, storage } from './firebase.js';
 
 // 2. الثوابت الأساسية للمنصة
 export const APP_CONFIG = {
     name: 'Tera Gateway',
     version: '2.0.2', 
-    company: 'Tera Gateway',
+    company: 'في خدمتكم | Fi Khidmatik', // تحديث الاسم للهوية الجديدة
     region: 'Saudi Arabia',
     debug: true
 };
 
 // 3. تكوين أسماء المجموعات (Collections) لضمان المركزية
+// تغيير أي اسم هنا سيحدثه في كامل النظام فوراً
 export const FIREBASE_COLLECTIONS = {
     products: 'products',
     orders: 'orders',
     customers: 'customers',
     payments: 'payments',
-    settings: 'settings'
+    settings: 'settings',
+    logs: 'system_logs' // إضافة سجل العمليات
 };
 
-// 4. الإعدادات المالية الخاصة بالسوق السعودي (تيرا)
+// 4. الإعدادات المالية الخاصة بالسوق السعودي
 export const FINANCIAL_CONFIG = {
     currency: 'SAR',
+    currencySymbol: 'ر.س',
     taxRate: 0.15, // ضريبة القيمة المضافة 15%
     taxEnabled: true
 };
 
 /**
- * دالة جلب الإعدادات الكاملة بنظام الموديولات
+ * دالة جلب الإعدادات الكاملة
+ * مفيدة عند الحاجة لتحميل الإعدادات في واجهات الإدارة
  */
 export function getAllConfig() {
     return { 
@@ -44,17 +48,31 @@ export function getAllConfig() {
     };
 }
 
-// 5. إعادة تصدير الخدمات لضمان سهولة الاستيراد من ملف واحد
-// ملاحظة: هذا يسمح للموديولات باستيراد db من config.js بدلاً من firebase.js مباشرة
-export { db, auth, app };
+/**
+ * دالة التحقق من جاهزية قاعدة البيانات
+ * تمنع الأخطاء في حالة تأخر اتصال Firebase
+ */
+export async function ensureDbReady() {
+    if (!db) {
+        console.error("❌ Tera Config: قاعدة البيانات غير جاهزة!");
+        return false;
+    }
+    return true;
+}
 
-// التصدير الافتراضي المجمع
+// 5. إعادة تصدير الخدمات لضمان سهولة الاستيراد من ملف واحد
+// الآن يمكنك كتابة: import { db } from './core/config.js';
+export { db, auth, app, storage };
+
+// التصدير الافتراضي المجمع (Object Export)
 export default {
     db, 
     auth, 
     app,
+    storage,
     APP_CONFIG,
     FIREBASE_COLLECTIONS,
     FINANCIAL_CONFIG,
-    getAllConfig
+    getAllConfig,
+    ensureDbReady
 };
