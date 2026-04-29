@@ -1,7 +1,7 @@
 /**
- * Tera Gateway - Customers UI Module
- * Version: 12.12.6
- * Description: التحكم في واجهة المستخدم لقاعدة العملاء والتعامل مع النوافذ المنبثقة
+ * Tera Gateway - Customers UI Module (Enterprise Version)
+ * Version: 12.12.8
+ * Description: النظام المتكامل لإدارة بيانات العملاء مع دعم العنوان الوطني والمفاتيح الدولية
  * المطور: محمد بن صالح الشمري
  */
 
@@ -12,29 +12,73 @@ class CustomersUI {
         this.modal = document.getElementById('customerModal');
         this.form = document.getElementById('customerForm');
         this.tableBody = document.getElementById('customersList');
-        // استخدام رابط خارجي للأفاتار لتجنب أخطاء 404 في GitHub Pages
         this.defaultAvatar = "https://ui-avatars.com/api/?background=f97316&color=fff&bold=true&name=";
         
+        // قاعدة بيانات مفاتيح الدول مع البحث
+        this.countries = [
+            { name: "المملكة العربية السعودية", dial: "+966", code: "SA" },
+            { name: "الإمارات العربية المتحدة", dial: "+971", code: "AE" },
+            { name: "الكويت", dial: "+965", code: "KW" },
+            { name: "قطر", dial: "+974", code: "QA" },
+            { name: "عمان", dial: "+968", code: "OM" },
+            { name: "البحرين", dial: "+973", code: "BH" },
+            { name: "مصر", dial: "+20", code: "EG" },
+            { name: "الأردن", dial: "+962", code: "JO" },
+            { name: "العراق", dial: "+964", code: "IQ" }
+        ];
+
         this.init();
     }
 
     init() {
-        // تسجيل الوظائف في النطاق العالمي لسهولة الوصول من HTML
+        // تسجيل الوظائف عالمياً للوصول من HTML
         window.openCustomerModal = (id = null) => this.openModal(id);
         window.closeCustomerModal = () => this.closeModal();
         window.handleCustomerSubmit = (e) => this.handleSubmit(e);
         window.filterCustomers = () => this.handleSearch();
         window.deleteCustomer = (id) => this.confirmDelete(id);
+        window.toggleCountryDropdown = () => this.toggleDropdown();
+        window.selectCountry = (dial, name) => this.setCountry(dial, name);
+        window.searchCountryList = (q) => this.renderCountryOptions(q);
 
-        // تحميل البيانات الأولية
         this.loadCustomers();
+        this.renderCountryOptions();
+    }
+
+    // --- منطق اختيار الدولة ومفتاح الاتصال ---
+    
+    toggleDropdown() {
+        const drop = document.getElementById('countryDropdown');
+        if (drop) drop.classList.toggle('show');
+    }
+
+    renderCountryOptions(query = '') {
+        const container = document.getElementById('countryOptions');
+        if (!container) return;
+
+        const filtered = this.countries.filter(c => 
+            c.name.includes(query) || c.dial.includes(query)
+        );
+
+        container.innerHTML = filtered.map(c => `
+            <div class="country-option" onclick="selectCountry('${c.dial}', '${c.name}')">
+                <span>${c.name}</span>
+                <span class="dial-code">${c.dial}</span>
+            </div>
+        `).join('');
+    }
+
+    setCountry(dial, name) {
+        document.getElementById('dialCodeDisplay').innerText = dial;
+        document.getElementById('countryDialInput').value = dial;
+        document.getElementById('countryNameInput').value = name;
+        this.toggleDropdown();
     }
 
     // --- إدارة النافذة المنبثقة (Modal) ---
     
     async openModal(customerId = null) {
         if (!this.modal) return;
-
         this.modal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; 
         
@@ -44,95 +88,32 @@ class CustomersUI {
             this.form.reset();
             this.form.dataset.mode = 'add';
             delete this.form.dataset.editId;
+            document.getElementById('dialCodeDisplay').innerText = '+966'; // افتراضي
             
-            // تعيين صورة افتراضية نظيفة للمعاينة
             const preview = document.getElementById('imagePreview');
-            if (preview) {
-                preview.style.backgroundImage = `url('${this.defaultAvatar}New+User')`;
-            }
+            if (preview) preview.style.backgroundImage = `url('${this.defaultAvatar}New+User')`;
         }
     }
 
     closeModal() {
-        if (this.modal) {
-            this.modal.style.display = 'none';
-            document.body.style.overflow = 'auto';
-            this.form.reset();
-        }
+        this.modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        this.form.reset();
     }
 
     // --- التعامل مع البيانات (CRUD) ---
 
     async loadCustomers() {
         try {
-            this.tableBody.innerHTML = `
-                <tr>
-                    <td colspan="7" style="text-align:center; padding: 20px;">
-                        <i class="fas fa-spinner fa-spin"></i> جاري تحميل بيانات العملاء من تيرا...
-                    </td>
-                </tr>`;
-            
-            // جلب البيانات مع ترتيبها حسب التاريخ الأحدث
+            this.tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> جاري جلب بيانات عملاء حائل...</td></tr>';
             const snapshot = await db.collection('customers').orderBy('createdAt', 'desc').get();
             const customers = [];
             snapshot.forEach(doc => customers.push({ id: doc.id, ...doc.data() }));
-            
             this.renderTable(customers);
         } catch (error) {
-            console.error("Error loading customers:", error);
-            this.tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">خطأ في الاتصال: ${error.message}</td></tr>`;
+            console.error("Tera Engine Error:", error);
+            this.tableBody.innerHTML = `<tr><td colspan="7" style="color:red; text-align:center;">خطأ: ${error.message}</td></tr>`;
         }
-    }
-
-    renderTable(customers) {
-        if (customers.length === 0) {
-            this.tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center">لا يوجد عملاء في قاعدة بيانات حائل حالياً.</td></tr>';
-            return;
-        }
-
-        this.tableBody.innerHTML = customers.map(cust => {
-            const date = cust.createdAt ? new Date(cust.createdAt.seconds * 1000).toLocaleDateString('ar-SA') : '-';
-            const avatarUrl = `${this.defaultAvatar}${encodeURIComponent(cust.name || 'User')}`;
-
-            return `
-            <tr class="animate-row">
-                <td>
-                    <div class="user-info">
-                        <div class="avatar-circle" style="background-image: url('${avatarUrl}'); background-size: cover; border: 1px solid #ddd;">
-                        </div>
-                        <div class="name-details">
-                            <strong>${cust.name || 'بدون اسم'}</strong>
-                            <small>${cust.type === 'vip' ? '💎 عميل VIP' : 'فرد'}</small>
-                        </div>
-                    </div>
-                </td>
-                <td>
-                    <div class="contact-col">
-                        <span><i class="fas fa-phone"></i> ${cust.phone || '-'}</span>
-                        <small>${cust.email || 'بدون بريد'}</small>
-                    </div>
-                </td>
-                <td>
-                    <div class="address-col">
-                        <span>${cust.district || 'حائل'}</span>
-                        <small>${cust.street || '-'}</small>
-                    </div>
-                </td>
-                <td>${date}</td>
-                <td><span class="badge-type">${cust.type || 'عادي'}</span></td>
-                <td><span class="status-pill active">نشط</span></td>
-                <td>
-                    <div class="action-btns">
-                        <button onclick="openCustomerModal('${cust.id}')" class="edit-btn" title="تعديل">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="deleteCustomer('${cust.id}')" class="delete-btn" title="حذف">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>`;
-        }).join('');
     }
 
     async handleSubmit(e) {
@@ -142,18 +123,26 @@ class CustomersUI {
         
         if (btn) {
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> جاري الحفظ...';
         }
 
+        // تجميع الـ 16 حقل المطلوبة
         const customerData = {
             name: formData.get('name'),
             phone: formData.get('phone'),
+            countryDial: formData.get('countryDial') || '+966',
             email: formData.get('email'),
-            type: formData.get('type'),
+            countryName: formData.get('countryName'),
+            city: formData.get('city'),
             district: formData.get('district'),
             street: formData.get('street'),
-            building: formData.get('building'),
-            zip: formData.get('zip'),
+            buildingNum: formData.get('buildingNum'),
+            extraNum: formData.get('extraNum'),
+            zipCode: formData.get('zipCode'),
+            poBox: formData.get('poBox'),
+            status: formData.get('status'),
+            category: formData.get('category'),
+            notes: formData.get('notes'),
             updatedAt: new Date()
         };
 
@@ -163,14 +152,13 @@ class CustomersUI {
             } else {
                 await db.collection('customers').add({
                     ...customerData,
-                    createdAt: new Date()
+                    createdAt: new Date() // تاريخ الإضافة التلقائي
                 });
             }
-            
             this.closeModal();
             await this.loadCustomers(); 
         } catch (error) {
-            alert("حدث خطأ في منصة تيرا: " + error.message);
+            alert("خطأ في بوابة تيرا: " + error.message);
         } finally {
             if (btn) {
                 btn.disabled = false;
@@ -179,53 +167,75 @@ class CustomersUI {
         }
     }
 
-    async prepareEditMode(id) {
-        try {
-            const doc = await db.collection('customers').doc(id).get();
-            if (doc.exists) {
-                const data = doc.data();
-                this.form.dataset.mode = 'edit';
-                this.form.dataset.editId = id;
-                
-                // تعبئة الحقول ديناميكياً
-                Object.keys(data).forEach(key => {
-                    const input = this.form.querySelector(`[name="${key}"]`);
-                    if (input) input.value = data[key];
-                });
+    renderTable(customers) {
+        if (customers.length === 0) {
+            this.tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">لا يوجد عملاء مسجلين.</td></tr>';
+            return;
+        }
 
-                const preview = document.getElementById('imagePreview');
-                if (preview) {
-                    preview.style.backgroundImage = `url('${this.defaultAvatar}${encodeURIComponent(data.name)}')`;
-                }
-            }
-        } catch (error) {
-            console.error("Error fetching customer:", error);
+        this.tableBody.innerHTML = customers.map(cust => {
+            const avatarUrl = `${this.defaultAvatar}${encodeURIComponent(cust.name || 'User')}`;
+            return `
+            <tr class="animate-row">
+                <td>
+                    <div class="user-info">
+                        <div class="avatar-circle" style="background-image: url('${avatarUrl}')"></div>
+                        <div class="name-details">
+                            <strong>${cust.name}</strong>
+                            <small>${cust.category || 'عادي'}</small>
+                        </div>
+                    </div>
+                </td>
+                <td><span dir="ltr">${cust.countryDial} ${cust.phone}</span></td>
+                <td>${cust.city} - ${cust.district}</td>
+                <td>${cust.createdAt ? new Date(cust.createdAt.seconds * 1000).toLocaleDateString('ar-SA') : '-'}</td>
+                <td><span class="status-pill ${cust.status === 'نشط' ? 'active' : 'inactive'}">${cust.status || 'نشط'}</span></td>
+                <td>
+                    <div class="action-btns">
+                        <button onclick="openCustomerModal('${cust.id}')" class="edit-btn"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteCustomer('${cust.id}')" class="delete-btn"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    async prepareEditMode(id) {
+        const doc = await db.collection('customers').doc(id).get();
+        if (doc.exists) {
+            const data = doc.data();
+            this.form.dataset.mode = 'edit';
+            this.form.dataset.editId = id;
+            
+            // تعبئة كافة الحقول
+            Object.keys(data).forEach(key => {
+                const input = this.form.querySelector(`[name="${key}"]`);
+                if (input) input.value = data[key];
+            });
+
+            document.getElementById('dialCodeDisplay').innerText = data.countryDial || '+966';
+            const preview = document.getElementById('imagePreview');
+            if (preview) preview.style.backgroundImage = `url('${this.defaultAvatar}${encodeURIComponent(data.name)}')`;
         }
     }
 
     handleSearch() {
-        const input = document.getElementById('customerSearch')?.value.toLowerCase() || '';
+        const query = document.getElementById('customerSearch').value.toLowerCase();
         const rows = this.tableBody.getElementsByTagName('tr');
-
         Array.from(rows).forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(input) ? '' : 'none';
+            row.style.display = row.textContent.toLowerCase().includes(query) ? '' : 'none';
         });
     }
 
     async confirmDelete(id) {
-        if (confirm("تنبيه أبا صالح: هل أنت متأكد من حذف هذا العميل نهائياً؟")) {
-            try {
-                await db.collection('customers').doc(id).delete();
-                await this.loadCustomers();
-            } catch (error) {
-                alert("فشل الحذف: " + error.message);
-            }
+        if (confirm("أبا صالح، هل أنت متأكد من حذف هذا العميل وسجلاته نهائياً؟")) {
+            await db.collection('customers').doc(id).delete();
+            await this.loadCustomers();
         }
     }
 }
 
-// تشغيل الموديول عند جاهزية الصفحة
+// تشغيل المحرك
 document.addEventListener('DOMContentLoaded', () => {
     window.CustomersModule = new CustomersUI();
 });
