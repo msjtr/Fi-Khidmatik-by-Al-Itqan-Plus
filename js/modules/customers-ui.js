@@ -1,65 +1,189 @@
 /**
- * Tera Gateway 12.12.6 - Customers UI Module
- * تم حل مشكلة توقف النظام بسبب الحقول المفقودة (toUpperCase)
+ * Tera Gateway - Customers UI Module
+ * Version: 12.12.6
+ * Description: التحكم في واجهة المستخدم لقاعدة العملاء والتعامل مع النوافذ المنبثقة
  */
 
-export async function loadCustomers(db, query, collection, getDocs, orderBy) {
-    const list = document.getElementById('customersList');
-    if (!list) return;
+import { db } from '../core/config.js';
 
-    try {
-        const customerRef = collection(db, "customers");
-        const q = query(customerRef, orderBy("createdAt", "desc"));
-        const snapshot = await getDocs(q);
+class CustomersUI {
+    constructor() {
+        this.modal = document.getElementById('customerModal');
+        this.form = document.getElementById('customerForm');
+        this.tableBody = document.getElementById('customersList');
+        this.searchTerm = '';
         
-        list.innerHTML = '';
-        let count = 0;
+        this.init();
+    }
 
-        snapshot.forEach((docSnap) => {
-            const c = docSnap.data();
+    init() {
+        // تسجيل الوظائف في النطاق العالمي لسهولة الوصول من HTML
+        window.openCustomerModal = () => this.openModal();
+        window.closeCustomerModal = () => this.closeModal();
+        window.handleCustomerSubmit = (e) => this.handleSubmit(e);
+        window.filterCustomers = () => this.handleSearch();
+        window.deleteCustomer = (id) => this.confirmDelete(id);
+
+        // تحميل البيانات الأولية
+        this.loadCustomers();
+    }
+
+    // --- إدارة النافذة المنبثقة (Modal) ---
+    
+    openModal(customerId = null) {
+        if (this.modal) {
+            this.modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // منع التمرير في الخلفية
             
-            // تحقق أمان: إذا كان السجل فارغاً أو تالفاً لا تعالجه
-            if (!c) return;
+            if (customerId) {
+                this.prepareEditMode(customerId);
+            } else {
+                this.form.reset();
+                document.getElementById('imagePreview').style.backgroundImage = "url('images/default-avatar.png')";
+            }
+        }
+    }
 
-            count++;
-            const id = docSnap.id;
+    closeModal() {
+        if (this.modal) {
+            this.modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            this.form.reset();
+        }
+    }
+
+    // --- التعامل مع البيانات (CRUD) ---
+
+    async loadCustomers() {
+        try {
+            // إظهار لودر بسيط داخل الجدول
+            this.tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center">جاري تحميل بيانات العملاء...</td></tr>';
             
-            // حل مشكلة toUpperCase: نضع قيمة افتراضية في حال كان الحقل undefined
-            const tagValue = (c.tag || 'regular').toUpperCase(); 
-            const statusValue = (c.status || 'active');
+            const snapshot = await db.collection('customers').orderBy('createdAt', 'desc').get();
+            const customers = [];
+            snapshot.forEach(doc => customers.push({ id: doc.id, ...doc.data() }));
+            
+            this.renderTable(customers);
+        } catch (error) {
+            console.error("Error loading customers:", error);
+            this.tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">فشل تحميل البيانات. تأكد من الاتصال.</td></tr>';
+        }
+    }
 
-            const row = `
-                <tr class="tera-row">
-                    <td>${count}</td>
-                    <td>
-                        <div class="user-cell">
-                            <img src="${c.photoURL || 'admin/images/default-avatar.png'}" class="table-img-circle">
-                            <div class="user-info">
-                                <span class="user-name">${c.name || 'عميل غير مسمى'}</span>
-                                <span class="user-id">#${id.substring(0,6)}</span>
-                            </div>
-                        </div>
-                    </td>
-                    <td dir="ltr" class="amount">${c.phone || '-'}</td>
-                    <td>${c.district || 'حائل'}</td>
-                    <td><span class="badge-${tagValue.toLowerCase()}">${tagValue}</span></td>
-                    <td>
-                        <div class="table-actions">
-                            <button onclick="editCustomer('${id}')" class="btn-action edit"><i class="fas fa-edit"></i></button>
-                            <button onclick="deleteCustomer('${id}')" class="btn-action delete"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            list.insertAdjacentHTML('beforeend', row);
-        });
-
-        if(count === 0) {
-            list.innerHTML = '<tr><td colspan="6" class="text-center p-5">لا يوجد بيانات لعرضها</td></tr>';
+    renderTable(customers) {
+        if (customers.length === 0) {
+            this.tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center">لا يوجد عملاء مسجلين حالياً.</td></tr>';
+            return;
         }
 
-    } catch (error) {
-        console.error("Tera Engine Error [UI]:", error);
-        list.innerHTML = '<tr><td colspan="6" class="text-center text-danger">حدث خطأ في جلب البيانات من السحابة</td></tr>';
+        this.tableBody.innerHTML = customers.map(cust => `
+            <tr class="animate-row">
+                <td>
+                    <div class="user-info">
+                        <div class="avatar-circle" style="background: ${this.getRandomColor()}">
+                            ${cust.name ? cust.name.substring(0, 2) : '??'}
+                        </div>
+                        <div class="name-details">
+                            <strong>${cust.name}</strong>
+                            <small>${cust.type === 'vip' ? '💎 عميل VIP' : 'فرد'}</small>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="contact-col">
+                        <span><i class="fas fa-phone"></i> ${cust.phone}</span>
+                        <small>${cust.email || 'بدون بريد'}</small>
+                    </div>
+                </td>
+                <td>
+                    <div class="address-col">
+                        <span>${cust.district || 'حائل'}</span>
+                        <small>${cust.street || '-'}</small>
+                    </div>
+                </td>
+                <td>${cust.createdAt ? new Date(cust.createdAt.seconds * 1000).toLocaleDateString('ar-SA') : '-'}</td>
+                <td><span class="badge-type">${cust.type || 'عادي'}</span></td>
+                <td><span class="status-pill active">نشط</span></td>
+                <td>
+                    <div class="action-btns">
+                        <button onclick="openCustomerModal('${cust.id}')" class="edit-btn" title="تعديل">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteCustomer('${cust.id}')" class="delete-btn" title="حذف">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async handleSubmit(e) {
+        e.preventDefault();
+        const btn = e.target.querySelector('.btn-save');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+
+        const formData = new FormData(this.form);
+        const customerData = {
+            name: formData.get('name'),
+            phone: formData.get('phone'),
+            email: formData.get('email'),
+            type: formData.get('type'),
+            district: formData.get('district'),
+            street: formData.get('street'),
+            building: formData.get('building'),
+            zip: formData.get('zip'),
+            updatedAt: new Date()
+        };
+
+        try {
+            await db.collection('customers').add({
+                ...customerData,
+                createdAt: new Date()
+            });
+            
+            this.closeModal();
+            this.loadCustomers(); // تحديث الجدول
+            // يمكنك إضافة تنبيه نجاح هنا (مثل Toast)
+        } catch (error) {
+            alert("حدث خطأ أثناء الحفظ: " + error.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'حفظ البيانات';
+        }
+    }
+
+    // --- وظائف مساعدة ---
+
+    handleSearch() {
+        const input = document.getElementById('customerSearch').value.toLowerCase();
+        const rows = this.tableBody.getElementsByTagName('tr');
+
+        for (let row of rows) {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(input) ? '' : 'none';
+        }
+    }
+
+    getRandomColor() {
+        const colors = ['#f97316', '#0ea5e9', '#8b5cf6', '#10b981', '#ef4444'];
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    async confirmDelete(id) {
+        if (confirm("هل أنت متأكد من حذف هذا العميل؟ لا يمكن التراجع عن هذا الإجراء.")) {
+            try {
+                await db.collection('customers').doc(id).delete();
+                this.loadCustomers();
+            } catch (error) {
+                alert("خطأ في الحذف: " + error.message);
+            }
+        }
     }
 }
+
+// تشغيل الموديول
+document.addEventListener('DOMContentLoaded', () => {
+    window.CustomersModule = new CustomersUI();
+});
