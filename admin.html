@@ -17,32 +17,36 @@
     <link rel="stylesheet" href="css/customers.css?v=12.12.6">
 
     <style>
-        :root { --tera-orange: #f97316; --tera-bg: #f8fafc; }
-        body { font-family: 'Cairo', sans-serif; background-color: var(--tera-bg); }
+        :root { --tera-blue: #2563eb; --tera-bg: #f8fafc; }
+        body { font-family: 'Cairo', sans-serif; background-color: var(--tera-bg); margin: 0; }
         
         .loader-box {
             display: flex; flex-direction: column; align-items: center;
-            justify-content: center; height: 70vh; color: var(--tera-orange);
+            justify-content: center; height: 60vh; color: var(--tera-blue);
         }
         .spinner-tera {
             width: 48px; height: 48px; border: 5px solid #e2e8f0;
-            border-top: 5px solid var(--tera-orange); border-radius: 50%;
+            border-top: 5px solid var(--tera-blue); border-radius: 50%;
             animation: spin 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .main-wrapper { display: flex; flex-direction: column; flex: 1; min-height: 100vh; }
+        .admin-layout { display: flex; min-height: 100vh; }
+        .content-area { padding: 20px; flex: 1; }
     </style>
 </head>
 <body class="tera-admin-body">
 
     <div class="admin-layout">
-        <!-- حاوية القائمة الجانبية (Sidebar) -->
-        <aside id="sidebar-container" class="sidebar-container"></aside>
+        <!-- حاوية القائمة الجانبية -->
+        <aside id="sidebar-container"></aside>
         
         <main class="main-wrapper">
-            <!-- الهيدر العلوي (Header) -->
-            <header id="header-container" class="top-bar"></header>
+            <!-- الهيدر العلوي -->
+            <header id="header-container"></header>
             
-            <!-- منطقة حقن الموديولات ديناميكياً -->
+            <!-- منطقة حقن الموديولات -->
             <section id="module-container" class="content-area">
                 <div class="loader-box">
                     <div class="spinner-tera"></div>
@@ -56,16 +60,14 @@
 
     <!-- تشغيل المحرك الرئيسي للنظام -->
     <script type="module">
-        // استيراد الإعدادات المعتمدة على 10.7.1
         import { db, auth } from './js/core/config.js';
-        import './js/main.js';
 
         class TeraApp {
             constructor() {
                 this.container = document.getElementById('module-container');
                 this.version = "12.12.6";
                 
-                // تحديد المسار الأساسي ذكياً (GitHub Pages vs Localhost)
+                // تحديد المسار الأساسي
                 const isGithub = window.location.hostname.includes('github.io');
                 this.baseUrl = isGithub ? '/fi-khidmatik' : '';
                 
@@ -74,15 +76,20 @@
 
             async init() {
                 try {
-                    // 1. تحميل الهيكل الأساسي (Header & Sidebar)
+                    // 1. تحميل المكونات الثابتة
                     await Promise.all([
                         this.fetchToElement('sidebar-container', `${this.baseUrl}/admin/components/sidebar.html`),
                         this.fetchToElement('header-container', `${this.baseUrl}/admin/components/header.html`)
                     ]);
 
-                    // 2. تفعيل نظام التوجيه (Routing)
+                    // 2. تفعيل الروابط
                     window.addEventListener('hashchange', () => this.route());
-                    this.route(); // التشغيل الأول
+                    this.route(); 
+
+                    // تعريف دالة التنقل عالمياً لاستخدامها في الـ Sidebar
+                    window.handleSidebarClick = (element, module) => {
+                        window.location.hash = `#${module}`;
+                    };
 
                 } catch (err) {
                     console.error("Critical System Failure:", err);
@@ -91,7 +98,8 @@
 
             async fetchToElement(id, path) {
                 try {
-                    const res = await fetch(`${path}?v=${this.version}`);
+                    const cleanPath = path.replace(/\/+/g, '/'); // منع تكرار السلاش
+                    const res = await fetch(`${cleanPath}?v=${this.version}`);
                     if (!res.ok) throw new Error(`HTTP ${res.status}`);
                     document.getElementById(id).innerHTML = await res.text();
                 } catch (e) {
@@ -101,11 +109,11 @@
 
             async route() {
                 const hash = window.location.hash || '#dashboard';
-                const module = hash.replace('#', '');
+                const moduleName = hash.replace('#', '');
                 
-                // توزيع الملفات: لوحة التحكم في components والبقية في modules
-                const folder = (module === 'dashboard') ? 'components' : 'modules';
-                const targetPath = `${this.baseUrl}/admin/${folder}/${module}.html`;
+                // تحديد المجلد بناءً على الموديول
+                const folder = (moduleName === 'dashboard') ? 'components' : 'modules';
+                const targetPath = `${this.baseUrl}/admin/${folder}/${moduleName}.html`.replace(/\/+/g, '/');
 
                 try {
                     this.container.innerHTML = '<div class="loader-box"><div class="spinner-tera"></div></div>';
@@ -113,17 +121,21 @@
                     const res = await fetch(`${targetPath}?v=${this.version}`);
                     if (!res.ok) throw new Error("Module Not Found");
 
-                    this.container.innerHTML = await res.text();
+                    const html = await res.text();
+                    this.container.innerHTML = html;
                     
-                    // تحديث مؤشر القائمة النشط
-                    this.syncSidebar(module);
+                    // تحديث الحالة في السايدبار
+                    this.syncSidebar(moduleName);
+
+                    // اختياري: تشغيل سكربت الموديول إذا وجد
+                    console.log(`Tera Engine: Loaded module [${moduleName}]`);
 
                 } catch (e) {
                     this.container.innerHTML = `
                         <div class="loader-box" style="color:#dc2626;">
                             <i class="fas fa-exclamation-triangle fa-3x"></i>
-                            <h3 style="margin-top:15px;">عذراً، فشل تحميل الصفحة</h3>
-                            <p>المسار المستهدف غير موجود أو هناك مشكلة في الاتصال.</p>
+                            <h3 style="margin-top:15px;">عذراً، الصفحة غير متوفرة</h3>
+                            <p>تأكد من وجود الملف في: admin/${folder}/${moduleName}.html</p>
                         </div>`;
                 }
             }
@@ -131,7 +143,7 @@
             syncSidebar(activeModule) {
                 document.querySelectorAll('.nav-item').forEach(nav => {
                     nav.classList.remove('active');
-                    if (nav.getAttribute('data-module') === activeModule || nav.innerText.includes(activeModule)) {
+                    if (nav.getAttribute('data-module') === activeModule) {
                         nav.classList.add('active');
                     }
                 });
@@ -139,7 +151,9 @@
         }
 
         // إقلاع النظام
-        window.onload = () => { window.TeraInstance = new TeraApp(); };
+        window.addEventListener('DOMContentLoaded', () => {
+            window.TeraInstance = new TeraApp();
+        });
     </script>
 </body>
 </html>
