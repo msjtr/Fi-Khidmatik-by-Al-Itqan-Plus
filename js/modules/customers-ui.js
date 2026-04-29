@@ -1,110 +1,104 @@
-/**
- * موديول واجهة مستخدم العملاء - إصدار Tera Engine V12.12.1
- * تم الإصلاح: إضافة الأقواس المفقودة، تصدير الدوال، وربط الجسر البرمجي
- */
-
+// استيراد الدوال المطلوبة من الإصدار 12
 import { 
+    getFirestore, 
     collection, 
     getDocs, 
-    doc, 
-    deleteDoc, 
     query, 
-    orderBy,
-    addDoc,
-    serverTimestamp 
-} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+    orderBy 
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-// --- 1. الدالة الرئيسية لتشغيل الموديول ---
+/**
+ * دالة تهيئة واجهة العملاء
+ * @param {HTMLElement} container - الحاوية التي سيتم حقن الجدول فيها
+ */
 export async function initCustomersUI(container) {
-    console.log("🚀 Tera Gateway: موديول العملاء نشط");
-    const db = window.db;
+    console.log("🚀 Tera Gateway: موديول العملاء نشط (Firebase v12)");
+
+    // 1. إعداد الهيكل البصري للجدول
+    container.innerHTML = `
+        <div class="customers-view-container">
+            <div class="view-header">
+                <h3><i class="fas fa-users"></i> إدارة العملاء</h3>
+                <p>عرض وتعديل بيانات العملاء المسجلين في "في خدمتك"</p>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="tera-table">
+                    <thead>
+                        <tr>
+                            <th>العميل</th>
+                            <th>العنوان والتفاصيل</th>
+                            <th>رقم الهاتف</th>
+                            <th>التصنيف</th>
+                            <th>تاريخ التسجيل</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customers-data-rows">
+                        <tr>
+                            <td colspan="5" class="text-center">
+                                <div class="loading-spinner-small"></div> جاري مزامنة البيانات...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+
+    const tbody = document.getElementById('customers-data-rows');
     
-    if (!db) {
-        console.error("❌ قاعدة البيانات غير متصلة");
-        return;
-    }
-
-    const tableBody = document.getElementById('customers-data-rows');
-    if (tableBody) {
-        await renderCustomersTable(db, tableBody);
-    }
-}
-
-// --- 2. دالة جلب وعرض البيانات في الجدول ---
-export async function renderCustomersTable(db, tableBody) {
-    tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center;">جاري تحميل البيانات...</td></tr>';
-
     try {
+        const db = getFirestore();
+        
+        // 2. بناء الاستعلام (ترتيب حسب تاريخ الإنشاء تنازلياً)
         const customersRef = collection(db, "customers");
-        const q = query(customersRef, orderBy("name"));
+        const q = query(customersRef, orderBy("createdAt", "desc"));
+        
+        // 3. تنفيذ جلب البيانات
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-            tableBody.innerHTML = '<tr><td colspan="17" style="text-align:center;">لا يوجد عملاء مسجلين حالياً.</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="5" class="empty-msg">لا توجد سجلات عملاء حالياً</td></tr>`;
             return;
         }
 
-        let html = '';
-        let index = 1;
+        tbody.innerHTML = ""; // تنظيف صف التحميل
 
-        querySnapshot.forEach((customerDoc) => {
-            const data = customerDoc.data();
-            const id = customerDoc.id;
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const row = document.createElement('tr');
+            
+            // تحويل الطابع الزمني (Timestamp) الخاص بفايربيز إلى تاريخ مقروء
+            const dateStr = data.createdAt ? new Date(data.createdAt).toLocaleDateString('ar-SA') : '-';
 
-            html += `
-                <tr>
-                    <td>${index++}</td>
-                    <td><strong>${data.name || '---'}</strong></td>
-                    <td dir="ltr">${data.phone || '---'}</td>
-                    <td>${data.city || '---'}</td>
-                    <td>${data.classification || 'عادي'}</td>
-                    <td><span class="status-badge">${data.status || 'نشط'}</span></td>
-                    <td>
-                        <button onclick="editCustomerRow('${id}')" class="btn-edit"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteCustomerRow('${id}')" class="btn-delete"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>`;
+            row.innerHTML = `
+                <td>
+                    <div class="user-info">
+                        <span class="user-name">${data.name || 'بدون اسم'}</span>
+                        <span class="user-email">${data.email || ''}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="address-box">
+                        <strong>${data.city || ''}</strong>، ${data.district || ''}<br>
+                        <small>${data.street || ''} - مبنى: ${data.buildingNo || ''}</small>
+                    </div>
+                </td>
+                <td dir="ltr" class="text-right">
+                    ${data.countryCode || ''} ${data.phone || ''}
+                </td>
+                <td>
+                    <span class="tag-badge ${data.tag === 'vip' ? 'is-vip' : ''}">
+                        ${data.tag || 'عميل'}
+                    </span>
+                </td>
+                <td>${dateStr}</td>
+            `;
+            tbody.appendChild(row);
         });
 
-        tableBody.innerHTML = html;
-
     } catch (error) {
-        console.error("🔴 خطأ في عرض الجدول:", error);
-        tableBody.innerHTML = `<tr><td colspan="17" style="color:red;">خطأ: ${error.message}</td></tr>`;
+        console.error("Firebase v12 Error:", error);
+        tbody.innerHTML = `<tr><td colspan="5" class="error-msg">فشل جلب البيانات: ${error.message}</td></tr>`;
     }
 }
-
-// --- 3. دالة فتح مودال إضافة عميل جديد ---
-export function openAddCustomerModal() {
-    const modal = document.getElementById('customerModal') || document.getElementById('customer-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-        const form = modal.querySelector('form');
-        if (form) form.reset();
-        console.log("✅ تم فتح نافذة إضافة عميل");
-    }
-}
-
-// --- 4. دالة حذف عميل ---
-window.deleteCustomerRow = async (id) => {
-    if (confirm("هل أنت متأكد من حذف هذا العميل نهائياً؟")) {
-        try {
-            await deleteDoc(doc(window.db, "customers", id));
-            alert("تم الحذف بنجاح");
-            const tableBody = document.getElementById('customers-data-rows');
-            if (tableBody) renderCustomersTable(window.db, tableBody);
-        } catch (e) {
-            alert("خطأ في الحذف: " + e.message);
-        }
-    }
-};
-
-// --- 5. دالة تعديل عميل ---
-window.editCustomerRow = (id) => {
-    console.log("تعديل العميل ذو المعرف:", id);
-    // هنا يتم وضع منطق فتح المودال وتعبئة البيانات
-    if (window.openCustomerModal) window.openCustomerModal('edit', id);
-};
-
-// إغلاق أي أقواس مفتوحة لضمان عدم حدوث Syntax Error
-console.log("✅ تم تحميل ملف customers-ui.js بالكامل.");
