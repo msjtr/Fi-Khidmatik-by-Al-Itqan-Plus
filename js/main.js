@@ -1,28 +1,36 @@
 /**
- * js/main.js - V12.12.4
- * المحرك الرئيسي لإدارة الحالة والواجهة
+ * js/main.js - V12.12.5
+ * المحرك الرئيسي لإدارة الحالة والواجهة لـ Tera Gateway
  */
 import { db, auth } from './core/config.js';
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"; // تأكد من إصدار Firebase المستخدم
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 /**
- * دالة عالمية لتحديث حالة القائمة الجانبية (Active State)
- * يتم استدعاؤها من الـ Router عند تغيير الـ Hash
+ * [1] دالة معالجة النقر من السايدبار (عالمية)
+ * تم وضعها هنا لضمان استجابة ملف sidebar.html فور تحميله
+ */
+window.handleSidebarClick = function(element, moduleName) {
+    // تحديث الشكل المرئي
+    window.syncNavigationUI(`#${moduleName}`);
+    
+    // تحديث الرابط (هذا سيطلق حدث hashchange تلقائياً)
+    location.hash = `#${moduleName}`;
+
+    // إغلاق قائمة الموبايل إذا كانت مفتوحة
+    const container = document.querySelector('.sidebar-container');
+    if (container) container.classList.remove('mobile-open');
+};
+
+/**
+ * [2] مزامنة حالة القائمة مع الرابط الحالي
  */
 window.syncNavigationUI = (hash) => {
     const activeModule = hash.replace('#', '') || 'dashboard';
-    
-    // البحث عن جميع عناصر التنقل (سواء كانت li أو a)
-    const navItems = document.querySelectorAll('.nav-item, .sidebar-link');
+    const navItems = document.querySelectorAll('.nav-item');
     
     navItems.forEach(item => {
         item.classList.remove('active');
-        
-        // التحقق من الموديول عن طريق data-module أو الـ href
-        const itemModule = item.getAttribute('data-module') || 
-                           (item.getAttribute('href') ? item.getAttribute('href').replace('#', '') : null);
-        
-        if (itemModule === activeModule) {
+        if (item.getAttribute('data-module') === activeModule) {
             item.classList.add('active');
         }
     });
@@ -31,45 +39,49 @@ window.syncNavigationUI = (hash) => {
 };
 
 /**
- * تشغيل المحرك الأساسي للنظام
+ * [3] تشغيل المحرك الأساسي
  */
 function initCoreEngine() {
-    // 1. مراقبة حالة تسجيل الدخول
+    // مراقبة حالة تسجيل الدخول
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            console.log("✅ Tera Gateway: المستخدم مسجل دخول حالياً", user.email);
-            // يمكنك هنا إضافة كود لجلب بيانات المستخدم وعرضها في الهيدر
+            console.log("✅ Tera Gateway: متصل كـ", user.email);
+            document.body.classList.add('auth-verified');
         } else {
-            console.log("ℹ️ Tera Gateway: وضع الضيف - لا يوجد مستخدم");
-            // يمكنك هنا توجيه المستخدم لصفحة تسجيل الدخول إذا كان في صفحة الإدارة
-            // window.location.href = 'index.html';
+            console.log("ℹ️ Tera Gateway: وضع الضيف");
+            // window.location.href = '../login.html'; // فعلها عند الحاجة
         }
     });
 
-    // 2. تحديث التاريخ في الفوتر (إن وجد)
+    // معالجة تصغير السايدبار (Collapse)
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const container = document.querySelector('.sidebar-container');
+    
+    if (sidebarToggle && container) {
+        sidebarToggle.addEventListener('click', () => {
+            container.classList.toggle('collapsed');
+            localStorage.setItem('sidebar-collapsed', container.classList.contains('collapsed'));
+        });
+
+        // استرجاع حالة السايدبار المحفوظة
+        if (localStorage.getItem('sidebar-collapsed') === 'true') {
+            container.classList.add('collapsed');
+        }
+    }
+
+    // تحديث التاريخ في أي مكوّن يحمل id="current-year"
     const yearEl = document.getElementById('current-year');
     if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-    // 3. معالجة فتح وإغلاق القائمة الجانبية (Mobile Sidebar Toggle)
-    const sidebarToggle = document.getElementById('sidebar-toggle');
-    const sidebar = document.querySelector('.sidebar');
-    if (sidebarToggle && sidebar) {
-        sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-            // حفظ الحالة في LocalStorage لتذكر تفضيل المستخدم
-            localStorage.setItem('sidebar-collapsed', sidebar.classList.contains('collapsed'));
-        });
-    }
-
-    // 4. تحميل حالة السايدبار المحفوظة
-    if (localStorage.getItem('sidebar-collapsed') === 'true' && sidebar) {
-        sidebar.classList.add('collapsed');
-    }
-
-    console.log("🚀 Tera Core Engine Started Successfully.");
+    console.log("🚀 Tera Core Engine Ready.");
 }
 
-// التأكد من تشغيل الكود بعد تحميل المستند
+// مراقبة تغيير الـ Hash لمزامنة القائمة تلقائياً (عند ضغط زر الخلف في المتصفح مثلاً)
+window.addEventListener('hashchange', () => {
+    window.syncNavigationUI(location.hash);
+});
+
+// التشغيل
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initCoreEngine);
 } else {
