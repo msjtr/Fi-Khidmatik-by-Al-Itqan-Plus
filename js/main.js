@@ -1,177 +1,156 @@
 /**
- * js/main.js - V12.12.8
- * المحرك المركزي لنظام تيرا جيت واي (Tera Gateway)
- * المتوافق مع Firebase 10.7.1 ونظام الـ 17 حقلاً
+ * js/main.js - V12.12.12
+ * المحرك المركزي المطور لنظام تيرا جيت واي (Tera Gateway)
+ * المتوافق مع Firebase 10.7.1 ومعايير UI/UX الحديثة
  * المطور: محمد بن صالح الشمري
  */
 
-import { db, auth, ensureDbReady } from './core/config.js';
-import { initCustomersUI } from './modules/customers-ui.js';
-import { getCustomersStats } from './modules/customers-core.js';
+import { db, auth } from './core/firebase.js'; // تم تحديث المسار للمعيار الجديد
+import { initCustomers } from './modules/customers-ui.js';
 
-// متغير داخلي لإدارة حالة النظام ومنع التكرار
+// إدارة حالة النظام المركزية
 let currentModule = null;
 
 /**
  * دالة إدارة التنقل المركزية (Tera Router)
- * تم تسجيلها في window لتكون متاحة لجميع عناصر واجهة المستخدم
  */
 window.handleSidebarClick = async function(element, moduleName) {
-    // منع إعادة تحميل الموديول إذا كان نشطاً لتوفير موارد الشبكة
+    // 1. منع التكرار وتوفير موارد الشبكة
     if (currentModule === moduleName) return; 
     
-    console.log(`🔄 Tera Router: جاري الانتقال إلى [${moduleName}]`);
+    console.log(`%c🔄 Tera Router: جاري الانتقال إلى [${moduleName}]`, "color: #0ea5e9; font-weight: bold;");
     
-    // 1. تحديث الحالة البصرية للقائمة الجانبية (Active State)
-    document.querySelectorAll('.nav-item').forEach(item => {
+    // 2. تحديث الحالة البصرية للقائمة (Active State)
+    document.querySelectorAll('.nav-link').forEach(item => {
         item.classList.remove('active');
     });
     
     if (element) {
         element.classList.add('active');
     } else {
-        const target = document.querySelector(`.nav-item[data-module="${moduleName}"]`);
+        const target = document.querySelector(`[onclick*="'${moduleName}'"]`);
         if (target) target.classList.add('active');
     }
 
-    // 2. تحديث الـ Hash في المتصفح لدعم أزرار الرجوع
+    // 3. تحديث الـ Hash لدعم أزرار المتصفح
     if (window.location.hash !== `#${moduleName}`) {
         history.pushState(null, null, `#${moduleName}`);
     }
 
-    // 3. تحديد منطقة عرض المحتوى (module-container)
-    const container = document.getElementById('module-container');
+    // 4. منطقة حقن المحتوى
+    const container = document.getElementById('main-content-area'); // التأكد من مطابقة ID الحاوية
     if (container) {
         currentModule = moduleName;
         await renderModule(moduleName, container);
     }
 
-    // 4. إغلاق القائمة الجانبية في وضع الجوال تلقائياً بعد الاختيار
-    document.getElementById('main-sidebar')?.classList.remove('mobile-open');
+    // 5. إغلاق القائمة في وضع الجوال
+    const sidebar = document.getElementById('sidebarMenu');
+    if (sidebar && sidebar.classList.contains('show')) {
+        bootstrap.Collapse.getInstance(sidebar).hide();
+    }
 };
 
 /**
  * الموزع المنطقي للموديولات (Module Switcher)
- * يقوم بحقن الـ HTML والوظائف بناءً على الاختيار
  */
 async function renderModule(moduleName, container) {
-    // التأكد من استقرار الاتصال بقاعدة البيانات قبل التحميل
-    const isReady = await ensureDbReady();
-    if (!isReady) {
-        container.innerHTML = `
-            <div class="loader-box text-center p-5" style="color:#ef4444;">
-                <i class="fas fa-database fa-3x mb-3"></i>
-                <h3>بوابة تيرا غير متصلة</h3>
-                <p>تعذر الوصول للسحابة. يرجى التحقق من إعدادات Firebase والإنترنت.</p>
-                <button class="btn-tera primary mt-3" onclick="location.reload()">إعادة المحاولة</button>
-            </div>`;
-        return;
-    }
-
-    // عرض مؤشر التحميل الخاص بمنصة تيرا
+    // عرض مؤشر التحميل بتصميم "تيرا" الزجاجي
     container.innerHTML = `
-        <div class="loader-box">
-            <div class="spinner-tera"></div>
-            <p style="margin-top:20px; font-weight:700; color: #1e293b;">جاري مزامنة بيانات ${moduleName}...</p>
+        <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 400px;">
+            <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+            <h5 class="text-secondary animate-pulse">جاري مزامنة بيانات ${moduleName}...</h5>
         </div>`;
 
     try {
         switch(moduleName) {
-            case 'customers':
-                // تشغيل واجهة إدارة العملاء (17 حقلاً)
-                await initCustomersUI(container);
+            case 'dashboard':
+                await renderDashboard(container);
                 break;
                 
-            case 'dashboard':
-                // جلب إحصائيات حقيقية من Firestore للوحة التحكم
-                const stats = await getCustomersStats();
-                container.innerHTML = `
-                    <div class="dashboard-wrapper animated fadeIn">
-                        <div class="welcome-banner glassmorphism mb-4">
-                            <h1>لوحة تحكم تيرا <span class="v-tag">12.12.8</span></h1>
-                            <p>مرحباً بك أبا صالح في نظام "في خدمتكم" - منطقة حائل</p>
-                        </div>
-                        
-                        <div class="stats-grid">
-                            <div class="stat-card">
-                                <i class="fas fa-users"></i>
-                                <h3>إجمالي العملاء</h3>
-                                <span class="stat-value">${stats?.total || 0}</span>
-                            </div>
-                            <div class="stat-card">
-                                <i class="fas fa-check-circle text-success"></i>
-                                <h3>العملاء النشطون</h3>
-                                <span class="stat-value">${stats?.active || 0}</span>
-                            </div>
-                            <div class="stat-card">
-                                <i class="fas fa-map-marker-alt text-primary"></i>
-                                <h3>عملاء حائل</h3>
-                                <span class="stat-value">${stats?.hailRegion || 0}</span>
-                            </div>
-                            <div class="stat-card">
-                                <i class="fas fa-crown text-warning"></i>
-                                <h3>عملاء VIP</h3>
-                                <span class="stat-value">${stats?.vip || 0}</span>
-                            </div>
-                        </div>
-                    </div>`;
+            case 'customers':
+                // تشغيل موديول العملاء المطور V12.12.12
+                await initCustomers(container);
                 break;
-
+                
             case 'orders':
-                // موديول الطلبات والعقود
                 container.innerHTML = `
-                    <div class="orders-section p-4 animated slideInUp">
-                        <div class="section-header d-flex justify-content-between align-items-center mb-4">
-                            <h3><i class="fas fa-file-invoice-dollar ml-2"></i> عقود وطلبات التقسيط</h3>
-                        </div>
-                        <div class="empty-state text-center p-5 glassmorphism">
-                            <i class="fas fa-box-open fa-3x mb-3 text-muted"></i>
-                            <p>جاري تطوير محرك العقود الذكي (Snapshot Logic)...</p>
+                    <div class="p-4 animate-fade-in">
+                        <div class="card border-0 shadow-sm rounded-4 p-5 text-center">
+                            <i class="fas fa-file-invoice-dollar fa-4x text-light mb-4"></i>
+                            <h2 class="fw-900">محرك العقود الذكي</h2>
+                            <p class="text-muted">نظام Snapshot Logic قيد المزامنة النهائية للإصدار القادم.</p>
                         </div>
                     </div>`;
                 break;
 
             default:
                 container.innerHTML = `
-                    <div class="loader-box text-center p-5">
-                        <i class="fas fa-tools fa-3x mb-3" style="color: #94a3b8;"></i>
-                        <h3>الموديول [${moduleName}]</h3>
-                        <p>هذه الميزة قيد البرمجة حالياً ضمن تحديثات المحرك القادمة.</p>
-                        <button class="btn-tera primary" onclick="window.location.hash='#dashboard'">العودة للرئيسية</button>
+                    <div class="text-center p-5">
+                        <h3 class="text-muted">الموديول [${moduleName}] قيد التطوير</h3>
+                        <button class="btn btn-primary mt-3" onclick="window.handleSidebarClick(null, 'dashboard')">العودة للرئيسية</button>
                     </div>`;
         }
     } catch (error) {
-        console.error(`🔴 Render Error [${moduleName}]:`, error);
+        console.error(`🔴 Tera Error [${moduleName}]:`, error);
         container.innerHTML = `
-            <div class="alert error-toast">
-                <i class="fas fa-exclamation-triangle"></i>
-                حدث خطأ أثناء تحميل الوحدة. تفاصيل: ${error.message}
+            <div class="alert alert-danger m-4 rounded-4 shadow-sm">
+                <i class="fas fa-exclamation-circle me-2"></i> حدث خطأ أثناء تحميل الوحدة: ${error.message}
             </div>`;
     }
 }
 
 /**
- * مراقب تغيير الرابط (Hash Change Listener)
- * يسمح للمستخدم بالانتقال عبر أزرار المتصفح (خلف/أمام)
+ * بناء لوحة التحكم السريعة
+ */
+async function renderDashboard(container) {
+    container.innerHTML = `
+        <div class="dashboard-content animate-fade-in p-4">
+            <div class="welcome-section mb-4">
+                <h1 class="fw-900">لوحة التحكم <span class="badge bg-soft-primary text-primary fs-6">V12.12.12</span></h1>
+                <p class="text-muted">مرحباً بك أبا صالح | منصة "في خدمتكم" - فرع حائل</p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-box bg-soft-primary text-primary rounded-3 p-3 me-3">
+                                <i class="fas fa-users fa-lg"></i>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block">إجمالي العملاء</small>
+                                <h4 class="fw-bold mb-0 counter">--</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- يمكن إضافة كروت إضافية هنا -->
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * مراقب التغييرات في الرابط
  */
 window.addEventListener('hashchange', () => {
-    const currentHash = window.location.hash.replace('#', '') || 'dashboard';
-    if (currentModule !== currentHash) {
-        window.handleSidebarClick(null, currentHash);
+    const hash = window.location.hash.replace('#', '') || 'dashboard';
+    if (currentModule !== hash) {
+        window.handleSidebarClick(null, hash);
     }
 });
 
 /**
- * نقطة الانطلاق (System Entry Point)
+ * نقطة الانطلاق
  */
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("%c🚀 Tera Engine V12.12.8 Initialized", "color: #f97316; font-weight: bold; font-size: 14px;");
+    console.log("%c🚀 Tera Engine V12.12.12 Initialized", "color: #f97316; font-weight: bold; font-size: 14px;");
     
-    // تشغيل المزامنة الأولى بناءً على الرابط الحالي أو الافتراضي
+    // تشغيل الموديول الافتراضي بناءً على الرابط
     const initialHash = window.location.hash.replace('#', '') || 'dashboard';
     
-    // تأخير بسيط لضمان استقرار تحميل القائمة الجانبية في المتصفح
     setTimeout(() => {
         window.handleSidebarClick(null, initialHash);
-    }, 150);
+    }, 100);
 });
