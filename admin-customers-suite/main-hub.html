@@ -3,13 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>في خدمتك | Fi Khidmatik by Al-Itqan Plus</title>
     
-    <!-- ربط ملفات التنسيق (CSS) بناءً على صورك -->
+    <!-- الاسم الرسمي للمنصة في التبويب بالعربي والإنجليزي -->
+    <title>في خدمتك من الإتقان بلس | Fi Khidmatik by Al-Itqan Plus</title>
+    
+    <!-- أيقونة التبويب (Favicon) من مسار الصور المعتمد -->
+    <link rel="icon" type="image/svg+xml" href="../images/logo.svg">
+    
+    <!-- ربط ملفات التنسيق CSS -->
     <link rel="stylesheet" href="css-styles/hub-style.css">
     <link rel="stylesheet" href="css-styles/buttons-theme.css">
     
-    <!-- أيقونات FontAwesome -->
+    <!-- مكتبة الأيقونات -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
@@ -18,15 +23,13 @@
             padding: 25px 15px;
             border-bottom: 1px solid rgba(197, 160, 89, 0.2);
         }
-        /* تنسيق الشعار SVG ليكون متجاوباً وأنيقاً */
         .app-logo {
-            width: 100px; /* مقاس مناسب لشعار SVG */
+            width: 100px;
             height: auto;
             margin-bottom: 15px;
             display: block;
             margin-left: auto;
             margin-right: auto;
-            /* تأثير ظل خفيف لإبراز الشعار */
             filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.3));
         }
         .loading-overlay {
@@ -36,28 +39,33 @@
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 9999; color: #c5a059; font-family: 'Tajawal', sans-serif;
         }
+        .platform-name-ar { color: #c5a059; margin: 5px 0 0 0; font-size: 1.3rem; font-weight: 900; }
+        .platform-name-en { color: #fff; margin: 0; font-size: 0.8rem; opacity: 0.9; letter-spacing: 0.5px; }
     </style>
 </head>
 <body>
 
-    <!-- شاشة التحميل مع الشعار المحدث -->
+    <!-- شاشة التحميل الذكية -->
     <div id="loader" class="loading-overlay">
-        <img src="../images/logo.svg" alt="Fi Khidmatik Logo" class="app-logo animate-pulse">
-        <div class="spinner-border text-gold mb-3"></div>
-        <h2 style="font-weight: 900; letter-spacing: 1px;">تـيـرا جـيـت واي V12.12.12</h2>
+        <img src="../images/logo.svg" alt="Logo" class="app-logo animate-pulse">
+        <div class="spinner-border text-warning mb-3"></div>
+        <h2 class="platform-name-ar">في خدمتك من الإتقان بلس</h2>
+        <p class="platform-name-en">Fi Khidmatik by Al-Itqan Plus</p>
     </div>
 
     <div class="hub-container">
-        <!-- القائمة الجانبية -->
+        <!-- القائمة الجانبية (Sidebar) -->
         <aside class="sidebar" id="sidebarMenu">
             <div class="brand-section">
-                <!-- المسار المحدث للشعار بناءً على طلبك -->
-                <img src="../images/logo.svg" alt="شعار في خدمتك" class="app-logo">
+                <!-- الشعار الرسمي -->
+                <img src="../images/logo.svg" alt="Logo" class="app-logo">
                 
-                <h1 style="color: #c5a059; margin: 5px 0 0 0; font-size: 1.5rem; font-weight: 900;">في خدمتك</h1>
-                <p style="color: #fff; margin: 0; font-size: 0.9rem; opacity: 0.8;">من الإتقان بلس</p>
-                <hr style="border: 0; border-top: 1px solid rgba(197, 160, 89, 0.3); margin: 15px 0;">
-                <small style="color: rgba(255,255,255,0.5); font-size: 0.7rem;">حائل | م. محمد الشمري</small>
+                <!-- مسمى المنصة المعتمد -->
+                <h1 class="platform-name-ar">في خدمتك</h1>
+                <p class="platform-name-en">Al-Itqan Plus</p>
+                <small style="color: rgba(255,255,255,0.5); font-size: 0.6rem; display: block; margin-top: 5px;">Fi Khidmatik by Al-Itqan Plus</small>
+                
+                <hr style="border: 0; border-top: 1px solid rgba(197, 160, 89, 0.2); margin: 15px 0;">
             </div>
 
             <nav class="nav-menu">
@@ -76,29 +84,31 @@
             </nav>
 
             <div class="sidebar-footer" style="position: absolute; bottom: 20px; width: 100%; text-align: center;">
-                <span class="badge bg-gold text-dark p-2">نظام الإدارة الآمن</span>
+                <small style="color: #c5a059; font-size: 0.7rem;">فرع حائل | V12.12.12</small>
             </div>
         </aside>
 
         <!-- منطقة العرض الرئيسية -->
         <main class="main-viewport">
             <div id="main-content-area">
-                <!-- الموديولات يتم حقنها هنا عبر js-logic/main.js -->
+                <!-- المحتوى يتم حقنه عبر main.js -->
             </div>
         </main>
     </div>
 
-    <!-- ربط المحركات البرمجية من مجلد js-logic -->
+    <!-- ربط محركات النظام -->
     <script type="module" src="js-logic/main.js"></script>
     <script src="js-logic/btn-actions-controller.js"></script>
 
     <script>
-        // التحكم في شاشة التحميل
+        // إخفاء شاشة التحميل بعد استقرار النظام
         window.addEventListener('load', () => {
             setTimeout(() => {
                 const loader = document.getElementById('loader');
-                loader.style.opacity = '0';
-                setTimeout(() => loader.style.display = 'none', 500);
+                if(loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 500);
+                }
             }, 1000);
         });
     </script>
