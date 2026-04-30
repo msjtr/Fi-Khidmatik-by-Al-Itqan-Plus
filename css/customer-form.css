@@ -1,0 +1,47 @@
+/* * Tera Gateway - Customer Form Styles (v12.12.12)
+ * المطور: محمد بن صالح الشمري
+ */
+
+.tera-form-container {
+    display: grid;
+    gap: 20px;
+    padding: 10px;
+}
+
+.form-section-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--tera-dark);
+    border-right: 4px solid var(--tera-orange);
+    padding-right: 10px;
+    margin-bottom: 15px;
+    background: linear-gradient(to left, var(--tera-orange-soft), transparent);
+}
+
+.tera-field {
+    border: 2px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    padding: 12px !important;
+    transition: all 0.3s ease !important;
+    background-color: #fdfdfd !important;
+}
+
+.tera-field:focus {
+    border-color: var(--tera-orange) !important;
+    background-color: #fff !important;
+    box-shadow: 0 0 0 4px var(--tera-orange-soft) !important;
+}
+
+.profile-upload-zone {
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    border-radius: 20px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.profile-upload-zone:hover {
+    border-color: var(--tera-orange);
+    background: #fff;
+}
