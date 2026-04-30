@@ -128,7 +128,7 @@ class CustomersUI {
             btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> جاري الحفظ...';
         }
 
-        // تجميع الحقول الـ 16 المطلوبة بدقة
+        // تجميع الحقول الـ 16 المطلوبة بدقة (بما في ذلك تفاصيل العنوان الوطني)
         const customerData = {
             name: formData.get('name'),
             phone: formData.get('phone'),
@@ -209,7 +209,7 @@ class CustomersUI {
             this.form.dataset.mode = 'edit';
             this.form.dataset.editId = id;
             
-            // تعبئة كافة الحقول ديناميكياً
+            // تعبئة كافة الحقول ديناميكياً لضمان سلامة البيانات
             Object.keys(data).forEach(key => {
                 const input = this.form.querySelector(`[name="${key}"]`);
                 if (input) input.value = data[key];
