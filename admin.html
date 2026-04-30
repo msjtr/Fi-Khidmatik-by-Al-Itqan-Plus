@@ -5,23 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tera Gateway | نظام إدارة التقسيط الذكي</title>
     
-    <!-- الهوية البصرية -->
+    <!-- الهوية البصرية والخطوط -->
     <link rel="icon" href="images/logo.svg" type="image/svg+xml">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     
+    <!-- مكتبات الدعم الخارجية -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <!-- استدعاء ملفات التنسيق المحدثة v12.12.12 -->
     <link rel="stylesheet" href="css/admin.css?v=12.12.12">
     <link rel="stylesheet" href="css/sidebar.css?v=12.12.12"> 
     <link rel="stylesheet" href="css/table.css?v=12.12.12">
     <link rel="stylesheet" href="css/customers.css?v=12.12.12">
-    <link rel="stylesheet" href="css/modals.css?v=12.12.12"> <!-- الملف المستقل -->
+    <link rel="stylesheet" href="css/modals.css?v=12.12.12">
 
     <style>
         :root { 
             --tera-orange: #f97316;
             --tera-bg: #f8fafc; 
             --tera-dark: #0f172a;
+            --glass-bg: rgba(255, 255, 255, 0.7);
         }
 
         body { 
@@ -32,7 +37,13 @@
             color: var(--tera-dark);
         }
 
-        .admin-layout { display: flex; height: 100vh; width: 100vw; overflow: hidden; }
+        /* تخطيط الإدارة الرئيسي */
+        .admin-layout { 
+            display: flex; 
+            height: 100vh; 
+            width: 100vw; 
+            overflow: hidden; 
+        }
 
         .main-wrapper { 
             display: flex; 
@@ -45,10 +56,14 @@
 
         .content-area { 
             flex: 1; 
-            padding: 25px; 
+            padding: 0; /* التنسيق الداخلي يتم عبر الموديولات */
             overflow-y: auto; 
             scroll-behavior: smooth;
-            animation: fadeIn 0.4s ease-out;
+        }
+
+        /* تأثيرات الانتقال الاحترافية */
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
         }
 
         @keyframes fadeIn {
@@ -56,6 +71,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
+        /* مؤشر تحميل تيرا */
         .loader-box { 
             display: flex; 
             flex-direction: column; 
@@ -75,6 +91,7 @@
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+        /* تخصيص السكرول بار */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--tera-orange); }
@@ -83,27 +100,31 @@
 <body class="tera-gateway-v12">
 
     <div class="admin-layout">
+        <!-- القائمة الجانبية (تشحن ديناميكياً) -->
         <aside id="sidebar-container"></aside>
         
         <main class="main-wrapper">
+            <!-- الهيدر العلوي (يشحن ديناميكياً) -->
             <header id="header-container"></header>
             
+            <!-- منطقة حقن الموديولات (Dashboard, Customers, etc.) -->
             <section id="module-container" class="content-area">
                 <div class="loader-box">
                     <div class="spinner-tera"></div>
-                    <p style="color: var(--tera-orange); margin-top: 20px; font-weight: 700;">TERA ENGINE v12.12.12</p>
+                    <p style="color: var(--tera-orange); margin-top: 20px; font-weight: 700; letter-spacing: 1px;">TERA ENGINE v12.12.12</p>
                 </div>
             </section>
         </main>
     </div>
 
-    <!-- حاوية النوافذ المنبثقة المستقلة -->
+    <!-- حاوية النوافذ المنبثقة المستقلة (تشحن من modals.html) -->
     <div id="modal-root"></div>
 
+    <!-- المحرك الرئيسي للنظام -->
     <script type="module">
         import { ensureDbReady } from './js/core/config.js';
-        import { initDashboard } from './js/modules/dashboard.js';
         import { initCustomers } from './js/modules/customers-ui.js';
+        // ملاحظة: يتم استيراد الموديولات الأخرى عند الحاجة لتقليل وقت التحميل الأولي
 
         class TeraApp {
             constructor() {
@@ -115,37 +136,50 @@
 
             async init() {
                 try {
+                    // 1. التأكد من اتصال Firebase Firestore
                     await ensureDbReady();
 
+                    // 2. تحميل المكونات الهيكلية الثابتة
+                    await this.loadStaticComponents();
+
+                    // 3. إعداد نظام الراوتر (Hash Router)
                     window.navigateTo = (moduleName) => {
                         window.location.hash = `#${moduleName}`;
                     };
 
-                    // تحميل المكونات الثابتة (شاملة ملف modals.html المستقل)
-                    await this.loadStaticComponents();
-
                     window.addEventListener('hashchange', () => this.route());
+                    
+                    // تشغيل الراوتر لأول مرة
                     this.route(); 
 
                 } catch (err) {
                     console.error("System Boot Error:", err);
-                    this.container.innerHTML = `<div style="text-align:center; padding:100px;"><h2>خطأ في تشغيل المحرك</h2><p>${err.message}</p></div>`;
+                    this.container.innerHTML = `
+                        <div class="text-center p-5">
+                            <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                            <h2 class="fw-bold">خطأ في تشغيل المحرك</h2>
+                            <p class="text-muted">${err.message}</p>
+                            <button class="btn btn-orange mt-3" onclick="location.reload()">إعادة التشغيل</button>
+                        </div>`;
                 }
             }
 
+            /**
+             * تحميل الأجزاء الثابتة من المجلد admin/components
+             */
             async loadStaticComponents() {
-                // إضافة 'modals' إلى قائمة المكونات ليتم شحنها في حاوية modal-root
                 const components = [
                     { id: 'sidebar-container', name: 'sidebar' },
                     { id: 'header-container', name: 'header' },
-                    { id: 'modal-root', name: 'modals' } // ربط ملف modals.html
+                    { id: 'modal-root', name: 'modals' } // شحن ملف النوافذ المنبثقة المستقل
                 ];
 
                 for (const comp of components) {
                     try {
                         const res = await fetch(`./admin/components/${comp.name}.html?v=${this.version}`);
                         if (res.ok) {
-                            document.getElementById(comp.id).innerHTML = await res.text();
+                            const html = await res.text();
+                            document.getElementById(comp.id).innerHTML = html;
                         }
                     } catch (e) {
                         console.warn(`Failed to load component: ${comp.name}`, e);
@@ -153,35 +187,59 @@
                 }
             }
 
+            /**
+             * نظام توزيع المحتوى بناءً على الـ Hash
+             */
             async route() {
                 const hash = window.location.hash.replace('#', '') || 'dashboard';
-                this.container.innerHTML = '<div class="loader-box"><div class="spinner-tera"></div></div>';
+                
+                // تفعيل تأثير التحميل عند الانتقال
+                this.container.innerHTML = `
+                    <div class="loader-box animate-fade-in">
+                        <div class="spinner-tera"></div>
+                    </div>`;
 
                 try {
-                    if (hash === 'dashboard') {
-                        await initDashboard(this.container);
-                    } else if (hash === 'customers') {
+                    if (hash === 'customers') {
+                        // تشغيل موديول العملاء برمجياً (JS Injection)
                         await initCustomers(this.container);
                     } else {
+                        // تحميل موديولات الـ HTML البسيطة ديناميكياً
                         const res = await fetch(`./admin/modules/${hash}.html?v=${this.version}`);
-                        if (res.ok) this.container.innerHTML = await res.text();
-                        else throw new Error("Module not found");
+                        if (res.ok) {
+                            this.container.innerHTML = await res.text();
+                        } else {
+                            throw new Error("Module Not Found");
+                        }
                     }
-                    this.updateActiveLink(hash);
+                    
+                    this.updateActiveUI(hash);
                 } catch (e) {
-                    this.container.innerHTML = `<div style="text-align:center; padding:100px;"><h3>القسم غير متوفر حالياً</h3></div>`;
+                    this.container.innerHTML = `
+                        <div class="text-center p-5 mt-5">
+                            <i class="fas fa-search fa-3x text-light mb-3"></i>
+                            <h3 class="text-muted">القسم [${hash}] قيد التطوير أو غير متوفر</h3>
+                            <a href="#dashboard" class="btn btn-link text-orange">العودة للرئيسية</a>
+                        </div>`;
                 }
             }
 
-            updateActiveLink(hash) {
+            /**
+             * تحديث شكل الروابط النشطة في القائمة الجانبية
+             */
+            updateActiveUI(hash) {
                 document.querySelectorAll('.nav-link, .nav-item').forEach(el => {
-                    const moduleAttr = el.getAttribute('data-module') || el.getAttribute('href')?.replace('#', '');
+                    const moduleAttr = el.getAttribute('data-module') || el.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
                     el.classList.toggle('active', moduleAttr === hash);
                 });
             }
         }
 
+        // إطلاق المحرك
         window.Tera = new TeraApp();
     </script>
+
+    <!-- دعم Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
