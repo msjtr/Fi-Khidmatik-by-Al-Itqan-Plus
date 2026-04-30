@@ -12,6 +12,8 @@ class CustomersUI {
         this.modal = document.getElementById('customerModal');
         this.form = document.getElementById('customerForm');
         this.tableBody = document.getElementById('customersList');
+        
+        // استخدام API خارجي للصور الرمزية لتجنب خطأ 404 المفقود في GitHub Pages
         this.defaultAvatar = "https://ui-avatars.com/api/?background=f97316&color=fff&bold=true&name=";
         
         // قاعدة بيانات مفاتيح الدول مع البحث
@@ -23,15 +25,14 @@ class CustomersUI {
             { name: "عمان", dial: "+968", code: "OM" },
             { name: "البحرين", dial: "+973", code: "BH" },
             { name: "مصر", dial: "+20", code: "EG" },
-            { name: "الأردن", dial: "+962", code: "JO" },
-            { name: "العراق", dial: "+964", code: "IQ" }
+            { name: "الأردن", dial: "+962", code: "JO" }
         ];
 
         this.init();
     }
 
     init() {
-        // تسجيل الوظائف عالمياً للوصول من HTML
+        // تسجيل الوظائف في النطاق العالمي لسهولة الوصول من HTML
         window.openCustomerModal = (id = null) => this.openModal(id);
         window.closeCustomerModal = () => this.closeModal();
         window.handleCustomerSubmit = (e) => this.handleSubmit(e);
@@ -72,6 +73,7 @@ class CustomersUI {
         document.getElementById('dialCodeDisplay').innerText = dial;
         document.getElementById('countryDialInput').value = dial;
         document.getElementById('countryNameInput').value = name;
+        document.getElementById('countryNameDisplay').value = name;
         this.toggleDropdown();
     }
 
@@ -88,7 +90,7 @@ class CustomersUI {
             this.form.reset();
             this.form.dataset.mode = 'add';
             delete this.form.dataset.editId;
-            document.getElementById('dialCodeDisplay').innerText = '+966'; // افتراضي
+            document.getElementById('dialCodeDisplay').innerText = '+966'; 
             
             const preview = document.getElementById('imagePreview');
             if (preview) preview.style.backgroundImage = `url('${this.defaultAvatar}New+User')`;
@@ -101,7 +103,7 @@ class CustomersUI {
         this.form.reset();
     }
 
-    // --- التعامل مع البيانات (CRUD) ---
+    // --- العمليات على قاعدة البيانات (CRUD) ---
 
     async loadCustomers() {
         try {
@@ -126,11 +128,11 @@ class CustomersUI {
             btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> جاري الحفظ...';
         }
 
-        // تجميع الـ 16 حقل المطلوبة
+        // تجميع الحقول الـ 16 المطلوبة بدقة
         const customerData = {
             name: formData.get('name'),
             phone: formData.get('phone'),
-            countryDial: formData.get('countryDial') || '+966',
+            countryDial: formData.get('countryDial'),
             email: formData.get('email'),
             countryName: formData.get('countryName'),
             city: formData.get('city'),
@@ -156,7 +158,7 @@ class CustomersUI {
                 });
             }
             this.closeModal();
-            await this.loadCustomers(); 
+            await this.loadCustomers();
         } catch (error) {
             alert("خطأ في بوابة تيرا: " + error.message);
         } finally {
@@ -186,7 +188,7 @@ class CustomersUI {
                         </div>
                     </div>
                 </td>
-                <td><span dir="ltr">${cust.countryDial} ${cust.phone}</span></td>
+                <td><span dir="ltr">${cust.countryDial || '+966'} ${cust.phone}</span></td>
                 <td>${cust.city} - ${cust.district}</td>
                 <td>${cust.createdAt ? new Date(cust.createdAt.seconds * 1000).toLocaleDateString('ar-SA') : '-'}</td>
                 <td><span class="status-pill ${cust.status === 'نشط' ? 'active' : 'inactive'}">${cust.status || 'نشط'}</span></td>
@@ -207,7 +209,7 @@ class CustomersUI {
             this.form.dataset.mode = 'edit';
             this.form.dataset.editId = id;
             
-            // تعبئة كافة الحقول
+            // تعبئة كافة الحقول ديناميكياً
             Object.keys(data).forEach(key => {
                 const input = this.form.querySelector(`[name="${key}"]`);
                 if (input) input.value = data[key];
@@ -235,7 +237,7 @@ class CustomersUI {
     }
 }
 
-// تشغيل المحرك
+// تشغيل المحرك عند جاهزية الصفحة
 document.addEventListener('DOMContentLoaded', () => {
     window.CustomersModule = new CustomersUI();
 });
