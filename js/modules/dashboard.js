@@ -1,6 +1,6 @@
 /**
  * js/modules/dashboard.js
- * موديول لوحة التحكم الرئيسية - الإصدار المطور V12.12.8
+ * موديول لوحة التحكم الرئيسية - الإصدار المطور V12.12.9
  * المطور: محمد بن صالح الشمري
  */
 
@@ -28,24 +28,29 @@ function formatCurrency(amount) {
  */
 async function loadStats() {
     try {
-        // تنفيذ الاستعلامات بشكل متوازي لتحسين سرعة الاستجابة
+        console.log("🔄 جاري محاولة جلب البيانات من Firebase...");
+        
+        // استخدام مسميات المجموعات من COLLECTIONS لضمان التطابق
         const [productsSnap, ordersSnap, customersSnap] = await Promise.all([
-            getDocs(collection(db, COLLECTIONS.inventory)),
-            getDocs(collection(db, COLLECTIONS.orders)),
-            getDocs(collection(db, COLLECTIONS.customers))
+            getDocs(collection(db, COLLECTIONS.inventory || "products")),
+            getDocs(collection(db, COLLECTIONS.orders || "orders")),
+            getDocs(collection(db, COLLECTIONS.customers || "customers"))
         ]);
+
+        console.log(`✅ تم جلب ${customersSnap.size} عميل بنجاح.`);
 
         let totalSales = 0;
         let hailCustomers = 0;
         
-        // حساب المبيعات
         ordersSnap.forEach(doc => {
             totalSales += doc.data().total || 0;
         });
 
         // إحصائيات العملاء (تصفية منطقة حائل)
         customersSnap.forEach(doc => {
-            if (doc.data().city === 'حائل' || doc.data().region === 'Hail') {
+            const data = doc.data();
+            // التحقق من الحقول التي قد تحتوي على اسم المنطقة
+            if (data.city === 'حائل' || data.region === 'Hail' || data.address?.includes('حائل')) {
                 hailCustomers++;
             }
         });
@@ -60,12 +65,49 @@ async function loadStats() {
         };
     } catch (error) {
         console.error("🔴 Tera Dashboard Error:", error);
-        return null;
+        // في حال فشل الجلب، نعيد قيم صفرية لمنع تعطل الواجهة
+        return { products: 0, orders: 0, customers: 0, hailRegion: 0, totalSales: 0, totalSalesFormatted: '0' };
     }
 }
 
 /**
- * تحديث واجهة الإحصائيات بتصميم "نيومورفيزم" ملون
+ * جلب آخر الطلبات لعرضها في القائمة
+ */
+async function loadRecentOrders() {
+    const listContainer = document.getElementById('recent-orders-list');
+    if (!listContainer) return;
+
+    try {
+        const q = query(collection(db, COLLECTIONS.orders || "orders"), orderBy("createdAt", "desc"), limit(5));
+        const snap = await getDocs(q);
+
+        if (snap.empty) {
+            listContainer.innerHTML = '<div style="padding:10px; color:#95a5a6;">لا توجد عمليات تقسيط مسجلة حالياً.</div>';
+            return;
+        }
+
+        listContainer.innerHTML = snap.docs.map(doc => {
+            const order = doc.data();
+            return `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f1f5f9;">
+                    <div>
+                        <strong style="color: #2c3e50;">${order.customerName || 'عميل غير معروف'}</strong>
+                        <div style="font-size: 0.8rem; color: #7f8c8d;">${order.orderNumber || doc.id}</div>
+                    </div>
+                    <div style="text-align: left;">
+                        <div style="font-weight: bold; color: #27ae60;">${formatCurrency(order.total || 0)}</div>
+                        <div style="font-size: 0.7rem; color: #95a5a6;">${order.createdAt?.toDate().toLocaleDateString('ar-SA') || ''}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        listContainer.innerHTML = '<div style="padding:10px; color:#e74c3c;">فشل تحميل العمليات الأخيرة.</div>';
+    }
+}
+
+/**
+ * تحديث واجهة الإحصائيات
  */
 function updateStatsUI(stats) {
     const statsGrid = document.getElementById('stats-grid');
@@ -100,9 +142,8 @@ function updateStatsUI(stats) {
 export async function initDashboard(container) {
     if (!container) return;
     
-    // وضع الهيكل البنائي أولاً
     container.innerHTML = `
-        <div style="padding: 25px; font-family: 'Tajawal', sans-serif;">
+        <div style="padding: 25px; font-family: 'Tajawal', sans-serif; direction: rtl;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                 <div>
                     <h1 style="color: #2c3e50; margin: 0;">لوحة تحكم ${APP_CONFIG.name}</h1>
@@ -112,23 +153,25 @@ export async function initDashboard(container) {
             </div>
             
             <div id="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
-                <!-- سيتم تحميل الإحصائيات هنا -->
+                <!-- جاري تحميل الإحصائيات... -->
             </div>
 
             <div style="background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                <h3 style="margin-top: 0;"><i class="fas fa-history"></i> آخر عمليات التقسيط</h3>
+                <h3 style="margin-top: 0; color:#2c3e50;"><i class="fas fa-history" style="color:#e67e22;"></i> آخر عمليات التقسيط</h3>
                 <div id="recent-orders-list"> جاري جلب البيانات... </div>
             </div>
         </div>
     `;
 
-    // تحميل البيانات الحقيقية
+    // تحميل أولي للبيانات
     const stats = await loadStats();
     updateStatsUI(stats);
+    await loadRecentOrders();
     
-    // تشغيل التحديث التلقائي كل دقيقة لتقليل استهلاك الكوتا
+    // التحديث التلقائي
     setInterval(async () => {
         const newStats = await loadStats();
         updateStatsUI(newStats);
+        await loadRecentOrders();
     }, 60000);
 }
