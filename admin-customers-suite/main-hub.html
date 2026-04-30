@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>في خدمتك | Fi Khidmatik by Al-Itqan Plus</title>
     
-    <!-- ربط ملفات التنسيق (CSS) من المجلدات التي ظهرت في صورتك -->
+    <!-- ربط ملفات التنسيق (CSS) بناءً على صورك -->
     <link rel="stylesheet" href="css-styles/hub-style.css">
     <link rel="stylesheet" href="css-styles/buttons-theme.css">
     
@@ -13,17 +13,21 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
-        /* تنسيق خاص بالشعار لضمان ظهوره بشكل أنيق */
         .brand-section {
             text-align: center;
-            padding: 20px 10px;
+            padding: 25px 15px;
             border-bottom: 1px solid rgba(197, 160, 89, 0.2);
         }
+        /* تنسيق الشعار SVG ليكون متجاوباً وأنيقاً */
         .app-logo {
-            width: 80px; /* يمكنك تعديل المقاس حسب حجم شعارك */
+            width: 100px; /* مقاس مناسب لشعار SVG */
             height: auto;
             margin-bottom: 15px;
-            filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.2));
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            /* تأثير ظل خفيف لإبراز الشعار */
+            filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.3));
         }
         .loading-overlay {
             position: fixed;
@@ -36,65 +40,66 @@
 </head>
 <body>
 
-    <!-- شاشة التحميل -->
+    <!-- شاشة التحميل مع الشعار المحدث -->
     <div id="loader" class="loading-overlay">
-        <!-- شعار التحميل (اختياري) -->
-        <img src="assets/logo.png" alt="Logo" class="app-logo animate-pulse">
-        <i class="fas fa-circle-notch fa-spin fa-2x mb-3"></i>
-        <h2 style="font-weight: 900;">تيرا جيت واي V12.12.12</h2>
+        <img src="../images/logo.svg" alt="Fi Khidmatik Logo" class="app-logo animate-pulse">
+        <div class="spinner-border text-gold mb-3"></div>
+        <h2 style="font-weight: 900; letter-spacing: 1px;">تـيـرا جـيـت واي V12.12.12</h2>
     </div>
 
     <div class="hub-container">
         <!-- القائمة الجانبية -->
         <aside class="sidebar" id="sidebarMenu">
             <div class="brand-section">
-                <!-- إدراج الشعار هنا -->
-                <!-- تأكد من وضع صورة الشعار في مجلد اسمه assets وتسميتها logo.png -->
-                <img src="assets/logo.png" alt="شعار في خدمتك" class="app-logo">
+                <!-- المسار المحدث للشعار بناءً على طلبك -->
+                <img src="../images/logo.svg" alt="شعار في خدمتك" class="app-logo">
                 
-                <h1 class="fw-900" style="color: #c5a059; margin: 0; font-size: 1.6rem;">في خدمتك</h1>
-                <p style="color: #fff; margin: 0; opacity: 0.9;">من الإتقان بلس</p>
-                <small style="color: rgba(255,255,255,0.6);">فرع حائل | Mohammed Al-Shammari</small>
+                <h1 style="color: #c5a059; margin: 5px 0 0 0; font-size: 1.5rem; font-weight: 900;">في خدمتك</h1>
+                <p style="color: #fff; margin: 0; font-size: 0.9rem; opacity: 0.8;">من الإتقان بلس</p>
+                <hr style="border: 0; border-top: 1px solid rgba(197, 160, 89, 0.3); margin: 15px 0;">
+                <small style="color: rgba(255,255,255,0.5); font-size: 0.7rem;">حائل | م. محمد الشمري</small>
             </div>
 
             <nav class="nav-menu">
                 <button class="nav-link active" onclick="handleSidebarClick(this, 'dashboard')">
-                    <i class="fas fa-chart-line me-2"></i> لوحة التحكم
+                    <i class="fas fa-chart-pie me-2"></i> لوحة التحكم
                 </button>
                 <button class="nav-link" onclick="handleSidebarClick(this, 'customers')">
-                    <i class="fas fa-users me-2"></i> إدارة العملاء
+                    <i class="fas fa-user-friends me-2"></i> إدارة العملاء
                 </button>
                 <button class="nav-link" onclick="handleSidebarClick(this, 'orders')">
-                    <i class="fas fa-file-invoice-dollar me-2"></i> العقود والطلبات
+                    <i class="fas fa-file-contract me-2"></i> محرك العقود
                 </button>
                 <button class="nav-link" onclick="handleSidebarClick(this, 'map-bridge')">
-                    <i class="fas fa-map-marked-alt me-2"></i> نظام الخرائط
+                    <i class="fas fa-map-marker-alt me-2"></i> تتبع المواقع
                 </button>
             </nav>
 
-            <div class="user-info-bottom" style="padding: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
-                <p style="font-size: 0.85rem; color: #c5a059;"><i class="fas fa-shield-alt me-2"></i> إدارة النظام</p>
+            <div class="sidebar-footer" style="position: absolute; bottom: 20px; width: 100%; text-align: center;">
+                <span class="badge bg-gold text-dark p-2">نظام الإدارة الآمن</span>
             </div>
         </aside>
 
-        <!-- منطقة المحتوى -->
+        <!-- منطقة العرض الرئيسية -->
         <main class="main-viewport">
             <div id="main-content-area">
-                <!-- المحتوى يتم استدعاؤه عبر main.js -->
+                <!-- الموديولات يتم حقنها هنا عبر js-logic/main.js -->
             </div>
         </main>
     </div>
 
-    <!-- ربط الملفات البرمجية -->
+    <!-- ربط المحركات البرمجية من مجلد js-logic -->
     <script type="module" src="js-logic/main.js"></script>
     <script src="js-logic/btn-actions-controller.js"></script>
 
     <script>
+        // التحكم في شاشة التحميل
         window.addEventListener('load', () => {
             setTimeout(() => {
-                document.getElementById('loader').style.fadeOut = "slow";
-                document.getElementById('loader').style.display = 'none';
-            }, 1200);
+                const loader = document.getElementById('loader');
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 500);
+            }, 1000);
         });
     </script>
 </body>
