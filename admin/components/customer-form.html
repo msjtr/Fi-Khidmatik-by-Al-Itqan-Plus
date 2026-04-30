@@ -1,31 +1,176 @@
-<div class="tera-form-container">
-    <form id="customer-form">
-        <div class="form-section-title">المعلومات الشخصية</div>
-        <div class="row g-3">
+<!-- 
+    Tera Gateway v12.12.12 | Customer Form Container
+    النسخة الشاملة والنهائية - منطقة حائل
+-->
+
+<div class="tera-form-container p-4" style="background: #ffffff; border-radius: 25px;">
+    <form id="customer-form" autocomplete="off">
+        <input type="hidden" id="cust-id-hidden" name="customerId">
+        
+        <!-- 🧩 القسم الأول: المعلومات الشخصية -->
+        <div class="form-section-title d-flex align-items-center mb-4">
+            <i class="fas fa-user-circle me-2 text-primary"></i> المعلومات الشخصية
+        </div>
+        
+        <div class="row g-4 mb-4">
             <div class="col-md-6">
-                <label>الاسم الكامل</label>
-                <input type="text" id="cust-name" class="form-control tera-field" required>
+                <label class="form-label fw-bold">الاسم الكامل</label>
+                <input type="text" id="cust-name" name="name" class="form-control tera-field" placeholder="محمد صالح الشمري" required>
             </div>
+            
             <div class="col-md-6">
-                <label>رقم الجوال</label>
-                <input type="tel" id="cust-phone" class="form-control tera-field" placeholder="5xxxxxxxx" required>
+                <label class="form-label fw-bold">رقم الجوال</label>
+                <div class="input-group dir-ltr">
+                    <select name="country_code" class="form-select border-end-0" style="max-width: 110px; border-radius: 0 12px 12px 0; background-color: #f8fafc;">
+                        <option value="+966" selected>🇸🇦 +966</option>
+                        <option value="+971">🇦🇪 +971</option>
+                        <option value="+965">🇰🇼 +965</option>
+                        <option value="+968">🇴🇲 +968</option>
+                    </select>
+                    <input type="tel" id="cust-phone" name="phone" class="form-control tera-field border-start-0" placeholder="5xxxxxxxx" style="border-radius: 12px 0 0 12px;" required>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label fw-bold">نوع المستخدم</label>
+                <select name="user_type" class="form-select tera-field">
+                    <option value="أفراد" selected>أفراد</option>
+                    <option value="شركة">شركة</option>
+                    <option value="مؤسسة">مؤسسة</option>
+                    <option value="متجر إلكتروني">متجر إلكتروني</option>
+                    <option value="منصة">منصة</option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label fw-bold">تاريخ الميلاد</label>
+                <input type="date" name="birth_date" class="form-control tera-field">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label fw-bold">الجنس</label>
+                <select name="gender" class="form-select tera-field">
+                    <option value="ذكر">ذكر</option>
+                    <option value="أنثى">أنثى</option>
+                </select>
             </div>
         </div>
 
-        <div class="form-section-title mt-4">تفاصيل العنوان (حائل)</div>
-        <div class="row g-3">
-            <div class="col-md-4">
-                <label>الحي</label>
-                <input type="text" id="cust-district" class="form-control tera-field">
+        <!-- 📍 القسم الثاني: تفاصيل العنوان (الربط الذكي) -->
+        <div class="form-section-title d-flex align-items-center mt-5 mb-4 text-blue">
+            <i class="fas fa-map-marker-alt me-2"></i> تفاصيل العنوان (مزامنة حائل)
+        </div>
+
+        <!-- زر الخريطة التفاعلي -->
+        <div class="map-action-box mb-4 p-3 rounded-4 border-dashed text-center">
+            <button type="button" class="btn btn-blue-gradient rounded-pill px-4" id="btn-open-map">
+                <i class="fas fa-map-marked-alt me-2"></i> تحديد الموقع على الخريطة
+            </button>
+            <p class="small text-muted mt-2 mb-0">سيتم جلب المدينة والحي والشارع تلقائياً عند تحديد الموقع</p>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <!-- حقول الإحداثيات المخفية -->
+            <input type="hidden" name="latitude" id="lat-field">
+            <input type="hidden" name="longitude" id="lng-field">
+
+            <div class="col-md-3">
+                <label class="small fw-bold">المدينة</label>
+                <input type="text" id="cust-city" name="city" class="form-control tera-field text-center" value="حائل">
             </div>
-            <div class="col-md-4">
-                <label>رقم المبنى</label>
-                <input type="text" id="cust-buildingNo" class="form-control tera-field text-center">
+            <div class="col-md-3">
+                <label class="small fw-bold">الحي</label>
+                <input type="text" id="cust-district" name="district" class="form-control tera-field" placeholder="مثلاً: النقرة">
             </div>
-            <div class="col-md-4">
-                <label>الرمز البريدي</label>
-                <input type="text" id="cust-postalCode" class="form-control tera-field text-center">
+            <div class="col-md-6">
+                <label class="small fw-bold">الشارع</label>
+                <input type="text" id="cust-street" name="street" class="form-control tera-field" placeholder="شارع الملك فهد">
+            </div>
+            <div class="col-md-3">
+                <label class="small fw-bold">رقم المبنى</label>
+                <input type="text" id="cust-buildingNo" name="building_number" class="form-control tera-field text-center font-monospace" placeholder="0000">
+            </div>
+            <div class="col-md-3">
+                <label class="small fw-bold">الرقم الإضافي</label>
+                <input type="text" name="additional_number" class="form-control tera-field text-center font-monospace" placeholder="0000">
+            </div>
+            <div class="col-md-3">
+                <label class="small fw-bold">الرمز البريدي</label>
+                <input type="text" id="cust-postalCode" name="postal_code" class="form-control tera-field text-center font-monospace" placeholder="00000">
+            </div>
+            <div class="col-md-3">
+                <label class="small fw-bold">صندوق البريد</label>
+                <input type="text" name="po_box" class="form-control tera-field text-center" placeholder="--">
+            </div>
+            <div class="col-12">
+                <label class="small fw-bold">وصف إضافي للعنوان</label>
+                <textarea name="address_note" maxlength="600" class="form-control tera-field" rows="2" placeholder="بجوار سوبر ماركت..."></textarea>
+            </div>
+        </div>
+
+        <!-- ⚙️ القسم الثالث: خيارات الحالة والتصنيف -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-6">
+                <div class="p-3 rounded-4 bg-light border-start border-4 border-orange">
+                    <label class="form-label fw-bold small text-orange">تصنيف العميل</label>
+                    <select name="customer_type" class="form-select border-0 bg-transparent fw-bold">
+                        <option value="عميل عادي">عميل عادي</option>
+                        <option value="عميل مميز">عميل مميز</option>
+                        <option value="عميل VIP">عميل VIP 💎</option>
+                        <option value="لم يصنف بعد" selected>لم يصنف بعد</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 rounded-4 bg-light border-start border-4 border-danger">
+                    <label class="form-label fw-bold small text-danger">حالة العميل (تنبيه أمان)</label>
+                    <select name="customer_status" class="form-select border-0 bg-transparent fw-bold">
+                        <option value="طبيعي" selected>طبيعي ✅</option>
+                        <option value="عميل مزعج">عميل مزعج ⚠️</option>
+                        <option value="عميل غير جدي">عميل غير جدي ❌</option>
+                        <option value="عميل محتال">عميل محتال 🚩</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🖊️ القسم الرابع: ملاحظات متقدمة (Rich Text) والمرفقات -->
+        <div class="form-section-title d-flex align-items-center mb-4">
+            <i class="fas fa-file-invoice me-2"></i> السجل الائتماني والمرفقات
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label fw-bold small">ملاحظات تفصيلية (حتى 2500 كلمة)</label>
+            <div id="editor-container" class="tera-editor shadow-sm">
+                <!-- هنا يتم حقن محرر النصوص مثل Quill أو TinyMCE -->
+            </div>
+            <textarea name="customer_notes" id="hidden-notes" style="display:none;"></textarea>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label fw-bold small">المرفقات والوثائق</label>
+            <div class="upload-zone p-4 rounded-4 text-center border-dashed">
+                <input type="file" name="attachments" multiple class="d-none" id="file-input">
+                <label for="file-input" style="cursor: pointer;">
+                    <i class="fas fa-cloud-upload-alt fa-2x text-primary mb-2"></i>
+                    <p class="mb-0 text-muted small">اضغط هنا أو اسحب الملفات لرفع (PDF, JPG, DOC)</p>
+                </label>
             </div>
         </div>
     </form>
 </div>
+
+<style>
+    /* تنسيقات Tera Form المحدثة 2026 */
+    .tera-form-container { box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
+    .form-section-title { font-size: 1.1rem; font-weight: 800; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+    .text-blue { color: #2563eb !important; }
+    .tera-field { border-radius: 12px; background-color: #f8fafc; border: 1.5px solid #e2e8f0; padding: 12px; transition: 0.3s; }
+    .tera-field:focus { border-color: #f97316; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1); }
+    .border-dashed { border: 2px dashed #cbd5e1; }
+    .bg-light-soft { background-color: #f1f5f9; }
+    .btn-blue-gradient { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; }
+    .tera-editor { height: 200px; background: #f8fafc; border-radius: 12px; border: 1.5px solid #e2e8f0; }
+    .border-orange { border-color: #f97316 !important; }
+    .text-orange { color: #f97316 !important; }
+</style>
