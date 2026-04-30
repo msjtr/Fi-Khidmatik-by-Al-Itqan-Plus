@@ -5,7 +5,6 @@
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
@@ -15,34 +14,29 @@ const firebaseConfig = {
     apiKey: "AIzaSyBWYW6Qqlhh904pBeuJ29wY7Cyjm2uklBA",
     authDomain: "msjt301-974bb.firebaseapp.com",
     projectId: "msjt301-974bb",
-    storageBucket: "msjt301-974bb.firebasestorage.app",
+    // تصحيح: الرابط الافتراضي للمخزن عادة ينتهي بـ .com وليس .app في المشاريع المنشأة قديماً
+    storageBucket: "msjt301-974bb.appspot.com", 
     messagingSenderId: "186209858482",
     appId: "1:186209858482:web:186ca610780799ef562aab",
     measurementId: "G-NDVGC9GPQZ"
 };
 
-// 1. تهيئة التطبيق (Initialization)
+// 1. تهيئة التطبيق
 const app = initializeApp(firebaseConfig);
 
-// 2. تهيئة الخدمات الأساسية
+// 2. تهيئة الخدمات
 const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
-const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 
 /**
- * تصحيح المسار: تصدير الكائنات للنافذة (window)
- * لضمان عمل السكربتات التي لا تستخدم نظام الموديولات (Legacy Scripts)
+ * حماية النافذة العالمية (Window) لبيئة المتصفح
  */
-window.db = db;
-window.auth = auth;
-window.storage = storage;
-window.firebaseApp = app;
+if (typeof window !== 'undefined') {
+    window.db = db;
+    window.auth = auth;
+    window.storage = storage;
+    console.log("%c✅ Tera Gateway Connected:", "color: #f97316; font-weight: bold;", "المشروع [msjt301-974bb] جاهز للعمل");
+}
 
-console.log("%c✅ Tera Core Connected:", "color: #f97316; font-weight: bold;", "المحرك متصل بنجاح بـ Firebase [msjt301]");
-
-/**
- * 3. التصدير للموديولات الحديثة (ES Modules)
- * ملاحظة: استخدم هذا التصدير في ملفات مثل customers-ui.js
- */
-export { app, db, auth, storage, analytics, firebaseConfig };
+export { app, db, auth, storage, firebaseConfig };
