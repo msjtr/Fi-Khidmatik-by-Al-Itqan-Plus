@@ -1,7 +1,8 @@
 /**
- * js/modules/customers-core.js - المحرك التشغيلي المطور (V12.12.6)
+ * js/modules/customers-core.js - المحرك التشغيلي المطور (V12.12.8)
  * يدعم نظام البيانات الـ 17 المعتمد لمنصة تيرا جيت واي
  * الإصدار المستقر للمكتبة: 10.7.1
+ * المطور: محمد بن صالح الشمري
  */
 
 import { db } from '../core/firebase.js'; 
@@ -9,41 +10,44 @@ import {
     collection, addDoc, updateDoc, deleteDoc, doc, getDoc, getDocs, query, orderBy, serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// المرجع الرئيسي لمجموعة العملاء
+// المرجع الرئيسي لمجموعة العملاء في Firestore
 const customersRef = collection(db, "customers");
 
 /**
  * 1. إضافة عميل جديد
- * تم تحسين دمج البيانات لضمان توافق الـ 17 حقلاً مع معايير تيرا
+ * تم تحسين الهيكل ليتوافق مع الحقول الـ 17 المطلوبة في نظام تيرا
  */
 export async function addCustomer(data) {
     const defaultData = {
-        name: "", 
-        phone: "", 
-        countryCode: "+966", 
-        email: "",
-        country: "المملكة العربية السعودية", 
-        city: "حائل",
-        district: "",
-        street: "", 
-        buildingNo: "", 
-        additionalNo: "", 
-        postalCode: "",
-        poBox: "", 
-        status: "نشط", 
-        tag: "عادي", 
-        type: "فرد", 
-        notes: "",
-        photoURL: "admin/images/default-avatar.png",
+        name: "",               // 1. الاسم الكامل
+        phone: "",              // 2. رقم الجوال
+        countryDial: "+966",    // 3. مفتاح الدولة
+        email: "",              // 4. البريد الإلكتروني
+        countryName: "المملكة العربية السعودية", // 5. الدولة
+        city: "حائل",           // 6. المدينة
+        district: "",           // 7. الحي
+        street: "",             // 8. الشارع
+        buildingNum: "",        // 9. رقم المبنى
+        extraNum: "",           // 10. الرقم الإضافي
+        zipCode: "",            // 11. الرمز البريدي
+        poBox: "",              // 12. صندوق البريد
+        status: "نشط",          // 13. الحالة (نشط/محظور)
+        category: "عادي",       // 14. التصنيف (عادي/VIP/تاجر)
+        type: "فرد",            // 15. النوع (فرد/شركة)
+        notes: "",              // 16. ملاحظات إضافية
+        avatar: "",             // 17. رابط الصورة (يتم توليده ديناميكياً)
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
     };
 
+    // دمج البيانات المرسلة مع القيم الافتراضية
     const finalData = { ...defaultData, ...data };
 
-    // تنظيف البيانات من القيم undefined لمنع أخطاء الـ Payload
+    // تنظيف البيانات: تحويل القيم undefined أو null إلى نصوص فارغة لسلامة الـ Firestore
     Object.keys(finalData).forEach(key => {
-        if (finalData[key] === undefined) delete finalData[key];
+        if (finalData[key] === undefined || finalData[key] === null) {
+            finalData[key] = "";
+        }
     });
 
     try {
@@ -59,7 +63,7 @@ export async function addCustomer(data) {
  * 2. تحديث بيانات عميل
  */
 export async function updateCustomer(id, data) {
-    if (!id) throw new Error("ID العميل مطلوب للتحديث");
+    if (!id) throw new Error("معرف العميل (ID) مطلوب لإتمام التحديث");
     
     const docRef = doc(db, "customers", id);
     const updateData = {
@@ -67,8 +71,11 @@ export async function updateCustomer(id, data) {
         updatedAt: serverTimestamp()
     };
     
+    // منع تعديل تاريخ الإنشاء الأصلي وتنظيف الحقول
     delete updateData.createdAt; 
-    Object.keys(updateData).forEach(key => (updateData[key] === undefined) && delete updateData[key]);
+    Object.keys(updateData).forEach(key => {
+        if (updateData[key] === undefined) delete updateData[key];
+    });
 
     try {
         await updateDoc(docRef, updateData);
@@ -80,7 +87,7 @@ export async function updateCustomer(id, data) {
 }
 
 /**
- * 3. جلب بيانات عميل واحد
+ * 3. جلب بيانات عميل واحد بواسطة الـ ID
  */
 export async function fetchCustomerById(id) {
     try {
@@ -93,11 +100,10 @@ export async function fetchCustomerById(id) {
 }
 
 /**
- * 4. جلب كافة العملاء (مرتبين حسب الأحدث)
+ * 4. جلب كافة العملاء مرتبين من الأحدث للأقدم
  */
 export async function fetchAllCustomers() {
     try {
-        // تأكد من وجود Index في Firebase لـ createdAt إذا لم تظهر النتائج
         const q = query(customersRef, orderBy("createdAt", "desc"));
         const snapshot = await getDocs(q);
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -108,7 +114,7 @@ export async function fetchAllCustomers() {
 }
 
 /**
- * 5. حذف عميل نهائياً
+ * 5. حذف عميل نهائياً من النظام
  */
 export async function deleteCustomer(id) {
     try {
@@ -122,36 +128,33 @@ export async function deleteCustomer(id) {
 }
 
 /**
- * 6. جلب إحصائيات متقدمة
+ * 6. جلب إحصائيات لوحة التحكم (Dashboard Stats)
+ * تم تحديث المنطق ليدعم الحقول الجديدة
  */
 export async function getCustomersStats() {
     try {
         const snapshot = await getDocs(customersRef);
         const stats = {
             total: 0,
-            complete: 0,
-            incomplete: 0,
             active: 0,
-            suspended: 0,
+            blocked: 0,
             vip: 0,
-            companies: 0,
-            individuals: 0
+            merchants: 0,
+            hailRegion: 0 // إحصائية خاصة لعملاء منطقة حائل
         };
 
         snapshot.forEach(docSnap => {
             const d = docSnap.data();
             stats.total++;
             
-            const isComplete = !!(d.name && d.phone && d.city && d.district && d.buildingNo);
-            isComplete ? stats.complete++ : stats.incomplete++;
+            if (d.status === 'نشط') stats.active++;
+            else if (d.status === 'محظور') stats.blocked++;
 
-            if (d.status === 'نشط' || d.status === 'active') stats.active++;
-            else stats.suspended++;
-
-            if (d.tag?.toUpperCase() === 'VIP') stats.vip++;
+            if (d.category === 'vip') stats.vip++;
+            if (d.category === 'تاجر') stats.merchants++;
             
-            if (d.type === 'شركة') stats.companies++;
-            else stats.individuals++;
+            // تتبع العملاء في منطقة حائل
+            if (d.city && d.city.includes("حائل")) stats.hailRegion++;
         });
 
         return stats;
@@ -162,10 +165,11 @@ export async function getCustomersStats() {
 }
 
 /**
- * 7. الاستيراد الجماعي
+ * 7. الاستيراد الجماعي (Bulk Import)
+ * مفيد عند استيراد بيانات العملاء من ملفات Excel الخارجية
  */
-export async function importCustomersFromExcel(dataArray) {
-    const results = { success: 0, failed: 0, logs: [] };
+export async function importCustomersBatch(dataArray) {
+    const results = { success: 0, failed: 0 };
     
     const promises = dataArray.map(async (item) => {
         try {
@@ -173,7 +177,6 @@ export async function importCustomersFromExcel(dataArray) {
             results.success++;
         } catch (err) {
             results.failed++;
-            results.logs.push(`فشل: ${item.name || 'مجهول'} | ${err.message}`);
         }
     });
 
