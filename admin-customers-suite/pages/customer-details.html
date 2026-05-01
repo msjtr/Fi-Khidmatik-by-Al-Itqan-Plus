@@ -1,1 +1,79 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- الربط المباشر لضمان التنسيق (بدون ../ لضمان استقرار المعالج) -->
+    <link rel="stylesheet" href="css-styles/list-table-style.css">
+    <link rel="stylesheet" href="css-styles/buttons-theme.css">
+    <style>
+        .details-wrapper { padding: 25px; max-width: 1100px; margin: auto; }
+        .info-card {
+            background: #fff; border-radius: 12px; padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px;
+            border-right: 6px solid #c5a059; /* الهوية الذهبية */
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;
+        }
+        .info-item label { display: block; font-size: 0.85rem; color: #777; margin-bottom: 5px; }
+        .info-item span { font-weight: bold; color: #001f3f; font-size: 1.1rem; }
+        .payment-status { padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .status-active { background: #d4edda; color: #155724; }
+    </style>
+</head>
+<body>
+    <div class="details-wrapper">
+        <div class="form-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="color: #001f3f; margin: 0;">🔍 تفاصيل العميل المالية</h2>
+            <button class="btn-itqan btn-gold btn-sm" onclick="window.print()">🖨️ طباعة التقرير</button>
+        </div>
 
+        <!-- بطاقة المعلومات الشخصية -->
+        <div class="info-card" id="customerQuickInfo">
+            <div class="info-item">
+                <label>اسم العميل</label>
+                <span id="detName">جاري التحميل...</span>
+            </div>
+            <div class="info-item">
+                <label>رقم الهوية</label>
+                <span id="detId">--</span>
+            </div>
+            <div class="info-item">
+                <label>رقم الجوال</label>
+                <span id="detPhone">--</span>
+            </div>
+            <div class="info-item">
+                <label>حالة القسط</label>
+                <span class="payment-status status-active" id="detStatus">نشط</span>
+            </div>
+        </div>
+
+        <!-- جدول سجل الأقساط والمدفوعات -->
+        <div class="table-responsive">
+            <h3 style="color: #c5a059; font-size: 1.1rem; margin-bottom: 15px;">📋 سجل الدفعات والعمليات</h3>
+            <table class="itqan-table" style="width: 100%;">
+                <thead>
+                    <tr style="background: #001f3f; color: white;">
+                        <th>التاريخ</th>
+                        <th>نوع العملية</th>
+                        <th>المبلغ</th>
+                        <th>المتبقي</th>
+                        <th>المسؤول</th>
+                    </tr>
+                </thead>
+                <tbody id="paymentHistoryBody">
+                    <!-- البيانات تُجلب من Firestore عبر details-logic.js -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="form-actions" style="margin-top: 30px; display: flex; gap: 10px;">
+            <button class="btn-itqan btn-primary" onclick="handleSidebarClick('customers-list')">⬅️ العودة للقائمة</button>
+            <button class="btn-itqan btn-add">➕ إضافة دفعة جديدة</button>
+        </div>
+    </div>
+
+    <!-- ربط الملفات البرمجية المسؤولة عن معالجة البيانات -->
+    <script src="js-logic/api-connector.js"></script>
+    <script src="js-logic/details-logic.js"></script>
+</body>
+</html>
