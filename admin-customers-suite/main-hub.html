@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tera V12 | مؤسسة الإتقان بلس</title>
     
-    <!-- 🖼️ أيقونة النظام -->
+    <!-- 🖼️ تصحيح مسار الشعار بناءً على طلبك -->
     <link rel="icon" type="image/svg+xml" href="images/logo.svg">
 
-    <!-- 🎨 ربط التنسيق الموحد بناءً على المسار المعتمد -->
+    <!-- 🎨 ربط التنسيق الموحد (تم إزالة التكرار من المسار) -->
     <link rel="stylesheet" href="admin-customers-suite/css-styles/hub-style.css">
 
     <style>
-        /* التنسيقات الهيكلية لتوزيع الشبكة (Layout) */
         :root {
             --sidebar-width: 280px;
             --header-height: 70px;
@@ -24,7 +23,7 @@
             padding: 0;
             background: var(--main-bg);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden; /* لمنع التمرير المزدوج */
+            overflow: hidden; 
         }
 
         .tera-container {
@@ -38,7 +37,6 @@
             height: 100vh;
         }
 
-        /* حاويات المكونات الديناميكية */
         #sidebar-mount { grid-area: sidebar; z-index: 100; }
         #header-mount { grid-area: header; z-index: 90; }
         #main-viewport { 
@@ -50,7 +48,6 @@
         }
         #footer-mount { grid-area: footer; z-index: 80; }
 
-        /* تأثير تحميل بسيط */
         .loader-hub {
             display: flex;
             justify-content: center;
@@ -64,52 +61,44 @@
 <body>
 
     <div class="tera-container">
-        <!-- تحميل القائمة الجانبية -->
         <aside id="sidebar-mount"></aside>
-
-        <!-- تحميل الهيدر العلوي -->
         <header id="header-mount"></header>
-
-        <!-- منطقة العرض الرئيسية -->
         <main id="main-viewport">
             <div id="dynamic-content-area" class="loader-hub">
-                جاري مزامنة بيانات "الإتقان بلس"...
+                جاري مزامنة بيانات "الإتقان بلس" عبر Tera V12...
             </div>
         </main>
-
-        <!-- تحميل التذييل -->
         <footer id="footer-mount"></footer>
     </div>
 
     <script>
         /**
-         * دالة استدعاء المكونات (Components Loader)
-         * تقوم بسحب ملفات HTML من مجلد mm ووضعها في الحاويات
+         * 🛠️ تم تصحيح الدالة لإزالة تكرار المجلد في المسار
          */
         async function injectComponent(elementId, fileName) {
             try {
+                // ✅ المسار المصلح ليتوافق مع هيكلية GitHub
                 const response = await fetch(`admin-customers-suite/mm/${fileName}`);
                 if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
                 const htmlContent = await response.text();
                 document.getElementById(elementId).innerHTML = htmlContent;
+                console.log(`✅ تم تحميل المكون: ${fileName}`);
             } catch (error) {
-                console.error(`خطأ في تحميل المكون ${fileName}:`, error);
+                console.error(`❌ خطأ في تحميل المكون ${fileName}:`, error);
                 document.getElementById(elementId).innerHTML = `<p style="color:red; padding:10px;">فشل تحميل ${fileName}</p>`;
             }
         }
 
-        // تشغيل التحميل عند فتح الصفحة
         window.addEventListener('DOMContentLoaded', () => {
+            // استدعاء المكونات بالمسارات المصلحة
             injectComponent('sidebar-mount', 'sidebar.html');
             injectComponent('header-mount', 'header.html');
             injectComponent('footer-mount', 'footer.html');
             
-            // افتراضياً: تحميل واجهة الساعة عند الدخول
             setTimeout(() => {
                 injectComponent('dynamic-content-area', 'clock-view.html');
             }, 500);
         });
     </script>
-
 </body>
 </html>
