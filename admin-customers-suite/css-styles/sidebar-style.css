@@ -1,10 +1,57 @@
+/* تنسيق القائمة الجانبية لمنصة في خدمتك */
 .itqan-sidebar {
-    width: 260px; background: #001f3f; color: white; height: 100vh;
-    position: fixed; right: 0; top: 0; padding: 20px; border-left: 2px solid #c5a059;
+    width: 280px; /* التوسعة لتناسب الشاشات المتوسطة */
+    background: #001f3f; 
+    color: white; 
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 25px 15px; 
+    border-left: 3px solid #c5a059; /* تقوية الخط الذهبي */
+    box-shadow: -5px 0 15px rgba(0,0,0,0.2);
+    /* حذف position: fixed لأن الحاوية الرئيسية في main-hub هي flex */
 }
-.sidebar-brand h2 { color: #c5a059; margin: 0; font-size: 1.5rem; }
+
+.sidebar-brand {
+    text-align: center;
+    padding-bottom: 30px;
+    border-bottom: 1px solid rgba(197, 160, 89, 0.2);
+    margin-bottom: 20px;
+}
+
+.sidebar-brand h2 { 
+    color: #c5a059; 
+    margin: 0; 
+    font-size: 1.4rem; 
+    letter-spacing: 1px;
+    font-weight: bold;
+}
+
 .nav-btn {
-    display: block; padding: 12px; color: white; text-decoration: none;
-    margin-top: 10px; border-radius: 8px; transition: 0.3s; cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 14px 18px; 
+    color: #ecf0f1; 
+    text-decoration: none;
+    margin-top: 8px; 
+    border-radius: 10px; 
+    transition: all 0.3s ease; 
+    cursor: pointer;
+    font-size: 0.95rem;
+    border: 1px solid transparent;
 }
-.nav-btn:hover { background: #c5a059; color: #001f3f; }
+
+/* تأثير التفاعل عند مرور الماوس */
+.nav-btn:hover { 
+    background: #c5a059; 
+    color: #001f3f; 
+    transform: translateX(-5px); /* تحريك بسيط لليمين يعطي طابعاً عصرياً */
+    font-weight: bold;
+}
+
+/* تمييز الزر النشط */
+.nav-btn.active {
+    background: rgba(197, 160, 89, 0.15);
+    border: 1px solid #c5a059;
+    color: #c5a059;
+}
