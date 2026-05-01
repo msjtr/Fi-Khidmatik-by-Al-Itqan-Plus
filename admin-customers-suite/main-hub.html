@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- 1. ربط الشعار كأيقونة لتبويمة المتصفح (Favicon) -->
     <title>في خدمتك | الإتقان بلس</title>
+    
+    <!-- 1. ربط الشعار كأيقونة للمتصفح (Favicon) -->
     <link rel="icon" type="image/svg+xml" href="../images/logo.svg">
 
-    <!-- 2. ربط كافة ملفات التنسيق الـ 11 من مجلد css-styles -->
+    <!-- 2. ربط ملفات التنسيق الـ 11 (css-styles) بالمسارات الصحيحة -->
     <link rel="stylesheet" href="css-styles/hub-style.css">
     <link rel="stylesheet" href="css-styles/sidebar-style.css">
     <link rel="stylesheet" href="css-styles/header-style.css">
@@ -22,72 +22,64 @@
     <link rel="stylesheet" href="css-styles/print-layout.css">
 
     <style>
-        /* التنسيق الأساسي لضمان عرض الشعار والصفحات */
-        body { margin: 0; display: flex; height: 100vh; background-color: #f8f9fa; overflow: hidden; }
+        /* تنسيقات أساسية لضبط توزيع الشاشة في حائل */
+        body { margin: 0; display: flex; height: 100vh; background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; }
         .app-container { display: flex; width: 100%; height: 100%; }
-        #sidebar-area { width: 280px; flex-shrink: 0; background: #001f3f; }
+        #sidebar-area { width: 280px; flex-shrink: 0; z-index: 100; }
         .content-area { flex-grow: 1; display: flex; flex-direction: column; }
-        .page-display { flex-grow: 1; position: relative; }
+        #header-area { height: 70px; background: #fff; display: flex; align-items: center; padding: 0 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .page-display { flex-grow: 1; position: relative; background: #fff; }
         iframe { width: 100%; height: 100%; border: none; }
-        
-        /* إضافة الشعار في زاوية الهيدر بربط مباشر */
-        .brand-logo-top { width: 50px; height: 50px; margin-left: 15px; }
+        .main-logo { height: 45px; margin-left: 20px; }
     </style>
 </head>
 <body>
 
     <div class="app-container">
-        
         <!-- منطقة القائمة الجانبية -->
         <aside id="sidebar-area"></aside>
 
         <section class="content-area">
-            
-            <!-- منطقة الهيدر مع الشعار -->
-            <header id="header-area" style="display: flex; align-items: center; padding: 0 20px;">
-                <img src="../images/logo.svg" alt="الإتقان بلس" class="brand-logo-top">
+            <!-- الهيدر مع شعار الإتقان بلس -->
+            <header id="header-area">
+                <img src="../images/logo.svg" alt="الإتقان بلس" class="main-logo">
                 <div id="header-content" style="flex-grow: 1;"></div>
             </header>
 
-            <!-- عرض الصفحات الديناميكي -->
+            <!-- عرض الصفحات (مثل جدول العملاء) -->
             <main class="page-display">
                 <iframe name="main-viewport" src="pages/customers-list.html" id="frame-engine"></iframe>
             </main>
 
-            <!-- منطقة التذييل -->
+            <!-- التذييل -->
             <footer id="footer-area"></footer>
-
         </section>
     </div>
 
-    <!-- محرك الربط والتشغيل V12.12.12 -->
+    <!-- 3. المحرك البرمجي الرئيسي -->
     <script type="module">
         import { initApp } from './js-logic/main.js';
 
-        // وظيفة الحقن المباشر للمكونات مع تفعيل ملفات الـ JS الخاصة بها
-        async function loadPart(id, file) {
+        // وظيفة جلب المكونات الفرعية (Header, Sidebar, Footer)
+        async function loadComponent(id, path) {
             try {
-                const res = await fetch(file);
-                const html = await res.text();
-                const target = document.getElementById(id);
-                target.innerHTML = html;
-
-                // تفعيل أي سكريبت داخل المكون (مثل ساعة الهيدر)
-                target.querySelectorAll('script').forEach(oldScript => {
-                    const newScript = document.createElement('script');
-                    Array.from(oldScript.attributes).forEach(a => newScript.setAttribute(a.name, a.value));
-                    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-                    oldScript.parentNode.replaceChild(newScript, oldScript);
-                });
-            } catch (e) { console.error("Error loading " + file, e); }
+                const response = await fetch(path);
+                if (!response.ok) throw new Error(`Missing: ${path}`);
+                const html = await response.text();
+                document.getElementById(id).innerHTML = html;
+            } catch (err) {
+                console.error("خطأ في تحميل المكون:", err);
+            }
         }
 
-        // تشغيل الربط الكلي
+        // تشغيل المنصة
         document.addEventListener('DOMContentLoaded', () => {
-            loadPart('sidebar-area', 'mm/sidebar.html');
-            loadPart('header-content', 'mm/header.html');
-            loadPart('footer-area', 'mm/footer.html');
-            initApp(); // تشغيل Firebase والمحرك
+            loadComponent('sidebar-area', 'mm/sidebar.html');
+            loadComponent('header-content', 'mm/header.html');
+            loadComponent('footer-area', 'mm/footer.html');
+            
+            // تشغيل محرك Tera V12.12.12
+            initApp(); 
         });
     </script>
 </body>
