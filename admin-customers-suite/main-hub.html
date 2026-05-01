@@ -3,58 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tera V12 | لوحة تحكم الإتقان بلس</title>
+    <title>Tera V12 | الإتقان بلس</title>
 
-    <!-- الربط بملف التنسيق الموحد الجديد -->
-    <link rel="stylesheet" href="css-styles/tera-master.css">
+    <!-- 1. ربط شعار التبويب (Favicon) من مجلد images الخارجي -->
+    <link rel="icon" type="image/svg+xml" href="../images/logo.svg">
+
+    <!-- 2. ربط جميع ملفات CSS (الـ 10 ملفات) -->
+    <!-- الملفات الأساسية والهيكلية -->
+    <link rel="stylesheet" href="css-styles/hub-style.css">
+    <link rel="stylesheet" href="css-styles/auth-style.css">
+    <link rel="stylesheet" href="css-styles/buttons-theme.css">
+    <!-- ملفات المكونات الفرعية (مكملة للـ 10) -->
+    <link rel="stylesheet" href="css-styles/header-style.css"> 
+    <link rel="stylesheet" href="css-styles/sidebar-style.css">
+    <link rel="stylesheet" href="css-styles/footer-style.css">
+    <!-- ملفات العمليات والبيانات -->
+    <link rel="stylesheet" href="css-styles/add-cust-style.css">
+    <link rel="stylesheet" href="css-styles/list-table-style.css">
+    <link rel="stylesheet" href="css-styles/stats-visuals.css">
+    <link rel="stylesheet" href="css-styles/print-layout.css">
 </head>
 <body>
 
     <div class="tera-main-wrapper">
-        
-        <!-- 1. الهيدر (Header Area) -->
-        <header id="header-mount">
-            <!-- سيتم تحميل محتوى header.html هنا عبر JS -->
-        </header>
+        <!-- منطقة الشعار الأساسي داخل النظام -->
+        <div class="brand-container" style="display: none;">
+            <img src="../images/logo.svg" alt="شعار الإتقان بلس" id="main-brand-logo">
+        </div>
 
-        <!-- 2. القائمة الجانبية (Sidebar Area) -->
-        <aside id="sidebar-mount">
-            <!-- سيتم تحميل محتوى sidebar.html هنا عبر JS -->
-        </aside>
-
-        <!-- 3. منطقة العرض الرئيسية (Main Content Area) -->
-        <main class="tera-view-window">
-            <iframe id="tera-iframe" src="dashboard-home.html" name="tera-frame"></iframe>
-        </main>
-
-        <!-- 4. التذييل (Footer Area) -->
-        <footer id="footer-mount">
-            <!-- سيتم تحميل محتوى footer.html هنا عبر JS -->
-        </footer>
-
+        <!-- هيكل النظام سيتم تحميله هنا -->
+        <header id="header-mount"></header>
+        <aside id="sidebar-mount"></aside>
+        <main id="main-view"></main>
     </div>
 
-    <!-- 🧠 ملف البرمجة الموحد لربط العمليات -->
-    <script src="js-logic/master-logic.js"></script>
+    <!-- 3. ربط جميع أوامر وملفات JS (الـ 14 ملفاً الموجودة بالصور) -->
     
-    <script>
-        // دالة بسيطة لتحميل الملفات الفرعية في الهب الرئيسي
-        async function loadComponent(id, file) {
-            try {
-                const response = await fetch(`mm/${file}`);
-                const data = await response.text();
-                document.getElementById(id).innerHTML = data;
-            } catch (err) {
-                console.error(`خطأ في تحميل ${file}:`, err);
-            }
-        }
+    <!-- أوامر التهيئة وقواعد البيانات (Firebase & API) -->
+    <script type="module" src="js-logic/firebase.js"></script>
+    <script src="js-logic/api-connector.js"></script>
+    
+    <!-- أوامر المصادقة والتحكم الرئيسي -->
+    <script src="js-logic/auth-logic.js"></script>
+    <script src="js-logic/main.js"></script>
+    
+    <!-- أوامر الواجهة (الهيدر، السايدبار، الأزرار، والساعة) -->
+    <script src="js-logic/header-logic.js"></script>
+    <script src="js-logic/sidebar-logic.js"></script>
+    <script src="js-logic/btn-actions-controller.js"></script>
+    <script src="js-logic/clock-logic.js"></script>
+    
+    <!-- أوامر العمليات (العملاء، الجداول، الإحصائيات) -->
+    <script src="js-logic/add-cust-logic.js"></script>
+    <script src="js-logic/list-table-logic.js"></script>
+    <script src="js-logic/stats-engine.js"></script>
+    
+    <!-- أوامر الميزات الإضافية (الخرائط، الطباعة، وتتبع السجلات) -->
+    <script src="js-logic/map-logic.js"></script>
+    <script src="js-logic/pdf-generator.js"></script>
+    <script src="js-logic/log-tracker.js"></script>
 
-        // تشغيل التحميل عند فتح الصفحة
-        window.onload = () => {
-            loadComponent('header-mount', 'header.html');
-            loadComponent('sidebar-mount', 'sidebar.html');
-            loadComponent('footer-mount', 'footer.html');
-        };
-    </script>
 </body>
 </html>
