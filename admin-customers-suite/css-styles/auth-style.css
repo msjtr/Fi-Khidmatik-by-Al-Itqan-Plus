@@ -1,3 +1,82 @@
-.itqan-auth-bg { background: #001f3f; height: 100vh; display: flex; align-items: center; justify-content: center; }
-.login-container { background: white; padding: 40px; border-radius: 15px; width: 350px; text-align: center; }
-.btn-auth { background: #c5a059; color: white; border: none; padding: 10px 20px; border-radius: 5px; width: 100%; cursor: pointer; }
+/* 
+   تنسيق واجهة التحقق والدخول - منصة في خدمتك V12.12.12 
+   المصمم ليتناسب مع معايير الفخامة والوضوح
+*/
+
+.itqan-auth-bg { 
+    background: radial-gradient(circle, #002d5b 0%, #001f3f 100%); /* تدرج لإعطاء عمق للخلفية */
+    height: 100vh; 
+    width: 100%;
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    margin: 0;
+}
+
+.login-container { 
+    background: #ffffff; 
+    padding: 50px 40px; 
+    border-radius: 20px; 
+    width: 100%;
+    max-width: 400px; /* مرونة أكثر في العرض */
+    text-align: center; 
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); /* ظل أعمق لإبراز الحاوية */
+    border: 1px solid rgba(197, 160, 89, 0.2);
+}
+
+.login-container img {
+    height: 80px;
+    margin-bottom: 25px;
+}
+
+.login-container h2 {
+    color: #001f3f;
+    margin-bottom: 30px;
+    font-size: 1.6rem;
+    font-weight: bold;
+}
+
+/* تنسيق الحقول */
+.auth-input-group {
+    margin-bottom: 20px;
+    text-align: right;
+}
+
+.auth-input-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: inherit;
+    transition: border-color 0.3s;
+}
+
+.auth-input-group input:focus {
+    border-color: #c5a059;
+    outline: none;
+}
+
+/* زر الدخول الذهبي */
+.btn-auth { 
+    background: #c5a059; 
+    color: white; 
+    border: none; 
+    padding: 14px; 
+    border-radius: 10px; 
+    width: 100%; 
+    cursor: pointer; 
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(197, 160, 89, 0.3);
+}
+
+.btn-auth:hover { 
+    background: #b38f4d; 
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(197, 160, 89, 0.4);
+}
+
+.btn-auth:active {
+    transform: translateY(0);
+}
