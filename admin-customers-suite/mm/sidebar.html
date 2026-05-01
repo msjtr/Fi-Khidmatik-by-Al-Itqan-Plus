@@ -1,29 +1,56 @@
-<!-- 🎨 ربط التنسيق الخاص بالسايدبار -->
-<link rel="stylesheet" href="css-styles/sidebar-style.css">
-
-<aside class="itqan-sidebar">
+<div class="itqan-sidebar">
+    <!-- قسم الشعار والهوية -->
     <div class="sidebar-brand">
-        <!-- هوية مؤسسة الإتقان بلس - حائل -->
-        <h2>منصة Tera</h2>
-        <p>الإتقان بلس - حائل</p>
+        <img src="images/logo.svg" alt="Tera Logo" class="brand-logo" 
+             onerror="this.src='https://ui-avatars.com/api/?name=Tera+V12&background=001f3f&color=c5a059'">
+        <h2>TERA <span>V12</span></h2>
     </div>
 
+    <!-- قائمة التنقل الرئيسية -->
     <nav class="sidebar-nav">
-        <!-- قسم الإدارة والعملاء -->
-        <div onclick="window.teraNavigate('customers-list')" class="nav-btn">👥 قائمة العملاء</div>
-        <div onclick="window.teraNavigate('add-customer')" class="nav-btn">➕ إضافة عميل جديد</div>
+        <div class="nav-section-title">الإدارة العامة</div>
         
-        <!-- قسم التقسيط والبيانات -->
-        <div onclick="window.teraNavigate('customers-stats')" class="nav-btn">📊 إحصائيات الأقساط</div>
-        <div onclick="window.teraNavigate('archive-manager')" class="nav-btn">📦 أرشيف المعاملات</div>
-        
-        <!-- قسم الدعم والخرائط -->
-        <div onclick="window.teraNavigate('map-bridge')" class="nav-btn">📍 جسر المواقع</div>
-        <div onclick="window.teraNavigate('system-logs')" class="nav-btn">📝 سجلات النظام</div>
+        <button class="nav-btn active" onclick="window.teraNavigate('customers-list')">
+            <span class="nav-icon">👥</span>
+            <span class="nav-text">قائمة العملاء</span>
+        </button>
+
+        <button class="nav-btn" onclick="window.teraNavigate('add-customer')">
+            <span class="nav-icon">👤+</span>
+            <span class="nav-text">إضافة عميل جديد</span>
+        </button>
+
+        <div class="nav-section-title">العمليات المالية</div>
+
+        <button class="nav-btn" onclick="window.teraNavigate('installments-tracker')">
+            <span class="nav-icon">💰</span>
+            <span class="nav-text">متابعة الأقساط</span>
+        </button>
+
+        <button class="nav-btn" onclick="window.teraNavigate('sawa-cards')">
+            <span class="nav-icon">📱</span>
+            <span class="nav-text">بطاقات سوا</span>
+        </button>
+
+        <div class="nav-section-title">التقارير والإحصائيات</div>
+
+        <button class="nav-btn" onclick="window.teraNavigate('reports-gen')">
+            <span class="nav-icon">📊</span>
+            <span class="nav-text">التقارير الختامية</span>
+        </button>
+
+        <button class="nav-btn" onclick="window.teraNavigate('stats-visuals')">
+            <span class="nav-icon">📈</span>
+            <span class="nav-text">الإحصائيات الحية</span>
+        </button>
     </nav>
 
-    <div class="sidebar-exit">
-        <!-- زر الخروج المرتبط بالمنطق العالمي -->
-        <button onclick="if(window.handleLogout) window.handleLogout()" class="exit-link">🚪 تسجيل الخروج</button>
+    <!-- تذييل السايدبار (معلومات المدير) -->
+    <div class="sidebar-footer">
+        <div class="admin-badge">
+            <span class="status-online"></span>
+            <span class="admin-name">م. الشمري</span>
+        </div>
+        <button class="logout-link" onclick="window.location.href='login.html'">تسجيل الخروج</button>
     </div>
-</aside>
+</div>
