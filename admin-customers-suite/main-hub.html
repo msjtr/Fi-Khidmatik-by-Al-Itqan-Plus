@@ -3,80 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tera V12 | الإتقان بلس</title>
-    
-    <!-- ربط ملف التنسيق الموحد -->
-    <link rel="stylesheet" href="css-styles/hhh-style.css">
+    <title>Tera V12 | إدارة الإتقان بلس</title>
+
+    <!-- ========================================== -->
+    <!-- 1. ربط الشعار والتبويبة (Favicon)            -->
+    <!-- ========================================== -->
+    <link rel="icon" type="image/svg+xml" href="../images/logo.svg">
+
+    <!-- ========================================== -->
+    <!-- 2. ربط جميع ملفات التنسيق (CSS) - 7 ملفات    -->
+    <!-- ========================================== -->
+    <link rel="stylesheet" href="css-styles/hhh-style.css"> <!-- ملف الهيكل الشامل والإبداعي -->
+    <link rel="stylesheet" href="css-styles/auth-style.css">
+    <link rel="stylesheet" href="css-styles/buttons-theme.css">
+    <link rel="stylesheet" href="css-styles/add-cust-style.css">
+    <link rel="stylesheet" href="css-styles/list-table-style.css">
+    <link rel="stylesheet" href="css-styles/stats-visuals.css">
+    <link rel="stylesheet" href="css-styles/print-layout.css">
 </head>
 <body>
 
-    <!-- الهيكل الرئيسي المطابق لملف hhh-style.css -->
+    <!-- ========================================== -->
+    <!-- 3. الهيكل الرئيسي المعتمد على Grid           -->
+    <!-- ========================================== -->
     <div class="tera-layout">
+        
+        <!-- منطقة الهيدر -->
         <header id="header-mount"></header>
+        
+        <!-- منطقة القائمة الجانبية -->
         <aside id="sidebar-mount"></aside>
+        
+        <!-- منطقة العرض المركزية (تتغير بناءً على الزر المضغوط) -->
         <main id="main-view">
-            <!-- الشاشة التي تتغير عند الضغط على الأزرار -->
-            <iframe id="tera-iframe" src="dashboard-home.html"></iframe>
+            <!-- الشعار المائي كخلفية شفافة للوحة -->
+            <div style="position: absolute; bottom: -50px; left: -50px; opacity: 0.05; pointer-events: none; z-index: 0;">
+                <img src="../images/logo.svg" alt="إتقان بلس" style="width: 400px;">
+            </div>
+            
+            <!-- تم تعيين الصفحة الافتراضية إلى customers-list.html من مجلد pages -->
+            <iframe id="tera-iframe" name="tera-frame" src="pages/customers-list.html" style="position: relative; z-index: 1;"></iframe>
         </main>
+        
+        <!-- منطقة الفوتر -->
         <footer id="footer-mount"></footer>
+
     </div>
 
-    <!-- كود الجافاسكريبت لربط وتشغيل كل شيء -->
+    <!-- ========================================== -->
+    <!-- 4. ربط جميع ملفات الأوامر (JS) - 14 ملف      -->
+    <!-- ========================================== -->
+    
+    <!-- الأساسيات وقواعد البيانات -->
+    <script type="module" src="js-logic/firebase.js"></script>
+    <script src="js-logic/api-connector.js"></script>
+    
+    <!-- المصادقة والتحكم الرئيسي -->
+    <script src="js-logic/auth-logic.js"></script>
+    <script src="js-logic/main.js"></script>
+    
+    <!-- واجهة المستخدم والتنقل -->
+    <script src="js-logic/header-logic.js"></script>
+    <script src="js-logic/sidebar-logic.js"></script>
+    <script src="js-logic/btn-actions-controller.js"></script>
+    <script src="js-logic/clock-logic.js"></script>
+    
+    <!-- العمليات والجداول والإحصائيات -->
+    <script src="js-logic/add-cust-logic.js"></script>
+    <script src="js-logic/list-table-logic.js"></script>
+    <script src="js-logic/stats-engine.js"></script>
+    
+    <!-- الميزات المتقدمة (الخرائط، الطباعة، السجلات) -->
+    <script src="js-logic/map-logic.js"></script>
+    <script src="js-logic/pdf-generator.js"></script>
+    <script src="js-logic/log-tracker.js"></script>
+
+
+    <!-- ========================================== -->
+    <!-- 5. سكربت التشغيل الداخلي للواجهة             -->
+    <!-- ========================================== -->
     <script>
-        // 1. دالة لجلب الملفات من مجلد mm
-        async function loadComponent(id, fileName) {
-            try {
-                const response = await fetch(`mm/${fileName}`);
-                if(response.ok) {
-                    document.getElementById(id).innerHTML = await response.text();
+        // دالة سحب الملفات من مجلد mm
+        async function mountTeraComponents() {
+            const components = [
+                { id: 'header-mount', path: 'mm/header.html' },
+                { id: 'sidebar-mount', path: 'mm/sidebar.html' },
+                { id: 'footer-mount', path: 'mm/footer.html' }
+            ];
+
+            for (const comp of components) {
+                try {
+                    const res = await fetch(comp.path);
+                    if (res.ok) {
+                        document.getElementById(comp.id).innerHTML = await res.text();
+                    }
+                } catch (e) {
+                    console.error(`خطأ في تحميل المكون: ${comp.path}`, e);
                 }
-            } catch (error) {
-                console.error(`خطأ في تحميل ${fileName}:`, error);
+            }
+
+            // تحميل الساعة داخل الهيدر بعد اكتمال سحبه
+            try {
+                const clockRes = await fetch('mm/clock-view.html');
+                if (clockRes.ok) {
+                    const clockPoint = document.getElementById('clock-mount-point');
+                    if (clockPoint) {
+                        clockPoint.innerHTML = await clockRes.text();
+                        // استدعاء دالة الساعة (إذا كانت موجودة في clock-logic.js)
+                        if(typeof startTeraClock === 'function') startTeraClock();
+                    }
+                }
+            } catch (e) {
+                console.error("لم يتم العثور على مكان الساعة أو الملف", e);
             }
         }
 
-        // 2. دالة تشغيل الساعة الرقمية
-        function runLiveClock() {
-            setInterval(() => {
-                const now = new Date();
-                let h = now.getHours();
-                const ampm = h >= 12 ? 'م' : 'ص';
-                h = h % 12 || 12;
-
-                const elH = document.getElementById('c-hours');
-                if(elH) {
-                    elH.innerText = String(h).padStart(2, '0');
-                    document.getElementById('c-minutes').innerText = String(now.getMinutes()).padStart(2, '0');
-                    document.getElementById('c-seconds').innerText = String(now.getSeconds()).padStart(2, '0');
-                    document.getElementById('c-ampm').innerText = ampm;
-                    
-                    document.getElementById('c-greg').innerText = new Intl.DateTimeFormat('ar-SA', { day: '2-digit', month: 'short', year: 'numeric' }).format(now);
-                    document.getElementById('c-hijri').innerText = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', { day: '2-digit', month: 'short', year: 'numeric' }).format(now);
-                }
-            }, 1000);
-        }
-
-        // 3. دالة التنقل للسايدبار
-        window.teraNavigate = function(page) {
-            document.getElementById('tera-iframe').src = `${page}.html`;
+        // دالة التنقل العالمية (تفتح الصفحات من مجلد pages)
+        window.teraNavigate = function(pageName) {
+            const iframe = document.getElementById('tera-iframe');
+            if (iframe) {
+                // إضافة تأثير شفافية أثناء التحميل
+                iframe.style.opacity = '0.3';
+                // التوجيه لمسار الصفحات الصحيح
+                iframe.src = `pages/${pageName}.html`;
+                iframe.onload = () => { iframe.style.opacity = '1'; };
+            }
         };
 
-        // 4. تسلسل التشغيل عند فتح الصفحة
-        window.addEventListener('DOMContentLoaded', async () => {
-            // تحميل الهيدر والسايدبار والفوتر أولاً
-            await Promise.all([
-                loadComponent('header-mount', 'header.html'),
-                loadComponent('sidebar-mount', 'sidebar.html'),
-                loadComponent('footer-mount', 'footer.html')
-            ]);
-            
-            // بعد تحميل الهيدر، نقوم بتحميل الساعة بداخله
-            await loadComponent('clock-mount-point', 'clock-view.html');
-            
-            // تشغيل عداد الساعة
-            runLiveClock();
-        });
+        // بدء التشغيل عند جاهزية الصفحة
+        window.addEventListener('DOMContentLoaded', mountTeraComponents);
     </script>
-
 </body>
 </html>
