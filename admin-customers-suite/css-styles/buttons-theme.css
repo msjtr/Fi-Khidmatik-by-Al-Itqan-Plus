@@ -1,1 +1,92 @@
+/* 
+   إطار عمل الأزرار - منصة في خدمتك V12.12.12 
+   المصمم خصيصاً لمؤسسة الإتقان بلس
+*/
 
+:root {
+    --btn-primary: #001f3f;   /* الكحلي الرسمي */
+    --btn-gold: #c5a059;      /* الذهبي الفاخر */
+    --btn-success: #28a745;   /* أخضر الحفظ */
+    --btn-danger: #d9534f;    /* أحمر الحذف */
+    --btn-shadow: rgba(0, 0, 0, 0.1);
+}
+
+/* 1. التنسيق الأساسي للأزرار */
+.btn-itqan {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    gap: 8px; /* مسافة للأيقونات */
+    text-decoration: none;
+    outline: none;
+    box-shadow: 0 2px 4px var(--btn-shadow);
+}
+
+.btn-itqan:active {
+    transform: scale(0.96); /* تأثير الضغط */
+}
+
+/* 2. الزر الرئيسي (Primary) */
+.btn-primary {
+    background-color: var(--btn-primary);
+    color: #ffffff;
+}
+
+.btn-primary:hover {
+    background-color: #003366;
+    box-shadow: 0 4px 12px rgba(0, 31, 63, 0.3);
+}
+
+/* 3. الزر الذهبي (Premium/Action) */
+.btn-gold {
+    background-color: var(--btn-gold);
+    color: #ffffff;
+}
+
+.btn-gold:hover {
+    background-color: #b38f4d;
+    box-shadow: 0 4px 12px rgba(197, 160, 89, 0.4);
+}
+
+/* 4. زر الإضافة أو الحفظ (Success) */
+.btn-add {
+    background-color: var(--btn-success);
+    color: #ffffff;
+}
+
+.btn-add:hover {
+    background-color: #218838;
+}
+
+/* 5. زر الحذف أو التراجع (Danger) */
+.btn-delete {
+    background-color: transparent;
+    color: var(--btn-danger);
+    border: 1px solid var(--btn-danger);
+}
+
+.btn-delete:hover {
+    background-color: var(--btn-danger);
+    color: #ffffff;
+}
+
+/* 6. الأزرار الصغيرة للجداول */
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 6px;
+}
+
+/* 7. تأثير التحميل (Loading state) */
+.btn-loading {
+    opacity: 0.7;
+    pointer-events: none;
+    position: relative;
+}
