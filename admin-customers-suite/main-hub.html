@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام Tera | مؤسسة الإتقان بلس</title>
 
-    <!-- 1. التبويمة (Logo) -->
+    <!-- 🖼️ الربط مع شعار النظام (images/logo.svg) -->
     <link rel="icon" type="image/svg+xml" href="../images/logo.svg">
 
-    <!-- 2. ربط جميع ملفات التنسيق (11 ملف CSS) -->
+    <!-- 🎨 ربط كافة ملفات التنسيق (11 ملف CSS) -->
     <link rel="stylesheet" href="css-styles/hub-style.css">
     <link rel="stylesheet" href="css-styles/buttons-theme.css">
     <link rel="stylesheet" href="css-styles/header-style.css">
@@ -23,26 +23,24 @@
 </head>
 <body>
 
-    <div class="tera-main-container">
-        <!-- الهيدر (mm/header.html) -->
-        <header id="header-region"></header>
+    <div class="tera-admin-layout">
+        <!-- 🧩 المكونات الثابتة (يتم حقنها من مجلد mm) -->
+        <header id="header-mount"></header>
 
-        <div class="tera-body">
-            <!-- القائمة الجانبية (mm/sidebar.html) -->
-            <aside id="sidebar-region"></aside>
+        <div class="tera-main-content">
+            <aside id="sidebar-mount"></aside>
 
-            <!-- محرك عرض الصفحات الـ 12 (Pages) -->
-            <main class="tera-viewport">
-                <iframe id="main-frame" name="main-frame" src="pages/customers-list.html"></iframe>
+            <!-- 📄 محرك عرض الصفحات (12 صفحة من مجلد pages) -->
+            <main class="tera-view-window">
+                <iframe id="tera-iframe" name="tera-iframe" src="pages/customers-list.html"></iframe>
             </main>
         </div>
 
-        <!-- الفوتر (mm/footer.html) -->
-        <footer id="footer-region"></footer>
+        <footer id="footer-mount"></footer>
     </div>
 
-    <!-- 3. ربط جميع الأوامر والعمليات (15 ملف JS Logic) -->
-    <!-- الأولوية لـ Firebase للاتصال بقاعدة بيانات حائل -->
+    <!-- 🧠 ربط كافة ملفات العمليات (14 ملف JS Logic) -->
+    <!-- الترتيب هنا حرج جداً: Firebase أولاً لضمان الاتصال -->
     <script src="js-logic/firebase.js"></script> 
     <script src="js-logic/api-connector.js"></script>
     <script src="js-logic/auth-logic.js"></script>
@@ -58,29 +56,34 @@
     <script src="js-logic/pdf-generator.js"></script>
     <script src="js-logic/map-logic.js"></script>
 
-    <!-- محرك التشغيل وحقن المكونات -->
     <script>
-        async function loadTeraComponents() {
-            const layout = [
-                { id: 'header-region', url: 'mm/header.html' },
-                { id: 'sidebar-region', url: 'mm/sidebar.html' },
-                { id: 'footer-region', url: 'mm/footer.html' }
+        /**
+         * محرك تحميل مكونات mm (5 ملفات)
+         */
+        async function loadMMComponents() {
+            const components = [
+                { id: 'header-mount', url: 'mm/header.html' },
+                { id: 'sidebar-mount', url: 'mm/sidebar.html' },
+                { id: 'footer-mount', url: 'mm/footer.html' }
+                // ملحوظة: login.html و clock-view.html يتم استدعاؤهما عند الحاجة
             ];
 
-            for (const part of layout) {
+            for (const item of components) {
                 try {
-                    const res = await fetch(part.url);
-                    document.getElementById(part.id).innerHTML = await res.text();
-                } catch (e) { console.error("خطأ في ربط المكون:", part.url); }
+                    const response = await fetch(item.url);
+                    document.getElementById(item.id).innerHTML = await response.text();
+                } catch (err) { console.error("خطأ في ربط مكون:", item.url); }
             }
         }
 
-        // دالة التنقل بين صفحات المجلد pages
-        function goToPage(page) {
-            document.getElementById('main-frame').src = `pages/${page}.html`;
+        /**
+         * وظيفة التنقل العالمي بين الـ 12 صفحة
+         */
+        function teraNavigate(targetPage) {
+            document.getElementById('tera-iframe').src = `pages/${targetPage}.html`;
         }
 
-        window.onload = loadTeraComponents;
+        window.onload = loadMMComponents;
     </script>
 </body>
 </html>
