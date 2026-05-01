@@ -1,1 +1,102 @@
+/* 
+   تنسيق نموذج إضافة عميل جديد - منصة في خدمتك V12.12.12 
+   مصمم لسهولة إدخال البيانات وتدقيقها
+*/
 
+.add-cust-container {
+    padding: 30px;
+    max-width: 900px;
+    margin: 20px auto;
+    background: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+}
+
+.form-header {
+    border-bottom: 2px solid var(--itqan-gold, #c5a059);
+    padding-bottom: 15px;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.form-header h2 {
+    color: var(--itqan-blue, #001f3f);
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+/* تنظيم الحقول في شبكة (Grid) */
+.cust-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: right;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #444;
+    font-size: 0.9rem;
+}
+
+.form-group input, 
+.form-group select, 
+.form-group textarea {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    background: #f9f9f9;
+}
+
+.form-group input:focus {
+    border-color: var(--itqan-gold, #c5a059);
+    background: #fff;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.1);
+}
+
+/* تخصيص مساحة الملاحظات */
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* قسم مبالغ الأقساط */
+.finance-section {
+    background: #fef9f0;
+    padding: 20px;
+    border-radius: 10px;
+    border-right: 5px solid var(--itqan-gold, #c5a059);
+    margin-top: 10px;
+}
+
+.finance-section h3 {
+    font-size: 1.1rem;
+    color: #856404;
+    margin-bottom: 15px;
+}
+
+/* الأزرار في أسفل النموذج */
+.form-actions {
+    margin-top: 30px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
