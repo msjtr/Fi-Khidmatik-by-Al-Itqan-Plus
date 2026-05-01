@@ -1,18 +1,25 @@
-<!-- سحب التنسيق -->
-<link rel="stylesheet" href="../css-styles/header-style.css">
+<!-- 1. ربط التنسيق (بدون الـ ../ لأن المعالج سيقوم بربطه بمجلد css-styles) -->
+<link rel="stylesheet" href="css-styles/header-style.css">
 
 <header class="itqan-header">
     <div class="user-info">
+        <!-- تم تخصيص الاسم بناءً على هويتك المهنية كمدير للنظام -->
         <span>مرحباً بك: أبا صالح الشمري</span>
     </div>
     <div class="live-meta">
+        <!-- العناصر التي يتم تحديثها بواسطة سكريبت الساعة -->
         <span id="h-clock" class="digital-clock">00:00:00</span>
         <span id="h-date" class="digital-date">--/--/----</span>
     </div>
 </header>
 
-<!-- تشغيل الساعة من المجلد الأب -->
+<!-- 2. تشغيل سكريبت الساعة (إصلاح مسار الاستيراد) -->
 <script type="module">
-    import { initClock } from '../js-logic/header-logic.js';
-    initClock();
+    // يتم الاستيراد من المسار المباشر لأن الملف يُعرض داخل main-hub.html
+    import { initClock } from './js-logic/header-logic.js';
+    
+    // تشغيل وظيفة الساعة الخاصة بمنصة في خدمتك V12.12.12
+    if (typeof initClock === 'function') {
+        initClock();
+    }
 </script>
