@@ -37,28 +37,26 @@
         <footer id="footer-mount"></footer>
     </div>
 
-    <!-- 🧠 الربط البرمجي المصلح (14 ملف) -->
-    <!-- الترتيب والنوع "defer" يضمنان تحميل الملفات في الخلفية وتشغيلها بعد الـ HTML -->
-    <script src="js-logic/firebase.js" defer></script> 
-    <script src="js-logic/api-connector.js" defer></script>
-    <script src="js-logic/auth-logic.js" defer></script>
-    <script src="js-logic/main.js" defer></script>
-    <script src="js-logic/header-logic.js" defer></script>
-    <script src="js-logic/sidebar-logic.js" defer></script>
-    <script src="js-logic/clock-logic.js" defer></script>
-    <script src="js-logic/add-cust-logic.js" defer></script>
-    <script src="js-logic/list-table-logic.js" defer></script>
-    <script src="js-logic/btn-actions-controller.js" defer></script>
-    <script src="js-logic/stats-engine.js" defer></script>
-    <script src="js-logic/log-tracker.js" defer></script>
-    <script src="js-logic/pdf-generator.js" defer></script>
-    
-    <!-- تم تغيير النوع إلى module لحل خطأ Unexpected token 'export' -->
+    <!-- 🧠 الربط البرمجي بنظام Modules (حل مشكلة Import/Export) -->
+    <!-- تم تفعيل type="module" لجميع الملفات لضمان التوافق التام -->
+    <script src="js-logic/firebase.js" type="module"></script> 
+    <script src="js-logic/api-connector.js" type="module"></script>
+    <script src="js-logic/auth-logic.js" type="module"></script>
+    <script src="js-logic/main.js" type="module"></script>
+    <script src="js-logic/header-logic.js" type="module"></script>
+    <script src="js-logic/sidebar-logic.js" type="module"></script>
+    <script src="js-logic/clock-logic.js" type="module"></script>
+    <script src="js-logic/add-cust-logic.js" type="module"></script>
+    <script src="js-logic/list-table-logic.js" type="module"></script>
+    <script src="js-logic/btn-actions-controller.js" type="module"></script>
+    <script src="js-logic/stats-engine.js" type="module"></script>
+    <script src="js-logic/log-tracker.js" type="module"></script>
+    <script src="js-logic/pdf-generator.js" type="module"></script>
     <script src="js-logic/map-logic.js" type="module"></script>
 
     <script>
         /**
-         * محرك تحميل المكونات مع حماية الأوامر البرمجية
+         * محرك تحميل المكونات بنظام الـ Dynamic Fetch
          */
         async function initTeraSystem() {
             const components = [
@@ -75,18 +73,19 @@
                         document.getElementById(item.id).innerHTML = html;
                     }
                 } catch (err) { 
-                    console.error("تعذر تحميل المكون:", item.url); 
+                    console.error(`تعذر تحميل المكون من حائل: ${item.url}`); 
                 }
             }
             
-            // تنبيه النظام بأن الواجهة جاهزة لتشغيل الساعة وغيرها
+            // إطلاق حدث الجاهزية لتشغيل الساعة والعمليات الأخرى
             document.dispatchEvent(new Event('TeraLayoutReady'));
         }
 
-        function teraNavigate(targetPage) {
+        // وظيفة التنقل العالمي بين الـ 12 صفحة
+        window.teraNavigate = function(targetPage) {
             const frame = document.getElementById('tera-iframe');
             if (frame) frame.src = `pages/${targetPage}.html`;
-        }
+        };
 
         window.onload = initTeraSystem;
     </script>
