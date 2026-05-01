@@ -1,162 +1,167 @@
 /* =========================================
-   ملف التنسيق الشامل الإبداعي - hhh-style.css
-   نظام: Tera V12 - مؤسسة الإتقان بلس (حائل)
+   ملف التنسيق الإبداعي (V12 Premium) - hhh-style.css
+   النمط: Floating Glassmorphism Dashboard
 ========================================= */
 
-/* --- 1. متغيرات الألوان والتأثيرات (Premium Theme) --- */
+/* --- 1. باليت الألوان الملكية المتطورة --- */
 :root {
-    --itqan-blue: #001f3f;
-    --itqan-blue-dark: #000d1a;
-    --itqan-gold: #c5a059;
-    --itqan-gold-glow: rgba(197, 160, 89, 0.4);
-    --bg-color: #f4f7f6;
+    /* ألوان الأساس */
+    --itqan-navy-bg: #071324;      /* خلفية السايدبار (كحلي ليلي عميق) */
+    --itqan-navy-light: #10213E;   /* تأثيرات التمرير */
+    --itqan-gold-primary: #D4AF37; /* ذهبي معدني نقي */
+    --itqan-gold-gradient: linear-gradient(135deg, #D4AF37 0%, #F3E5AB 50%, #D4AF37 100%);
     
-    /* أبعاد الواجهة */
-    --sidebar-w: 260px;
-    --header-h: 80px; /* زيادة طفيفة لفخامة الهيدر */
-    --footer-h: 40px;
+    /* ألوان الواجهة والخلفية */
+    --app-bg: #F5F7FA;             /* خلفية النظام (رمادي مزرق فاتح جداً) */
+    --card-bg: #FFFFFF;            /* لون شاشة العرض */
     
-    /* تأثيرات بصرية */
-    --glass-bg: rgba(255, 255, 255, 0.85);
-    --premium-shadow: 0 8px 25px rgba(0, 31, 63, 0.08);
-    --gold-gradient: linear-gradient(135deg, #c5a059 0%, #e6cc98 100%);
+    /* الأبعاد والظلال */
+    --sidebar-w: 280px;            /* عرض مريح للعين */
+    --header-h: 90px;              /* هيدر رحب */
+    --footer-h: 50px;
+    --shadow-soft: 0 10px 40px rgba(7, 19, 36, 0.06);
+    --shadow-gold: 0 8px 25px rgba(212, 175, 55, 0.25);
 }
 
 /* --- 2. الإعدادات الأساسية --- */
 body, html {
     margin: 0; padding: 0; height: 100vh;
-    font-family: 'Segoe UI', Tahoma, sans-serif;
-    background: var(--bg-color);
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    background: var(--app-bg);
     direction: rtl; overflow: hidden;
 }
 
-/* --- 3. الهيكل الرئيسي (Grid Layout) محصن ضد التداخل --- */
+/* --- 3. الهيكل العائم (Floating Grid Layout) --- */
 .tera-layout {
-    display: grid; height: 100vh; width: 100vw;
-    grid-template-rows: var(--header-h) 1fr var(--footer-h);
+    display: grid; 
+    height: 100vh; width: 100vw;
+    /* السايدبار يأخذ كامل الارتفاع، والمحتوى مقسم بجانبه */
     grid-template-columns: var(--sidebar-w) 1fr;
+    grid-template-rows: var(--header-h) 1fr var(--footer-h);
     grid-template-areas: 
-        "header header"
+        "sidebar header"
         "sidebar main"
-        "footer footer";
+        "sidebar footer";
 }
 
-/* --- 4. الهيدر (تأثير الزجاج الشفاف) --- */
-#header-mount { 
-    grid-area: header; 
-    background: var(--glass-bg); 
-    backdrop-filter: blur(12px); /* تأثير الزجاج */
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: var(--premium-shadow); 
-    z-index: 1000; display: flex; align-items: center; justify-content: space-between; 
-    padding: 0 30px; 
-    border-bottom: 1px solid rgba(255,255,255,0.5);
-}
-
-/* --- 5. القائمة الجانبية (تدرج لوني عميق) --- */
+/* --- 4. القائمة الجانبية (Sidebar) - فخامة داكنة --- */
 #sidebar-mount { 
     grid-area: sidebar; 
-    background: linear-gradient(180deg, var(--itqan-blue) 0%, var(--itqan-blue-dark) 100%);
-    border-left: 1px solid rgba(197, 160, 89, 0.2); 
-    padding: 25px 15px; z-index: 900; 
-    box-shadow: -5px 0 20px rgba(0,0,0,0.1);
+    background: var(--itqan-navy-bg);
+    padding: 30px 20px; 
+    z-index: 1000; 
+    box-shadow: -5px 0 30px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
 }
 
-#main-view { grid-area: main; position: relative; overflow: hidden; background: var(--bg-color); }
-#tera-iframe { width: 100%; height: 100%; border: none; transition: opacity 0.4s ease; }
-
-/* --- 6. الفوتر --- */
-#footer-mount { 
-    grid-area: footer; background: #fff; 
-    border-top: 1px solid rgba(0,0,0,0.05); 
-    display: flex; align-items: center; justify-content: space-between; 
-    padding: 0 25px; font-size: 0.85rem; z-index: 1000; color: #555;
-}
-
-/* --- 7. الإبداع في القائمة الجانبية (Sidebar Styling) --- */
 .brand-title { 
-    text-align: center; color: transparent; 
-    background: var(--gold-gradient);
+    text-align: center; 
+    color: transparent; 
+    background: var(--itqan-gold-gradient);
     -webkit-background-clip: text;
     background-clip: text;
-    font-size: 1.8rem; margin-bottom: 35px; font-weight: 900; 
+    font-size: 2.2rem; 
+    margin-bottom: 40px; 
+    font-weight: 900; 
     letter-spacing: 2px;
-    position: relative;
 }
 
-/* خط تجميلي تحت الشعار */
-.brand-title::after {
-    content: ''; position: absolute; bottom: -15px; left: 20%; width: 60%; 
-    height: 2px; background: var(--gold-gradient); border-radius: 5px; opacity: 0.5;
-}
-
+/* الأزرار الكبسولية في السايدبار */
 .nav-btn { 
-    display: flex; align-items: center; gap: 12px; width: 100%; 
-    background: transparent; border: none; border-right: 3px solid transparent;
-    color: rgba(255,255,255,0.7); padding: 14px 15px; margin-bottom: 8px; 
-    border-radius: 8px 0 0 8px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-    text-align: right; font-size: 0.95rem;
+    display: flex; align-items: center; gap: 15px; width: 100%; 
+    background: transparent; border: none; 
+    color: #A0B2C6; padding: 16px 20px; margin-bottom: 10px; 
+    border-radius: 16px; /* شكل كبسولي حديث */
+    cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+    text-align: right; font-size: 1.05rem; font-weight: 600;
 }
 
 .nav-btn:hover { 
-    background: rgba(197, 160, 89, 0.08); 
-    color: var(--itqan-gold); 
-    border-right: 3px solid var(--itqan-gold);
-    transform: translateX(-5px); /* حركة انسيابية لليسار */
+    background: var(--itqan-navy-light); 
+    color: #FFFFFF; 
+    transform: translateX(-5px); 
 }
 
-/* تصميم الزر النشط */
+/* الزر النشط (تأثير الإضاءة الذهبية) */
 .nav-btn.active { 
-    background: var(--gold-gradient); 
-    color: var(--itqan-blue-dark); 
+    background: var(--itqan-gold-gradient); 
+    color: var(--itqan-navy-bg); 
     font-weight: bold; 
-    box-shadow: 0 4px 15px var(--itqan-gold-glow);
-    border-right: 3px solid transparent;
-    border-radius: 8px;
+    box-shadow: var(--shadow-gold);
+    transform: scale(1.02);
 }
 
-/* --- 8. الإبداع في الساعة الرقمية (Premium Clock Widget) --- */
+/* --- 5. الهيدر (Header) - زجاجي وشفاف --- */
+#header-mount { 
+    grid-area: header; 
+    background: transparent; /* بدون خلفية صلبة ليعطي اتساعاً */
+    display: flex; align-items: center; justify-content: space-between; 
+    padding: 0 40px; 
+    z-index: 900;
+}
+
+/* --- 6. منطقة العرض المركزية (The Floating Card) --- */
+#main-view { 
+    grid-area: main; 
+    background: var(--card-bg); 
+    margin: 0 0 20px 30px; /* المسافات التي تصنع تأثير العوم */
+    border-radius: 24px; /* زوايا دائرية ناعمة */
+    box-shadow: var(--shadow-soft);
+    position: relative; 
+    overflow: hidden; 
+    border: 1px solid rgba(255,255,255,0.8);
+}
+
+#tera-iframe { 
+    width: 100%; height: 100%; 
+    border: none; 
+    border-radius: 24px; /* مطابقة لحواف الحاوية */
+    background: transparent;
+}
+
+/* --- 7. الفوتر (Footer) --- */
+#footer-mount { 
+    grid-area: footer; 
+    background: transparent; 
+    display: flex; align-items: center; justify-content: space-between; 
+    padding: 0 40px 15px 40px; 
+    font-size: 0.85rem; color: #8898AA; font-weight: 500;
+}
+
+/* --- 8. ودجت الساعة الرقمية (Premium Clock) --- */
 .clock-container { 
-    background: #ffffff; 
-    padding: 8px 20px; border-radius: 12px; 
-    border: 1px solid rgba(197, 160, 89, 0.3); 
+    background: rgba(255, 255, 255, 0.7); 
+    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+    padding: 10px 25px; border-radius: 18px; 
+    border: 1px solid rgba(255, 255, 255, 1); 
     text-align: center;
-    box-shadow: inset 0 0 10px rgba(197, 160, 89, 0.05), 0 4px 10px rgba(0,0,0,0.03);
-    position: relative;
-    overflow: hidden;
-}
-
-/* إضاءة خلفية خفيفة للساعة */
-.clock-container::before {
-    content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-    background: radial-gradient(circle, rgba(197,160,89,0.05) 0%, transparent 60%);
-    z-index: 0; pointer-events: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
 }
 
 .time-display { 
-    font-size: 1.4rem; font-weight: 900; 
-    color: var(--itqan-blue); font-family: 'Courier New', monospace; 
-    letter-spacing: 2px; position: relative; z-index: 1;
+    font-size: 1.6rem; font-weight: 900; 
+    color: var(--itqan-navy-bg); font-family: 'Courier New', monospace; 
+    letter-spacing: 2px;
 }
 
 .time-display .sep { 
     animation: blink 1.2s infinite ease-in-out; 
-    color: var(--itqan-gold); 
+    color: var(--itqan-gold-primary); 
 }
 
 .date-display { 
-    font-size: 0.75rem; color: #7f8c8d; font-weight: 700; 
-    margin-top: 4px; position: relative; z-index: 1;
-    display: flex; gap: 8px; justify-content: center; align-items: center;
+    font-size: 0.8rem; color: #718096; font-weight: 700; 
+    margin-top: 4px; display: flex; gap: 8px; justify-content: center; align-items: center;
 }
 
 @keyframes blink { 
-    0%, 100% { opacity: 1; text-shadow: 0 0 5px var(--itqan-gold-glow); }
-    50% { opacity: 0.3; text-shadow: none; } 
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; } 
 }
 
-/* تخصيص شريط التمرير (Scrollbar) ليناسب الفخامة */
-::-webkit-scrollbar { width: 6px; }
+/* تحسين شريط التمرير */
+::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(197, 160, 89, 0.3); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: var(--itqan-gold); }
+::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.4); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--itqan-gold-primary); }
