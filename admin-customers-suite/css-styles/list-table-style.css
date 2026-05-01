@@ -1,9 +1,103 @@
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
-:root { --main-blue: #003366; --gold: #c5a059; }
-body { font-family: 'Tajawal', sans-serif; margin: 0; direction: rtl; }
-.sidebar { width: 260px; background: var(--main-blue); color: white; height: 100vh; padding: 20px; position: fixed; }
-.brand-identity h1 { color: var(--gold); font-size: 1.4rem; margin: 0; }
-.menu-item { display: block; padding: 10px; color: #fff; text-decoration: none; border-radius: 5px; margin-top: 5px; }
-.menu-item:hover { background: var(--gold); color: var(--main-blue); }
-.content-viewport { margin-right: 260px; height: 100vh; }
-iframe { width: 100%; height: 100%; border: none; }
+/* 
+   إطار العمل الرئيسي - منصة في خدمتك V12.12.12 
+   الهوية البصرية المعتمدة لمؤسسة الإتقان بلس - حائل
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+
+:root { 
+    --main-blue: #001f3f; /* تم تحديثه للكحلي الرسمي */
+    --gold: #c5a059; 
+    --bg-light: #f4f7f6;
+    --sidebar-width: 280px;
+}
+
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+}
+
+body { 
+    font-family: 'Tajawal', sans-serif; 
+    direction: rtl; 
+    background-color: var(--bg-light);
+    height: 100vh;
+    overflow: hidden; /* لمنع السكرول المزدوج مع الإطارات */
+}
+
+/* حاوية النظام الرئيسية */
+.app-wrapper {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+}
+
+/* القائمة الجانبية المحدثة */
+.sidebar { 
+    width: var(--sidebar-width); 
+    background: var(--main-blue); 
+    color: white; 
+    height: 100vh; 
+    padding: 25px 15px; 
+    flex-shrink: 0;
+    border-left: 2px solid var(--gold);
+    box-shadow: -4px 0 10px rgba(0,0,0,0.1);
+    z-index: 1000;
+}
+
+.brand-identity {
+    text-align: center;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(197, 160, 89, 0.2);
+}
+
+.brand-identity h1 { 
+    color: var(--gold); 
+    font-size: 1.3rem; 
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* عناصر القائمة */
+.menu-item { 
+    display: flex; 
+    align-items: center;
+    padding: 12px 15px; 
+    color: rgba(255, 255, 255, 0.8); 
+    text-decoration: none; 
+    border-radius: 8px; 
+    margin-top: 8px; 
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.menu-item:hover { 
+    background: var(--gold); 
+    color: var(--main-blue); 
+    transform: translateX(-5px); /* تأثير انزلاق بسيط */
+}
+
+.menu-item.active {
+    background: rgba(197, 160, 89, 0.1);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+}
+
+/* منطقة عرض المحتوى (Iframe Container) */
+.content-viewport { 
+    flex-grow: 1;
+    height: 100vh; 
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+iframe { 
+    width: 100%; 
+    height: 100%; 
+    border: none; 
+    display: block;
+}
