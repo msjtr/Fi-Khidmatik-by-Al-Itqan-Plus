@@ -1,0 +1,20 @@
+<!-- سحب التنسيق من المجلد الأب -->
+<link rel="stylesheet" href="../css-styles/sidebar-style.css">
+
+<aside class="itqan-sidebar">
+    <div class="sidebar-brand">
+        <h2>في خدمتك</h2>
+        <p>الإتقان بلس - حائل</p>
+    </div>
+    <nav class="sidebar-nav">
+        <div onclick="handleSidebarClick('dashboard')" class="nav-btn">🏠 لوحة التحكم</div>
+        <div onclick="handleSidebarClick('customers')" class="nav-btn">👤 إدارة العملاء</div>
+        <div onclick="handleSidebarClick('stats')" class="nav-btn">📊 الإحصاءات</div>
+    </nav>
+    <div class="sidebar-exit">
+        <button onclick="handleLogout()" class="exit-link">🚪 خروج</button>
+    </div>
+</aside>
+
+<!-- سحب الأوامر من المجلد الأب -->
+<script src="../js-logic/sidebar-logic.js"></script>
