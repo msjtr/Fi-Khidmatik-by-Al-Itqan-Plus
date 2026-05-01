@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام Tera | مؤسسة الإتقان بلس</title>
 
-    <!-- 🖼️ التبويمة الرسمية للمنصة -->
+    <!-- 🖼️ التبويمة -->
     <link rel="icon" type="image/svg+xml" href="../images/logo.svg">
 
-    <!-- 🎨 ربط ملفات التنسيق الفاخرة (11 ملف) -->
+    <!-- 🎨 ربط ملفات التنسيق (11 ملف) -->
     <link rel="stylesheet" href="css-styles/hub-style.css">
     <link rel="stylesheet" href="css-styles/buttons-theme.css">
     <link rel="stylesheet" href="css-styles/header-style.css">
@@ -20,27 +20,45 @@
     <link rel="stylesheet" href="css-styles/stats-visuals.css">
     <link rel="stylesheet" href="css-styles/auth-style.css">
     <link rel="stylesheet" href="css-styles/print-layout.css">
+
+    <style>
+        /* 🛠️ تنسيق الطوارئ لضمان استقرار الواجهة الظاهرة في الصورة */
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+        .tera-admin-layout { display: flex; flex-direction: column; height: 100vh; }
+        
+        #header-mount { min-height: 70px; background: #1a237e; width: 100%; }
+        
+        .tera-main-content { display: flex; flex: 1; overflow: hidden; }
+        
+        #sidebar-mount { width: 260px; min-width: 260px; background: #283593; height: 100%; }
+        
+        .tera-view-window { flex: 1; height: 100%; background: #fff; position: relative; }
+        
+        #tera-iframe { width: 100%; height: 100%; border: none; }
+        
+        #footer-mount { min-height: 40px; background: #f1f1f1; width: 100%; }
+    </style>
 </head>
 <body>
 
     <div class="tera-admin-layout">
-        <!-- منطقة حقن المكونات الديناميكية -->
+        <!-- 1. الهيدر (يظهر في الأعلى دائماً) -->
         <header id="header-mount"></header>
 
+        <!-- 2. المحتوى الأوسط (سايدبار بجانب الصفحة) -->
         <div class="tera-main-content">
             <aside id="sidebar-mount"></aside>
 
             <main class="tera-view-window">
-                <!-- نافذة العرض الأساسية لبيانات الإتقان بلس -->
-                <iframe id="tera-iframe" name="tera-iframe" src="pages/customers-list.html" frameborder="0"></iframe>
+                <iframe id="tera-iframe" name="tera-iframe" src="pages/customers-list.html"></iframe>
             </main>
         </div>
 
+        <!-- 3. الفوتر (في الأسفل) -->
         <footer id="footer-mount"></footer>
     </div>
 
-    <!-- 🧠 النظام البرمجي المتكامل بنظام Modules -->
-    <!-- ترتيب التحميل يبدأ بالمحرك الأساسي Firebase وصولاً للمكونات الإضافية -->
+    <!-- 🧠 الربط البرمجي بنظام Modules -->
     <script src="js-logic/firebase.js" type="module"></script> 
     <script src="js-logic/api-connector.js" type="module"></script>
     <script src="js-logic/auth-logic.js" type="module"></script>
@@ -57,9 +75,6 @@
     <script src="js-logic/map-logic.js" type="module"></script>
 
     <script>
-        /**
-         * محرك تهيئة نظام Tera الذكي
-         */
         async function initTeraSystem() {
             const components = [
                 { id: 'header-mount', url: 'mm/header.html' },
@@ -67,7 +82,6 @@
                 { id: 'footer-mount', url: 'mm/footer.html' }
             ];
 
-            // تحميل المكونات بشكل تتابعي لضمان استقرار واجهة حائل
             for (const item of components) {
                 try {
                     const response = await fetch(item.url);
@@ -77,29 +91,23 @@
                         if (target) target.innerHTML = html;
                     }
                 } catch (err) { 
-                    console.error(`Tera Alert: فشل تحميل المكون [${item.url}]`); 
+                    console.error(`خطأ في تحميل مكونات حائل: ${item.url}`); 
                 }
             }
             
-            // إبلاغ محركات الجافا سكريبت بأن الواجهة جاهزة (مثل الساعة والإحصائيات)
+            // إرسال إشارة جاهزية الواجهة لتشغيل الساعة واسم المستخدم
             document.dispatchEvent(new Event('TeraLayoutReady'));
         }
 
-        /**
-         * وظيفة التنقل العالمي (Global Navigation)
-         * تسمح بتغيير محتوى الـ iframe من أي مكان في النظام
-         */
         window.teraNavigate = function(targetPage) {
             const frame = document.getElementById('tera-iframe');
             if (frame) {
-                // إضافة تأثير بصري بسيط عند الانتقال
                 frame.style.opacity = '0.5';
                 frame.src = `pages/${targetPage}.html`;
                 frame.onload = () => frame.style.opacity = '1';
             }
         };
 
-        // تشغيل النظام فور اكتمال تحميل نافذة المتصفح
         window.addEventListener('load', initTeraSystem);
     </script>
 </body>
