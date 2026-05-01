@@ -1,13 +1,19 @@
+<!-- ربط التنسيقات من مجلد css-styles المخصص (رجوع خطوة للخلف من مجلد mm) -->
+<link rel="stylesheet" href="../css-styles/hub-style.css">
+<link rel="stylesheet" href="../css-styles/header-style.css">
+
 <div class="itqan-header-container">
     <!-- القسم الأيمن: شعار النظام واسم المنصة -->
     <div class="header-brand">
+        <!-- إضافة شعار المؤسسة الرسمي -->
+        <img src="../images/logo.svg" alt="Tera Logo" class="brand-logo-img" style="width: 45px; margin-left: 10px;">
         <div class="brand-details">
             <h1 class="platform-name">TERA <span>V12</span></h1>
             <p class="organization-name">مؤسسة الإتقان بلس</p>
         </div>
     </div>
 
-    <!-- القسم الأوسط: شريط البحث السريع (اختياري) -->
+    <!-- القسم الأوسط: شريط البحث السريع (مرتبط بـ list-table-logic.js) -->
     <div class="header-search">
         <div class="search-wrapper">
             <input type="text" placeholder="بحث سريع عن عميل أو فاتورة..." id="global-search">
@@ -17,7 +23,7 @@
 
     <!-- القسم الأيسر: معلومات المستخدم والساعة -->
     <div class="header-meta">
-        <!-- منطقة الساعة الرقمية (سيتم تحديثها بواسطة clock-logic.js) -->
+        <!-- منطقة الساعة الرقمية (تُحدث عبر clock-logic.js) -->
         <div class="header-clock">
             <div id="tera-hours">00</div>
             <span class="sep">:</span>
@@ -31,13 +37,19 @@
                 <span class="user-role">مدير النظام</span>
             </div>
             <div class="user-avatar">
-                <img src="images/admin-avatar.png" alt="Admin" onerror="this.src='https://ui-avatars.com/api/?name=M+S&background=c5a059&color=fff'">
+                <!-- تصحيح مسار الصورة واستخدام API كبديل في حال عدم التحميل -->
+                <img src="../images/admin-avatar.png" alt="Admin" 
+                     onerror="this.src='https://ui-avatars.com/api/?name=Mohamed+AlShammari&background=c5a059&color=fff'">
             </div>
             
-            <!-- زر الإعدادات / الخروج -->
-            <button class="header-action-btn" title="الإعدادات">
+            <!-- زر الإعدادات / الخروج (مرتبط بـ auth-logic.js) -->
+            <button class="header-action-btn" title="الإعدادات" id="header-settings-btn">
                 ⚙️
             </button>
         </div>
     </div>
 </div>
+
+<!-- ربط الأوامر البرمجية الضرورية كـ Modules -->
+<script type="module" src="../js-logic/header-logic.js"></script>
+<script type="module" src="../js-logic/clock-logic.js"></script>
