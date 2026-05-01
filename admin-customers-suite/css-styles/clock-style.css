@@ -1,0 +1,46 @@
+:root {
+    --itqan-blue: #001f3f;
+    --itqan-gold: #c5a059;
+}
+
+body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: transparent; /* لتتمكن من دمجها كإطار */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.glass-box {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 2px solid var(--itqan-gold);
+    padding: 30px 60px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.clock-text {
+    font-size: 4rem;
+    font-weight: bold;
+    color: var(--itqan-blue);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 10px;
+}
+
+.date-text {
+    font-size: 1.5rem;
+    color: #555;
+    letter-spacing: 1px;
+}
+
+.location-tag {
+    margin-top: 15px;
+    color: var(--itqan-gold);
+    font-weight: bold;
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+}
