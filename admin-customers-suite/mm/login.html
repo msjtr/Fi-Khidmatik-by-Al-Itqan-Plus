@@ -2,24 +2,39 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>دخول النظام | في خدمتك</title>
-    <!-- سحب التنسيق المخصص -->
-    <link rel="stylesheet" href="../css-styles/auth-style.css">
+    
+    <!-- الربط المباشر لضمان تحميل التنسيق الفاخر -->
+    <link rel="stylesheet" href="css-styles/auth-style.css">
+    
+    <!-- أيقونة منصة Tera الرسمية -->
+    <link rel="icon" type="image/svg+xml" href="images/logo.svg">
 </head>
 <body class="itqan-auth-bg">
     <div class="login-container">
         <div class="login-header">
+            <!-- إضافة الشعار لتعزيز الهوية البصرية -->
+            <img src="images/logo.svg" alt="Tera Logo" style="height: 60px; margin-bottom: 15px;">
             <h1>دخول الإدارة</h1>
             <p>منصة الإتقان بلس - حائل</p>
         </div>
+        
         <div class="login-fields">
-            <input type="email" id="userEmail" placeholder="البريد الإلكتروني" required>
-            <input type="password" id="userPass" placeholder="كلمة المرور" required>
-            <button id="loginBtn" class="btn-auth">دخول</button>
+            <div class="auth-input-group">
+                <input type="email" id="userEmail" placeholder="البريد الإلكتروني" required>
+            </div>
+            <div class="auth-input-group">
+                <input type="password" id="userPass" placeholder="كلمة المرور" required>
+            </div>
+            <!-- زر الدخول الذهبي المعتمد لمشاريعك -->
+            <button id="loginBtn" class="btn-auth">تسجيل الدخول</button>
         </div>
+
+        <div id="auth-message" style="margin-top: 15px; font-size: 0.8rem; color: #d9534f;"></div>
     </div>
 
-    <!-- سحب الأوامر والربط مع Firebase -->
-    <script type="module" src="../js-logic/auth-logic.js"></script>
+    <!-- استدعاء المنطق البرمجي والربط مع Firebase بمسار مباشر -->
+    <script type="module" src="js-logic/auth-logic.js"></script>
 </body>
 </html>
