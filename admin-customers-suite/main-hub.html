@@ -3,102 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>في خدمتك | لوحة الإدارة الرئيسية</title>
     
-    <!-- ربط التنسيق الأساسي للهيكل -->
+    <!-- 1. تبويبة المتصفح والشعار (Favicon) -->
+    <title>في خدمتك | مؤسسة الإتقان بلس</title>
+    <link rel="icon" type="image/svg+xml" href="../images/logo.svg">
+
+    <!-- 2. ربط كافة ملفات التنسيق (CSS) من مجلد css-styles -->
     <link rel="stylesheet" href="css-styles/hub-style.css">
+    <link rel="stylesheet" href="css-styles/sidebar-style.css">
+    <link rel="stylesheet" href="css-styles/header-style.css">
+    <link rel="stylesheet" href="css-styles/footer-style.css">
     <link rel="stylesheet" href="css-styles/buttons-theme.css">
-    
+    <link rel="stylesheet" href="css-styles/list-table-style.css">
+    <link rel="stylesheet" href="css-styles/stats-visuals.css">
+
     <style>
-        /* تنظيم توزيع الواجهة */
-        body { margin: 0; display: flex; background-color: #f4f7f6; overflow: hidden; height: 100vh; }
+        /* تنظيم الواجهة لضمان ثبات الهيدر والسايدبار */
+        body { margin: 0; display: flex; background-color: #f4f7f6; height: 100vh; overflow: hidden; }
         .main-wrapper { display: flex; width: 100%; height: 100%; }
-        
-        /* حاوية السايدبار */
-        #sidebar-placeholder { width: 260px; height: 100%; flex-shrink: 0; }
-        
-        /* حاوية المحتوى المتغير */
-        .page-container { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
-        
-        /* منطقة العرض الديناميكي */
-        .dynamic-view { flex-grow: 1; padding: 20px; overflow-y: auto; background: #fafafa; }
-        iframe { width: 100%; height: 100%; border: none; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .page-container { flex-grow: 1; display: flex; flex-direction: column; height: 100vh; }
+        .dynamic-view { flex-grow: 1; background: #fff; position: relative; }
+        iframe { width: 100%; height: 100%; border: none; }
     </style>
 </head>
 <body>
 
     <div class="main-wrapper">
         
-        <!-- 1. استدعاء القائمة الجانبية من مجلد mm -->
-        <div id="sidebar-placeholder"></div>
+        <!-- 3. القائمة الجانبية (Sidebar) مسحوبة من مجلد mm -->
+        <div id="sidebar-target"></div>
 
         <div class="page-container">
             
-            <!-- 2. استدعاء الهيدر (الساعة والترحيب) من مجلد mm -->
-            <div id="header-placeholder"></div>
+            <!-- 4. الرأس (Header) مسحوب من مجلد mm -->
+            <div id="header-target"></div>
 
-            <!-- 3. منطقة عرض الصفحات (المحتوى المتغير) -->
+            <!-- 5. منطقة عرض المحتوى (Pages) -->
             <main class="dynamic-view">
-                <!-- الصفحة الافتراضية عند الفتح هي قائمة العملاء -->
-                <iframe name="content-frame" src="pages/customers-list.html" id="main-iframe"></iframe>
+                <iframe name="content-view" id="main-frame" src="pages/customers-list.html"></iframe>
             </main>
 
-            <!-- 4. استدعاء التذييل من مجلد mm -->
-            <div id="footer-placeholder"></div>
+            <!-- 6. التذييل (Footer) مسحوب من مجلد mm -->
+            <div id="footer-target"></div>
 
         </div>
     </div>
 
-    <!-- محرك الربط الذكي -->
+    <!-- 7. الأوامر البرمجية (JS) والربط المركزي -->
+    
+    <!-- تهيئة Firebase الأساسية -->
+    <script type="module" src="js-logic/firebase.js"></script>
+    
+    <!-- محرك التشغيل الرئيسي -->
     <script type="module">
-        // استدعاء الأوامر المركزية
         import { initApp } from './js-logic/main.js';
 
-        async function loadComponent(id, path) {
+        // وظيفة التحميل الديناميكي للمكونات من مجلد mm
+        async function injectComponent(elementId, filePath) {
             try {
-                const response = await fetch(path);
+                const response = await fetch(filePath);
                 const html = await response.text();
-                document.getElementById(id).innerHTML = html;
-                
-                // تفعيل السكريبتات داخل المكونات المحملة (مثل الساعة في الهيدر)
-                const scripts = document.getElementById(id).querySelectorAll('script');
+                const container = document.getElementById(elementId);
+                container.innerHTML = html;
+
+                // إعادة تفعيل السكريبتات (للساعة والتنقل)
+                const scripts = container.querySelectorAll('script');
                 scripts.forEach(oldScript => {
                     const newScript = document.createElement('script');
                     Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-                    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                    if (oldScript.src) {
+                        newScript.src = oldScript.src;
+                    } else {
+                        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                    }
                     oldScript.parentNode.replaceChild(newScript, oldScript);
                 });
             } catch (err) {
-                console.error(`خطأ في تحميل المكون ${path}:`, err);
+                console.error("خطأ في ربط المكون:", filePath, err);
             }
         }
 
-        // تشغيل المنصة وتحميل الأجزاء عند البدء
+        // تنفيذ الربط عند فتح الصفحة
         document.addEventListener('DOMContentLoaded', () => {
-            loadComponent('sidebar-placeholder', 'mm/sidebar.html');
-            loadComponent('header-placeholder', 'mm/header.html');
-            loadComponent('footer-placeholder', 'mm/footer.html');
-            initApp(); // تشغيل منطق Firebase والتحقق من الجلسة
-        });
-
-        /**
-         * وظيفة التنقل المركزي بين الصفحات
-         * تستخدمها القائمة الجانبية (Sidebar) لتغيير محتوى الـ Iframe
-         */
-        window.navigateTo = function(pageName) {
-            const frame = document.getElementById('main-iframe');
-            const pagesMap = {
-                'list': 'pages/customers-list.html',
-                'add': 'pages/add-customer.html',
-                'stats': 'pages/customers-stats.html',
-                'logs': 'pages/system-logs.html',
-                'archive': 'pages/archive-manager.html'
-            };
+            injectComponent('sidebar-target', 'mm/sidebar.html');
+            injectComponent('header-target', 'mm/header.html');
+            injectComponent('footer-target', 'mm/footer.html');
             
-            if (pagesMap[pageName]) {
-                frame.src = pagesMap[pageName];
-            }
-        };
+            // تشغيل محرك النظام الأساسي
+            initApp(); 
+        });
     </script>
 
 </body>
