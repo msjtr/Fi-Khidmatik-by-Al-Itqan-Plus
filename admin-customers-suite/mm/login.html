@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تسجيل الدخول | نظام Tera V12</title>
 
-    <!-- 🖼️ الأيقونة -->
-    <link rel="icon" type="image/svg+xml" href="images/logo.svg">
+    <!-- 🖼️ الأيقونة - تم تصحيح المسار للرجوع لمجلد الصور الرئيسي -->
+    <link rel="icon" type="image/svg+xml" href="../images/logo.svg">
 
-    <!-- 🎨 ملفات التنسيق -->
-    <link rel="stylesheet" href="css-styles/auth-style.css">
-    <link rel="stylesheet" href="css-styles/buttons-theme.css">
+    <!-- 🎨 ملفات التنسيق - تم ربطها من مجلد css-styles المخصص -->
+    <link rel="stylesheet" href="../css-styles/auth-style.css">
+    <link rel="stylesheet" href="../css-styles/buttons-theme.css">
 
     <style>
-        /* 🛠️ تنسيق خاص بصفحة الدخول لضمان الفخامة */
+        /* 🛠️ التنسيق الفاخر الخاص بمؤسسة الإتقان بلس */
         body {
             margin: 0;
             padding: 0;
@@ -21,7 +21,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: linear-gradient(135deg, #001f3f 0%, #001529 100%); /* أزرق الإتقان العميق */
+            background: linear-gradient(135deg, #001f3f 0%, #001529 100%); 
             font-family: 'Segoe UI', Tahoma, sans-serif;
             overflow: hidden;
         }
@@ -40,7 +40,7 @@
             border-radius: 25px;
             padding: 40px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-            border: 2px solid rgba(197, 160, 89, 0.3); /* إطار ذهبي خفيف */
+            border: 2px solid rgba(197, 160, 89, 0.3); /* إطار ذهبي يمثل هوية حائل */
             text-align: center;
         }
 
@@ -56,14 +56,15 @@
             font-weight: 800;
         }
 
+        .login-header h2 span { color: #c5a059; }
+
         .login-header p {
-            color: #c5a059; /* ذهبي */
+            color: #c5a059;
             margin-bottom: 30px;
             font-weight: 600;
             font-size: 0.9rem;
         }
 
-        /* تنسيق الحقول */
         .input-group {
             margin-bottom: 20px;
             text-align: right;
@@ -91,7 +92,6 @@
         .input-group input:focus {
             outline: none;
             border-color: #c5a059;
-            background: #fff;
             box-shadow: 0 0 0 4px rgba(197, 160, 89, 0.1);
         }
 
@@ -106,7 +106,6 @@
             font-weight: 700;
             cursor: pointer;
             transition: 0.3s;
-            margin-top: 10px;
         }
 
         .login-btn:hover {
@@ -121,7 +120,6 @@
             color: #888;
         }
 
-        /* زينة خلفية (دوائر ذهبية) */
         .bg-circle {
             position: absolute;
             border-radius: 50%;
@@ -132,15 +130,14 @@
 </head>
 <body>
 
-    <!-- عناصر زينة خلفية -->
     <div class="bg-circle" style="width: 400px; height: 400px; top: -100px; right: -100px;"></div>
     <div class="bg-circle" style="width: 300px; height: 300px; bottom: -50px; left: -50px;"></div>
 
     <div class="login-wrapper">
         <div class="login-card">
             <div class="login-logo">
-                <!-- تأكد من وجود الشعار في مجلد images -->
-                <img src="images/logo.svg" alt="Tera Logo" onerror="this.src='https://ui-avatars.com/api/?name=Tera+V12&background=001f3f&color=c5a059'">
+                <!-- تصحيح مسار الشعار للوصول للمجلد الرئيسي -->
+                <img src="../images/logo.svg" alt="Tera Logo" onerror="this.src='https://ui-avatars.com/api/?name=Tera+V12&background=001f3f&color=c5a059'">
             </div>
 
             <div class="login-header">
@@ -150,7 +147,7 @@
 
             <form id="login-form">
                 <div class="input-group">
-                    <label>البريد الإلكتروني أو اسم المستخدم</label>
+                    <label>البريد الإلكتروني</label>
                     <input type="email" id="user-email" placeholder="example@itqan.sa" required>
                 </div>
 
@@ -168,23 +165,28 @@
         </div>
     </div>
 
-    <!-- 🧠 منطق Firebase Auth -->
+    <!-- 🧠 الربط مع منطق الجافاسكربت الخاص بالنظام -->
     <script type="module">
-        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        // استيراد إعدادات firebase.js التي قمت بإنشائها مسبقاً
+        import { auth } from "../js-logic/firebase.js"; // استخدام ملف الإعدادات الخاص بك
+        import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         
         const loginForm = document.getElementById('login-form');
         
-        loginForm.addEventListener('submit', (e) => {
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('user-email').value;
             const pass = document.getElementById('user-password').value;
             
-            // هنا يتم الربط مع firebase-auth.js
-            console.log("محاولة تسجيل دخول للمستخدم:", email);
-            
-            // تحويل المستخدم إلى الصفحة الرئيسية بعد التحقق بنجاح
-            window.location.href = 'main-hub.html';
+            try {
+                // محاولة تسجيل الدخول عبر Firebase
+                await signInWithEmailAndPassword(auth, email, pass);
+                console.log("تم تسجيل الدخول بنجاح للمستخدم:", email);
+                // التوجه للهب الرئيسي (main-hub.html موجود في المجلد الأعلى)
+                window.location.href = '../main-hub.html';
+            } catch (error) {
+                console.error("خطأ في الدخول:", error.message);
+                alert("خطأ في البيانات: " + error.message);
+            }
         });
     </script>
 </body>
