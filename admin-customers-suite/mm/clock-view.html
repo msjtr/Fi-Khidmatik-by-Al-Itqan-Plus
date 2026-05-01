@@ -1,22 +1,17 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <!-- الربط المباشر مع ملف التنسيق الخاص بالساعة -->
-    <link rel="stylesheet" href="../css-styles/clock-style.css">
-</head>
-<body class="widget-body">
-    <div class="clock-container">
-        <div class="glass-box">
-            <!-- تم تغيير المعرفات لتطابق محرك clock-logic.js المعتمد -->
-            <div id="h-clock" class="clock-text">00:00:00</div>
-            <div id="h-date" class="date-text">-- / -- / ----</div>
-            <div class="location-tag">مؤسسة الإتقان بلس | حائل</div>
-        </div>
+<div class="tera-clock-container">
+    <!-- عرض الوقت -->
+    <div class="time-section">
+        <span id="tera-hours">00</span>
+        <span class="separator">:</span>
+        <span id="tera-minutes">00</span>
+        <span class="separator">:</span>
+        <span id="tera-seconds">00</span>
+        <span id="time-period">--</span>
     </div>
 
-    <!-- استدعاء المنطق البرمجي بنظام Module -->
-    <!-- ملاحظة: استخدم المسار الصحيح حسب موقع الصفحة في المجلدات -->
-    <script type="module" src="../js-logic/clock-logic.js"></script>
-</body>
-</html>
+    <!-- عرض التاريخ (هجري وميلادي) -->
+    <div class="date-section">
+        <div id="hijri-date" class="date-item">.. / .. / .... هـ</div>
+        <div id="gregorian-date" class="date-item">.. / .. / .... م</div>
+    </div>
+</div>
