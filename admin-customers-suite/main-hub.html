@@ -3,29 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>في خدمتك | الإتقان بلس</title>
+    <title>منصة في خدمتك | الإتقان بلس</title>
     
-    <!-- 1. ربط الشعار كأيقونة للمتصفح (Favicon) -->
+    <!-- 1. ربط الشعار كأيقونة (صعود درجة للمجلد الرئيسي ثم الدخول لـ images) -->
     <link rel="icon" type="image/svg+xml" href="../images/logo.svg">
 
-    <!-- 2. ربط ملفات التنسيق الـ 11 (css-styles) بالمسارات الصحيحة -->
-    <link rel="stylesheet" href="css-styles/hub-style.css">
-    <link rel="stylesheet" href="css-styles/sidebar-style.css">
-    <link rel="stylesheet" href="css-styles/header-style.css">
-    <link rel="stylesheet" href="css-styles/footer-style.css">
+    <!-- 2. ربط جميع ملفات التنسيق الـ 11 بشكل دقيق وصحيح -->
+    <link rel="stylesheet" href="css-styles/add-cust-style.css">
+    <link rel="stylesheet" href="css-styles/auth-style.css">
     <link rel="stylesheet" href="css-styles/buttons-theme.css">
     <link rel="stylesheet" href="css-styles/clock-style.css">
-    <link rel="stylesheet" href="css-styles/auth-style.css">
-    <link rel="stylesheet" href="css-styles/add-cust-style.css">
+    <link rel="stylesheet" href="css-styles/footer-style.css">
+    <link rel="stylesheet" href="css-styles/header-style.css">
+    <link rel="stylesheet" href="css-styles/hub-style.css">
     <link rel="stylesheet" href="css-styles/list-table-style.css">
-    <link rel="stylesheet" href="css-styles/stats-visuals.css">
     <link rel="stylesheet" href="css-styles/print-layout.css">
+    <link rel="stylesheet" href="css-styles/sidebar-style.css">
+    <link rel="stylesheet" href="css-styles/stats-visuals.css">
 
     <style>
-        /* تنسيقات أساسية لضبط توزيع الشاشة في حائل */
+        /* تنسيق أساسي لضبط الواجهة في حال تأخر تحميل ملفات CSS */
         body { margin: 0; display: flex; height: 100vh; background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; }
         .app-container { display: flex; width: 100%; height: 100%; }
-        #sidebar-area { width: 280px; flex-shrink: 0; z-index: 100; }
+        #sidebar-area { width: 280px; flex-shrink: 0; background: #001f3f; z-index: 100; }
         .content-area { flex-grow: 1; display: flex; flex-direction: column; }
         #header-area { height: 70px; background: #fff; display: flex; align-items: center; padding: 0 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .page-display { flex-grow: 1; position: relative; background: #fff; }
@@ -36,50 +36,74 @@
 <body>
 
     <div class="app-container">
-        <!-- منطقة القائمة الجانبية -->
+        <!-- منطقة القائمة الجانبية (تسحب من mm/sidebar.html) -->
         <aside id="sidebar-area"></aside>
 
         <section class="content-area">
-            <!-- الهيدر مع شعار الإتقان بلس -->
+            <!-- منطقة الهيدر (تسحب من mm/header.html مع الشعار) -->
             <header id="header-area">
+                <!-- استدعاء الشعار المرئي في الهيدر -->
                 <img src="../images/logo.svg" alt="الإتقان بلس" class="main-logo">
                 <div id="header-content" style="flex-grow: 1;"></div>
             </header>
 
-            <!-- عرض الصفحات (مثل جدول العملاء) -->
+            <!-- منطقة عرض الصفحات الفرعية الـ 12 (من مجلد pages) -->
             <main class="page-display">
                 <iframe name="main-viewport" src="pages/customers-list.html" id="frame-engine"></iframe>
             </main>
 
-            <!-- التذييل -->
+            <!-- منطقة التذييل (تسحب من mm/footer.html) -->
             <footer id="footer-area"></footer>
         </section>
     </div>
 
-    <!-- 3. المحرك البرمجي الرئيسي -->
+    <!-- 3. المحرك البرمجي والربط الديناميكي -->
     <script type="module">
         import { initApp } from './js-logic/main.js';
 
-        // وظيفة جلب المكونات الفرعية (Header, Sidebar, Footer)
-        async function loadComponent(id, path) {
+        // 🟢 حل مشكلة: Uncaught ReferenceError: handleSidebarClick is not defined
+        // تعريف الوظيفة بشكل عالمي (Global) لتعمل مع كل روابط القائمة الجانبية
+        window.handleSidebarClick = function(pageName) {
+            const frame = document.getElementById('frame-engine');
+            if (frame && pageName) {
+                // توجيه المتصفح للمجلد الصحيح للصفحات
+                frame.src = `pages/${pageName}.html`;
+            }
+        };
+
+        // وظيفة سحب المكونات وتفعيل السكريبتات داخلها
+        async function loadPart(id, file) {
             try {
-                const response = await fetch(path);
-                if (!response.ok) throw new Error(`Missing: ${path}`);
-                const html = await response.text();
-                document.getElementById(id).innerHTML = html;
-            } catch (err) {
-                console.error("خطأ في تحميل المكون:", err);
+                const res = await fetch(file);
+                if (!res.ok) throw new Error(`المسار مفقود: ${file}`);
+                const html = await res.text();
+                const target = document.getElementById(id);
+                target.innerHTML = html;
+
+                // إذا كان المكون يحتوي على أكواد JS مدمجة، هذا السطر سيقوم بتشغيلها
+                const scripts = target.querySelectorAll('script');
+                scripts.forEach(oldScript => {
+                    const newScript = document.createElement('script');
+                    Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                    oldScript.parentNode.replaceChild(newScript, oldScript);
+                });
+            } catch (e) {
+                console.error("خطأ في الربط:", e);
             }
         }
 
-        // تشغيل المنصة
-        document.addEventListener('DOMContentLoaded', () => {
-            loadComponent('sidebar-area', 'mm/sidebar.html');
-            loadComponent('header-content', 'mm/header.html');
-            loadComponent('footer-area', 'mm/footer.html');
+        // تشغيل المنصة فور تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', async () => {
+            // تحميل المكونات الثلاثة الأساسية
+            await loadPart('sidebar-area', 'mm/sidebar.html');
+            await loadPart('header-content', 'mm/header.html');
+            await loadPart('footer-area', 'mm/footer.html');
             
-            // تشغيل محرك Tera V12.12.12
-            initApp(); 
+            // تشغيل محرك Tera المركزي
+            if (typeof initApp === 'function') {
+                initApp();
+            }
         });
     </script>
 </body>
