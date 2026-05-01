@@ -1,16 +1,28 @@
 /* =========================================
-   ملف التنسيق الشامل - hhh-style.css
+   ملف التنسيق الشامل الإبداعي - hhh-style.css
    نظام: Tera V12 - مؤسسة الإتقان بلس (حائل)
 ========================================= */
+
+/* --- 1. متغيرات الألوان والتأثيرات (Premium Theme) --- */
 :root {
     --itqan-blue: #001f3f;
+    --itqan-blue-dark: #000d1a;
     --itqan-gold: #c5a059;
-    --sidebar-w: 260px;
-    --header-h: 75px;
-    --footer-h: 40px;
+    --itqan-gold-glow: rgba(197, 160, 89, 0.4);
     --bg-color: #f4f7f6;
+    
+    /* أبعاد الواجهة */
+    --sidebar-w: 260px;
+    --header-h: 80px; /* زيادة طفيفة لفخامة الهيدر */
+    --footer-h: 40px;
+    
+    /* تأثيرات بصرية */
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --premium-shadow: 0 8px 25px rgba(0, 31, 63, 0.08);
+    --gold-gradient: linear-gradient(135deg, #c5a059 0%, #e6cc98 100%);
 }
 
+/* --- 2. الإعدادات الأساسية --- */
 body, html {
     margin: 0; padding: 0; height: 100vh;
     font-family: 'Segoe UI', Tahoma, sans-serif;
@@ -18,7 +30,7 @@ body, html {
     direction: rtl; overflow: hidden;
 }
 
-/* --- الهيكل الرئيسي (Grid Layout) لمنع التداخل --- */
+/* --- 3. الهيكل الرئيسي (Grid Layout) محصن ضد التداخل --- */
 .tera-layout {
     display: grid; height: 100vh; width: 100vw;
     grid-template-rows: var(--header-h) 1fr var(--footer-h);
@@ -29,21 +41,122 @@ body, html {
         "footer footer";
 }
 
-#header-mount { grid-area: header; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 1000; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
-#sidebar-mount { grid-area: sidebar; background: var(--itqan-blue); border-left: 3px solid var(--itqan-gold); padding: 20px 10px; z-index: 900; }
-#main-view { grid-area: main; position: relative; overflow: hidden; }
-#footer-mount { grid-area: footer; background: #fff; border-top: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 0.85rem; z-index: 1000; }
+/* --- 4. الهيدر (تأثير الزجاج الشفاف) --- */
+#header-mount { 
+    grid-area: header; 
+    background: var(--glass-bg); 
+    backdrop-filter: blur(12px); /* تأثير الزجاج */
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: var(--premium-shadow); 
+    z-index: 1000; display: flex; align-items: center; justify-content: space-between; 
+    padding: 0 30px; 
+    border-bottom: 1px solid rgba(255,255,255,0.5);
+}
 
-#tera-iframe { width: 100%; height: 100%; border: none; }
+/* --- 5. القائمة الجانبية (تدرج لوني عميق) --- */
+#sidebar-mount { 
+    grid-area: sidebar; 
+    background: linear-gradient(180deg, var(--itqan-blue) 0%, var(--itqan-blue-dark) 100%);
+    border-left: 1px solid rgba(197, 160, 89, 0.2); 
+    padding: 25px 15px; z-index: 900; 
+    box-shadow: -5px 0 20px rgba(0,0,0,0.1);
+}
 
-/* --- تنسيقات القائمة الجانبية (Sidebar) --- */
-.brand-title { text-align: center; color: var(--itqan-gold); font-size: 1.5rem; margin-bottom: 30px; font-weight: 900; border-bottom: 1px solid rgba(197, 160, 89, 0.2); padding-bottom: 15px; }
-.nav-btn { display: flex; align-items: center; gap: 10px; width: 100%; background: transparent; border: none; color: #fff; padding: 12px; margin-bottom: 5px; border-radius: 8px; cursor: pointer; transition: 0.3s; text-align: right; }
-.nav-btn:hover, .nav-btn.active { background: rgba(197, 160, 89, 0.15); color: var(--itqan-gold); }
+#main-view { grid-area: main; position: relative; overflow: hidden; background: var(--bg-color); }
+#tera-iframe { width: 100%; height: 100%; border: none; transition: opacity 0.4s ease; }
 
-/* --- تنسيقات الساعة (Clock) --- */
-.clock-container { background: rgba(0, 31, 63, 0.05); padding: 5px 15px; border-radius: 8px; border: 1px solid rgba(197, 160, 89, 0.3); text-align: center; }
-.time-display { font-size: 1.3rem; font-weight: bold; color: var(--itqan-blue); font-family: monospace; letter-spacing: 2px; }
-.time-display .sep { animation: blink 1s infinite; }
-.date-display { font-size: 0.75rem; color: #666; font-weight: 600; margin-top: 3px; }
-@keyframes blink { 50% { opacity: 0.2; } }
+/* --- 6. الفوتر --- */
+#footer-mount { 
+    grid-area: footer; background: #fff; 
+    border-top: 1px solid rgba(0,0,0,0.05); 
+    display: flex; align-items: center; justify-content: space-between; 
+    padding: 0 25px; font-size: 0.85rem; z-index: 1000; color: #555;
+}
+
+/* --- 7. الإبداع في القائمة الجانبية (Sidebar Styling) --- */
+.brand-title { 
+    text-align: center; color: transparent; 
+    background: var(--gold-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    font-size: 1.8rem; margin-bottom: 35px; font-weight: 900; 
+    letter-spacing: 2px;
+    position: relative;
+}
+
+/* خط تجميلي تحت الشعار */
+.brand-title::after {
+    content: ''; position: absolute; bottom: -15px; left: 20%; width: 60%; 
+    height: 2px; background: var(--gold-gradient); border-radius: 5px; opacity: 0.5;
+}
+
+.nav-btn { 
+    display: flex; align-items: center; gap: 12px; width: 100%; 
+    background: transparent; border: none; border-right: 3px solid transparent;
+    color: rgba(255,255,255,0.7); padding: 14px 15px; margin-bottom: 8px; 
+    border-radius: 8px 0 0 8px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+    text-align: right; font-size: 0.95rem;
+}
+
+.nav-btn:hover { 
+    background: rgba(197, 160, 89, 0.08); 
+    color: var(--itqan-gold); 
+    border-right: 3px solid var(--itqan-gold);
+    transform: translateX(-5px); /* حركة انسيابية لليسار */
+}
+
+/* تصميم الزر النشط */
+.nav-btn.active { 
+    background: var(--gold-gradient); 
+    color: var(--itqan-blue-dark); 
+    font-weight: bold; 
+    box-shadow: 0 4px 15px var(--itqan-gold-glow);
+    border-right: 3px solid transparent;
+    border-radius: 8px;
+}
+
+/* --- 8. الإبداع في الساعة الرقمية (Premium Clock Widget) --- */
+.clock-container { 
+    background: #ffffff; 
+    padding: 8px 20px; border-radius: 12px; 
+    border: 1px solid rgba(197, 160, 89, 0.3); 
+    text-align: center;
+    box-shadow: inset 0 0 10px rgba(197, 160, 89, 0.05), 0 4px 10px rgba(0,0,0,0.03);
+    position: relative;
+    overflow: hidden;
+}
+
+/* إضاءة خلفية خفيفة للساعة */
+.clock-container::before {
+    content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(197,160,89,0.05) 0%, transparent 60%);
+    z-index: 0; pointer-events: none;
+}
+
+.time-display { 
+    font-size: 1.4rem; font-weight: 900; 
+    color: var(--itqan-blue); font-family: 'Courier New', monospace; 
+    letter-spacing: 2px; position: relative; z-index: 1;
+}
+
+.time-display .sep { 
+    animation: blink 1.2s infinite ease-in-out; 
+    color: var(--itqan-gold); 
+}
+
+.date-display { 
+    font-size: 0.75rem; color: #7f8c8d; font-weight: 700; 
+    margin-top: 4px; position: relative; z-index: 1;
+    display: flex; gap: 8px; justify-content: center; align-items: center;
+}
+
+@keyframes blink { 
+    0%, 100% { opacity: 1; text-shadow: 0 0 5px var(--itqan-gold-glow); }
+    50% { opacity: 0.3; text-shadow: none; } 
+}
+
+/* تخصيص شريط التمرير (Scrollbar) ليناسب الفخامة */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(197, 160, 89, 0.3); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--itqan-gold); }
