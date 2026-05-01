@@ -1,36 +1,86 @@
-<!-- 1. ربط التنسيق -->
-<link rel="stylesheet" href="css-styles/header-style.css">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام Tera | مؤسسة الإتقان بلس</title>
 
-<header class="itqan-header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px;">
-    <div class="header-right-section" style="display: flex; align-items: center; gap: 15px;">
-        <!-- إضافة الشعار الرسمي لمنصة في خدمتك V12 -->
-        <img src="images/logo.svg" alt="الإتقان بلس" style="height: 45px; width: auto;">
-        
-        <div class="user-info">
-            <span style="font-weight: bold; color: #001f3f;">مرحباً بك: أبا صالح الشمري</span>
+    <!-- 1. التبويمة (Logo) -->
+    <link rel="icon" type="image/svg+xml" href="../images/logo.svg">
+
+    <!-- 2. ربط جميع ملفات التنسيق (11 ملف CSS) -->
+    <link rel="stylesheet" href="css-styles/hub-style.css">
+    <link rel="stylesheet" href="css-styles/buttons-theme.css">
+    <link rel="stylesheet" href="css-styles/header-style.css">
+    <link rel="stylesheet" href="css-styles/sidebar-style.css">
+    <link rel="stylesheet" href="css-styles/footer-style.css">
+    <link rel="stylesheet" href="css-styles/clock-style.css">
+    <link rel="stylesheet" href="css-styles/add-cust-style.css">
+    <link rel="stylesheet" href="css-styles/list-table-style.css">
+    <link rel="stylesheet" href="css-styles/stats-visuals.css">
+    <link rel="stylesheet" href="css-styles/auth-style.css">
+    <link rel="stylesheet" href="css-styles/print-layout.css">
+</head>
+<body>
+
+    <div class="tera-main-container">
+        <!-- الهيدر (mm/header.html) -->
+        <header id="header-region"></header>
+
+        <div class="tera-body">
+            <!-- القائمة الجانبية (mm/sidebar.html) -->
+            <aside id="sidebar-region"></aside>
+
+            <!-- محرك عرض الصفحات الـ 12 (Pages) -->
+            <main class="tera-viewport">
+                <iframe id="main-frame" name="main-frame" src="pages/customers-list.html"></iframe>
+            </main>
         </div>
+
+        <!-- الفوتر (mm/footer.html) -->
+        <footer id="footer-region"></footer>
     </div>
 
-    <div class="live-meta" style="text-align: left;">
-        <!-- المعرفات h-clock و h-date مرتبطة بملف header-logic.js -->
-        <span id="h-clock" class="digital-clock" style="display: block; font-family: monospace; font-size: 1.2rem; color: #c5a059;">00:00:00</span>
-        <span id="h-date" class="digital-date" style="font-size: 0.85rem; color: #666;">--/--/----</span>
-    </div>
-</header>
+    <!-- 3. ربط جميع الأوامر والعمليات (15 ملف JS Logic) -->
+    <!-- الأولوية لـ Firebase للاتصال بقاعدة بيانات حائل -->
+    <script src="js-logic/firebase.js"></script> 
+    <script src="js-logic/api-connector.js"></script>
+    <script src="js-logic/auth-logic.js"></script>
+    <script src="js-logic/main.js"></script>
+    <script src="js-logic/header-logic.js"></script>
+    <script src="js-logic/sidebar-logic.js"></script>
+    <script src="js-logic/clock-logic.js"></script>
+    <script src="js-logic/add-cust-logic.js"></script>
+    <script src="js-logic/list-table-logic.js"></script>
+    <script src="js-logic/btn-actions-controller.js"></script>
+    <script src="js-logic/stats-engine.js"></script>
+    <script src="js-logic/log-tracker.js"></script>
+    <script src="js-logic/pdf-generator.js"></script>
+    <script src="js-logic/map-logic.js"></script>
 
-<!-- 2. تشغيل سكريبت الساعة الذكي مع المرجع النسبي الصحيح -->
-<script type="module">
-    /**
-     * تم استخدام './' لضمان توافق المسار مع معايير المتصفح الحديثة
-     * ولتجنب خطأ Module Specifier
-     */
-    import { initClock } from './js-logic/header-logic.js';
-    
-    try {
-        if (typeof initClock === 'function') {
-            initClock();
+    <!-- محرك التشغيل وحقن المكونات -->
+    <script>
+        async function loadTeraComponents() {
+            const layout = [
+                { id: 'header-region', url: 'mm/header.html' },
+                { id: 'sidebar-region', url: 'mm/sidebar.html' },
+                { id: 'footer-region', url: 'mm/footer.html' }
+            ];
+
+            for (const part of layout) {
+                try {
+                    const res = await fetch(part.url);
+                    document.getElementById(part.id).innerHTML = await res.text();
+                } catch (e) { console.error("خطأ في ربط المكون:", part.url); }
+            }
         }
-    } catch (error) {
-        console.error("خطأ في تشغيل ساعة الإتقان بلس:", error);
-    }
-</script>
+
+        // دالة التنقل بين صفحات المجلد pages
+        function goToPage(page) {
+            document.getElementById('main-frame').src = `pages/${page}.html`;
+        }
+
+        window.onload = loadTeraComponents;
+    </script>
+</body>
+</html>
