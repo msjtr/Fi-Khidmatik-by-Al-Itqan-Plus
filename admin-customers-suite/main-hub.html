@@ -2,13 +2,14 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>منصة في خدمتك | الإتقان بلس</title>
     
-    <!-- 1. ربط الشعار (صحيح: يخرج للمجلد الرئيسي ثم الصور) -->
+    <!-- 1. الأيقونة (Favicon) - المسار الصحيح للخروج للمجلد الرئيسي -->
     <link rel="icon" type="image/svg+xml" href="../images/logo.svg">
 
-    <!-- 2. ربط ملفات التنسيق الـ 11 (المسارات ثابتة هنا ولا تحتاج تعديل) -->
+    <!-- 2. ربط ملفات التنسيق الـ 11 من مجلد css-styles -->
     <link rel="stylesheet" href="css-styles/hub-style.css">
     <link rel="stylesheet" href="css-styles/sidebar-style.css">
     <link rel="stylesheet" href="css-styles/header-style.css">
@@ -22,14 +23,15 @@
     <link rel="stylesheet" href="css-styles/print-layout.css">
 
     <style>
-        body { margin: 0; display: flex; height: 100vh; background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        /* تنسيق هيكلي سريع لضمان استقرار الواجهة */
+        body { margin: 0; padding: 0; display: flex; height: 100vh; background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; }
         .app-container { display: flex; width: 100%; height: 100%; }
-        #sidebar-area { width: 260px; flex-shrink: 0; background: #001f3f; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
-        .content-area { flex-grow: 1; display: flex; flex-direction: column; }
-        #header-area { height: 70px; background: #fff; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid #e0e0e0; }
-        .page-display { flex-grow: 1; background: #fff; position: relative; }
+        #sidebar-area { width: 260px; flex-shrink: 0; background: #001f3f; }
+        .content-area { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
+        #header-area { height: 70px; background: #fff; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid #ddd; }
+        .page-display { flex-grow: 1; position: relative; background: #fff; }
         iframe { width: 100%; height: 100%; border: none; }
-        .brand-logo { height: 45px; margin-left: 15px; }
+        .main-logo { height: 45px; margin-left: 15px; }
     </style>
 </head>
 <body>
@@ -38,7 +40,7 @@
         <aside id="sidebar-area"></aside>
         <section class="content-area">
             <header id="header-area">
-                <img src="../images/logo.svg" alt="الإتقان بلس" class="brand-logo">
+                <img src="../images/logo.svg" alt="الإتقان بلس" class="main-logo">
                 <div id="header-content" style="flex-grow: 1;"></div>
             </header>
             <main class="page-display">
@@ -48,31 +50,31 @@
         </section>
     </div>
 
+    <!-- 3. المحرك البرمجي لإدارة منصة Tera -->
     <script type="module">
-        // استيراد المحرك (تأكد أن صفحة الدخول معطلة داخل هذا الملف)
         import { initApp } from './js-logic/main.js';
 
-        // وظيفة التنقل العالمي بين الصفحات الـ 12
+        // وظيفة التنقل العالمي بين الـ 12 صفحة
         window.handleSidebarClick = function(page) {
             const frame = document.getElementById('frame-engine');
             if (frame) frame.src = `pages/${page}.html`;
         };
 
-        // 🛠️ المصحح الذكي: يجلب الملفات ويحذف "../" لضمان عملها داخل المجلد الفرعي
+        // المصحح الآلي للمسارات لمنع خطأ 404
         async function loadPart(id, file) {
             try {
                 const res = await fetch(file);
                 if (!res.ok) throw new Error("404");
                 let html = await res.text();
                 
-                // تصحيح فوري لروابط الـ CSS والـ JS داخل المكونات
+                // تنظيف الروابط من ../ لضمان بقائها داخل admin-customers-suite
                 html = html.replace(/href="\.\.\//g, 'href="');
                 html = html.replace(/src="\.\.\//g, 'src="');
 
                 const target = document.getElementById(id);
                 target.innerHTML = html;
 
-                // إعادة تشغيل السكريبتات المدمجة بعد تصحيح مساراتها
+                // تفعيل السكريبتات الملحقة بالمكونات (مثل ساعة الهيدر)
                 target.querySelectorAll('script').forEach(oldScript => {
                     const newScript = document.createElement('script');
                     Array.from(oldScript.attributes).forEach(attr => {
@@ -84,16 +86,17 @@
                     oldScript.parentNode.replaceChild(newScript, oldScript);
                 });
             } catch (e) {
-                console.error(`خطأ في تحميل المكون ${file}:`, e);
+                console.error("فشل في ربط المكون:", file);
             }
         }
 
-        // إطلاق المنصة V12.12.12
         document.addEventListener('DOMContentLoaded', async () => {
+            // تحميل أجزاء النظام من مجلد mm
             await loadPart('sidebar-area', 'mm/sidebar.html');
             await loadPart('header-content', 'mm/header.html');
             await loadPart('footer-area', 'mm/footer.html');
             
+            // تشغيل تهيئة Firebase والمنصة
             if (typeof initApp === 'function') initApp();
         });
     </script>
