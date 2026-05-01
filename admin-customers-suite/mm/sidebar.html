@@ -1,66 +1,99 @@
-<!-- ربط التنسيقات من مجلد css-styles المخصص (الرجوع خطوة للخلف من مجلد mm) -->
+<!-- 🎨 ربط التنسيقات من مجلد css-styles المخصص (الرجوع خطوة للخلف من مجلد mm) -->
 <link rel="stylesheet" href="../css-styles/hub-style.css">
 <link rel="stylesheet" href="../css-styles/sidebar-style.css">
 
+<style>
+    /* ✨ تحسينات بصرية لهوية Tera V12 المتميزة */
+    .itqan-sidebar {
+        background-color: #001f3f; /* الكحلي الفخم لمؤسسة الإتقان بلس */
+        color: #ffffff;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .sidebar-brand h2 span {
+        color: #c5a059; /* اللون الذهبي لهوية حائل */
+    }
+
+    .nav-btn {
+        transition: all 0.3s ease;
+        border-right: 4px solid transparent;
+    }
+
+    .nav-btn.active, .nav-btn:hover {
+        background: rgba(197, 160, 89, 0.15);
+        border-right: 4px solid #c5a059;
+        color: #c5a059;
+    }
+
+    .status-online {
+        width: 10px;
+        height: 10px;
+        background-color: #2ecc71;
+        border-radius: 50%;
+        display: inline-block;
+        margin-left: 8px;
+        box-shadow: 0 0 8px #2ecc71;
+    }
+</style>
+
 <div class="itqan-sidebar">
-    <!-- قسم الشعار والهوية -->
-    <div class="sidebar-brand">
-        <!-- تصحيح مسار الشعار للوصول للمجلد الرئيسي -->
-        <img src="../images/logo.svg" alt="Tera Logo" class="brand-logo" 
+    <!-- قسم الشعار والهوية (مؤسسة الإتقان بلس - حائل) -->
+    <div class="sidebar-brand" style="padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <img src="../images/logo.svg" alt="Tera Logo" class="brand-logo" style="width: 60px; margin-bottom: 10px;"
              onerror="this.src='https://ui-avatars.com/api/?name=Tera+V12&background=001f3f&color=c5a059'">
-        <h2>TERA <span>V12</span></h2>
+        <h2 style="margin: 0; font-size: 1.5rem;">TERA <span style="color: #c5a059;">V12</span></h2>
     </div>
 
     <!-- قائمة التنقل الرئيسية -->
-    <nav class="sidebar-nav">
-        <div class="nav-section-title">الإدارة العامة</div>
+    <nav class="sidebar-nav" style="flex-grow: 1; padding: 20px 0;">
+        <div class="nav-section-title" style="padding: 10px 20px; font-size: 0.75rem; color: #888; text-transform: uppercase;">الإدارة العامة</div>
         
-        <!-- أزرار التنقل مرتبطة بـ sidebar-logic.js و main.js -->
-        <button class="nav-btn active" id="btn-customers-list">
-            <span class="nav-icon">👥</span>
+        <button class="nav-btn active" id="btn-customers-list" style="width: 100%; text-align: right; padding: 12px 20px; background: none; border: none; color: white; cursor: pointer; display: flex; align-items: center;">
+            <span class="nav-icon" style="margin-left: 15px;">👥</span>
             <span class="nav-text">قائمة العملاء</span>
         </button>
 
-        <button class="nav-btn" id="btn-add-customer">
-            <span class="nav-icon">👤+</span>
+        <button class="nav-btn" id="btn-add-customer" style="width: 100%; text-align: right; padding: 12px 20px; background: none; border: none; color: white; cursor: pointer; display: flex; align-items: center;">
+            <span class="nav-icon" style="margin-left: 15px;">👤+</span>
             <span class="nav-text">إضافة عميل جديد</span>
         </button>
 
-        <div class="nav-section-title">العمليات المالية</div>
+        <div class="nav-section-title" style="padding: 20px 20px 10px; font-size: 0.75rem; color: #888; text-transform: uppercase;">العمليات المالية</div>
 
-        <button class="nav-btn" id="btn-installments">
-            <span class="nav-icon">💰</span>
+        <button class="nav-btn" id="btn-installments" style="width: 100%; text-align: right; padding: 12px 20px; background: none; border: none; color: white; cursor: pointer; display: flex; align-items: center;">
+            <span class="nav-icon" style="margin-left: 15px;">💰</span>
             <span class="nav-text">متابعة الأقساط</span>
         </button>
 
-        <button class="nav-btn" id="btn-sawa-cards">
-            <span class="nav-icon">📱</span>
+        <button class="nav-btn" id="btn-sawa-cards" style="width: 100%; text-align: right; padding: 12px 20px; background: none; border: none; color: white; cursor: pointer; display: flex; align-items: center;">
+            <span class="nav-icon" style="margin-left: 15px;">📱</span>
             <span class="nav-text">بطاقات سوا</span>
         </button>
 
-        <div class="nav-section-title">التقارير والإحصائيات</div>
+        <div class="nav-section-title" style="padding: 20px 20px 10px; font-size: 0.75rem; color: #888; text-transform: uppercase;">التقارير والإحصائيات</div>
 
-        <button class="nav-btn" id="btn-reports">
-            <span class="nav-icon">📊</span>
+        <button class="nav-btn" id="btn-reports" style="width: 100%; text-align: right; padding: 12px 20px; background: none; border: none; color: white; cursor: pointer; display: flex; align-items: center;">
+            <span class="nav-icon" style="margin-left: 15px;">📊</span>
             <span class="nav-text">التقارير الختامية</span>
         </button>
 
-        <button class="nav-btn" id="btn-stats">
-            <span class="nav-icon">📈</span>
+        <button class="nav-btn" id="btn-stats" style="width: 100%; text-align: right; padding: 12px 20px; background: none; border: none; color: white; cursor: pointer; display: flex; align-items: center;">
+            <span class="nav-icon" style="margin-left: 15px;">📈</span>
             <span class="nav-text">الإحصائيات الحية</span>
         </button>
     </nav>
 
     <!-- تذييل السايدبار (معلومات المدير) -->
-    <div class="sidebar-footer">
-        <div class="admin-badge">
+    <div class="sidebar-footer" style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+        <div class="admin-badge" style="display: flex; align-items: center; margin-bottom: 15px;">
             <span class="status-online"></span>
-            <span class="admin-name">م. الشمري</span>
+            <span class="admin-name" style="font-weight: bold; font-size: 0.9rem;">م. الشمري</span>
         </div>
-        <!-- تصحيح مسار تسجيل الخروج للعودة لصفحة الدخول -->
-        <button class="logout-link" id="btn-logout">تسجيل الخروج</button>
+        <button class="logout-link" id="btn-logout" style="width: 100%; padding: 10px; background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #e74c3c; border-radius: 8px; cursor: pointer; transition: 0.3s;">تسجيل الخروج</button>
     </div>
 </div>
 
-<!-- ربط المنطق البرمجي الخاص بالسايدبار كـ Module -->
+<!-- 🧠 ربط المنطق البرمجي الخاص بالسايدبار كـ Module -->
 <script type="module" src="../js-logic/sidebar-logic.js"></script>
