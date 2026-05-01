@@ -2,19 +2,20 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <!-- سحب التنسيق من المجلد الأب -->
-    <link rel="stylesheet" href="../css-styles/clock-style.css">
+    <!-- الربط المباشر: المعالج في main-hub سيقوم بتوجيهه لمجلد css-styles تلقائياً -->
+    <link rel="stylesheet" href="css-styles/clock-style.css">
 </head>
 <body>
     <div class="clock-container">
         <div class="glass-box">
-            <div id="digital-clock" class="clock-text">00:00:00</div>
-            <div id="digital-date" class="date-text">-- / -- / ----</div>
-            <div class="location-tag">فرع حائل</div>
+            <!-- التأكد من مطابقة الـ IDs لما هو موجود في ملف clock-logic.js -->
+            <div id="main-clock" class="clock-text">00:00:00</div>
+            <div id="main-date" class="date-text">-- / -- / ----</div>
+            <div class="location-tag">مؤسسة الإتقان بلس | فرع حائل</div>
         </div>
     </div>
 
-    <!-- سحب الأوامر من المجلد الأب -->
-    <script type="module" src="../js-logic/clock-logic.js"></script>
+    <!-- استدعاء المنطق البرمجي بمسار مباشر -->
+    <script type="module" src="js-logic/clock-logic.js"></script>
 </body>
 </html>
