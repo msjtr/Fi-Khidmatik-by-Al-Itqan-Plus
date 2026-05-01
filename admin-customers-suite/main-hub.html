@@ -4,95 +4,91 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- 1. تبويبة المتصفح والشعار (Favicon) -->
-    <title>في خدمتك | مؤسسة الإتقان بلس</title>
+    <!-- 1. ربط الشعار كأيقونة لتبويمة المتصفح (Favicon) -->
+    <title>في خدمتك | الإتقان بلس</title>
     <link rel="icon" type="image/svg+xml" href="../images/logo.svg">
 
-    <!-- 2. ربط كافة ملفات التنسيق (CSS) من مجلد css-styles -->
+    <!-- 2. ربط كافة ملفات التنسيق الـ 11 من مجلد css-styles -->
     <link rel="stylesheet" href="css-styles/hub-style.css">
     <link rel="stylesheet" href="css-styles/sidebar-style.css">
     <link rel="stylesheet" href="css-styles/header-style.css">
     <link rel="stylesheet" href="css-styles/footer-style.css">
     <link rel="stylesheet" href="css-styles/buttons-theme.css">
+    <link rel="stylesheet" href="css-styles/clock-style.css">
+    <link rel="stylesheet" href="css-styles/auth-style.css">
+    <link rel="stylesheet" href="css-styles/add-cust-style.css">
     <link rel="stylesheet" href="css-styles/list-table-style.css">
     <link rel="stylesheet" href="css-styles/stats-visuals.css">
+    <link rel="stylesheet" href="css-styles/print-layout.css">
 
     <style>
-        /* تنظيم الواجهة لضمان ثبات الهيدر والسايدبار */
-        body { margin: 0; display: flex; background-color: #f4f7f6; height: 100vh; overflow: hidden; }
-        .main-wrapper { display: flex; width: 100%; height: 100%; }
-        .page-container { flex-grow: 1; display: flex; flex-direction: column; height: 100vh; }
-        .dynamic-view { flex-grow: 1; background: #fff; position: relative; }
+        /* التنسيق الأساسي لضمان عرض الشعار والصفحات */
+        body { margin: 0; display: flex; height: 100vh; background-color: #f8f9fa; overflow: hidden; }
+        .app-container { display: flex; width: 100%; height: 100%; }
+        #sidebar-area { width: 280px; flex-shrink: 0; background: #001f3f; }
+        .content-area { flex-grow: 1; display: flex; flex-direction: column; }
+        .page-display { flex-grow: 1; position: relative; }
         iframe { width: 100%; height: 100%; border: none; }
+        
+        /* إضافة الشعار في زاوية الهيدر بربط مباشر */
+        .brand-logo-top { width: 50px; height: 50px; margin-left: 15px; }
     </style>
 </head>
 <body>
 
-    <div class="main-wrapper">
+    <div class="app-container">
         
-        <!-- 3. القائمة الجانبية (Sidebar) مسحوبة من مجلد mm -->
-        <div id="sidebar-target"></div>
+        <!-- منطقة القائمة الجانبية -->
+        <aside id="sidebar-area"></aside>
 
-        <div class="page-container">
+        <section class="content-area">
             
-            <!-- 4. الرأس (Header) مسحوب من مجلد mm -->
-            <div id="header-target"></div>
+            <!-- منطقة الهيدر مع الشعار -->
+            <header id="header-area" style="display: flex; align-items: center; padding: 0 20px;">
+                <img src="../images/logo.svg" alt="الإتقان بلس" class="brand-logo-top">
+                <div id="header-content" style="flex-grow: 1;"></div>
+            </header>
 
-            <!-- 5. منطقة عرض المحتوى (Pages) -->
-            <main class="dynamic-view">
-                <iframe name="content-view" id="main-frame" src="pages/customers-list.html"></iframe>
+            <!-- عرض الصفحات الديناميكي -->
+            <main class="page-display">
+                <iframe name="main-viewport" src="pages/customers-list.html" id="frame-engine"></iframe>
             </main>
 
-            <!-- 6. التذييل (Footer) مسحوب من مجلد mm -->
-            <div id="footer-target"></div>
+            <!-- منطقة التذييل -->
+            <footer id="footer-area"></footer>
 
-        </div>
+        </section>
     </div>
 
-    <!-- 7. الأوامر البرمجية (JS) والربط المركزي -->
-    
-    <!-- تهيئة Firebase الأساسية -->
-    <script type="module" src="js-logic/firebase.js"></script>
-    
-    <!-- محرك التشغيل الرئيسي -->
+    <!-- محرك الربط والتشغيل V12.12.12 -->
     <script type="module">
         import { initApp } from './js-logic/main.js';
 
-        // وظيفة التحميل الديناميكي للمكونات من مجلد mm
-        async function injectComponent(elementId, filePath) {
+        // وظيفة الحقن المباشر للمكونات مع تفعيل ملفات الـ JS الخاصة بها
+        async function loadPart(id, file) {
             try {
-                const response = await fetch(filePath);
-                const html = await response.text();
-                const container = document.getElementById(elementId);
-                container.innerHTML = html;
+                const res = await fetch(file);
+                const html = await res.text();
+                const target = document.getElementById(id);
+                target.innerHTML = html;
 
-                // إعادة تفعيل السكريبتات (للساعة والتنقل)
-                const scripts = container.querySelectorAll('script');
-                scripts.forEach(oldScript => {
+                // تفعيل أي سكريبت داخل المكون (مثل ساعة الهيدر)
+                target.querySelectorAll('script').forEach(oldScript => {
                     const newScript = document.createElement('script');
-                    Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-                    if (oldScript.src) {
-                        newScript.src = oldScript.src;
-                    } else {
-                        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-                    }
+                    Array.from(oldScript.attributes).forEach(a => newScript.setAttribute(a.name, a.value));
+                    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
                     oldScript.parentNode.replaceChild(newScript, oldScript);
                 });
-            } catch (err) {
-                console.error("خطأ في ربط المكون:", filePath, err);
-            }
+            } catch (e) { console.error("Error loading " + file, e); }
         }
 
-        // تنفيذ الربط عند فتح الصفحة
+        // تشغيل الربط الكلي
         document.addEventListener('DOMContentLoaded', () => {
-            injectComponent('sidebar-target', 'mm/sidebar.html');
-            injectComponent('header-target', 'mm/header.html');
-            injectComponent('footer-target', 'mm/footer.html');
-            
-            // تشغيل محرك النظام الأساسي
-            initApp(); 
+            loadPart('sidebar-area', 'mm/sidebar.html');
+            loadPart('header-content', 'mm/header.html');
+            loadPart('footer-area', 'mm/footer.html');
+            initApp(); // تشغيل Firebase والمحرك
         });
     </script>
-
 </body>
 </html>
