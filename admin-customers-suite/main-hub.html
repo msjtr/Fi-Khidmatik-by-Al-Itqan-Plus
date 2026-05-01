@@ -5,31 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>منصة في خدمتك | الإتقان بلس</title>
     
-    <!-- 1. ربط الشعار كأيقونة -->
+    <!-- 1. ربط الشعار (صحيح: يخرج للمجلد الرئيسي ثم الصور) -->
     <link rel="icon" type="image/svg+xml" href="../images/logo.svg">
 
-    <!-- 2. ربط ملفات التنسيق الـ 11 بالمسارات الصحيحة -->
-    <link rel="stylesheet" href="css-styles/add-cust-style.css">
-    <link rel="stylesheet" href="css-styles/auth-style.css">
+    <!-- 2. ربط ملفات التنسيق الـ 11 (المسارات ثابتة هنا ولا تحتاج تعديل) -->
+    <link rel="stylesheet" href="css-styles/hub-style.css">
+    <link rel="stylesheet" href="css-styles/sidebar-style.css">
+    <link rel="stylesheet" href="css-styles/header-style.css">
+    <link rel="stylesheet" href="css-styles/footer-style.css">
     <link rel="stylesheet" href="css-styles/buttons-theme.css">
     <link rel="stylesheet" href="css-styles/clock-style.css">
-    <link rel="stylesheet" href="css-styles/footer-style.css">
-    <link rel="stylesheet" href="css-styles/header-style.css">
-    <link rel="stylesheet" href="css-styles/hub-style.css">
+    <link rel="stylesheet" href="css-styles/auth-style.css">
+    <link rel="stylesheet" href="css-styles/add-cust-style.css">
     <link rel="stylesheet" href="css-styles/list-table-style.css">
-    <link rel="stylesheet" href="css-styles/print-layout.css">
-    <link rel="stylesheet" href="css-styles/sidebar-style.css">
     <link rel="stylesheet" href="css-styles/stats-visuals.css">
+    <link rel="stylesheet" href="css-styles/print-layout.css">
 
     <style>
-        body { margin: 0; display: flex; height: 100vh; background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; }
+        body { margin: 0; display: flex; height: 100vh; background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         .app-container { display: flex; width: 100%; height: 100%; }
-        #sidebar-area { width: 280px; flex-shrink: 0; background: #001f3f; z-index: 100; }
+        #sidebar-area { width: 260px; flex-shrink: 0; background: #001f3f; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
         .content-area { flex-grow: 1; display: flex; flex-direction: column; }
-        #header-area { height: 70px; background: #fff; display: flex; align-items: center; padding: 0 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .page-display { flex-grow: 1; position: relative; background: #fff; }
+        #header-area { height: 70px; background: #fff; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid #e0e0e0; }
+        .page-display { flex-grow: 1; background: #fff; position: relative; }
         iframe { width: 100%; height: 100%; border: none; }
-        .main-logo { height: 45px; margin-left: 20px; }
+        .brand-logo { height: 45px; margin-left: 15px; }
     </style>
 </head>
 <body>
@@ -38,46 +38,42 @@
         <aside id="sidebar-area"></aside>
         <section class="content-area">
             <header id="header-area">
-                <img src="../images/logo.svg" alt="الإتقان بلس" class="main-logo">
+                <img src="../images/logo.svg" alt="الإتقان بلس" class="brand-logo">
                 <div id="header-content" style="flex-grow: 1;"></div>
             </header>
-
             <main class="page-display">
                 <iframe name="main-viewport" src="pages/customers-list.html" id="frame-engine"></iframe>
             </main>
-
             <footer id="footer-area"></footer>
         </section>
     </div>
 
     <script type="module">
+        // استيراد المحرك (تأكد أن صفحة الدخول معطلة داخل هذا الملف)
         import { initApp } from './js-logic/main.js';
 
-        // تعريف وظيفة التنقل عالمياً
-        window.handleSidebarClick = function(pageName) {
+        // وظيفة التنقل العالمي بين الصفحات الـ 12
+        window.handleSidebarClick = function(page) {
             const frame = document.getElementById('frame-engine');
-            if (frame && pageName) {
-                frame.src = `pages/${pageName}.html`;
-            }
+            if (frame) frame.src = `pages/${page}.html`;
         };
 
-        // 🛠️ وظيفة سحب المكونات مع "المعالج الذكي" لتصحيح مسارات 404
+        // 🛠️ المصحح الذكي: يجلب الملفات ويحذف "../" لضمان عملها داخل المجلد الفرعي
         async function loadPart(id, file) {
             try {
                 const res = await fetch(file);
-                if (!res.ok) throw new Error(`المسار مفقود: ${file}`);
+                if (!res.ok) throw new Error("404");
                 let html = await res.text();
                 
-                // تصحيح روابط التنسيق والسكريبتات التي تحتوي على ../ لتناسب المسار الحالي
+                // تصحيح فوري لروابط الـ CSS والـ JS داخل المكونات
                 html = html.replace(/href="\.\.\//g, 'href="');
                 html = html.replace(/src="\.\.\//g, 'src="');
 
                 const target = document.getElementById(id);
                 target.innerHTML = html;
 
-                // تفعيل السكريبتات المدمجة بعد تصحيح مساراتها
-                const scripts = target.querySelectorAll('script');
-                scripts.forEach(oldScript => {
+                // إعادة تشغيل السكريبتات المدمجة بعد تصحيح مساراتها
+                target.querySelectorAll('script').forEach(oldScript => {
                     const newScript = document.createElement('script');
                     Array.from(oldScript.attributes).forEach(attr => {
                         let val = attr.value;
@@ -88,20 +84,17 @@
                     oldScript.parentNode.replaceChild(newScript, oldScript);
                 });
             } catch (e) {
-                console.error("خطأ في الربط الذكي:", e);
+                console.error(`خطأ في تحميل المكون ${file}:`, e);
             }
         }
 
+        // إطلاق المنصة V12.12.12
         document.addEventListener('DOMContentLoaded', async () => {
-            // تحميل المكونات
             await loadPart('sidebar-area', 'mm/sidebar.html');
             await loadPart('header-content', 'mm/header.html');
             await loadPart('footer-area', 'mm/footer.html');
             
-            // تشغيل محرك Tera V12.12.12
-            if (typeof initApp === 'function') {
-                initApp();
-            }
+            if (typeof initApp === 'function') initApp();
         });
     </script>
 </body>
