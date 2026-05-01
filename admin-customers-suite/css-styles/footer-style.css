@@ -1,23 +1,76 @@
-.itqan-footer {
-    /* حذف margin-right لأن الحاوية flex في main-hub تتكفل بالتوزيع */
-    width: 100%; 
-    padding: 15px 25px; 
-    text-align: center;
-    background: #ffffff; /* أبيض صريح ليعطي شعوراً بالنظافة Modern Premium */
-    border-top: 1px solid #e0e0e0; 
-    font-size: 13px;
-    color: #666;
-    display: flex;
-    justify-content: space-between; /* توزيع الحقوق والروابط على الأطراف */
-    align-items: center;
-    flex-shrink: 0; /* يمنع انكماش الفوتير عند كثرة البيانات في الجدول */
+:root {
+    --itqan-gold: #c5a059;
+    --itqan-text-muted: #7f8c8d;
+    --footer-bg: #ffffff;
 }
 
+.itqan-footer {
+    width: 100%; 
+    padding: clamp(10px, 2vw, 15px) clamp(15px, 3vw, 30px); 
+    background: var(--footer-bg);
+    border-top: 1px solid rgba(224, 224, 224, 0.6); 
+    
+    display: flex;
+    /* تحويل التوزيع إلى عمودي في الشاشات الصغيرة جداً */
+    flex-flow: row wrap; 
+    justify-content: space-between; 
+    align-items: center;
+    gap: 15px;
+    
+    flex-shrink: 0; 
+    box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.02);
+    z-index: 10;
+}
+
+/* حاوية الحقوق */
 .footer-rights {
+    font-size: clamp(11px, 1.2vw, 13px);
+    color: var(--itqan-text-muted);
     font-weight: 500;
+    flex: 1 1 auto;
+}
+
+.footer-rights strong {
+    color: #2c3e50;
+    margin-right: 5px;
+}
+
+/* حاوية الإصدار والبيانات التقنية */
+.footer-meta {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 0 1 auto;
 }
 
 .footer-version {
-    color: var(--itqan-gold, #c5a059);
-    font-weight: bold;
+    font-size: clamp(10px, 1.1vw, 12px);
+    background: rgba(197, 160, 89, 0.08); /* خلفية ذهبية باهتة لإبراز الإصدار */
+    color: var(--itqan-gold);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+    border: 1px solid rgba(197, 160, 89, 0.2);
+    white-space: nowrap;
+}
+
+/* تأثير عند مرور الماوس على الحقوق */
+.itqan-footer:hover .footer-version {
+    background: var(--itqan-gold);
+    color: #fff;
+    transition: all 0.3s ease;
+}
+
+/* 📱 توافق خاص للشاشات الصغيرة (الجوال) */
+@media (max-width: 600px) {
+    .itqan-footer {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+    }
+    
+    .footer-meta {
+        justify-content: center;
+        width: 100%;
+    }
 }
