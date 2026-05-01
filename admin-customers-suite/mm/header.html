@@ -1,0 +1,18 @@
+<!-- سحب التنسيق -->
+<link rel="stylesheet" href="../css-styles/header-style.css">
+
+<header class="itqan-header">
+    <div class="user-info">
+        <span>مرحباً بك: أبا صالح الشمري</span>
+    </div>
+    <div class="live-meta">
+        <span id="h-clock" class="digital-clock">00:00:00</span>
+        <span id="h-date" class="digital-date">--/--/----</span>
+    </div>
+</header>
+
+<!-- تشغيل الساعة من المجلد الأب -->
+<script type="module">
+    import { initClock } from '../js-logic/header-logic.js';
+    initClock();
+</script>
