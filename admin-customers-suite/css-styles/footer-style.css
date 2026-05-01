@@ -1,4 +1,23 @@
 .itqan-footer {
-    margin-right: 260px; padding: 15px; text-align: center;
-    background: #f8f9fa; border-top: 1px solid #ddd; font-size: 13px;
+    /* حذف margin-right لأن الحاوية flex في main-hub تتكفل بالتوزيع */
+    width: 100%; 
+    padding: 15px 25px; 
+    text-align: center;
+    background: #ffffff; /* أبيض صريح ليعطي شعوراً بالنظافة Modern Premium */
+    border-top: 1px solid #e0e0e0; 
+    font-size: 13px;
+    color: #666;
+    display: flex;
+    justify-content: space-between; /* توزيع الحقوق والروابط على الأطراف */
+    align-items: center;
+    flex-shrink: 0; /* يمنع انكماش الفوتير عند كثرة البيانات في الجدول */
+}
+
+.footer-rights {
+    font-weight: 500;
+}
+
+.footer-version {
+    color: var(--itqan-gold, #c5a059);
+    font-weight: bold;
 }
