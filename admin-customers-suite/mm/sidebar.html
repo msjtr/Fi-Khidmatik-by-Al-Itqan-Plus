@@ -1,32 +1,29 @@
-<!-- 1. ربط التنسيق بمسار مباشر (المعالج سيتولى الربط بمجلد css-styles) -->
+<!-- 🎨 ربط التنسيق الخاص بالسايدبار -->
 <link rel="stylesheet" href="css-styles/sidebar-style.css">
 
 <aside class="itqan-sidebar">
     <div class="sidebar-brand">
-        <!-- شعار المنصة بناءً على هويتك المهنية -->
+        <!-- هوية مؤسسة الإتقان بلس - حائل -->
         <h2>منصة Tera</h2>
         <p>الإتقان بلس - حائل</p>
     </div>
 
     <nav class="sidebar-nav">
         <!-- قسم الإدارة والعملاء -->
-        <div onclick="handleSidebarClick('customers-list')" class="nav-btn">👥 قائمة العملاء</div>
-        <div onclick="handleSidebarClick('add-customer')" class="nav-btn">➕ إضافة عميل جديد</div>
+        <div onclick="window.teraNavigate('customers-list')" class="nav-btn">👥 قائمة العملاء</div>
+        <div onclick="window.teraNavigate('add-customer')" class="nav-btn">➕ إضافة عميل جديد</div>
         
         <!-- قسم التقسيط والبيانات -->
-        <div onclick="handleSidebarClick('customers-stats')" class="nav-btn">📊 إحصائيات الأقساط</div>
-        <div onclick="handleSidebarClick('archive-manager')" class="nav-btn">📦 أرشيف المعاملات</div>
+        <div onclick="window.teraNavigate('customers-stats')" class="nav-btn">📊 إحصائيات الأقساط</div>
+        <div onclick="window.teraNavigate('archive-manager')" class="nav-btn">📦 أرشيف المعاملات</div>
         
         <!-- قسم الدعم والخرائط -->
-        <div onclick="handleSidebarClick('map-bridge')" class="nav-btn">📍 جسر المواقع</div>
-        <div onclick="handleSidebarClick('system-logs')" class="nav-btn">📝 سجلات النظام</div>
+        <div onclick="window.teraNavigate('map-bridge')" class="nav-btn">📍 جسر المواقع</div>
+        <div onclick="window.teraNavigate('system-logs')" class="nav-btn">📝 سجلات النظام</div>
     </nav>
 
     <div class="sidebar-exit">
-        <!-- زر الخروج المرتبط بمنطق Firebase -->
-        <button onclick="handleLogout()" class="exit-link">🚪 تسجيل الخروج</button>
+        <!-- زر الخروج المرتبط بالمنطق العالمي -->
+        <button onclick="if(window.handleLogout) window.handleLogout()" class="exit-link">🚪 تسجيل الخروج</button>
     </div>
 </aside>
-
-<!-- 2. سحب الأوامر البرمجية بمسار مباشر لضمان استجابة الأزرار -->
-<script src="js-logic/sidebar-logic.js"></script>
