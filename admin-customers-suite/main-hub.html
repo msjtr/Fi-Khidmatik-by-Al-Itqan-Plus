@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام Tera | مؤسسة الإتقان بلس</title>
 
-    <!-- 🖼️ الربط مع شعار النظام (images/logo.svg) -->
+    <!-- 🖼️ التبويمة -->
     <link rel="icon" type="image/svg+xml" href="../images/logo.svg">
 
-    <!-- 🎨 ربط كافة ملفات التنسيق (11 ملف CSS) -->
+    <!-- 🎨 ربط كافة ملفات التنسيق (11 ملف) -->
     <link rel="stylesheet" href="css-styles/hub-style.css">
     <link rel="stylesheet" href="css-styles/buttons-theme.css">
     <link rel="stylesheet" href="css-styles/header-style.css">
@@ -24,13 +24,11 @@
 <body>
 
     <div class="tera-admin-layout">
-        <!-- 🧩 المكونات الثابتة (يتم حقنها من مجلد mm) -->
         <header id="header-mount"></header>
 
         <div class="tera-main-content">
             <aside id="sidebar-mount"></aside>
 
-            <!-- 📄 محرك عرض الصفحات (12 صفحة من مجلد pages) -->
             <main class="tera-view-window">
                 <iframe id="tera-iframe" name="tera-iframe" src="pages/customers-list.html"></iframe>
             </main>
@@ -39,51 +37,58 @@
         <footer id="footer-mount"></footer>
     </div>
 
-    <!-- 🧠 ربط كافة ملفات العمليات (14 ملف JS Logic) -->
-    <!-- الترتيب هنا حرج جداً: Firebase أولاً لضمان الاتصال -->
-    <script src="js-logic/firebase.js"></script> 
-    <script src="js-logic/api-connector.js"></script>
-    <script src="js-logic/auth-logic.js"></script>
-    <script src="js-logic/main.js"></script>
-    <script src="js-logic/header-logic.js"></script>
-    <script src="js-logic/sidebar-logic.js"></script>
-    <script src="js-logic/clock-logic.js"></script>
-    <script src="js-logic/add-cust-logic.js"></script>
-    <script src="js-logic/list-table-logic.js"></script>
-    <script src="js-logic/btn-actions-controller.js"></script>
-    <script src="js-logic/stats-engine.js"></script>
-    <script src="js-logic/log-tracker.js"></script>
-    <script src="js-logic/pdf-generator.js"></script>
-    <script src="js-logic/map-logic.js"></script>
+    <!-- 🧠 الربط البرمجي المصلح (14 ملف) -->
+    <!-- الترتيب والنوع "defer" يضمنان تحميل الملفات في الخلفية وتشغيلها بعد الـ HTML -->
+    <script src="js-logic/firebase.js" defer></script> 
+    <script src="js-logic/api-connector.js" defer></script>
+    <script src="js-logic/auth-logic.js" defer></script>
+    <script src="js-logic/main.js" defer></script>
+    <script src="js-logic/header-logic.js" defer></script>
+    <script src="js-logic/sidebar-logic.js" defer></script>
+    <script src="js-logic/clock-logic.js" defer></script>
+    <script src="js-logic/add-cust-logic.js" defer></script>
+    <script src="js-logic/list-table-logic.js" defer></script>
+    <script src="js-logic/btn-actions-controller.js" defer></script>
+    <script src="js-logic/stats-engine.js" defer></script>
+    <script src="js-logic/log-tracker.js" defer></script>
+    <script src="js-logic/pdf-generator.js" defer></script>
+    
+    <!-- تم تغيير النوع إلى module لحل خطأ Unexpected token 'export' -->
+    <script src="js-logic/map-logic.js" type="module"></script>
 
     <script>
         /**
-         * محرك تحميل مكونات mm (5 ملفات)
+         * محرك تحميل المكونات مع حماية الأوامر البرمجية
          */
-        async function loadMMComponents() {
+        async function initTeraSystem() {
             const components = [
                 { id: 'header-mount', url: 'mm/header.html' },
                 { id: 'sidebar-mount', url: 'mm/sidebar.html' },
                 { id: 'footer-mount', url: 'mm/footer.html' }
-                // ملحوظة: login.html و clock-view.html يتم استدعاؤهما عند الحاجة
             ];
 
             for (const item of components) {
                 try {
                     const response = await fetch(item.url);
-                    document.getElementById(item.id).innerHTML = await response.text();
-                } catch (err) { console.error("خطأ في ربط مكون:", item.url); }
+                    if (response.ok) {
+                        const html = await response.text();
+                        document.getElementById(item.id).innerHTML = html;
+                    }
+                } catch (err) { 
+                    console.error("تعذر تحميل المكون:", item.url); 
+                }
             }
+            
+            // تنبيه النظام بأن الواجهة جاهزة لتشغيل الساعة وغيرها
+            document.dispatchEvent(new Event('TeraLayoutReady'));
         }
 
-        /**
-         * وظيفة التنقل العالمي بين الـ 12 صفحة
-         */
         function teraNavigate(targetPage) {
-            document.getElementById('tera-iframe').src = `pages/${targetPage}.html`;
+            const frame = document.getElementById('tera-iframe');
+            if (frame) frame.src = `pages/${targetPage}.html`;
         }
 
-        window.onload = loadMMComponents;
+        window.onload = initTeraSystem;
     </script>
 </body>
 </html>
