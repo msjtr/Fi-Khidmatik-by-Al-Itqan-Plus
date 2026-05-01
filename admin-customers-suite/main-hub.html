@@ -5,19 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tera V12 | الإتقان بلس</title>
 
-    <!-- 1. ربط شعار التبويب (Favicon) من مجلد images الخارجي -->
+    <!-- ربط شعار التبويب (Favicon) -->
     <link rel="icon" type="image/svg+xml" href="../images/logo.svg">
 
-    <!-- 2. ربط جميع ملفات CSS (الـ 10 ملفات) -->
-    <!-- الملفات الأساسية والهيكلية -->
+    <!-- 
+       إصلاح خطأ 404: 
+       تم الإبقاء فقط على الملفات الـ 7 الموجودة فعلياً في المستودع 
+    -->
     <link rel="stylesheet" href="css-styles/hub-style.css">
     <link rel="stylesheet" href="css-styles/auth-style.css">
     <link rel="stylesheet" href="css-styles/buttons-theme.css">
-    <!-- ملفات المكونات الفرعية (مكملة للـ 10) -->
-    <link rel="stylesheet" href="css-styles/header-style.css"> 
-    <link rel="stylesheet" href="css-styles/sidebar-style.css">
-    <link rel="stylesheet" href="css-styles/footer-style.css">
-    <!-- ملفات العمليات والبيانات -->
     <link rel="stylesheet" href="css-styles/add-cust-style.css">
     <link rel="stylesheet" href="css-styles/list-table-style.css">
     <link rel="stylesheet" href="css-styles/stats-visuals.css">
@@ -37,31 +34,34 @@
         <main id="main-view"></main>
     </div>
 
-    <!-- 3. ربط جميع أوامر وملفات JS (الـ 14 ملفاً الموجودة بالصور) -->
+    <!-- 
+       إصلاح خطأ SyntaxError: 
+       تم إضافة type="module" لجميع الملفات لكي يتعرف المتصفح على أوامر import/export 
+    -->
     
     <!-- أوامر التهيئة وقواعد البيانات (Firebase & API) -->
     <script type="module" src="js-logic/firebase.js"></script>
-    <script src="js-logic/api-connector.js"></script>
+    <script type="module" src="js-logic/api-connector.js"></script>
     
     <!-- أوامر المصادقة والتحكم الرئيسي -->
-    <script src="js-logic/auth-logic.js"></script>
-    <script src="js-logic/main.js"></script>
+    <script type="module" src="js-logic/auth-logic.js"></script>
+    <script type="module" src="js-logic/main.js"></script>
     
     <!-- أوامر الواجهة (الهيدر، السايدبار، الأزرار، والساعة) -->
-    <script src="js-logic/header-logic.js"></script>
-    <script src="js-logic/sidebar-logic.js"></script>
-    <script src="js-logic/btn-actions-controller.js"></script>
-    <script src="js-logic/clock-logic.js"></script>
+    <script type="module" src="js-logic/header-logic.js"></script>
+    <script type="module" src="js-logic/sidebar-logic.js"></script>
+    <script type="module" src="js-logic/btn-actions-controller.js"></script>
+    <script type="module" src="js-logic/clock-logic.js"></script>
     
     <!-- أوامر العمليات (العملاء، الجداول، الإحصائيات) -->
-    <script src="js-logic/add-cust-logic.js"></script>
-    <script src="js-logic/list-table-logic.js"></script>
-    <script src="js-logic/stats-engine.js"></script>
+    <script type="module" src="js-logic/add-cust-logic.js"></script>
+    <script type="module" src="js-logic/list-table-logic.js"></script>
+    <script type="module" src="js-logic/stats-engine.js"></script>
     
     <!-- أوامر الميزات الإضافية (الخرائط، الطباعة، وتتبع السجلات) -->
-    <script src="js-logic/map-logic.js"></script>
-    <script src="js-logic/pdf-generator.js"></script>
-    <script src="js-logic/log-tracker.js"></script>
+    <script type="module" src="js-logic/map-logic.js"></script>
+    <script type="module" src="js-logic/pdf-generator.js"></script>
+    <script type="module" src="js-logic/log-tracker.js"></script>
 
 </body>
 </html>
