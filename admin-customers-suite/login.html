@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول | Tera V12</title>
+    
+    <!-- 🖼️ الأيقونة الرسمية -->
+    <link rel="icon" type="image/svg+xml" href="images/logo.svg">
+
+    <!-- 🎨 ربط التنسيق الموحد بناءً على المسار المعتمد -->
+    <link rel="stylesheet" href="admin-customers-suite/css-styles/hub-style.css">
+
+    <style>
+        /* تنسيقات مخصصة لصفحة الدخول لضمان التمركز والفخامة */
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: radial-gradient(circle at center, #002b55 0%, #001f3f 100%);
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        .login-card {
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 25px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border: 2px solid #c5a059;
+            text-align: center;
+        }
+
+        .login-header img {
+            width: 80px;
+            margin-bottom: 15px;
+        }
+
+        .login-header h1 {
+            color: #001f3f;
+            font-size: 1.8rem;
+            margin: 0;
+            font-weight: 800;
+        }
+
+        .login-header p {
+            color: #c5a059;
+            margin: 5px 0 30px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #001f3f;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-sizing: border-box;
+            background: #f9f9f9;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            border-color: #c5a059;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: #001f3f;
+            color: #c5a059;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            background: #002d5a;
+            transform: translateY(-2px);
+        }
+
+        .footer-text {
+            margin-top: 25px;
+            font-size: 0.75rem;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <div class="login-header">
+            <img src="images/logo.svg" alt="Tera Logo" onerror="this.src='https://ui-avatars.com/api/?name=Tera+V12&background=001f3f&color=c5a059'">
+            <h1>TERA <span style="color: #c5a059;">V12</span></h1>
+            <p>مؤسسة الإتقان بلس - حائل</p>
+        </div>
+
+        <form id="login-form">
+            <div class="form-group">
+                <label>اسم المستخدم</label>
+                <input type="text" id="username" placeholder="أدخل اسم المستخدم" required>
+            </div>
+
+            <div class="form-group">
+                <label>كلمة المرور</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="btn-login">دخول للنظام</button>
+        </form>
+
+        <div class="footer-text">
+            جميع الحقوق محفوظة © 2026 لمؤسسة الإتقان بلس
+        </div>
+    </div>
+
+    <!-- الربط البرمجي مع Firebase (إذا رغبت في تفعيل الدخول الفعلي) -->
+    <script type="module" src="admin-customers-suite/js-logic/firebase.js"></script>
+    <script>
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // هنا يتم وضع منطق التحقق من الهوية
+            // في حال النجاح، يتم التوجيه لصفحة main-hub.html
+            window.location.href = 'main-hub.html';
+        });
+    </script>
+</body>
+</html>
