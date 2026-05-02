@@ -4,24 +4,15 @@
     <meta charset="UTF-8">
     <title>قائمة العملاء - Tera V12</title>
     <link rel="stylesheet" href="../css-styles/customers-list.css">
-    
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-    <style>
-        .map-section { grid-column: 1 / -1; margin: 10px 0; }
-        #modal-map { height: 250px; width: 100%; border-radius: 8px; border: 1px solid #ccc; z-index: 1; }
-        .location-btn { background: #e3f2fd; color: #0d47a1; border: 1px solid #90caf9; padding: 6px 12px; cursor: pointer; border-radius: 4px; margin-bottom: 5px; }
-    </style>
 </head>
 <body>
 
     <div class="page-header">
         <div class="header-titles">
             <h2>قائمة العملاء</h2>
-            <p>إدارة بيانات العملاء (العدد: <span id="customers-count">0</span>)</p>
+            <p>إدارة البيانات (عدد العملاء: <span id="customers-count">0</span>)</p>
         </div>
-        <button class="primary-btn" onclick="window.parent.teraNavigate('add-customer')">➕ إضافة عميل</button>
+        <button class="primary-btn" onclick="window.parent.teraNavigate('add-customer')">➕ إضافة عميل جديد</button>
     </div>
 
     <div class="table-responsive-container">
@@ -36,52 +27,41 @@
                     <th>الحي</th>
                     <th>الشارع</th>
                     <th>المبنى</th>
-                    <th>الإضافي</th>
-                    <th>الرمز البريدي</th>
-                    <th>صندوق البريد</th>
                     <th>📍 الموقع</th>
                     <th>الحالة</th>
                     <th class="sticky-col-right">الإجراءات</th>
                 </tr>
             </thead>
-            <tbody id="customers-tbody"></tbody>
+            <tbody id="customers-tbody">
+                <tr><td colspan="11" class="loading-msg">جارِ جلب البيانات...</td></tr>
+            </tbody>
         </table>
     </div>
 
+    <!-- نافذة التعديل المبسطة -->
     <div id="edit-customer-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>تعديل بيانات وموقع العميل</h3>
+                <h3>تعديل بيانات العميل</h3>
                 <button class="close-btn" onclick="closeEditModal()">✖</button>
             </div>
             <form id="edit-customer-form">
                 <input type="hidden" id="edit-doc-id">
-                <input type="hidden" id="edit-lat"> 
-                <input type="hidden" id="edit-lng"> 
-                
                 <div class="form-grid">
                     <div class="input-group"><label>الاسم</label><input type="text" id="edit-name" required></div>
                     <div class="input-group"><label>الجوال</label><input type="text" id="edit-phone" required></div>
-                    
-                    <div class="map-section">
-                        <label>📍 الموقع (الدبوس يتحدث تلقائياً مع العنوان)</label>
-                        <button type="button" class="location-btn" onclick="autoDetectLocation()">🎯 موقعي الحالي</button>
-                        <div id="modal-map"></div>
-                    </div>
-
-                    <div class="input-group"><label>الدولة</label><input type="text" id="edit-country" class="address-input"></div>
-                    <div class="input-group"><label>المدينة</label><input type="text" id="edit-city" class="address-input"></div>
-                    <div class="input-group"><label>الحي</label><input type="text" id="edit-district" class="address-input"></div>
-                    <div class="input-group"><label>الشارع</label><input type="text" id="edit-street" class="address-input"></div>
-                    <div class="input-group"><label>المبنى</label><input type="text" id="edit-buildingNo" class="address-input"></div>
-                    <div class="input-group"><label>الإضافي</label><input type="text" id="edit-additionalNo" class="address-input"></div>
-                    <div class="input-group"><label>الرمز البريدي</label><input type="text" id="edit-postalCode" class="address-input"></div>
-                    <div class="input-group"><label>صندوق البريد</label><input type="text" id="edit-poBox" class="address-input"></div>
+                    <div class="input-group"><label>الدولة</label><input type="text" id="edit-country"></div>
+                    <div class="input-group"><label>المدينة</label><input type="text" id="edit-city"></div>
+                    <div class="input-group"><label>الحي</label><input type="text" id="edit-district"></div>
+                    <div class="input-group"><label>الشارع</label><input type="text" id="edit-street"></div>
+                    <div class="input-group"><label>رقم المبنى</label><input type="text" id="edit-buildingNo"></div>
+                    <div class="input-group"><label>الرقم الإضافي</label><input type="text" id="edit-additionalNo"></div>
+                    <div class="input-group"><label>الرمز البريدي</label><input type="text" id="edit-postalCode"></div>
+                    <div class="input-group"><label>صندوق البريد</label><input type="text" id="edit-poBox"></div>
                 </div>
-
                 <div class="modal-footer">
                     <button type="button" class="cancel-btn" onclick="closeEditModal()">إلغاء</button>
-                    <button type="submit" class="save-btn">حفظ</button>
+                    <button type="submit" class="save-btn">حفظ التغييرات</button>
                 </div>
             </form>
         </div>
