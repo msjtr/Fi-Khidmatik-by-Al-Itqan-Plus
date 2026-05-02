@@ -59,10 +59,13 @@
             // إطلاق إشارة لملف main.js بأن الواجهة جاهزة لتركيب الساعة واسم المستخدم
             setTimeout(() => {
                 document.dispatchEvent(new Event('TeraLayoutReady'));
-            }, 100);
+                
+                // ⚠️ هذا هو السطر السحري الذي كان مفقوداً لتشغيل الأزرار!
+                setupSidebarInteractions(); 
+            }, 200);
         }
 
-        // دالة التنقل للقائمة الجانبية
+        // دالة التنقل للقائمة الجانبية وفتح الصفحات في الإطار
         window.teraNavigate = function(pageName) {
             const iframe = document.getElementById('tera-iframe');
             if (iframe) {
@@ -71,6 +74,38 @@
                 iframe.onload = () => { iframe.style.opacity = '1'; };
             }
         };
+
+        // 🛠️ محرك تفاعلات القائمة الجانبية (الألوان والقوائم المنسدلة)
+        function setupSidebarInteractions() {
+            document.addEventListener('click', function(e) {
+                // أ) نقل اللون للزر النشط
+                const clickedLink = e.target.closest('.tera-nav-link');
+                if (clickedLink) {
+                    document.querySelectorAll('.tera-nav-link').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    clickedLink.classList.add('active');
+                }
+
+                // ب) فتح وإغلاق القوائم المنسدلة (مثل قائمة العملاء)
+                const submenuBtn = e.target.closest('.has-submenu');
+                if (submenuBtn) {
+                    const targetId = submenuBtn.getAttribute('data-target');
+                    const submenu = document.getElementById(targetId);
+                    if (submenu) {
+                        // تبديل ظهور القائمة
+                        submenu.style.display = (submenu.style.display === 'block') ? 'none' : 'block';
+                    }
+                }
+
+                // ج) زر طي القائمة الجانبية
+                const toggleBtn = e.target.closest('#toggle-sidebar-btn');
+                if (toggleBtn) {
+                    const sidebar = document.querySelector('.sidebar-nav');
+                    if(sidebar) sidebar.classList.toggle('collapsed');
+                }
+            });
+        }
 
         window.addEventListener('DOMContentLoaded', mountTeraComponents);
     </script>
