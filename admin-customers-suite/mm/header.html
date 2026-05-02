@@ -1,9 +1,46 @@
-<div class="header-right">
-    <h3 style="margin:0; color:#001f3f;">إدارة النظام - مؤسسة الإتقان بلس</h3>
-</div>
-<!-- سيتم حقن الساعة هنا برمجياً من ملف clock-view.html -->
-<div id="clock-mount-point"></div>
-<div class="header-left" style="display:flex; align-items:center; gap:10px;">
-    <span style="font-weight:bold;">م. محمد الشمري</span>
-    <div style="width:35px; height:35px; background:#c5a059; border-radius:50%; color:#fff; display:flex; align-items:center; justify-content:center;">م</div>
+<div class="header-container">
+    <!-- القسم الأيمن: الترحيب والعبارات التحفيزية -->
+    <div class="header-greeting">
+        <div class="greeting-main">مرحباً بك، <span id="display-user-name">محمد الشمري</span> 👋</div>
+        <div class="motivate-text" id="motivational-phrase">يوم مليء بالنجاح والإنجازات!</div>
+    </div>
+
+    <!-- القسم الأوسط: مكان عرض الساعة الرقمية -->
+    <div id="clock-mount-point" class="header-clock-wrapper"></div>
+
+    <!-- القسم الأيسر: الإشعارات والملف الشخصي -->
+    <div class="header-actions">
+        
+        <!-- أيقونة الإشعارات وتنبيهات النظام -->
+        <button class="icon-btn notification-btn" title="تنبيهات النظام">
+            🔔
+            <span class="badge">3</span> <!-- عدد الإشعارات -->
+        </button>
+
+        <!-- القائمة المنسدلة للملف الشخصي -->
+        <div class="user-profile-dropdown" id="profile-dropdown-container">
+            <div class="profile-trigger" id="profile-trigger-btn">
+                <div class="user-info">
+                    <span class="user-name">محمد الشمري</span>
+                    <span class="user-role">مدير النظام</span>
+                </div>
+                <!-- الحرف الأول يظهر هنا برمجياً -->
+                <div class="user-avatar" id="user-avatar-icon">م</div>
+                <span class="dropdown-arrow">▼</span>
+            </div>
+
+            <!-- القائمة المخفية (تظهر عند الضغط) -->
+            <div class="dropdown-menu" id="user-dropdown-menu">
+                <div class="dropdown-header">إعدادات الحساب</div>
+                <button class="dropdown-item"><span>✏️</span> تعديل البيانات</button>
+                <button class="dropdown-item"><span>📞</span> تعديل بيانات التواصل</button>
+                <button class="dropdown-item"><span>👤</span> تغيير اسم المستخدم</button>
+                <button class="dropdown-item"><span>🔒</span> تغيير كلمة المرور</button>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item logout-item" onclick="window.location.href='login.html'">
+                    <span>🚪</span> تسجيل الخروج
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
