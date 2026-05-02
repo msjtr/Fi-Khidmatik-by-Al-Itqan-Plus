@@ -16,9 +16,6 @@ async function loadCustomers() {
             data.id = docSnap.id;
             customersDataList.push(data);
 
-            const addrParts = [data.country, data.city, data.district, data.street, data.buildingNo].filter(p => p);
-            const fullAddr = addrParts.join(" / ") || "حائل";
-            const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddr)}`;
             const dateAdded = data.createdAt ? new Date(data.createdAt).toLocaleDateString('ar-SA') : '-';
 
             const row = document.createElement('tr');
@@ -36,7 +33,6 @@ async function loadCustomers() {
                 <td>${data.additionalNo || '-'}</td>
                 <td>${data.postalCode || '-'}</td>
                 <td>${data.poBox || '-'}</td>
-                <td><a href="${mapLink}" target="_blank">📍 عرض</a></td>
                 <td>${dateAdded}</td>
                 <td>${data.status || 'نشط'}</td>
                 <td>${data.tag || 'عام'}</td>
