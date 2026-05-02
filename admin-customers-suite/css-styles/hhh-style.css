@@ -1,6 +1,6 @@
 /* =========================================
    التصميم الإبداعي (Tera V12 - Floating Islands)
-   النمط: Bento Box UI / Apple-like SaaS
+   النمط: Bento Box UI / Apple-like SaaS + Accordion Sidebar
 ========================================= */
 
 /* --- 1. باليت الألوان الملكية المتطورة --- */
@@ -63,9 +63,15 @@ body, html {
     box-shadow: var(--shadow-float);
     display: flex; flex-direction: column;
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto; /* للسماح بالتمرير إذا كثرت الإعدادات */
     transition: all 0.4s ease;
 }
+
+/* إخفاء شريط التمرير الافتراضي للقائمة الجانبية */
+#sidebar-mount::-webkit-scrollbar { width: 4px; }
+#sidebar-mount::-webkit-scrollbar-track { background: transparent; }
+#sidebar-mount::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.2); border-radius: 10px; }
 
 #sidebar-mount::before {
     content: ''; position: absolute; top: -50px; right: -50px;
@@ -76,7 +82,7 @@ body, html {
 /* الشعار وزر الطي في القائمة الجانبية */
 .sidebar-header {
     display: flex; flex-direction: column; align-items: center; 
-    position: relative; margin-bottom: 30px;
+    position: relative; margin-bottom: 30px; flex-shrink: 0;
 }
 .collapse-btn {
     position: absolute; left: 0; top: 0; 
@@ -93,7 +99,7 @@ body, html {
 .brand-title-ar { color: #FFF; font-size: 0.95rem; font-weight: 800; }
 .brand-title-en { color: var(--itqan-gold-primary); font-size: 0.65rem; font-family: monospace; letter-spacing: 0.5px; margin-top: 2px; }
 
-/* أزرار القائمة */
+/* --- أزرار القائمة (الأساسية والمنسدلة) --- */
 .nav-btn { 
     display: flex; align-items: center; gap: 12px; width: 100%; 
     background: transparent; border: none; 
@@ -113,6 +119,50 @@ body, html {
 }
 .nav-btn.active svg { color: var(--itqan-gold-primary); }
 
+/* --- الزر المميز والمعزول (الرئيسية) --- */
+.nav-btn.special-btn {
+    background: linear-gradient(90deg, rgba(212, 175, 55, 0.15) 0%, transparent 100%);
+    border-right: 3px solid var(--itqan-gold-primary);
+    color: #FFF; margin-bottom: 20px;
+}
+.nav-btn.special-btn svg { color: var(--itqan-gold-primary); }
+
+/* --- عناوين الفواصل والفئات --- */
+.nav-section-title {
+    font-size: 0.7rem; font-weight: 800; color: rgba(255, 255, 255, 0.3);
+    margin: 15px 20px 8px 0; padding-right: 10px;
+    letter-spacing: 0.5px; transition: 0.3s opacity;
+}
+.nav-divider { height: 1px; background: rgba(255, 255, 255, 0.05); margin: 15px 15px; flex-shrink: 0; }
+
+/* --- القوائم المنسدلة (Submenus) --- */
+.nav-item-wrapper { width: 100%; display: flex; flex-direction: column; }
+.dropdown-arrow-icon { margin-right: auto; transition: transform 0.3s ease; }
+.nav-btn.has-submenu.open .dropdown-arrow-icon { transform: rotate(180deg); color: var(--itqan-gold-primary); }
+
+.submenu-container {
+    display: grid; grid-template-rows: 0fr;
+    transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.submenu-container.open { grid-template-rows: 1fr; }
+.submenu-inner { overflow: hidden; display: flex; flex-direction: column; padding-right: 40px; }
+
+.submenu-item {
+    background: transparent; border: none; color: #6A7B9C;
+    text-align: right; padding: 10px 10px 10px 0; cursor: pointer;
+    font-size: 0.8rem; font-weight: 600; transition: all 0.3s ease;
+    display: flex; align-items: center; position: relative;
+}
+.submenu-item::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: #6A7B9C; position: absolute; right: -12px; transition: 0.3s;
+}
+.submenu-item:hover { color: var(--itqan-gold-primary); transform: translateX(-4px); }
+.submenu-item:hover::before { background: var(--itqan-gold-primary); box-shadow: 0 0 5px var(--itqan-gold-primary); }
+
+.submenu-item.active { color: var(--itqan-gold-primary); transform: translateX(-4px); font-weight: 800; }
+.submenu-item.active::before { background: var(--itqan-gold-primary); box-shadow: 0 0 6px var(--itqan-gold-primary); }
+
 /* --- تأثيرات طي القائمة --- */
 .sidebar-collapsed #sidebar-mount { padding: 25px 8px; }
 .sidebar-collapsed .main-logo { width: 40px; } 
@@ -120,6 +170,9 @@ body, html {
 .sidebar-collapsed .nav-text { opacity: 0; width: 0; display: none; } 
 .sidebar-collapsed .nav-btn { justify-content: center; padding: 12px 0; }
 .sidebar-collapsed .collapse-btn .chevron-icon { transform: rotate(180deg); }
+.sidebar-collapsed .nav-section-title, .sidebar-collapsed .nav-divider { opacity: 0; margin: 0; height: 0; overflow: hidden; }
+.sidebar-collapsed .dropdown-arrow-icon { display: none; }
+.sidebar-collapsed .submenu-container { display: none; }
 
 /* --- 5. الجزيرة الثانية: الهيدر الذكي (Smart Header) --- */
 #header-mount { 
