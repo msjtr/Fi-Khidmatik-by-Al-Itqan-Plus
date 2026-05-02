@@ -131,6 +131,10 @@ body, html {
     display: flex; align-items: center; justify-content: space-between; 
     padding: 0 25px; 
     box-shadow: var(--shadow-float);
+    
+    /* هذا هو الحل الذي يمنع القائمة من الاختفاء خلف الجداول */
+    position: relative; 
+    z-index: 9999; 
 }
 
 /* --- 6. الجزيرة الثالثة: شاشة العرض الرئيسية (Main View) --- */
