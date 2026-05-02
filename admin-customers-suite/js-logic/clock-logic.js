@@ -1,42 +1,52 @@
 /**
- * نظام Tera V12 - محرك الساعة الذكي
- * مؤسسة الإتقان بلس - حائل
+ * نظام Tera V12 - محرك الساعة الذكي (مضاد للفشل)
  */
-
 export function startTeraClock() {
     function updateClock() {
-        // 1. محاولة الوصول للعناصر
-        const clockElement = document.getElementById('h-clock');
-        const dateElement = document.getElementById('h-date');
+        // 1. البحث عن عناصر الساعة
+        const hoursEl = document.getElementById('c-hours');
+        const minEl = document.getElementById('c-minutes');
+        const secEl = document.getElementById('c-seconds');
+        const ampmEl = document.getElementById('c-ampm');
+        const hijriEl = document.getElementById('c-hijri');
+        const gregEl = document.getElementById('c-greg');
 
-        // 2. الحماية: إذا لم تجد العناصر، توقف فوراً ولا تظهر خطأ
-        if (!clockElement || !dateElement) {
+        // 2. الحماية: إذا لم يتم جلب ملف HTML للساعة بعد، توقف وحاول في الثانية القادمة
+        if (!hoursEl || !minEl || !secEl || !ampmEl) {
             return; 
         }
 
-        // 3. التحديث فقط في حال وجود العناصر
         const now = new Date();
         
-        // تنسيق الوقت (نظام 12 ساعة ص/م ليكون أفضل بصرياً)
-        clockElement.innerText = now.toLocaleTimeString('ar-SA', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true
-        });
-
-        // تنسيق التاريخ (دمج الهجري والميلادي بأسلوب أنيق)
-        const gregorian = now.toLocaleDateString('en-GB'); // 01/05/2026
-        const hijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', { 
-            day: 'numeric', month: 'long', year: 'numeric' 
-        }).format(now);
+        // 3. حساب الوقت بنظام 12 ساعة
+        let h = now.getHours();
+        let m = now.getMinutes();
+        let s = now.getSeconds();
+        let ampm = h >= 12 ? 'م' : 'ص';
         
-        dateElement.innerText = `${hijri} | ${gregorian}`;
+        h = h % 12 || 12; // تحويل الصفر إلى 12
+
+        // 4. حقن الوقت في الشاشة
+        hoursEl.innerText = String(h).padStart(2, '0');
+        minEl.innerText = String(m).padStart(2, '0');
+        secEl.innerText = String(s).padStart(2, '0');
+        ampmEl.innerText = ampm;
+
+        // 5. حقن التاريخ
+        if (hijriEl && gregEl) {
+            hijriEl.innerText = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-uma', { 
+                day: 'numeric', month: 'long', year: 'numeric' 
+            }).format(now);
+
+            gregEl.innerText = new Intl.DateTimeFormat('ar-SA', { 
+                day: '2-digit', month: 'long', year: 'numeric' 
+            }).format(now);
+        }
     }
 
-    // 4. تشغيل الساعة بأمان فور استدعاء الدالة من main-hub.html
+    // تشغيل التحديث فوراً
     updateClock();
     
-    // 5. التحديث المستمر كل ثانية
+    // استمرار التحديث كل ثانية (1000 ملي ثانية)
     setInterval(updateClock, 1000);
 }
