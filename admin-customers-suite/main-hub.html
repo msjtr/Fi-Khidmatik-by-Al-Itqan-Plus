@@ -76,7 +76,12 @@
     <!-- ========================================== -->
     <!-- 5. سكربت التشغيل الداخلي للواجهة             -->
     <!-- ========================================== -->
-    <script>
+    
+    <!-- تم إضافة type="module" لكي نتمكن من استيراد الدوال -->
+    <script type="module">
+        // استيراد دالة تفعيل الهيدر
+        import { initHeaderLogic } from './js-logic/header-logic.js';
+
         async function mountTeraComponents() {
             const components = [
                 { id: 'header-mount', path: 'mm/header.html' },
@@ -95,6 +100,14 @@
                 }
             }
 
+            // --- التحديث هنا: تفعيل الهيدر بعد تحميله ---
+            try {
+                initHeaderLogic();
+            } catch (e) {
+                console.error("حدث خطأ في تشغيل الهيدر:", e);
+            }
+
+            // تحميل الساعة
             try {
                 const clockRes = await fetch('mm/clock-view.html');
                 if (clockRes.ok) {
@@ -109,6 +122,7 @@
             }
         }
 
+        // جعل دالة التنقل مرئية على مستوى المتصفح (Global)
         window.teraNavigate = function(pageName) {
             const iframe = document.getElementById('tera-iframe');
             if (iframe) {
