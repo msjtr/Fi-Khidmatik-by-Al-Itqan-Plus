@@ -1,2 +1,25 @@
-<div>© 2026 نظام Tera V12 - مؤسسة الإتقان بلس (حائل)</div>
-<div style="color: #2ecc71; font-weight: bold;">● متصل بالنظام</div>
+<div class="footer-status-bar">
+    <!-- القسم الأيمن: حقوق النشر ورقم الإصدار -->
+    <div class="footer-info">
+        <span>© 2026 مؤسسة الإتقان بلس (حائل)</span>
+        <span class="version-badge" title="الإصدار الحالي">Tera V12.0.1</span>
+    </div>
+
+    <!-- القسم الأوسط: إشعارات مشاكل/حالة النظام (تتغير برمجياً) -->
+    <div class="footer-alerts" id="system-status-msg">
+        <!-- الحالة الافتراضية السليمة -->
+        <span class="alert-msg success-msg">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            جميع الأنظمة تعمل بكفاءة
+        </span>
+        <!-- يمكنك لاحقاً برمجتها لتتغير إلى:
+        <span class="alert-msg error-msg">⚠️ يوجد مشكلة في الاتصال بقاعدة البيانات</span>
+        -->
+    </div>
+
+    <!-- القسم الأيسر: حالة الاتصال مع نقطة نابضة -->
+    <div class="footer-connection" id="system-connection-status">
+        <span class="status-dot online"></span>
+        <span class="status-text">متصل بخوادم النظام</span>
+    </div>
+</div>
