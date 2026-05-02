@@ -1,27 +1,28 @@
 /* =========================================
-   التصميم الإبداعي (Tera V12 - Floating Islands)
+   نظام Tera V12 - ملف التنسيق الإبداعي الموحد
    النمط: Bento Box UI / Apple-like SaaS + Metal Scrollbar
+   المؤسسة: الإتقان بلس - حائل
 ========================================= */
 
 /* --- 1. باليت الألوان الملكية المتطورة --- */
 :root {
     --itqan-navy-bg: #0A192F;      /* كحلي ليلي عميق جداً للقائمة */
-    --itqan-navy-light: #112240;   /* تأثيرات التمرير */
-    --itqan-gold-primary: #D4AF37; 
+    --itqan-navy-light: #112240;   /* تأثيرات التمرير والتفعيل */
+    --itqan-gold-primary: #D4AF37; /* اللون الذهبي للهوية */
     --itqan-gold-glow: rgba(212, 175, 55, 0.4);
     --metal-gray: #6A7B9C;         /* رصاصي معدني لشريط التمرير */
     
-    --app-bg: #E8EEF2;             /* خلفية النظام */
-    --card-bg: #FFFFFF;            
+    --app-bg: #E8EEF2;             /* خلفية النظام (رمادي لؤلؤي) */
+    --card-bg: #FFFFFF;            /* خلفية الجزر العائمة */
     
     --shadow-float: 0 8px 30px rgba(10, 25, 47, 0.06);
     --shadow-glow: 0 8px 25px rgba(212, 175, 55, 0.15);
 }
 
-/* --- الحماية الشاملة للزوم --- */
+/* --- الحماية الشاملة وضبط القياسات --- */
 * { box-sizing: border-box; }
 
-/* --- 2. الإعدادات الأساسية --- */
+/* --- 2. الإعدادات الأساسية للواجهة --- */
 body, html {
     margin: 0; padding: 0; 
     height: 100vh; width: 100%;
@@ -30,7 +31,7 @@ body, html {
     direction: rtl; overflow: hidden;
 }
 
-/* --- 3. توزيع (الجزر العائمة) المحسن --- */
+/* --- 3. توزيع (الجزر العائمة) المحسن (Grid System) --- */
 .tera-layout {
     display: grid; 
     height: 100vh; width: 100%;
@@ -45,6 +46,7 @@ body, html {
     transition: grid-template-columns 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* حالة طي القائمة الجانبية (Sidebar Collapsed) */
 .tera-layout.sidebar-collapsed { grid-template-columns: 85px 1fr; }
 
 /* --- 4. الجزيرة الأولى: القائمة الجانبية (Sidebar) --- */
@@ -60,13 +62,14 @@ body, html {
     transition: all 0.4s ease;
 }
 
+/* تأثير الإضاءة الخلفية في القائمة */
 #sidebar-mount::before {
     content: ''; position: absolute; top: -50px; right: -50px;
     width: 150px; height: 150px; background: var(--itqan-gold-glow);
     filter: blur(80px); border-radius: 50%; pointer-events: none;
 }
 
-/* --- الشعار وزر الطي (ثابت تماماً) --- */
+/* --- الشعار وزر الطي (ثابت في الأعلى) --- */
 .sidebar-header {
     display: flex; flex-direction: column; align-items: center; 
     position: relative; margin-bottom: 20px; flex-shrink: 0;
@@ -84,7 +87,7 @@ body, html {
 .brand-title-ar { color: #FFF; font-size: 0.95rem; font-weight: 800; }
 .brand-title-en { color: var(--itqan-gold-primary); font-size: 0.65rem; font-family: monospace; letter-spacing: 0.5px; margin-top: 2px; }
 
-/* --- حاوية التنقل (التي تنزل وتتحرك فقط) --- */
+/* --- حاوية التنقل (التي تحتوي على سكرول التمرير) --- */
 .sidebar-nav {
     flex: 1;
     overflow-y: auto; /* التمرير هنا فقط */
@@ -92,7 +95,7 @@ body, html {
     padding-right: 2px;
 }
 
-/* --- شريط التمرير العريض برصاص معدني --- */
+/* --- شريط التمرير العريض بلون الرصاص المعدني --- */
 .sidebar-nav::-webkit-scrollbar { width: 10px; }
 .sidebar-nav::-webkit-scrollbar-track { 
     background: rgba(255, 255, 255, 0.02); 
@@ -102,11 +105,11 @@ body, html {
 .sidebar-nav::-webkit-scrollbar-thumb { 
     background: var(--metal-gray); 
     border-radius: 10px; 
-    border: 2px solid var(--itqan-navy-bg); /* بروز معدني */
+    border: 2px solid var(--itqan-navy-bg); /* إطار يمنح بريقاً معدنياً 3D */
 }
 .sidebar-nav::-webkit-scrollbar-thumb:hover { background: #8892B0; }
 
-/* --- أزرار القائمة --- */
+/* --- تنسيق أزرار القائمة الأساسية --- */
 .nav-btn { 
     display: flex; align-items: center; gap: 12px; width: 100%; 
     background: transparent; border: none; 
@@ -122,18 +125,17 @@ body, html {
     box-shadow: inset -4px 0 0 var(--itqan-gold-primary);
 }
 
+/* الزر المميز (الرئيسية) */
 .nav-btn.special-btn {
     background: linear-gradient(90deg, rgba(212, 175, 55, 0.15) 0%, transparent 100%);
     border-right: 3px solid var(--itqan-gold-primary);
     color: #FFF; margin-bottom: 20px;
 }
 
-/* --- المنسدلات والأقسام --- */
-.nav-section-title {
-    font-size: 0.7rem; font-weight: 800; color: rgba(255, 255, 255, 0.3);
-    margin: 15px 20px 8px 0; padding-right: 10px; letter-spacing: 0.5px;
-}
-.nav-divider { height: 1px; background: rgba(255, 255, 255, 0.05); margin: 15px 15px; }
+/* --- تنسيق القوائم المنسدلة (Submenus) --- */
+.nav-item-wrapper { width: 100%; display: flex; flex-direction: column; }
+.dropdown-arrow-icon { margin-right: auto; transition: transform 0.3s ease; }
+.nav-btn.has-submenu.open .dropdown-arrow-icon { transform: rotate(180deg); color: var(--itqan-gold-primary); }
 
 .submenu-container {
     display: grid; grid-template-rows: 0fr;
@@ -153,8 +155,16 @@ body, html {
     background: #6A7B9C; position: absolute; right: -12px; transition: 0.3s;
 }
 .submenu-item.active { color: var(--itqan-gold-primary); font-weight: 800; }
+.submenu-item.active::before { background: var(--itqan-gold-primary); box-shadow: 0 0 6px var(--itqan-gold-primary); }
 
-/* --- الجزيرة الثانية: الهيدر --- */
+/* الفواصل وعناوين الأقسام */
+.nav-section-title {
+    font-size: 0.7rem; font-weight: 800; color: rgba(255, 255, 255, 0.3);
+    margin: 15px 20px 8px 0; padding-right: 10px; letter-spacing: 0.5px;
+}
+.nav-divider { height: 1px; background: rgba(255, 255, 255, 0.05); margin: 15px 15px; }
+
+/* --- 5. الجزيرة الثانية: الهيدر الذكي (Header) --- */
 #header-mount { 
     grid-area: header; 
     background: rgba(255, 255, 255, 0.75); 
@@ -163,10 +173,10 @@ body, html {
     border-radius: 18px;
     display: flex; align-items: center; justify-content: space-between; 
     padding: 0 25px; box-shadow: var(--shadow-float);
-    position: relative; z-index: 9999; 
+    position: relative; z-index: 9999; /* لضمان ظهور القوائم المنسدلة فوق المحتوى */
 }
 
-/* --- الجزيرة الثالثة: شاشة العرض --- */
+/* --- 6. الجزيرة الثالثة: شاشة العرض الرئيسية (Main) --- */
 #main-view { 
     grid-area: main; 
     background: var(--card-bg); 
@@ -175,13 +185,12 @@ body, html {
     position: relative; overflow: hidden; 
     display: flex; flex-direction: column;
 }
-
 #tera-iframe { flex: 1; width: 100%; height: 100%; border: none; border-radius: 20px; }
 
-/* --- الجزيرة الرابعة: الفوتر --- */
+/* --- 7. الجزيرة الرابعة: شريط حالة النظام (Footer) --- */
 #footer-mount { grid-area: footer; display: flex; align-items: center; background: transparent; padding: 0 10px; }
 
-/* --- الأنميشن والتفاعلات --- */
+/* --- التنسيقات التفاعلية للساعة والإشعارات --- */
 .clock-container { 
     background: #FFF; padding: 5px 18px; border-radius: 30px; 
     border: 1px solid rgba(10, 25, 47, 0.05); display: flex; align-items: center; gap: 12px;
@@ -190,13 +199,8 @@ body, html {
 .time-display .sep { color: var(--itqan-gold-primary); animation: blink 1s infinite; }
 
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-@keyframes pulse-green {
-    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.5); }
-    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(46, 204, 113, 0); }
-    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
-}
 
-/* إخفاء العناصر عند الطي */
+/* إخفاء العناصر عند طي القائمة الجانبية (Sidebar Collapsed) */
 .sidebar-collapsed #sidebar-mount { padding: 25px 8px; }
 .sidebar-collapsed .main-logo { width: 40px; } 
 .sidebar-collapsed .brand-titles, .sidebar-collapsed .nav-text, 
