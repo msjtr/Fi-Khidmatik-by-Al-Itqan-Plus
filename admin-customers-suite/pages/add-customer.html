@@ -4,40 +4,75 @@
     <meta charset="UTF-8">
     <title>إضافة عميل جديد - منصة في خدمتك</title>
     <link rel="stylesheet" href="../css-styles/add-cust-style.css">
-    <!-- محرر النصوص Quill -->
+    
+    <!-- محرر النصوص Quill مع التنسيقات المتقدمة -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    
+    <!-- مكتبة مفاتيح الدول مع البحث -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
+    
+    <style>
+        /* تنسيقات خاصة لضبط مظهر مفاتيح الدول والمحرر العربي */
+        .iti { width: 100%; direction: ltr; } /* مفاتيح الدول تظهر يسار الرقم */
+        .ql-editor { 
+            text-align: right; 
+            direction: rtl; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+            min-height: 200px;
+        }
+        /* تحسين مظهر شريط أدوات المحرر */
+        .ql-toolbar.ql-snow {
+            background: #f0f2f5;
+            border-radius: 8px 8px 0 0;
+            text-align: right;
+        }
+    </style>
 </head>
 <body>
 
     <div class="page-container">
         <div class="form-header">
             <h2>➕ إضافة عميل جديد لـ (تيرا)</h2>
-            <p>يرجى تعبئة كافة البيانات المطلوبة لضمان دقة السجل</p>
+            <p>يرجى تعبئة كافة البيانات المطلوبة لضمان دقة السجل في مكتب حائل</p>
         </div>
 
         <form id="add-customer-form">
             <div class="form-grid">
                 <!-- البيانات الأساسية -->
-                <div class="input-group"><label>اسم العميل</label><input type="text" id="cust-name" required placeholder="الاسم الكامل"></div>
-                <div class="input-group"><label>رقم الجوال</label><input type="text" id="cust-phone" required placeholder="05xxxxxxxx"></div>
-                <div class="input-group"><label>مفتاح الدولة</label><input type="text" id="cust-countryCode" value="+966"></div>
-                <div class="input-group"><label>البريد الإلكتروني</label><input type="email" id="cust-email" placeholder="example@mail.com"></div>
+                <div class="input-group">
+                    <label>اسم العميل</label>
+                    <input type="text" id="cust-name" required placeholder="أدخل الاسم الثلاثي">
+                </div>
                 
-                <!-- العنوان التفصيلي -->
-                <div class="input-group"><label>الدولة</label><input type="text" id="cust-country" value="المملكة العربية السعودية"></div>
-                <div class="input-group"><label>المدينة</label><input type="text" id="cust-city" value="حائل"></div>
-                <div class="input-group"><label>الحي</label><input type="text" id="cust-district"></div>
-                <div class="input-group"><label>الشارع</label><input type="text" id="cust-street"></div>
-                <div class="input-group"><label>رقم المبنى</label><input type="text" id="cust-buildingNo"></div>
-                <div class="input-group"><label>الرقم الإضافي</label><input type="text" id="cust-additionalNo"></div>
-                <div class="input-group"><label>الرمز البريدي</label><input type="text" id="cust-postalCode"></div>
-                <div class="input-group"><label>صندوق البريد</label><input type="text" id="cust-poBox"></div>
+                <div class="input-group">
+                    <label>رقم الجوال (يبدأ بـ 5)</label>
+                    <input type="tel" id="cust-phone" required placeholder="5xxxxxxxx">
+                    <!-- حقل مخفي لتخزين مفتاح الدولة المختار من القائمة -->
+                    <input type="hidden" id="cust-countryCode" value="+966">
+                </div>
 
-                <!-- الحالة والتصنيف (مطابق للقائمة) -->
+                <div class="input-group">
+                    <label>البريد الإلكتروني</label>
+                    <input type="email" id="cust-email" placeholder="example@mail.com">
+                </div>
+                
+                <!-- العنوان التفصيلي (تم إفراغها لتكون جاهزة للإدخال) -->
+                <div class="input-group"><label>الدولة</label><input type="text" id="cust-country" placeholder="مثلاً: السعودية"></div>
+                <div class="input-group"><label>المدينة</label><input type="text" id="cust-city" placeholder="مثلاً: حائل"></div>
+                <div class="input-group"><label>الحي</label><input type="text" id="cust-district" placeholder="اسم الحي"></div>
+                <div class="input-group"><label>الشارع</label><input type="text" id="cust-street" placeholder="اسم الشارع"></div>
+                <div class="input-group"><label>رقم المبنى</label><input type="text" id="cust-buildingNo" placeholder="0000"></div>
+                <div class="input-group"><label>الرقم الإضافي</label><input type="text" id="cust-additionalNo" placeholder="0000"></div>
+                <div class="input-group"><label>الرمز البريدي</label><input type="text" id="cust-postalCode" placeholder="00000"></div>
+                <div class="input-group"><label>صندوق البريد</label><input type="text" id="cust-poBox" placeholder="00000"></div>
+
+                <!-- الحالة والتصنيف -->
                 <div class="input-group">
                     <label>حالة الحساب</label>
                     <select id="cust-accountStatus">
-                        <option value="جديد" selected>جديد</option>
+                        <option value="" disabled selected>اختر الحالة</option>
+                        <option value="جديد">جديد</option>
                         <option value="نشط">نشط</option>
                         <option value="موقوف">موقوف</option>
                         <option value="محظور">محظور</option>
@@ -46,7 +81,8 @@
                 <div class="input-group">
                     <label>تصنيف العميل</label>
                     <select id="cust-customerCategory">
-                        <option value="عادي" selected>عادي</option>
+                        <option value="" disabled selected>اختر التصنيف</option>
+                        <option value="عادي">عادي</option>
                         <option value="VIP">VIP</option>
                         <option value="مميز">مميز</option>
                         <option value="محتمل">محتمل</option>
@@ -54,20 +90,41 @@
                 </div>
             </div>
 
-            <!-- محرر النصوص المتقدم (Word Style) -->
+            <!-- محرر النصوص المتقدم (Word Style الكامل) -->
             <div class="editor-section" style="margin-top: 20px;">
-                <label>الملاحظات التفصيلية</label>
-                <div id="editor-container" style="height: 200px; background: white;"></div>
+                <label>الملاحظات والتنسيقات المتقدمة</label>
+                <div id="editor-container"></div>
             </div>
 
             <div class="form-footer">
-                <button type="submit" id="submit-btn" class="save-btn">إضافة العميل للقاعدة</button>
-                <button type="button" class="cancel-btn" onclick="history.back()">إلغاء</button>
+                <button type="submit" id="submit-btn" class="save-btn">حفظ وإضافة العميل</button>
+                <button type="button" class="cancel-btn" onclick="history.back()">العودة للخلف</button>
             </div>
         </form>
     </div>
 
+    <!-- استدعاء المكتبات الخارجية -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    
+    <!-- تشغيل قائمة مفاتيح الدول -->
+    <script>
+        const phoneInput = document.querySelector("#cust-phone");
+        const countryCodeHidden = document.querySelector("#cust-countryCode");
+        
+        const iti = window.intlTelInput(phoneInput, {
+            separateDialCode: true,
+            initialCountry: "sa",
+            preferredCountries: ["sa", "ae", "kw", "qa", "eg"],
+            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+        });
+
+        // تحديث الحقل المخفي عند تغيير الدولة
+        phoneInput.addEventListener("countrychange", function() {
+            countryCodeHidden.value = "+" + iti.getSelectedCountryData().dialCode;
+        });
+    </script>
+
     <script type="module" src="../js-logic/add-cust.js"></script>
 </body>
 </html>
