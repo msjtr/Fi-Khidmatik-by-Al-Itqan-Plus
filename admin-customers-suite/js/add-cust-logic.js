@@ -1,120 +1,86 @@
-import { collection, getDocs, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
-import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
-import { db, storage } from '../js/firebase.js';
+import { collection, addDoc, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { db } from '../js/firebase.js'; 
 
-const currentEmployee = "Mohammad Al-Shammari"; 
-let customersDataList = [];
-let quill;
+const currentEmployee = "محمد بن صالح الشمري"; // تقييد العمليات باسم أبا صالح
 
-function initQuill() {
-    if (!quill) { quill = new Quill('#editor', { theme: 'snow' }); }
-}
+// تهيئة محرر Quill بكامل خصائص Word
+const quill = new Quill('#editor-container', {
+    theme: 'snow',
+    placeholder: 'اكتب ملاحظات العميل بخصائص وورد المتقدمة...',
+    modules: {
+        toolbar: [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            [{ 'direction': 'rtl' }, { 'align': [] }],
+            ['link', 'image', 'video', 'blockquote'],
+            ['clean'] 
+        ]
+    }
+});
+quill.format('direction', 'rtl'); quill.format('align', 'right');
 
-// عرض الـ 18 عموداً في الجدول[cite: 2]
-async function loadCustomers() {
-    const tbody = document.getElementById('customers-tbody');
+// دالة تحميل سجل العمليات في أسفل الصفحة
+async function loadOperationsLog() {
+    const tbody = document.getElementById('operations-log-tbody');
     try {
-        const querySnapshot = await getDocs(collection(db, "customers"));
-        tbody.innerHTML = ''; customersDataList = [];
-        
-        querySnapshot.forEach((docSnap) => {
-            const data = docSnap.data(); data.id = docSnap.id;
-            customersDataList.push(data);
-
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${tbody.children.length + 1}</td>
-                <td class="sticky-col"><strong>${data.name || '-'}</strong></td>
-                <td>${data.phone || '-'}</td>
-                <td>${data.countryCode || '-'}</td>
-                <td>${data.email || '-'}</td>
-                <td>${data.country || '-'}</td>
-                <td>${data.city || '-'}</td>
-                <td>${data.district || '-'}</td>
-                <td>${data.street || '-'}</td>
-                <td>${data.buildingNo || '-'}</td>
-                <td>${data.additionalNo || '-'}</td>
-                <td>${data.postalCode || '-'}</td>
-                <td>${data.poBox || '-'}</td>
-                <td>${data.createdAt ? new Date(data.createdAt).toLocaleDateString('ar-SA') : '-'}</td>
-                <td>${data.accountStatus || 'جديد'}</td>
-                <td>${data.customerCategory || 'عادي'}</td>
-                <td>${data.quickNote || '-'}</td>
-                <td class="sticky-actions actions-cell">
-                    <span class="action-link edit-btn" onclick="openEditModal('${data.id}')">تعديل</span> |
-                    <span class="action-link view-btn" onclick="viewCustomerDetails('${data.id}')">عرض</span> |
-                    <span class="action-link print-btn" onclick="window.print()">طباعة</span> |
-                    <span class="action-link delete-btn" onclick="deleteCustomer('${data.id}')">حذف</span>
-                </td>
-            `;
-            tbody.appendChild(row);
+        const q = query(collection(db, "customers"), orderBy("createdAt", "desc"), limit(10));
+        const snap = await getDocs(q);
+        tbody.innerHTML = '';
+        snap.forEach(docSnap => {
+            const data = docSnap.data();
+            const date = new Date(data.createdAt);
+            tbody.innerHTML += `
+                <tr>
+                    <td>${date.toLocaleString('ar-SA')}</td>
+                    <td><strong>${data.createdBy || 'محمد بن صالح'}</strong></td>
+                    <td>${data.name}</td>
+                    <td>${data.accountStatus}</td>
+                    <td style="color:green">إضافة ناجحة</td>
+                </tr>`;
         });
-        document.getElementById('customers-count').innerText = customersDataList.length;
-    } catch (e) { console.error("فشل الاتصال بالقاعدة الجديدة:", e); }
+    } catch (e) { console.error(e); }
 }
 
-// نظام رفع المرفقات وسجل العمليات
-async function handleUpload(id) {
-    const fileInput = document.getElementById('new-file-input');
-    const nameInput = document.getElementById('new-file-name');
-    const btn = document.getElementById('upload-btn');
-    if(!fileInput.files[0] || !nameInput.value) return alert("أكمل بيانات المرفق");
-
-    btn.innerText = "جاري الرفع..."; btn.disabled = true;
-    try {
-        const fileRef = ref(storage, `docs/${id}/${Date.now()}_${fileInput.files[0].name}`);
-        const snap = await uploadBytes(fileRef, fileInput.files[0]);
-        const url = await getDownloadURL(snap.ref);
-
-        const cDoc = await getDoc(doc(db, "customers", id));
-        const list = cDoc.data().attachments || [];
-        const newEntry = { 
-            fileId: Date.now().toString(), 
-            fileName: nameInput.value, 
-            fileUrl: url, 
-            addedBy: currentEmployee, 
-            addedAt: new Date().toISOString(), 
-            status: 'active', 
-            deletedAt: null 
-        };
-        
-        await updateDoc(doc(db, "customers", id), { attachments: [...list, newEntry] });
-        renderFilesLog([...list, newEntry], id);
-        alert("تم الرفع بنجاح للقاعدة الجديدة");
-        nameInput.value = ''; fileInput.value = '';
-    } catch(e) { alert("خطأ في الرفع"); console.error(e); }
-    finally { btn.innerText = "رفع"; btn.disabled = false; }
-}
-
-// حفظ البيانات في القاعدة الجديدة[cite: 1]
-document.getElementById('edit-customer-form').onsubmit = async (e) => {
+const addForm = document.getElementById('add-customer-form');
+addForm.onsubmit = async (e) => {
     e.preventDefault();
-    const id = document.getElementById('edit-doc-id').value;
+    const phone = document.getElementById('cust-phone').value;
+    if (!phone.startsWith('5')) return alert("يجب أن يبدأ الجوال بـ 5");
+
+    const btn = document.getElementById('submit-btn');
+    btn.innerText = "جاري الحفظ والتقييد...";
+    btn.disabled = true;
+
     try {
-        await updateDoc(doc(db, "customers", id), {
-            name: document.getElementById('edit-name').value,
-            phone: document.getElementById('edit-phone').value,
-            countryCode: document.getElementById('edit-countryCode').value,
-            email: document.getElementById('edit-email').value,
-            country: document.getElementById('edit-country').value,
-            city: document.getElementById('edit-city').value,
-            district: document.getElementById('edit-district').value,
-            street: document.getElementById('edit-street').value,
-            buildingNo: document.getElementById('edit-buildingNo').value,
-            additionalNo: document.getElementById('edit-additionalNo').value,
-            postalCode: document.getElementById('edit-postalCode').value,
-            poBox: document.getElementById('edit-poBox').value,
-            accountStatus: document.getElementById('edit-accountStatus').value,
-            customerCategory: document.getElementById('edit-customerCategory').value,
-            quickNote: document.getElementById('edit-quickNote').value,
+        const customerData = {
+            name: document.getElementById('cust-name').value,
+            phone: phone,
+            countryCode: document.getElementById('cust-countryCode').value,
+            email: document.getElementById('cust-email').value,
+            country: document.getElementById('cust-country').value,
+            city: document.getElementById('cust-city').value,
+            district: document.getElementById('cust-district').value,
+            street: document.getElementById('cust-street').value,
+            buildingNo: document.getElementById('cust-buildingNo').value,
+            additionalNo: document.getElementById('cust-additionalNo').value,
+            postalCode: document.getElementById('cust-postalCode').value,
+            poBox: document.getElementById('cust-poBox').value,
+            accountStatus: document.getElementById('cust-accountStatus').value,
+            customerCategory: document.getElementById('cust-customerCategory').value,
             detailedNotes: quill.root.innerHTML,
-            updatedAt: new Date().toISOString()
-        });
-        alert("تم تحديث البيانات بنجاح");
-        window.closeEditModal(); loadCustomers();
-    } catch(e) { console.error("فشل التحديث:", e); }
+            createdAt: new Date().toISOString(),
+            createdBy: currentEmployee, // تقييد العملية
+            attachments: []
+        };
+
+        await addDoc(collection(db, "customers"), customerData);
+        alert("تم الحفظ وتقييد العملية في السجل");
+        addForm.reset(); quill.setContents([]);
+        loadOperationsLog(); // تحديث الجدول فوراً
+    } catch (error) { alert("خطأ في القاعدة"); }
+    finally { btn.innerText = "حفظ وإضافة العميل"; btn.disabled = false; }
 };
 
-// باقي الدوال البرمجية المساعدة (سجل العمليات، العرض، الحذف) تبقى كما هي
-// ...
-document.addEventListener('DOMContentLoaded', loadCustomers);
+document.addEventListener('DOMContentLoaded', loadOperationsLog);
