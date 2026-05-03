@@ -1,87 +1,86 @@
-import { collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { collection, addDoc, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { db } from '../js/firebase.js'; 
 
-const currentEmployee = "محمد بن صالح الشمري"; // الموظف المسؤول
-let quill;
+const currentEmployee = "محمد بن صالح الشمري"; // تقييد العمليات باسم أبا صالح
 
-// تهيئة المحرر
-function initQuill() {
-    if (!quill) {
-        quill = new Quill('#editor-container', { theme: 'snow' });
+// تهيئة محرر Quill بكامل خصائص Word
+const quill = new Quill('#editor-container', {
+    theme: 'snow',
+    placeholder: 'اكتب ملاحظات العميل بخصائص وورد المتقدمة...',
+    modules: {
+        toolbar: [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            [{ 'direction': 'rtl' }, { 'align': [] }],
+            ['link', 'image', 'video', 'blockquote'],
+            ['clean'] 
+        ]
     }
-}
+});
+quill.format('direction', 'rtl'); quill.format('align', 'right');
 
-// 1. وظيفة تحميل سجل العمليات في الصفحة
+// دالة تحميل سجل العمليات في أسفل الصفحة
 async function loadOperationsLog() {
     const tbody = document.getElementById('operations-log-tbody');
     try {
-        const q = query(collection(db, "customers"), orderBy("createdAt", "desc"));
-        const querySnapshot = await getDocs(q);
+        const q = query(collection(db, "customers"), orderBy("createdAt", "desc"), limit(10));
+        const snap = await getDocs(q);
         tbody.innerHTML = '';
-
-        querySnapshot.forEach((docSnap) => {
+        snap.forEach(docSnap => {
             const data = docSnap.data();
-            const dateObj = new Date(data.createdAt);
-            
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${dateObj.toLocaleDateString('ar-SA')} - ${dateObj.toLocaleTimeString('ar-SA')}</td>
-                <td><strong>${data.createdBy || 'النظام'}</strong></td>
-                <td>${data.name}</td>
-                <td><span class="status-badge" style="background:#3498db">${data.accountStatus}</span></td>
-                <td style="color: green;">إضافة عميل</td>
-            `;
-            tbody.appendChild(row);
+            const date = new Date(data.createdAt);
+            tbody.innerHTML += `
+                <tr>
+                    <td>${date.toLocaleString('ar-SA')}</td>
+                    <td><strong>${data.createdBy || 'محمد بن صالح'}</strong></td>
+                    <td>${data.name}</td>
+                    <td>${data.accountStatus}</td>
+                    <td style="color:green">إضافة ناجحة</td>
+                </tr>`;
         });
     } catch (e) { console.error(e); }
 }
 
-// التحكم في النافذة المنبثقة
-document.getElementById('open-add-modal').onclick = () => {
-    document.getElementById('add-cust-modal').classList.add('active');
-    initQuill();
-};
-
-document.getElementById('close-modal').onclick = () => {
-    document.getElementById('add-cust-modal').classList.remove('active');
-};
-
-// 2. معالجة الإضافة مع تقييد اسم الموظف
-document.getElementById('add-customer-form').onsubmit = async (e) => {
+const addForm = document.getElementById('add-customer-form');
+addForm.onsubmit = async (e) => {
     e.preventDefault();
-    const btn = e.target.querySelector('button[type="submit"]');
-    
-    // التحقق من الجوال
     const phone = document.getElementById('cust-phone').value;
-    if (!phone.startsWith('5')) return alert("يجب أن يبدأ بـ 5");
+    if (!phone.startsWith('5')) return alert("يجب أن يبدأ الجوال بـ 5");
 
-    btn.innerText = "جاري التقييد...";
+    const btn = document.getElementById('submit-btn');
+    btn.innerText = "جاري الحفظ والتقييد...";
     btn.disabled = true;
 
     try {
         const customerData = {
             name: document.getElementById('cust-name').value,
             phone: phone,
+            countryCode: document.getElementById('cust-countryCode').value,
+            email: document.getElementById('cust-email').value,
+            country: document.getElementById('cust-country').value,
+            city: document.getElementById('cust-city').value,
+            district: document.getElementById('cust-district').value,
+            street: document.getElementById('cust-street').value,
+            buildingNo: document.getElementById('cust-buildingNo').value,
+            additionalNo: document.getElementById('cust-additionalNo').value,
+            postalCode: document.getElementById('cust-postalCode').value,
+            poBox: document.getElementById('cust-poBox').value,
             accountStatus: document.getElementById('cust-accountStatus').value,
+            customerCategory: document.getElementById('cust-customerCategory').value,
             detailedNotes: quill.root.innerHTML,
             createdAt: new Date().toISOString(),
-            createdBy: currentEmployee, // تقييد العملية باسم الموظف
+            createdBy: currentEmployee, // تقييد العملية
             attachments: []
         };
 
         await addDoc(collection(db, "customers"), customerData);
-        alert("تمت الإضافة وتقييد العملية في السجل بنجاح");
-        
-        document.getElementById('add-cust-modal').classList.remove('active');
-        e.target.reset();
-        quill.setContents([]);
-        loadOperationsLog(); // تحديث السجل فوراً في الصفحة
-    } catch (error) {
-        alert("خطأ في الاتصال");
-    } finally {
-        btn.innerText = "تأكيد الإضافة";
-        btn.disabled = false;
-    }
+        alert("تم الحفظ وتقييد العملية في السجل");
+        addForm.reset(); quill.setContents([]);
+        loadOperationsLog(); // تحديث الجدول فوراً
+    } catch (error) { alert("خطأ في القاعدة"); }
+    finally { btn.innerText = "حفظ وإضافة العميل"; btn.disabled = false; }
 };
 
 document.addEventListener('DOMContentLoaded', loadOperationsLog);
