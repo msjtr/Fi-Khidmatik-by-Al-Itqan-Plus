@@ -2,65 +2,72 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- إصلاح المسار: الصعود للمجلد الأب ثم الدخول لمجلد التنسيق -->
+    <title>إضافة عميل جديد - منصة في خدمتك</title>
     <link rel="stylesheet" href="../css-styles/add-cust-style.css">
-    <link rel="stylesheet" href="../css-styles/buttons-theme.css">
+    <!-- محرر النصوص Quill -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 </head>
 <body>
-    <div class="add-cust-container">
+
+    <div class="page-container">
         <div class="form-header">
-            <h3>تسجيل طلب جديد - مؤسسة الإتقان بلس</h3>
-            <span class="system-tag" style="color: #c5a059; font-size: 12px;">نظام Tera V12.12.12</span>
+            <h2>➕ إضافة عميل جديد لـ (تيرا)</h2>
+            <p>يرجى تعبئة كافة البيانات المطلوبة لضمان دقة السجل</p>
         </div>
 
-        <form id="addCustomerForm">
-            <!-- استخدام شبكة الحقول (Grid) المبرمجة -->
-            <div class="cust-form-grid">
-                <div class="form-group">
-                    <label for="custName">الاسم الرباعي للعميل</label>
-                    <input type="text" id="custName" name="custName" placeholder="أدخل الاسم الكامل" required>
-                </div>
+        <form id="add-customer-form">
+            <div class="form-grid">
+                <!-- البيانات الأساسية -->
+                <div class="input-group"><label>اسم العميل</label><input type="text" id="cust-name" required placeholder="الاسم الكامل"></div>
+                <div class="input-group"><label>رقم الجوال</label><input type="text" id="cust-phone" required placeholder="05xxxxxxxx"></div>
+                <div class="input-group"><label>مفتاح الدولة</label><input type="text" id="cust-countryCode" value="+966"></div>
+                <div class="input-group"><label>البريد الإلكتروني</label><input type="email" id="cust-email" placeholder="example@mail.com"></div>
+                
+                <!-- العنوان التفصيلي -->
+                <div class="input-group"><label>الدولة</label><input type="text" id="cust-country" value="المملكة العربية السعودية"></div>
+                <div class="input-group"><label>المدينة</label><input type="text" id="cust-city" value="حائل"></div>
+                <div class="input-group"><label>الحي</label><input type="text" id="cust-district"></div>
+                <div class="input-group"><label>الشارع</label><input type="text" id="cust-street"></div>
+                <div class="input-group"><label>رقم المبنى</label><input type="text" id="cust-buildingNo"></div>
+                <div class="input-group"><label>الرقم الإضافي</label><input type="text" id="cust-additionalNo"></div>
+                <div class="input-group"><label>الرمز البريدي</label><input type="text" id="cust-postalCode"></div>
+                <div class="input-group"><label>صندوق البريد</label><input type="text" id="cust-poBox"></div>
 
-                <div class="form-group">
-                    <label for="custId">رقم الهوية الوطنية</label>
-                    <input type="number" id="custId" name="custId" placeholder="10xxxxxxxx" required>
+                <!-- الحالة والتصنيف (مطابق للقائمة) -->
+                <div class="input-group">
+                    <label>حالة الحساب</label>
+                    <select id="cust-accountStatus">
+                        <option value="جديد" selected>جديد</option>
+                        <option value="نشط">نشط</option>
+                        <option value="موقوف">موقوف</option>
+                        <option value="محظور">محظور</option>
+                    </select>
                 </div>
-
-                <div class="form-group">
-                    <label for="custPhone">رقم الجوال (سوا)</label>
-                    <input type="tel" id="custPhone" name="custPhone" placeholder="05xxxxxxxx" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="amount">مبلغ التمويل / الأقساط</label>
-                    <input type="number" id="amount" name="amount" placeholder="0.00" required>
+                <div class="input-group">
+                    <label>تصنيف العميل</label>
+                    <select id="cust-customerCategory">
+                        <option value="عادي" selected>عادي</option>
+                        <option value="VIP">VIP</option>
+                        <option value="مميز">مميز</option>
+                        <option value="محتمل">محتمل</option>
+                    </select>
                 </div>
             </div>
 
-            <div class="form-actions">
-                <!-- إضافة onclick لضمان استجابة الزر فوراً -->
-                <button type="button" id="btnSave" class="btn-itqan btn-add" onclick="saveCustomerData()">
-                    <span>💾</span> حفظ في قاعدة بيانات حائل
-                </button>
+            <!-- محرر النصوص المتقدم (Word Style) -->
+            <div class="editor-section" style="margin-top: 20px;">
+                <label>الملاحظات التفصيلية</label>
+                <div id="editor-container" style="height: 200px; background: white;"></div>
+            </div>
+
+            <div class="form-footer">
+                <button type="submit" id="submit-btn" class="save-btn">إضافة العميل للقاعدة</button>
+                <button type="button" class="cancel-btn" onclick="history.back()">إلغاء</button>
             </div>
         </form>
     </div>
 
-    <!-- إصلاح مسارات السكريبتات للصعود للمجلد الأب -->
-    <script src="../js-logic/api-connector.js"></script>
-    <script src="../js-logic/add-cust-logic.js"></script>
-    
-    <script>
-        // دالة وسيطة للتأكد من عمل الزر ونقل البيانات لـ Firebase
-        function saveCustomerData() {
-            console.log("بدء عملية الحفظ في نظام الإتقان بلس...");
-            if (typeof handleCustomerSubmit === "function") {
-                handleCustomerSubmit(); // استدعاء الدالة الأساسية من ملف add-cust-logic.js
-            } else {
-                alert("خطأ: لم يتم تحميل ملف المنطق البرمجي بشكل صحيح.");
-            }
-        }
-    </script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <script type="module" src="../js-logic/add-cust.js"></script>
 </body>
 </html>
